@@ -1,3 +1,5 @@
+export const CPUFrequency: number = 1789773
+
 enum InterruptType {
     None = 1,
     NMI = 2,
@@ -201,7 +203,7 @@ class ProcessorStatus {
         flags |= (this.I ? 1 : 0) << 2;
         flags |= (this.D ? 1 : 0) << 3;
         flags |= (this.B ? 1 : 0) << 4;
-        flags |= (this.U ? 1 : 0) << 5;
+        flags |= 1 << 5;
         flags |= (this.V ? 1 : 0) << 6;
         flags |= (this.N ? 1 : 0) << 7;
         return flags;
@@ -249,6 +251,7 @@ class CPU {
     private SP: number = 0xFF
     private readonly P: ProcessorStatus = new ProcessorStatus()
 
+    stall: number = 0
     private currentInterrupt = InterruptType.None
     private cpuCycles: number = 0
     private readonly memory: Uint8Array = new Uint8Array(0x10000)
@@ -313,24 +316,24 @@ class CPU {
         this.memory.set(state.memory);
     }
 
-    writeByte(addr: number, value: number): void {
-        this.memory[addr & 0xFFFF] = value & 0xFF
+    writeByte(address: number, value: number): void {
+        this.memory[address & 0xFFFF] = value & 0xFF
     }
 
-    readByte(addr: number): number {
-        return this.memory[addr & 0xFFFF]
+    readByte(address: number): number {
+        return this.memory[address & 0xFFFF]
     }
 
-    readWord(addr: number): number {
-        const low = this.readByte(addr)
-        const high = this.readByte(addr + 1)
+    readWord(address: number): number {
+        const low = this.readByte(address)
+        const high = this.readByte(address + 1)
         return low | high << 8
     }
 
     // MOS6502 JMP bug
-    readWordWithBug(addr: number): number {
-        const low = this.readByte(addr)
-        const high = this.readByte((addr & 0xFF00) | (addr + 1))
+    readWordWithBug(address: number): number {
+        const low = this.readByte(address)
+        const high = this.readByte((address & 0xFF00) | (address + 1))
         return low | high << 8
     }
 
@@ -396,14 +399,14 @@ class CPU {
         return (a & 0xFF00) !== (b & 0xFF00)
     }
 
-    isPageBoundaryCrossedForMode(mode: AddressingMode, addr: number): boolean {
+    isPageBoundaryCrossedForMode(mode: AddressingMode, address: number): boolean {
         switch (mode) {
             case AddressingMode.AbsoluteX:
-                return this.isPageBoundaryCrossed((addr - this.X), addr)
+                return this.isPageBoundaryCrossed((address - this.X), address)
             case AddressingMode.AbsoluteY:
-                return this.isPageBoundaryCrossed((addr - this.Y), addr)
+                return this.isPageBoundaryCrossed((address - this.Y), address)
             case AddressingMode.IndirectIndexed:
-                return this.isPageBoundaryCrossed((addr - this.Y), addr)
+                return this.isPageBoundaryCrossed((address - this.Y), address)
             default:
                 return false
         }
@@ -437,7 +440,11 @@ class CPU {
         this.memory.fill(0)
     }
 
-    executeInstruction(): number {
+    update(): number {
+        if (this.stall > 0) {
+            this.stall--
+            return 1
+        }
         switch (this.currentInterrupt) {
             case InterruptType.NMI:
                 this.handleNMI()

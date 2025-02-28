@@ -4,9 +4,6 @@
  * It consists of a 16-byte header followed by the actual ROM data.
  */
 class INESHeader {
-    // Standard iNES file signature ("NES" followed by MS-DOS EOF)
-    private static readonly INES_SIGNATURE = 0x1a53454e;
-
     // Header fields as defined by iNES format specification
     private readonly signature: number;       // Should match INES_SIGNATURE
     public prgRomBanks: number;               // Number of 16KB PRG-ROM banks
@@ -17,6 +14,13 @@ class INESHeader {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
     private readonly reserved: Uint8Array;    // 7 bytes reserved for future use
+
+
+    // Standard iNES file signature ("NES" followed by MS-DOS EOF)
+    private static readonly INES_SIGNATURE = 0x1a53454e;
+    // Standard iNES file header size
+    public static readonly HEADER_SIZE = 16
+
 
     /**
      * Parses an iNES header from the provided buffer.
@@ -103,6 +107,15 @@ class Cartridge {
     mirroringMode: number;     // Name table mirroring mode
     hasBatteryBackup: boolean; // Whether cartridge supports saves
 
+    // Standard iNES file trainer size
+    public static readonly TRAINER_SIZE = 512
+    //prgRom 16KB per bank
+    private static readonly PER_PRGROMBANK_SIZE = 16384;
+    //chrRom 8KB per bank
+    private static readonly PER_CHRROMBANK_SIZE = 8192;
+    // 8KB of save RAM
+    private static readonly SAVERAM_SIZE = 0x2000
+
     /**
      * Loads an NES ROM file and returns a Cartridge instance.
      * Performs validation and extracts ROM data from the file.
@@ -115,7 +128,7 @@ class Cartridge {
         const arrayBuffer = await file.arrayBuffer();
 
         // Verify minimum file size for header
-        if (arrayBuffer.byteLength < 16) {
+        if (arrayBuffer.byteLength < INESHeader.HEADER_SIZE) {
             throw new Error(`"${file.name}" is not a valid NES ROM file (file too small)`);
         }
 
@@ -126,13 +139,13 @@ class Cartridge {
         }
 
         // Calculate data offsets, accounting for optional trainer
-        let offset = 16; // Header size
+        let offset = INESHeader.HEADER_SIZE;
         if (header.hasTrainer) {
-            offset += 512;
+            offset += Cartridge.TRAINER_SIZE;
         }
 
         // Extract PRG ROM (program code)
-        const prgRomSize = header.prgRomBanks * 16384; // 16KB per bank
+        const prgRomSize = header.prgRomBanks * Cartridge.PER_PRGROMBANK_SIZE;
         if (offset + prgRomSize > arrayBuffer.byteLength) {
             throw new Error(`"${file.name}" contains incomplete PRG ROM data`);
         }
@@ -140,7 +153,7 @@ class Cartridge {
         offset += prgRomSize;
 
         // Extract CHR ROM (graphics data)
-        const chrRomSize = header.chrRomBanks * 8192; // 8KB per bank
+        const chrRomSize = header.chrRomBanks * Cartridge.PER_CHRROMBANK_SIZE;
         if (offset + chrRomSize > arrayBuffer.byteLength) {
             throw new Error(`"${file.name}" contains incomplete CHR ROM data`);
         }
@@ -151,7 +164,7 @@ class Cartridge {
         cart.header = header;
         cart.prgRom = prgRom;
         cart.chrRom = chrRom;
-        cart.saveRam = new Uint8Array(0x2000); // 8KB of save RAM
+        cart.saveRam = new Uint8Array(Cartridge.SAVERAM_SIZE);
         cart.mapperNumber = header.mapperNumber;
         cart.mirroringMode = header.mirroringMode;
         cart.hasBatteryBackup = header.hasBatteryBackedRam;

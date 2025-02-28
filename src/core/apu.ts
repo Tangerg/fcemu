@@ -105,7 +105,7 @@ class PulseChannel {
      * Updates the timer and duty cycle step
      * Called at the CPU clock rate
      */
-    updateTimer() {
+    public updateTimer() {
         if (this.timerValue === 0) {
             this.timerValue = this.timerPeriod
             this.dutyStep = (this.dutyStep + 1) % 8
@@ -118,7 +118,7 @@ class PulseChannel {
      * Updates the volume envelope
      * Called at a rate of 240Hz
      */
-    updateEnvelope() {
+    public updateEnvelope() {
         if (this.envelopeRestart) {
             this.envelopeVolume = 15
             this.envelopeValue = this.envelopePeriod
@@ -142,7 +142,7 @@ class PulseChannel {
      * Updates the length counter
      * Called at a rate of 120Hz
      */
-    updateLength() {
+    public updateLength() {
         if (this.lengthEnabled && this.lengthValue > 0) {
             this.lengthValue--
         }
@@ -165,7 +165,7 @@ class PulseChannel {
      * Updates the frequency sweep unit
      * Called at a rate of 120Hz
      */
-    updateSweep() {
+    public updateSweep() {
         if (this.sweepReload) {
             if (this.sweepEnabled && this.sweepValue === 0) {
                 this.applySweep()
@@ -190,7 +190,7 @@ class PulseChannel {
      * Calculates the channel's output volume
      * @returns The current output level (0-15)
      */
-    output(): number {
+    public output(): number {
         if (!this.enabled) {
             return 0
         }
@@ -274,7 +274,7 @@ class TriangleChannel {
      * Updates the timer and steps through the triangle sequence
      * Called at the CPU clock rate
      */
-    updateTimer() {
+    public updateTimer() {
         if (this.timerValue === 0) {
             this.timerValue = this.timerPeriod
             // Only step through sequence if both length counter and linear counter are non-zero
@@ -290,7 +290,7 @@ class TriangleChannel {
      * Updates the length counter
      * Called at a rate of 120Hz
      */
-    updateLength() {
+    public updateLength() {
         if (this.lengthEnabled && this.lengthValue > 0) {
             this.lengthValue--
         }
@@ -300,7 +300,7 @@ class TriangleChannel {
      * Updates the linear counter
      * Called at a rate of 240Hz
      */
-    updateCounter() {
+    public updateCounter() {
         if (this.counterReload) {
             this.counterValue = this.counterPeriod
         } else if (this.counterValue > 0) {
@@ -315,7 +315,7 @@ class TriangleChannel {
      * Calculates the channel's output value
      * @returns The current output level (0-15)
      */
-    output(): number {
+    public output(): number {
         if (!this.enabled) {
             return 0
         }
@@ -404,7 +404,7 @@ class NoiseChannel {
      * Updates the noise generator timer and shift register
      * Called at the CPU clock rate
      */
-    updateTimer() {
+    public updateTimer() {
         if (this.timerValue === 0) {
             this.timerValue = this.timerPeriod
             const shift = this.mode ? 6 : 1
@@ -421,7 +421,7 @@ class NoiseChannel {
      * Updates the volume envelope
      * Called at a rate of 240Hz
      */
-    updateEnvelope() {
+    public updateEnvelope() {
         if (this.envelopeRestart) {
             this.envelopeVolume = 15
             this.envelopeValue = this.envelopePeriod
@@ -444,7 +444,7 @@ class NoiseChannel {
      * Updates the length counter
      * Called at a rate of 120Hz
      */
-    updateLength() {
+    public updateLength() {
         if (this.lengthEnabled && this.lengthValue > 0) {
             this.lengthValue--
         }
@@ -454,7 +454,7 @@ class NoiseChannel {
      * Calculates the channel's output value
      * @returns The current output level (0-15)
      */
-    output(): number {
+    public output(): number {
         if (!this.enabled) {
             return 0
         }
@@ -552,7 +552,7 @@ class DeltaModulationChannel {
      * Restarts sample playback
      * Resets current address and length to initial values
      */
-    restart(): void {
+    public restart(): void {
         this.currentAddress = this.simpleAddress
         this.currentLength = this.simpleLength
     }
@@ -561,7 +561,7 @@ class DeltaModulationChannel {
      * Updates the sample reader
      * Fetches new sample bytes from memory when needed
      */
-    updateReader() {
+    public updateReader() {
         if (this.currentLength > 0 && this.bitCount === 0) {
             this.cpu.stall += 4                // CPU stall for memory read
             this.shiftRegister = this.cpu.readByte(this.currentAddress)
@@ -582,7 +582,7 @@ class DeltaModulationChannel {
      * Updates the delta modulation unit
      * Processes one bit of the current sample byte
      */
-    updateShifter() {
+    public updateShifter() {
         if (this.bitCount === 0) {
             return
         }
@@ -603,7 +603,7 @@ class DeltaModulationChannel {
      * Updates the DMC timer
      * Called at the CPU clock rate
      */
-    updateTimer() {
+    public updateTimer() {
         if (!this.enabled) {
             return
         }
@@ -620,7 +620,7 @@ class DeltaModulationChannel {
      * Returns the current output level
      * @returns The current output level (0-127)
      */
-    output(): number {
+    public output(): number {
         return this.val
     }
 }
@@ -715,7 +715,7 @@ class AudioMixer {
      * Produces the final audio output sample
      * @returns Final output value (0.0 to 1.0)
      */
-    output(): number {
+    public output(): number {
         return this.filter(this.mix())
     }
 }
@@ -864,7 +864,7 @@ class APU {
      * Main update function
      * Called every CPU cycle
      */
-    update() {
+    public update() {
         const cycle1 = this.cycle
         this.cycle++
         const cycle2 = this.cycle
@@ -895,7 +895,7 @@ class APU {
      * Reads the APU status register ($4015)
      * Returns channel length counter status
      */
-    private readStatus(): number {
+    get status(): number {
         let res = 0
         if (this.pulseChannel1.lengthValue > 0) {
             res |= 1
@@ -919,18 +919,18 @@ class APU {
      * Reads from APU registers
      * Only $4015 (status) is readable
      */
-    readRegister(address: number) {
+    public readRegister(address: number): number {
         if (address != 0x4015) {
             return 0
         }
-        return this.readStatus()
+        return this.status
     }
 
     /**
      * Writes to APU registers
      * Handles all channel control registers
      */
-    writeRegister(address: number, value: number) {
+    public writeRegister(address: number, value: number) {
         switch (address) {
             // Pulse 1 registers
             case 0x4000:

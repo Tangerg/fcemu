@@ -266,7 +266,7 @@ class ProcessorStatus {
     // Carry Flag: Set if last operation resulted in a carry or if a borrow was not needed
     public C: boolean = false;
     // Zero Flag: Set if the result of last operation was zero
-    public Z: boolean = false;
+    private _Z: boolean = false;
     // Interrupt Disable Flag: When set, disables IRQ interrupts
     public I: boolean = false;
     // Decimal Mode Flag: Controls whether arithmetic operations use binary or BCD arithmetic
@@ -278,7 +278,7 @@ class ProcessorStatus {
     // Overflow Flag: Set when signed arithmetic operation results in overflow
     public V: boolean = false;
     // Negative Flag: Set if bit 7 of the last operation result was 1
-    public N: boolean = false;
+    private _N: boolean = false;
     // Initial value of flags after reset (only bit 5 is set)
     private static readonly RESET_FLAGS: number = 0b00100000
 
@@ -290,13 +290,13 @@ class ProcessorStatus {
     get flags(): number {
         let flags = 0;
         flags |= (this.C ? 1 : 0) << 0;  // Carry in bit 0
-        flags |= (this.Z ? 1 : 0) << 1;  // Zero in bit 1
+        flags |= (this._Z ? 1 : 0) << 1; // Zero in bit 1
         flags |= (this.I ? 1 : 0) << 2;  // Interrupt in bit 2
         flags |= (this.D ? 1 : 0) << 3;  // Decimal in bit 3
         flags |= (this.B ? 1 : 0) << 4;  // Break in bit 4
         flags |= 1 << 5;                 // Unused bit always 1
         flags |= (this.V ? 1 : 0) << 6;  // Overflow in bit 6
-        flags |= (this.N ? 1 : 0) << 7;  // Negative in bit 7
+        flags |= (this._N ? 1 : 0) << 7; // Negative in bit 7
         return flags;
     }
 
@@ -306,38 +306,46 @@ class ProcessorStatus {
      */
     set flags(flags: number) {
         this.C = Boolean((flags >> 0) & 1);  // Extract Carry from bit 0
-        this.Z = Boolean((flags >> 1) & 1);  // Extract Zero from bit 1
+        this._Z = Boolean((flags >> 1) & 1);  // Extract Zero from bit 1
         this.I = Boolean((flags >> 2) & 1);  // Extract Interrupt from bit 2
         this.D = Boolean((flags >> 3) & 1);  // Extract Decimal from bit 3
         this.B = Boolean((flags >> 4) & 1);  // Extract Break from bit 4
         // Bit 5 (U) is always true
         this.V = Boolean((flags >> 6) & 1);  // Extract Overflow from bit 6
-        this.N = Boolean((flags >> 7) & 1);  // Extract Negative from bit 7
+        this._N = Boolean((flags >> 7) & 1);  // Extract Negative from bit 7
     }
 
     /**
      * Sets the Zero flag based on whether the value is zero
      * @param value - Value to test for zero
      */
-    setZ(value: number) {
-        this.Z = value === 0;
+    set Z(value: number) {
+        this._Z = value === 0;
+    }
+
+    get Z(): boolean {
+        return this._Z;
     }
 
     /**
      * Sets the Negative flag based on bit 7 of the value
      * @param value - Value to test for negative (bit 7 set)
      */
-    setN(value: number) {
-        this.N = (value & 0x80) !== 0
+    set N(value: number) {
+        this._N = (value & 0x80) !== 0
+    }
+
+    get N(): boolean {
+        return this._N;
     }
 
     /**
      * Convenience method to set both Zero and Negative flags based on a value
      * @param value - Value to test for both zero and negative
      */
-    setZN(value: number) {
-        this.setZ(value);
-        this.setN(value);
+    set ZN(value: number) {
+        this.Z = value;
+        this.N = value;
     }
 
     /**
@@ -420,7 +428,7 @@ class CPU {
             this.DEY, this.NOP, this.TXA, this.XAA, this.STY, this.STA, this.STX, this.SAX,
             this.BCC, this.STA, this.KIL, this.AHX, this.STY, this.STA, this.STX, this.SAX,
             this.TYA, this.STA, this.TXS, this.TAS, this.SHY, this.STA, this.SHX, this.AHX,
-            this.LDY, this.LDA, this.LDX, this.LAX, this.LDY,  this.LDA, this.LDX, this.LAX,
+            this.LDY, this.LDA, this.LDX, this.LAX, this.LDY, this.LDA, this.LDX, this.LAX,
             this.TAY, this.LDA, this.TAX, this.LAX, this.LDY, this.LDA, this.LDX, this.LAX,
             this.BCS, this.LDA, this.KIL, this.LAX, this.LDY, this.LDA, this.LDX, this.LAX,
             this.CLV, this.LDA, this.TSX, this.LAS, this.LDY, this.LDA, this.LDX, this.LAX,
@@ -435,7 +443,7 @@ class CPU {
         ]
     }
 
-    saveState(): CPUState {
+    get state(): CPUState {
         return {
             A: this.A,
             X: this.X,
@@ -447,7 +455,7 @@ class CPU {
         };
     }
 
-    loadState(state: CPUState): void {
+    set state(state: CPUState) {
         this.A = state.A;
         this.X = state.X;
         this.Y = state.Y;
@@ -462,7 +470,7 @@ class CPU {
      * @param address - Memory address (will be masked to 16-bit)
      * @param value - Value to write (will be masked to 8-bit)
      */
-    writeByte(address: number, value: number): void {
+    private writeByte(address: number, value: number): void {
         this.memory[address & 0xFFFF] = value & 0xFF
     }
 
@@ -471,7 +479,7 @@ class CPU {
      * @param address - Memory address (will be masked to 16-bit)
      * @returns 8-bit value from memory
      */
-    readByte(address: number): number {
+    public readByte(address: number): number {
         return this.memory[address & 0xFFFF]
     }
 
@@ -480,7 +488,7 @@ class CPU {
      * @param address - Memory address of the low byte
      * @returns 16-bit value composed of two consecutive bytes
      */
-    readWord(address: number): number {
+    private readWord(address: number): number {
         const low = this.readByte(address)
         const high = this.readByte(address + 1)
         return low | high << 8
@@ -492,7 +500,7 @@ class CPU {
      * @param address - Memory address of the low byte
      * @returns 16-bit value with potential page boundary bug
      */
-    readWordWithBug(address: number): number {
+    private readWordWithBug(address: number): number {
         const low = this.readByte(address)
         const high = this.readByte((address & 0xFF00) | (address + 1))
         return low | high << 8
@@ -503,7 +511,7 @@ class CPU {
      * Stack Pointer decrements after push
      * @param value - 8-bit value to push
      */
-    pushByteToStack(value: number): void {
+    private pushByteToStack(value: number): void {
         this.writeByte(0x100 | this.SP, value)
         this.SP--
     }
@@ -512,7 +520,7 @@ class CPU {
      * Pushes a 16-bit word onto the stack (high byte first)
      * @param value - 16-bit value to push
      */
-    pushWordToStack(value: number): void {
+    private pushWordToStack(value: number): void {
         this.pushByteToStack(value >> 8)
         this.pushByteToStack(value & 0xFF)
     }
@@ -522,7 +530,7 @@ class CPU {
      * Stack Pointer increments before pull
      * @returns 8-bit value pulled from stack
      */
-    pullByteFromStack(): number {
+    private pullByteFromStack(): number {
         this.SP++
         return this.readByte(0x100 | this.SP)
     }
@@ -531,7 +539,7 @@ class CPU {
      * Pulls (pops) a 16-bit word from the stack (low byte first)
      * @returns 16-bit value composed of two bytes from stack
      */
-    pullWordFromStack(): number {
+    private pullWordFromStack(): number {
         const low = this.pullByteFromStack()
         const high = this.pullByteFromStack()
         return low | high << 8
@@ -542,7 +550,7 @@ class CPU {
      * @param mode - The addressing mode of the instruction
      * @returns The resolved memory address for the instruction
      *//**/
-    resolveInstructionAddress(mode: AddressingMode) {
+    private resolveInstructionAddress(mode: AddressingMode) {
         switch (mode) {
             case AddressingMode.Absolute:
                 return this.readWord(this.PC + 1)  // Use full 16-bit address
@@ -562,13 +570,14 @@ class CPU {
                 return this.readWordWithBug(this.readWord(this.PC + 1))  // JMP indirect
             case AddressingMode.IndirectIndexed:
                 return this.readWordWithBug(this.readByte(this.PC + 1)) + this.Y  // Indirect indexed
-            case AddressingMode.Relative:
+            case AddressingMode.Relative: {
                 const offset = this.readByte(this.PC + 1)
                 // Handle signed 8-bit offset for branch instructions
                 if (offset < 0x80) {
                     return this.PC + 2 + offset
                 }
                 return this.PC + 2 + offset - 0x100
+            }
             case AddressingMode.ZeroPage:
                 return this.readByte(this.PC + 1)  // Use zero page address (0x0000-0x00FF)
             case AddressingMode.ZeroPageX:
@@ -586,7 +595,7 @@ class CPU {
      * @param b - Second address
      * @returns True if addresses are in different pages
      */
-    isPageBoundaryCrossed(a: number, b: number): boolean {
+    private isPageBoundaryCrossed(a: number, b: number): boolean {
         return (a & 0xFF00) !== (b & 0xFF00)
     }
 
@@ -596,7 +605,7 @@ class CPU {
      * @param address - Effective address
      * @returns True if page boundary is crossed
      */
-    isPageBoundaryCrossedForMode(mode: AddressingMode, address: number): boolean {
+    private isPageBoundaryCrossedForMode(mode: AddressingMode, address: number): boolean {
         switch (mode) {
             case AddressingMode.AbsoluteX:
                 return this.isPageBoundaryCrossed((address - this.X), address)
@@ -612,14 +621,14 @@ class CPU {
     /**
      * Triggers a Non-Maskable Interrupt (NMI)
      */
-    triggerNMI() {
+    public triggerNMI() {
         this.currentInterrupt = InterruptType.NMI
     }
 
     /**
      * Triggers an Interrupt Request (IRQ)
      */
-    triggerIRQ() {
+    public triggerIRQ() {
         this.currentInterrupt = InterruptType.IRQ
     }
 
@@ -628,7 +637,7 @@ class CPU {
      * One cycle for branch taken, one additional cycle if page boundary crossed
      * @param ctx - Instruction execution context
      */
-    addBranchCycles(ctx: InstructionExecutionContext) {
+    private addBranchCycles(ctx: InstructionExecutionContext) {
         this.cpuCycles++
         if (this.isPageBoundaryCrossed(ctx.pc, ctx.address)) {
             this.cpuCycles++
@@ -641,8 +650,8 @@ class CPU {
      * @param a - First value to compare
      * @param b - Second value to compare
      */
-    compareValues(a: number, b: number) {
-        this.P.setZN(a - b)
+    private compareValues(a: number, b: number) {
+        this.P.ZN = a - b
         this.P.C = a >= b
     }
 
@@ -650,7 +659,7 @@ class CPU {
      * Resets the CPU to its initial state
      * Clears registers, loads reset vector, initializes stack pointer
      */
-    reset(): void {
+    public reset(): void {
         this.A = this.X = this.Y = 0
         this.PC = this.readWord(0xFFFC)
         this.SP = 0xFF
@@ -663,7 +672,7 @@ class CPU {
      * Handles interrupts, fetches and executes instructions
      * @returns Number of CPU cycles consumed in this update
      */
-    update(): number {
+    public update(): number {
         // Handle CPU stall cycles (if any)
         if (this.stall > 0) {
             this.stall--
@@ -726,7 +735,7 @@ class CPU {
      * 4. Set Interrupt Disable flag
      * 5. Add 7 cycle penalty
      */
-    handleNMI() {
+    private handleNMI() {
         this.pushWordToStack(this.PC)
         this.PHP()
         this.PC = this.readWord(0xFFFA)
@@ -744,7 +753,7 @@ class CPU {
      * 4. Set Interrupt Disable flag
      * 5. Add 7 cycle penalty
      */
-    handleIRQ() {
+    private handleIRQ() {
         this.pushWordToStack(this.PC)
         this.PHP()
         this.PC = this.readWord(0xFFFE)
@@ -762,9 +771,9 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    LDA(ctx: InstructionExecutionContext) {
+    private LDA(ctx: InstructionExecutionContext) {
         this.A = this.readByte(ctx.address)
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -772,9 +781,9 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    LDX(ctx: InstructionExecutionContext) {
+    private LDX(ctx: InstructionExecutionContext) {
         this.X = this.readByte(ctx.address)
-        this.P.setZN(this.X)
+        this.P.ZN = this.X
     }
 
     /**
@@ -782,9 +791,9 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    LDY(ctx: InstructionExecutionContext) {
+    private LDY(ctx: InstructionExecutionContext) {
         this.Y = this.readByte(ctx.address)
-        this.P.setZN(this.Y)
+        this.P.ZN = this.Y
     }
 
     /**
@@ -792,7 +801,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    STA(ctx: InstructionExecutionContext) {
+    private STA(ctx: InstructionExecutionContext) {
         this.writeByte(ctx.address, this.A)
     }
 
@@ -801,7 +810,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    STX(ctx: InstructionExecutionContext) {
+    private STX(ctx: InstructionExecutionContext) {
         this.writeByte(ctx.address, this.X)
     }
 
@@ -810,7 +819,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    STY(ctx: InstructionExecutionContext) {
+    private STY(ctx: InstructionExecutionContext) {
         this.writeByte(ctx.address, this.Y)
     }
 
@@ -819,9 +828,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    TAX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TAX(_: InstructionExecutionContext) {
         this.X = this.A
-        this.P.setZN(this.X)
+        this.P.ZN = this.X
     }
 
     /**
@@ -829,9 +839,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    TAY(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TAY(_: InstructionExecutionContext) {
         this.Y = this.A
-        this.P.setZN(this.Y)
+        this.P.ZN = this.Y
     }
 
     /**
@@ -839,9 +850,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    TXA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TXA(_: InstructionExecutionContext) {
         this.A = this.X
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -849,9 +861,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    TYA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TYA(_: InstructionExecutionContext) {
         this.A = this.Y
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -859,9 +872,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    TSX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TSX(_: InstructionExecutionContext) {
         this.X = this.SP
-        this.P.setZN(this.X)
+        this.P.ZN = this.X
     }
 
     /**
@@ -869,7 +883,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    TXS(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TXS(_: InstructionExecutionContext) {
         this.SP = this.X
     }
 
@@ -884,13 +899,13 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    ADC(ctx: InstructionExecutionContext) {
+    private ADC(ctx: InstructionExecutionContext) {
         const a = this.A
         const b = this.readByte(ctx.address)
         const c = this.P.C ? 1 : 0
         const abc = a + b + c
         this.A = abc
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
         this.P.C = abc > 0xFF
         this.P.V = (((a ^ b) & 0x80) == 0) && (((a ^ this.A) & 0x80) != 0)
     }
@@ -900,13 +915,13 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    SBC(ctx: InstructionExecutionContext) {
+    private SBC(ctx: InstructionExecutionContext) {
         const a = this.A
         const b = this.readByte(ctx.address)
         const c = this.P.C ? 1 : 0
         const abc = a - b - (1 - c)
         this.A = abc
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
         this.P.C = abc >= 0
         this.P.V = (((a ^ b) & 0x80) != 0) && ((a ^ this.A) & 0x80) != 0
     }
@@ -916,10 +931,10 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    INC(ctx: InstructionExecutionContext) {
+    private INC(ctx: InstructionExecutionContext) {
         const value = this.readByte(ctx.address) + 1
         this.writeByte(ctx.address, value)
-        this.P.setZN(value)
+        this.P.ZN = value
     }
 
     /**
@@ -927,9 +942,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    INX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private INX(_: InstructionExecutionContext) {
         this.X++
-        this.P.setZN(this.X)
+        this.P.ZN = this.X
     }
 
     /**
@@ -937,9 +953,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    INY(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private INY(_: InstructionExecutionContext) {
         this.Y++
-        this.P.setZN(this.Y)
+        this.P.ZN = this.Y
     }
 
     /**
@@ -947,10 +964,10 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    DEC(ctx: InstructionExecutionContext) {
+    private DEC(ctx: InstructionExecutionContext) {
         const value = this.readByte(ctx.address) - 1
         this.writeByte(ctx.address, value)
-        this.P.setZN(value)
+        this.P.ZN = value
     }
 
     /**
@@ -958,9 +975,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    DEX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private DEX(_: InstructionExecutionContext) {
         this.X--
-        this.P.setZN(this.X)
+        this.P.ZN = this.X
     }
 
     /**
@@ -968,9 +986,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    DEY(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private DEY(_: InstructionExecutionContext) {
         this.Y--
-        this.P.setZN(this.Y)
+        this.P.ZN = this.Y
     }
 
     /**
@@ -983,9 +1002,9 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    AND(ctx: InstructionExecutionContext) {
+    private AND(ctx: InstructionExecutionContext) {
         this.A = this.A & this.readByte(ctx.address)
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -993,9 +1012,9 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    ORA(ctx: InstructionExecutionContext) {
+    private ORA(ctx: InstructionExecutionContext) {
         this.A = this.A | this.readByte(ctx.address)
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -1003,9 +1022,9 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    EOR(ctx: InstructionExecutionContext) {
+    private EOR(ctx: InstructionExecutionContext) {
         this.A = this.A ^ this.readByte(ctx.address)
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -1013,11 +1032,11 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BIT(ctx: InstructionExecutionContext) {
+    private BIT(ctx: InstructionExecutionContext) {
         const value = this.readByte(ctx.address)
         this.P.V = !!((value >> 6) & 1)
-        this.P.setZ(value & this.A)
-        this.P.setN(value)
+        this.P.Z = (value & this.A)
+        this.P.N = value
     }
 
     /**
@@ -1030,18 +1049,18 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    ASL(ctx: InstructionExecutionContext) {
+    private ASL(ctx: InstructionExecutionContext) {
         if (ctx.addressingMode === AddressingMode.Accumulator) {
             this.P.C = !!((this.A >> 7) & 1)
             this.A <<= 1
-            this.P.setZN(this.A)
+            this.P.ZN = this.A
 
         } else {
             let value = this.readByte(ctx.address)
             this.P.C = !!((this.A >> 7) & 1)
             value <<= 1
             this.writeByte(ctx.address, value)
-            this.P.setZN(value)
+            this.P.ZN = value
         }
     }
 
@@ -1050,17 +1069,17 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    LSR(ctx: InstructionExecutionContext) {
+    private LSR(ctx: InstructionExecutionContext) {
         if (ctx.addressingMode == AddressingMode.Accumulator) {
             this.P.C = !!(this.A & 1)
             this.A >>= 1
-            this.P.setZN(this.A)
+            this.P.ZN = this.A
         } else {
             let value = this.readByte(ctx.address)
             this.P.C = !!(value & 1)
             value >>= 1
             this.writeByte(ctx.address, value)
-            this.P.setZN(value)
+            this.P.ZN = value
         }
     }
 
@@ -1069,19 +1088,19 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    ROL(ctx: InstructionExecutionContext) {
+    private ROL(ctx: InstructionExecutionContext) {
         if (ctx.addressingMode == AddressingMode.Accumulator) {
             const c = this.P.C ? 1 : 0
             this.P.C = !!((this.A >> 7) & 1)
             this.A = (this.A << 1) | c
-            this.P.setZN(this.A)
+            this.P.ZN = this.A
         } else {
             const c = this.P.C ? 1 : 0
             let value = this.readByte(ctx.address)
             this.P.C = !!((value >> 7) & 1)
             value = (value << 1) | c
             this.writeByte(ctx.address, value)
-            this.P.setZN(c)
+            this.P.ZN = c
         }
     }
 
@@ -1090,19 +1109,19 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    ROR(ctx: InstructionExecutionContext) {
+    private ROR(ctx: InstructionExecutionContext) {
         if (ctx.addressingMode == AddressingMode.Accumulator) {
             const c = this.P.C ? 1 : 0
             this.P.C = !!(this.A & 1)
             this.A = ((this.A >> 1) | (c << 7))
-            this.P.setZN(this.A)
+            this.P.ZN = this.A
         } else {
             const c = this.P.C ? 1 : 0
             let value = this.readByte(ctx.address)
             this.P.C = !!(value & 1)
             value = (value >> 1) | (c << 7)
             this.writeByte(ctx.address, value)
-            this.P.setZN(c)
+            this.P.ZN = c
         }
     }
 
@@ -1116,7 +1135,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    CLC(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private CLC(_: InstructionExecutionContext) {
         this.P.C = false
     }
 
@@ -1125,7 +1145,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    SEC(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SEC(_: InstructionExecutionContext) {
         this.P.I = true
     }
 
@@ -1134,7 +1155,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    CLD(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private CLD(_: InstructionExecutionContext) {
         this.P.D = false
     }
 
@@ -1143,7 +1165,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    SED(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SED(_: InstructionExecutionContext) {
         this.P.D = true
     }
 
@@ -1152,7 +1175,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    CLI(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private CLI(_: InstructionExecutionContext) {
         this.P.I = false
     }
 
@@ -1161,7 +1185,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    SEI(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SEI(_: InstructionExecutionContext) {
         this.P.I = true
     }
 
@@ -1170,7 +1195,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    CLV(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private CLV(_: InstructionExecutionContext) {
         this.P.V = false
     }
 
@@ -1187,7 +1213,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    CMP(ctx: InstructionExecutionContext) {
+    private CMP(ctx: InstructionExecutionContext) {
         const value = this.readByte(ctx.address)
         this.compareValues(this.A, value)
     }
@@ -1198,7 +1224,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    CPX(ctx: InstructionExecutionContext) {
+    private CPX(ctx: InstructionExecutionContext) {
         const value = this.readByte(ctx.address)
         this.compareValues(this.X, value)
     }
@@ -1209,7 +1235,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    CPY(ctx: InstructionExecutionContext) {
+    private CPY(ctx: InstructionExecutionContext) {
         const value = this.readByte(ctx.address)
         this.compareValues(this.Y, value)
     }
@@ -1224,7 +1250,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    JMP(ctx: InstructionExecutionContext) {
+    private JMP(ctx: InstructionExecutionContext) {
         this.PC = ctx.address
     }
 
@@ -1233,7 +1259,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    JSR(ctx: InstructionExecutionContext) {
+    private JSR(ctx: InstructionExecutionContext) {
         this.pushWordToStack(this.PC - 1)
         this.PC = ctx.address
     }
@@ -1243,7 +1269,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    RTS(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private RTS(_: InstructionExecutionContext) {
         this.PC = this.pullWordFromStack() + 1
     }
 
@@ -1252,7 +1279,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    RTI(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private RTI(_: InstructionExecutionContext) {
         this.P.flags = this.pullByteFromStack() & 0xEF | 0x20
         this.PC = this.pullWordFromStack()
     }
@@ -1262,7 +1290,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BRK(ctx: InstructionExecutionContext) {
+    private BRK(ctx: InstructionExecutionContext) {
         this.pushWordToStack(this.PC)
         this.PHP()
         this.SEC(ctx)
@@ -1274,7 +1302,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BPL(ctx: InstructionExecutionContext) {
+    private BPL(ctx: InstructionExecutionContext) {
         if (!this.P.N) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1286,7 +1314,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BMI(ctx: InstructionExecutionContext) {
+    private BMI(ctx: InstructionExecutionContext) {
         if (this.P.N) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1298,7 +1326,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BVC(ctx: InstructionExecutionContext) {
+    private BVC(ctx: InstructionExecutionContext) {
         if (!this.P.C) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1310,7 +1338,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BVS(ctx: InstructionExecutionContext) {
+    private BVS(ctx: InstructionExecutionContext) {
         if (this.P.C) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1322,7 +1350,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BCC(ctx: InstructionExecutionContext) {
+    private BCC(ctx: InstructionExecutionContext) {
         if (!this.P.C) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1334,7 +1362,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BCS(ctx: InstructionExecutionContext) {
+    private BCS(ctx: InstructionExecutionContext) {
         if (this.P.C) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1346,7 +1374,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BNE(ctx: InstructionExecutionContext) {
+    private BNE(ctx: InstructionExecutionContext) {
         if (!this.P.Z) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1358,7 +1386,7 @@ class CPU {
      * @param ctx
      * @constructor
      */
-    BEQ(ctx: InstructionExecutionContext) {
+    private BEQ(ctx: InstructionExecutionContext) {
         if (this.P.Z) {
             this.PC = ctx.address
             this.addBranchCycles(ctx)
@@ -1377,7 +1405,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    PHA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private PHA(_: InstructionExecutionContext) {
         this.pushByteToStack(this.A)
     }
 
@@ -1386,7 +1415,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    PHP(_?: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private PHP(_?: InstructionExecutionContext) {
         this.pushByteToStack(this.P.flags | 0x10)
     }
 
@@ -1395,9 +1425,10 @@ class CPU {
      * @param _
      * @constructor
      */
-    PLA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private PLA(_: InstructionExecutionContext) {
         this.A = this.pullByteFromStack()
-        this.P.setZN(this.A)
+        this.P.ZN = this.A
     }
 
     /**
@@ -1405,7 +1436,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    PLP(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private PLP(_: InstructionExecutionContext) {
         this.P.flags = this.pullByteFromStack() & 0xEF | 0x20
     }
 
@@ -1416,7 +1448,8 @@ class CPU {
      * @param _
      * @constructor
      */
-    NOP(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private NOP(_: InstructionExecutionContext) {
     }
 
     /**
@@ -1425,61 +1458,80 @@ class CPU {
      * which vary by hardware implementation and are not officially supported.
      */
 
-    AHX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private AHX(_: InstructionExecutionContext) {
     }
 
-    ALR(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private ALR(_: InstructionExecutionContext) {
     }
 
-    ANC(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private ANC(_: InstructionExecutionContext) {
     }
 
-    ARR(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private ARR(_: InstructionExecutionContext) {
     }
 
-    AXS(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private AXS(_: InstructionExecutionContext) {
     }
 
-    DCP(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private DCP(_: InstructionExecutionContext) {
     }
 
-    ISC(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private ISC(_: InstructionExecutionContext) {
     }
 
-    KIL(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private KIL(_: InstructionExecutionContext) {
     }
 
-    LAS(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private LAS(_: InstructionExecutionContext) {
     }
 
-    LAX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private LAX(_: InstructionExecutionContext) {
     }
 
-    RLA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private RLA(_: InstructionExecutionContext) {
     }
 
-    RRA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private RRA(_: InstructionExecutionContext) {
     }
 
-    SAX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SAX(_: InstructionExecutionContext) {
     }
 
-    SHX(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SHX(_: InstructionExecutionContext) {
     }
 
-    SHY(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SHY(_: InstructionExecutionContext) {
     }
 
-    SLO(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SLO(_: InstructionExecutionContext) {
     }
 
-    SRE(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private SRE(_: InstructionExecutionContext) {
     }
 
-    TAS(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private TAS(_: InstructionExecutionContext) {
     }
 
-    XAA(_: InstructionExecutionContext) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    private XAA(_: InstructionExecutionContext) {
     }
 }
 

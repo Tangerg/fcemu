@@ -8,13 +8,15 @@ class INESHeader {
     private static readonly INES_SIGNATURE = 0x1a53454e;
 
     // Header fields as defined by iNES format specification
-    signature: number;       // Should match INES_SIGNATURE
-    prgRomBanks: number;     // Number of 16KB PRG-ROM banks
-    chrRomBanks: number;     // Number of 8KB CHR-ROM banks
-    flagByte1: number;       // Control bits for mapper, mirroring, and battery
-    flagByte2: number;       // Additional mapper and system bits
-    ramBanks: number;        // Number of 8KB RAM banks
-    reserved: Uint8Array;    // 7 bytes reserved for future use
+    private readonly signature: number;       // Should match INES_SIGNATURE
+    public prgRomBanks: number;               // Number of 16KB PRG-ROM banks
+    public chrRomBanks: number;               // Number of 8KB CHR-ROM banks
+    private readonly flagByte1: number;       // Control bits for mapper, mirroring, and battery
+    private readonly flagByte2: number;       // Additional mapper and system bits
+    public ramBanks: number;                  // Number of 8KB RAM banks
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    private readonly reserved: Uint8Array;    // 7 bytes reserved for future use
 
     /**
      * Parses an iNES header from the provided buffer.
@@ -75,7 +77,7 @@ class INESHeader {
      * Checks if the file has a valid iNES signature.
      * Valid ROMs start with the bytes corresponding to "NES" followed by MS-DOS EOF.
      */
-    hasValidSignature(): boolean {
+    get hasValidSignature(): boolean {
         return this.signature === INESHeader.INES_SIGNATURE;
     }
 
@@ -83,7 +85,7 @@ class INESHeader {
      * Checks if the ROM contains a 512-byte trainer.
      * Trainers were sometimes used to modify game behavior.
      */
-    hasTrainer(): boolean {
+    get hasTrainer(): boolean {
         return (this.flagByte1 & 4) === 4;
     }
 }
@@ -119,13 +121,13 @@ class Cartridge {
 
         // Parse and validate the iNES header
         const header = new INESHeader(arrayBuffer);
-        if (!header.hasValidSignature()) {
+        if (!header.hasValidSignature) {
             throw new Error(`"${file.name}" is not a valid NES ROM file (invalid signature)`);
         }
 
         // Calculate data offsets, accounting for optional trainer
         let offset = 16; // Header size
-        if (header.hasTrainer()) {
+        if (header.hasTrainer) {
             offset += 512;
         }
 

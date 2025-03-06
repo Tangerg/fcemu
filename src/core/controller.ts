@@ -16,14 +16,14 @@ class Buttons {
      * @param state Array of 8 booleans representing button states
      */
     set state(state: boolean[]) {
-        this.A = state[0] || false;
-        this.B = state[1] || false;
-        this.Select = state[2] || false;
-        this.Start = state[3] || false;
-        this.Up = state[4] || false;
-        this.Down = state[5] || false;
-        this.Left = state[6] || false;
-        this.Right = state[7] || false;
+        this.A = state[0] ?? this.A;
+        this.B = state[1] ?? this.B;
+        this.Select = state[2] ?? this.Select;
+        this.Start = state[3] ?? this.Start;
+        this.Up = state[4] ?? this.Up;
+        this.Down = state[5] ?? this.Down;
+        this.Left = state[6] ?? this.Left;
+        this.Right = state[7] ?? this.Right;
     }
 
     /**

@@ -1,4 +1,5 @@
 import CPU from "./cpu.ts";
+import Bus from "./bus.ts";
 
 /**
  * Represents a Pulse Channel in the Audio Processing Unit (APU)
@@ -733,9 +734,9 @@ class APU {
     private readonly deltaModulationChannel: DeltaModulationChannel
     private readonly audioMixer: AudioMixer
     // System components
-    private readonly cpu: CPU
+    private readonly bus: Bus
     private readonly sampleRate: number = 0
-    private readonly receiver: (oupput: number) => void
+    private monitor: ((output: number) => void) | undefined = undefined
 
     // Frame counter state
     private cycle: number = 0
@@ -760,18 +761,16 @@ class APU {
 
     /**
      * Creates a new APU instance
-     * @param cpu - Reference to the CPU
-     * @param receiver - Callback function for receive audio output
+     * @param bus - Reference to the Bus
      */
-    constructor(cpu: CPU, receiver: (output: number) => void) {
-        this.cpu = cpu
-        this.receiver = receiver
+    constructor(bus: Bus) {
+        this.bus = bus
         this.framePeriod = 4
         this.pulseChannel1 = new PulseChannel(true)  // Extra sweep unit
         this.pulseChannel2 = new PulseChannel()
         this.triangleChannel = new TriangleChannel()
         this.noiseChannel = new NoiseChannel()
-        this.deltaModulationChannel = new DeltaModulationChannel(cpu)
+        this.deltaModulationChannel = new DeltaModulationChannel(this.bus.CPU)
         this.audioMixer = new AudioMixer({
             pulseChannel1: this.pulseChannel1,
             pulseChannel2: this.pulseChannel2,
@@ -786,7 +785,7 @@ class APU {
      */
     private irq() {
         if (this.frameIRQ) {
-            this.cpu.triggerIRQ()
+            this.bus.CPU.triggerIRQ()
         }
     }
 
@@ -880,7 +879,7 @@ class APU {
         const s2 = Math.floor(cycle2 / this.sampleRate)
         if (s1 != s2) {
             const output = this.output()
-            this.receiver(output)
+            this.monitor?.(output)
         }
     }
 
@@ -1048,6 +1047,10 @@ class APU {
             this.updateSweep()
             this.updateLength()
         }
+    }
+
+    setMonitor(monitor: (output: number) => void) {
+        this.monitor = monitor
     }
 }
 

@@ -1,3 +1,6 @@
+import Bus from "./bus.ts";
+import {CPUMemory} from "./memory.ts";
+
 type InstructionExecutionContext = {
     address: number
     pc: number
@@ -13,7 +16,6 @@ type CPUState = {
     PC: number
     SP: number
     P: number
-    memory: Array<number>
 }
 
 /**
@@ -369,6 +371,7 @@ class ProcessorStatus {
  * Represents the 6502 CPU with all its registers and functionality
  */
 class CPU {
+    private readonly memory: CPUMemory
     // Accumulator register
     private A: number = 0;
     // X index register
@@ -387,8 +390,6 @@ class CPU {
     private currentInterrupt = InterruptType.NONE
     // Total number of CPU cycles executed
     private cpuCycles: number = 0
-    // Memory array (64KB address space)
-    private readonly memory: Uint8Array = new Uint8Array(0x10000)
     // Array of instruction execution functions
     private readonly instructionExecutors: InstructionExecutor[] = []
 
@@ -403,7 +404,8 @@ class CPU {
      * Sets up the instruction execution table with all 6502 opcodes
      * Including both legal and illegal instructions
      */
-    constructor() {
+    constructor(bus: Bus) {
+        this.memory = new CPUMemory(bus)
         // Initialize instruction executor array
         // Each index corresponds to an opcode (0x00-0xFF)
         // Format: [Opcode Name, Implementation Function]
@@ -451,7 +453,6 @@ class CPU {
             PC: this.PC,
             SP: this.SP,
             P: this.P.flags,
-            memory: Array.from(this.memory),
         };
     }
 
@@ -462,7 +463,6 @@ class CPU {
         this.PC = state.PC;
         this.SP = state.SP;
         this.P.flags = state.P;
-        this.memory.set(state.memory);
     }
 
     /**
@@ -471,7 +471,7 @@ class CPU {
      * @param value - Value to write (will be masked to 8-bit)
      */
     private writeByte(address: number, value: number): void {
-        this.memory[address & 0xFFFF] = value & 0xFF
+        this.memory.write(address, value);
     }
 
     /**
@@ -480,7 +480,7 @@ class CPU {
      * @returns 8-bit value from memory
      */
     public readByte(address: number): number {
-        return this.memory[address & 0xFFFF]
+        return this.memory.read(address);
     }
 
     /**
@@ -664,7 +664,6 @@ class CPU {
         this.PC = this.readWord(0xFFFC)
         this.SP = 0xFF
         this.P.reset()
-        this.memory.fill(0)
     }
 
     /**

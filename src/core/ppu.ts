@@ -1,3 +1,6 @@
+import Bus from "./bus.ts";
+import {PPUMemory} from "./memory.ts";
+
 /**
  * PPU控制寄存器 ($2000) 管理器
  * 负责处理PPU的基本控制设置，如名称表选择、VRAM地址增量等
@@ -98,7 +101,7 @@ class BackgroundRenderer {
 
     set nameTableByte(value: number) {
         const address = 0x2000 | (value & 0x0FFF)
-        this._nameTableByte = this.ppu.Read(address);
+        this._nameTableByte = this.ppu.read(address);
     }
 
     get attributeTableByte(): number {
@@ -108,7 +111,7 @@ class BackgroundRenderer {
     set attributeTableByte(value: number) {
         const address = 0x23C0 | (value & 0x0C00) | ((value >> 4) & 0x38) | ((value >> 2) & 0x07)
         const shift = ((value >> 4) & 4) | (value & 2)
-        this._attributeTableByte = ((this.ppu.Read(address) >> shift) & 3) << 2
+        this._attributeTableByte = ((this.ppu.read(address) >> shift) & 3) << 2
     }
 }
 
@@ -212,6 +215,16 @@ class MemoryManager {
 
 
 class PPU {
+    private readonly controller: Controller;
+    private readonly renderer: Renderer;
+    private readonly status: Status;
+    private readonly interrupt: Interrupt;
+    private readonly background: BackgroundRenderer;
+    private readonly sprites: SpriteRenderer;
+    private readonly address: RegisterController;
+    private readonly bus: Bus
+    private readonly memory: PPUMemory
+
     static readonly PALETTE: number[] = [
         0x666666FF, 0x002A88FF, 0x1412A7FF, 0x3B00A4FF, 0x5C007EFF, 0x6E0040FF, 0x6C0600FF, 0x561D00FF,
         0x333500FF, 0x0B4800FF, 0x005200FF, 0x004F08FF, 0x00404DFF, 0x000000FF, 0x000000FF, 0x000000FF,
@@ -223,6 +236,10 @@ class PPU {
         0xE4E594FF, 0xCFEF96FF, 0xBDF4ABFF, 0xB3F3CCFF, 0xB5EBF2FF, 0xB8B8B8FF, 0x000000FF, 0x000000FF,
     ]
 
+    constructor(bus: Bus) {
+        this.bus = bus;
+        this.memory = new PPUMemory(bus)
+    }
 
     /** 当前PPU周期 (0-340) */
     public cycle: number = 0;
@@ -232,20 +249,16 @@ class PPU {
     public frameCount: number = 0;
 
 
-    private readonly controller: Controller;
-    private readonly renderer: Renderer;
-    private readonly status: Status;
-    private readonly interrupt: Interrupt;
-    private readonly background: BackgroundRenderer;
-    private readonly sprites: SpriteRenderer;
-    private readonly address: RegisterController;
-    private readonly memory: MemoryManager;
-
-    public Read(address: number): number {
-        return 0
+    public read(address: number): number {
+        return this.memory.read(address);
     }
 
-    public Write(address: number, value: number): void {
+    public write(address: number, value: number): void {
+        this.memory.write(address, value);
+    }
+
+    public setMonitor(monitor: (output: number) => void): void {
+
     }
 }
 

@@ -389,7 +389,7 @@ class CPU {
     // Current type of interrupt being processed
     private currentInterrupt = InterruptType.NONE
     // Total number of CPU cycles executed
-    private cpuCycles: number = 0
+    public cpuCycles: number = 0
     // Array of instruction execution functions
     private readonly instructionExecutors: InstructionExecutor[] = []
 

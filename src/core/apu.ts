@@ -477,7 +477,7 @@ class NoiseChannel {
  * Can directly access CPU memory to fetch sample data
  */
 class DeltaModulationChannel {
-    private readonly cpu: CPU                  // Reference to CPU for memory access
+    private readonly bus: Bus                  // Reference to bus for cpu access
     public enabled: boolean = false                   // Channel enable flag
     private val: number = 0                    // Current output level (0-127)
     // Sample memory control
@@ -505,10 +505,10 @@ class DeltaModulationChannel {
 
     /**
      * Creates a new DMC instance
-     * @param cpu - Reference to the CPU for memory access
+     * @param bus - Reference to the bus access
      */
-    constructor(cpu: CPU) {
-        this.cpu = cpu
+    constructor(bus: Bus) {
+        this.bus = bus
     }
 
     /**
@@ -564,8 +564,9 @@ class DeltaModulationChannel {
      */
     public updateReader() {
         if (this.currentLength > 0 && this.bitCount === 0) {
-            this.cpu.stall += 4                // CPU stall for memory read
-            this.shiftRegister = this.cpu.readByte(this.currentAddress)
+            const cpu = this.bus.CPU
+            cpu.stall += 4                // CPU stall for memory read
+            this.shiftRegister = cpu.readByte(this.currentAddress)
             this.bitCount = 8
             this.currentAddress++
             if (this.currentAddress === 0) {   // Handle memory overflow
@@ -736,7 +737,7 @@ class APU {
     // System components
     private readonly bus: Bus
     private readonly sampleRate: number = 0
-    private monitor: ((output: number) => void) | undefined = undefined
+    private listeners: Array<(output: number) => Promise<void>> = [];
 
     // Frame counter state
     private cycle: number = 0
@@ -770,7 +771,7 @@ class APU {
         this.pulseChannel2 = new PulseChannel()
         this.triangleChannel = new TriangleChannel()
         this.noiseChannel = new NoiseChannel()
-        this.deltaModulationChannel = new DeltaModulationChannel(this.bus.CPU)
+        this.deltaModulationChannel = new DeltaModulationChannel(bus)
         this.audioMixer = new AudioMixer({
             pulseChannel1: this.pulseChannel1,
             pulseChannel2: this.pulseChannel2,
@@ -879,7 +880,9 @@ class APU {
         const s2 = Math.floor(cycle2 / this.sampleRate)
         if (s1 != s2) {
             const output = this.output()
-            this.monitor?.(output)
+            this.listeners.forEach(listener => {
+                return listener(output)
+            })
         }
     }
 
@@ -1049,8 +1052,8 @@ class APU {
         }
     }
 
-    setMonitor(monitor: (output: number) => void) {
-        this.monitor = monitor
+    public addListener(listener: (output: number) => Promise<void>): void {
+        this.listeners.push(listener);
     }
 }
 

@@ -86,5 +86,6 @@ export class PPUMemory extends CPUMemory {
     }
 
     public write(address: number, value: number): void {
+        console.log(address, value)
     }
 }

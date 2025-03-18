@@ -1,229 +1,68 @@
 import Bus from "./bus.ts";
 import {PPUMemory} from "./memory.ts";
 
-/**
- * PPU控制寄存器 ($2000) 管理器
- * 负责处理PPU的基本控制设置，如名称表选择、VRAM地址增量等
- */
-class Controller {
-    public flagNameTable: number = 0;        // 基础名称表地址 (0-3)
-    public flagIncrement: boolean = false;   // VRAM地址增量模式 (0: +1, 1: +32)
-    public flagSpriteTable: boolean = false; // 精灵图案表地址 (0: $0000, 1: $1000)
-    public flagBackgroundTable: boolean = false; // 背景图案表地址 (0: $0000, 1: $1000)
-    public flagSpriteSize: boolean = false;  // 精灵大小 (0: 8x8像素, 1: 8x16像素)
-    public flagMasterSlave: boolean = false; // 主/从选择 (0: 读取EXT, 1: 写入EXT)
-
-    set flags(value: number) {
-        this.flagNameTable = (value >> 0) & 3
-        this.flagIncrement = Boolean((value >> 2) & 1);
-        this.flagSpriteTable = Boolean((value >> 3) & 1);
-        this.flagBackgroundTable = Boolean((value >> 4) & 1);
-        this.flagSpriteSize = Boolean((value >> 5) & 1);
-        this.flagMasterSlave = Boolean((value >> 6) & 1);
-    }
-}
-
-/**
- * PPU渲染控制寄存器 ($2001) 管理器
- * 控制PPU的渲染设置，如显示启用、色彩强调等
- */
-class Renderer {
-    public flagGrayscale: boolean = false;         // 灰度模式开关
-    public flagShowLeftBackground: boolean = false; // 显示最左边8像素的背景
-    public flagShowLeftSprites: boolean = false;    // 显示最左边8像素的精灵
-    public flagShowBackground: boolean = false;     // 显示背景
-    public flagShowSprites: boolean = false;        // 显示精灵
-    public flagRedTint: boolean = false;           // 强调红色
-    public flagGreenTint: boolean = false;         // 强调绿色
-    public flagBlueTint: boolean = false;          // 强调蓝色
-
-    set flags(value: number) {
-        this.flagGrayscale = Boolean((value >> 0) & 1)
-        this.flagShowLeftBackground = Boolean((value >> 1) & 1)
-        this.flagShowLeftSprites = Boolean((value >> 2) & 1)
-        this.flagShowBackground = Boolean((value >> 3) & 1)
-        this.flagShowSprites = Boolean((value >> 4) & 1)
-        this.flagRedTint = Boolean((value >> 5) & 1)
-        this.flagGreenTint = Boolean((value >> 6) & 1)
-        this.flagBlueTint = Boolean((value >> 7) & 1)
-    }
-
-    get flags(): number {
-        let value = 0;
-        if (this.flagGrayscale) value |= (1 << 0);
-        if (this.flagShowLeftBackground) value |= (1 << 1);
-        if (this.flagShowLeftSprites) value |= (1 << 2);
-        if (this.flagShowBackground) value |= (1 << 3);
-        if (this.flagShowSprites) value |= (1 << 4);
-        if (this.flagRedTint) value |= (1 << 5);
-        if (this.flagGreenTint) value |= (1 << 6);
-        if (this.flagBlueTint) value |= (1 << 7);
-        return value;
-    }
-}
-
-/**
- * PPU状态寄存器 ($2002) 管理器
- * 提供PPU的当前状态信息
- */
-class Status {
-    public flagSpriteZeroHit: boolean = false;  // 精灵0命中标志
-    public flagSpriteOverflow: boolean = false;  // 精灵溢出标志
-}
-
-
-/**
- * NMI (Non-Maskable Interrupt) 控制器
- * 管理PPU的不可屏蔽中断信号
- */
-class Interrupt {
-    public nmiOccurred: boolean = false;  // NMI中断是否发生
-    public nmiOutput: boolean = false;    // NMI输出状态
-    public nmiPrevious: boolean = false;  // 上一个NMI状态
-    public nmiDelay: number = 0;          // NMI延迟计数器
-}
-
-/**
- * 背景渲染管理器
- * 处理PPU的背景图案渲染
- */
-class BackgroundRenderer {
-    private ppu: PPU = null;
-    private _nameTableByte: number = 0;      // 名称表字节
-    private _attributeTableByte: number = 0;  // 属性表字节
-    public lowTileByte: number = 0;        // 图案表低字节
-    public highTileByte: number = 0;       // 图案表高字节
-    public tileData: number = 0;          // 完整的图块数据
-
-    get nameTableByte(): number {
-        return this._nameTableByte;
-    }
-
-    set nameTableByte(value: number) {
-        const address = 0x2000 | (value & 0x0FFF)
-        this._nameTableByte = this.ppu.read(address);
-    }
-
-    get attributeTableByte(): number {
-        return this._attributeTableByte;
-    }
-
-    set attributeTableByte(value: number) {
-        const address = 0x23C0 | (value & 0x0C00) | ((value >> 4) & 0x38) | ((value >> 2) & 0x07)
-        const shift = ((value >> 4) & 4) | (value & 2)
-        this._attributeTableByte = ((this.ppu.read(address) >> shift) & 3) << 2
-    }
-}
-
-
-/**
- * 精灵渲染管理器
- * 处理PPU的精灵渲染
- */
-class SpriteRenderer {
-    public spriteCount: number = 0;                    // 当前扫描线上的精灵数量
-    private spritePatterns: Uint32Array = new Uint32Array(8);   // 精灵图案数据
-    private spritePositions: Uint8Array = new Uint8Array(8);    // 精灵X坐标
-    private spritePriorities: Uint8Array = new Uint8Array(8);   // 精灵优先级
-    private spriteIndexes: Uint8Array = new Uint8Array(8);      // 精灵索引
-
-    getPattern(i: number): number {
-        return this.spritePatterns[i];
-    }
-
-    setPattern(i: number, value: number) {
-        this.spritePatterns[i] = value;
-    }
-
-    getPosition(i: number): number {
-        return this.spritePositions[i];
-    }
-
-    setPosition(i: number, value: number) {
-        this.spritePositions[i] = value;
-    }
-
-    getPrioritie(i: number): number {
-        return this.spritePriorities[i];
-    }
-
-    setPrioritie(i: number, value: number) {
-        this.spritePriorities[i] = (value >> 5) & 1;
-    }
-
-    getIndex(i: number): number {
-        return this.spriteIndexes[i];
-    }
-
-    setIndex(i: number, value: number) {
-        this.spriteIndexes[i] = value;
-    }
-}
-
-
-/**
- * VRAM地址控制器
- * 管理PPU的VRAM地址生成和更新
- */
-class RegisterController {
-    public V: number = 0;         // 当前VRAM地址 (15位)
-    public T: number = 0;         // 临时VRAM地址 (15位)
-    public X: number = 0;         // 精细X滚动值 (3位)
-    public W: boolean = false;    // 写入切换标志
-    public F: boolean = false;    // 帧标志(奇/偶)
-    public register: number = 0
-}
-
-/**
- * PPU内存管理器
- * 管理PPU的各种内存缓冲区
- */
-class MemoryManager {
-    private paletteData: Uint8Array = new Uint8Array(32);    // 调色板数据
-    private nameTableData: Uint8Array = new Uint8Array(2048); // 名称表数据
-    private _oamData: Uint8Array = new Uint8Array(256);        // 精灵属性内存(OAM)
-    public oamAddress: number = 0;                           // OAM当前地址
-    public bufferedData: number = 0;                         // 用于缓冲读取
-
-    readPalette(address: number): number {
-        if (address >= 16 && address % 4 == 0) {
-            address -= 16
-        }
-        return this.paletteData[address];
-    }
-
-    writePalette(address: number, value: number) {
-        if (address >= 16 && address % 4 == 0) {
-            address -= 16
-        }
-        this.paletteData[address] = value;
-    }
-
-    get oamData(): number {
-        let data = this._oamData[this.oamAddress]
-        if ((this.oamAddress & 0x03) == 0x02) {
-            data = data & 0xE3
-        }
-        return data
-    }
-
-    set oamData(value: number) {
-        this._oamData[this.oamAddress] = value;
-        this.oamAddress++
-    }
-}
-
 
 class PPU {
-    private readonly controller: Controller;
-    private readonly renderer: Renderer;
-    private readonly status: Status;
-    private readonly interrupt: Interrupt;
-    private readonly background: BackgroundRenderer;
-    private readonly sprites: SpriteRenderer;
-    private readonly address: RegisterController;
-    private readonly bus: Bus
-    private readonly memory: PPUMemory
+    private readonly memory: PPUMemory;
+    private readonly bus: Bus;
+    private listeners: Array<(output: number) => Promise<void>> = [];
+
+    public cycle: number = 0;
+    public scanLine: number = 0
+    public frame: number = 0
+
+    private readonly paletteData: Int8Array = new Int8Array(32)
+    public readonly nameTableData: Int8Array = new Int8Array(2048)
+    private readonly oamData: Int8Array = new Int8Array(256)
+
+    private v: number = 0;
+    private t: number = 0;
+    private x: number = 0;
+    private w: number = 0;
+    private f: number = 0;
+
+    private register: number = 0;
+
+    private nmiOccurred: boolean = false;
+    private nmiOutput: boolean = false;
+    private nmiPrevious: boolean = false;
+    private nmiDelay: number = 0;
+
+    private nameTableByte: number = 0;
+    private attributeTableByte: number = 0;
+    private lowTileByte: number = 0;
+    private highTileByte: number = 0;
+    private tileData: number = 0
+
+    private spriteCount: number = 0;
+    private spritePatterns: Uint32Array = new Uint32Array(8)
+    private spritePositions: Int8Array = new Int8Array(8)
+    private spritePriorities: Int8Array = new Int8Array(8)
+    private spriteIndexes: Int8Array = new Int8Array(8)
+
+    public flagNameTable: number = 0
+    private flagIncrement: number = 0
+    private flagSpriteTable: number = 0
+    private flagBackgroundTable: number = 0
+    private flagSpriteSize: number = 0
+    public flagMasterSlave: number = 0
+
+    public flagGrayscale: number = 0
+    private flagShowLeftBackground: number = 0
+    private flagShowLeftSprites: number = 0
+    private flagShowBackground: number = 0
+    private flagShowSprites: number = 0
+    public flagRedTint: number = 0
+    public flagGreenTint: number = 0
+    public flagBlueTint: number = 0
+
+
+    private flagSpriteZeroHit: number = 0
+    private flagSpriteOverflow: number = 0
+
+
+    private oamAddress: number = 0
+    private bufferedData: number = 0
 
     static readonly PALETTE: number[] = [
         0x666666FF, 0x002A88FF, 0x1412A7FF, 0x3B00A4FF, 0x5C007EFF, 0x6E0040FF, 0x6C0600FF, 0x561D00FF,
@@ -236,17 +75,11 @@ class PPU {
         0xE4E594FF, 0xCFEF96FF, 0xBDF4ABFF, 0xB3F3CCFF, 0xB5EBF2FF, 0xB8B8B8FF, 0x000000FF, 0x000000FF,
     ]
 
+
     constructor(bus: Bus) {
         this.bus = bus;
         this.memory = new PPUMemory(bus)
     }
-
-    /** 当前PPU周期 (0-340) */
-    public cycle: number = 0;
-    /** 当前扫描线 (0-261, 0-239=可见, 240=后置, 241-260=vblank, 261=预置) */
-    public scanline: number = 0;
-    /** 帧计数器 */
-    public frameCount: number = 0;
 
 
     public read(address: number): number {
@@ -257,8 +90,560 @@ class PPU {
         this.memory.write(address, value);
     }
 
-    public setMonitor(monitor: (output: number) => void): void {
+    public addListener(listener: (output: number) => Promise<void>): void {
+        this.listeners.push(listener);
+    }
 
+    public reset() {
+        this.cycle = 340
+        this.scanLine = 240
+        this.frame = 0
+        this.writeControl(0)
+        this.writeMask(0)
+        this.writeOAMAddress(0)
+    }
+
+    private readPalette(address: number): number {
+        if (address >= 16 && address % 4 == 0) {
+            address -= 16
+        }
+        return this.paletteData[address]
+    }
+
+    public writePalette(address: number, value: number) {
+        if (address >= 16 && address % 4 == 0) {
+            address -= 16
+        }
+        this.paletteData[address] = value
+    }
+
+    public readRegister(address: number): number {
+        switch (address) {
+            case 0x2002:
+                return this.readStatus()
+            case 0x2004:
+                return this.readOAMData()
+            case 0x2007:
+                return this.readData()
+        }
+        return 0
+    }
+
+    public writeRegister(address: number, value: number) {
+        this.register = value
+        switch (address) {
+            case 0x2000:
+                this.writeControl(value)
+                break
+            case 0x2001:
+                this.writeMask(value)
+                break
+            case 0x2003:
+                this.writeOAMAddress(value)
+                break
+            case 0x2004:
+                this.writeOAMData(value)
+                break
+            case 0x2005:
+                this.writeScroll(value)
+                break
+            case 0x2006:
+                this.writeAddress(value)
+                break
+            case 0x2007:
+                this.writeData(value)
+                break
+            case 0x4014:
+                this.writeDMA(value)
+                break
+        }
+    }
+
+    private writeControl(value: number) {
+        this.flagNameTable = (value >> 0) & 3
+        this.flagIncrement = (value >> 2) & 1
+        this.flagSpriteTable = (value >> 3) & 1
+        this.flagBackgroundTable = (value >> 4) & 1
+        this.flagSpriteSize = (value >> 5) & 1
+        this.flagMasterSlave = (value >> 6) & 1
+        this.nmiOutput = (((value >> 7) & 1) == 1)
+        this.nmiChange()
+        this.t = (this.t & 0xF3FF) | (((value) & 0x03) << 10)
+    }
+
+    private nmiChange() {
+        const nmi = this.nmiOutput && this.nmiOccurred
+        if (nmi && !this.nmiPrevious) {
+            this.nmiDelay = 15
+        }
+        this.nmiPrevious = nmi
+    }
+
+    private writeMask(value: number) {
+        this.flagGrayscale = (value >> 0) & 1
+        this.flagShowLeftBackground = (value >> 1) & 1
+        this.flagShowLeftSprites = (value >> 2) & 1
+        this.flagShowBackground = (value >> 3) & 1
+        this.flagShowSprites = (value >> 4) & 1
+        this.flagRedTint = (value >> 5) & 1
+        this.flagGreenTint = (value >> 6) & 1
+        this.flagBlueTint = (value >> 7) & 1
+    }
+
+    private writeOAMAddress(value: number) {
+        this.oamAddress = value
+    }
+
+    private readStatus() {
+        let result = this.register & 0x1F
+        result |= this.flagSpriteOverflow << 5
+        result |= this.flagSpriteZeroHit << 6
+        if (this.nmiOccurred) {
+            result |= 1 << 7
+        }
+        this.nmiOccurred = false
+        this.nmiChange()
+        this.w = 0
+        return result
+    }
+
+    private readOAMData() {
+        let data = this.oamData[this.oamAddress]
+        if ((this.oamAddress & 0x03) === 0x02) {
+            data = data & 0xE3
+        }
+        return data
+    }
+
+    private readData() {
+        let value = this.read(this.v)
+        // emulate buffered reads
+        if (this.v % 0x4000 < 0x3F00) {
+            const buffered = this.bufferedData
+            this.bufferedData = value
+            value = buffered
+        } else {
+            this.bufferedData = this.read(this.v - 0x1000)
+        }
+        // increment address
+        if (this.flagIncrement === 0) {
+            this.v += 1
+        } else {
+            this.v += 32
+        }
+        return value
+    }
+
+    private writeOAMData(value: number) {
+        this.oamData[this.oamAddress] = value
+        this.oamAddress++
+    }
+
+    private writeScroll(value: number) {
+        if (this.w === 0) {
+            // t: ........ ...HGFED = d: HGFED...
+            // x:               CBA = d: .....CBA
+            // w:                   = 1
+            this.t = (this.t & 0xFFE0) | ((value) >> 3)
+            this.x = value & 0x07
+            this.w = 1
+        } else {
+            // t: .CBA..HG FED..... = d: HGFEDCBA
+            // w:                   = 0
+            this.t = (this.t & 0x8FFF) | (((value) & 0x07) << 12)
+            this.t = (this.t & 0xFC1F) | (((value) & 0xF8) << 2)
+            this.w = 0
+        }
+    }
+
+    private writeAddress(value: number) {
+        if (this.w === 0) {
+            // t: ..FEDCBA ........ = d: ..FEDCBA
+            // t: .X...... ........ = 0
+            // w:                   = 1
+            this.t = (this.t & 0x80FF) | (((value) & 0x3F) << 8)
+            this.w = 1
+        } else {
+            // t: ........ HGFEDCBA = d: HGFEDCBA
+            // v                    = t
+            // w:                   = 0
+            this.t = (this.t & 0xFF00) | (value)
+            this.v = this.t
+            this.w = 0
+        }
+    }
+
+    private writeData(value: number) {
+        this.write(this.v, value)
+        if (this.flagIncrement === 0) {
+            this.v += 1
+        } else {
+            this.v += 32
+        }
+    }
+
+    private writeDMA(value: number) {
+        const cpu = this.bus.CPU
+        let address = (value) << 8
+        for (let i = 0; i < 256; i++) {
+            this.oamData[this.oamAddress] = cpu.readByte(address)
+            this.oamAddress++
+            address++
+        }
+        cpu.stall += 513
+        if (cpu.cpuCycles % 2 === 1) {
+            cpu.stall++
+        }
+    }
+
+    private incrementX() {
+        // increment hori(v)
+        // if coarse X == 31
+        if ((this.v & 0x001F) === 31) {
+            // coarse X = 0
+            this.v &= 0xFFE0
+            // switch horizontal nametable
+            this.v ^= 0x0400
+        } else {
+            // increment coarse X
+            this.v++
+        }
+    }
+
+    private incrementY() {
+        if ((this.v & 0x7000) !== 0x7000) {
+            this.v += 0x1000
+        } else {
+            this.v &= 0x8FFF
+            let y = (this.v & 0x03E0) >> 5
+            if (y === 29) {
+                y = 0
+                this.v ^= 0x0800
+            } else if (y === 31) {
+                y = 0
+            } else {
+                y++
+            }
+            this.v = (this.v & 0xFC1F) | (y << 5)
+        }
+    }
+
+    private copyX() {
+        this.v = (this.v & 0xFBE0) | (this.t & 0x041F)
+    }
+
+    private copyY() {
+        this.v = (this.v & 0x841F) | (this.t & 0x7BE0)
+    }
+
+    private setVerticalBlank() {
+        this.nmiOccurred = true
+        this.nmiChange()
+    }
+
+    private clearVerticalBlank() {
+        this.nmiOccurred = false
+        this.nmiChange()
+    }
+
+    private fetchNameTableByte() {
+        const address = 0x2000 | (this.v & 0x0FFF)
+        this.nameTableByte = this.read(address)
+    }
+
+    private fetchAttributeTableByte() {
+        const v = this.v
+        const address = 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
+        const shift = ((v >> 4) & 4) | (v & 2)
+        this.attributeTableByte = ((this.read(address) >> shift) & 3) << 2
+    }
+
+    private fetchLowTileByte() {
+        const fineY = (this.v >> 12) & 7
+        const table = this.flagBackgroundTable
+        const tile = this.nameTableByte
+        const address = 0x1000 * (table) + (tile) * 16 + fineY
+        this.lowTileByte = this.read(address)
+    }
+
+    private fetchHighTileByte() {
+        const fineY = (this.v >> 12) & 7
+        const table = this.flagBackgroundTable
+        const tile = this.nameTableByte
+        const address = 0x1000 * (table) + (tile) * 16 + fineY
+        this.highTileByte = this.read(address + 8)
+    }
+
+    private storeTileData() {
+        let data = 0
+        for (let i = 0; i < 8; i++) {
+            const a = this.attributeTableByte
+            const p1 = (this.lowTileByte & 0x80) >> 7
+            const p2 = (this.highTileByte & 0x80) >> 6
+            this.lowTileByte <<= 1
+            this.highTileByte <<= 1
+            data <<= 4
+            data |= (a | p1 | p2)
+        }
+        this.tileData |= (data)
+    }
+
+    private fetchTileData(): number {
+        return this.tileData >> 32
+    }
+
+    private backgroundPixel(): number {
+        if (this.flagShowBackground === 0) {
+            return 0
+        }
+        const data = this.fetchTileData() >> ((7 - this.x) * 4)
+        return data & 0x0F
+    }
+
+    private spritePixel(): {
+        index: number;
+        color: number;
+    } {
+        if (this.flagShowSprites === 0) {
+            return {
+                index: 0,
+                color: 0
+            }
+        }
+        for (let i = 0; i < this.spriteCount; i++) {
+            let offset = (this.cycle - 1) - (this.spritePositions[i])
+            if (offset < 0 || offset > 7) {
+                continue
+            }
+            offset = 7 - offset
+            const color = ((this.spritePatterns[i] >> (offset * 4)) & 0x0F)
+            if (color % 4 === 0) {
+                continue
+            }
+            return {
+                index: i,
+                color: color
+            }
+        }
+        return {
+            index: 0,
+            color: 0
+        }
+    }
+
+    private renderPixel() {
+        let x = this.cycle - 1
+        let y = this.scanLine
+        let background = this.backgroundPixel()
+        const pixel = this.spritePixel()
+        if (x < 8 && this.flagShowLeftBackground === 0) {
+            background = 0
+        }
+        if (x < 8 && this.flagShowLeftSprites == 0) {
+            pixel.color = 0
+        }
+        let b = background % 4 != 0
+        let s = pixel.color % 4 !== 0
+        let color: number = 0
+        if (!b && !s) {
+            color = 0
+        } else if (!b && s) {
+            color = pixel.color | 0x10
+        } else if (b && !s) {
+            color = background
+        } else {
+            if (this.spriteIndexes[pixel.index] === 0 && x < 255) {
+                this.flagSpriteZeroHit = 1
+            }
+            if (this.spritePriorities[pixel.index] == 0) {
+                color = pixel.color | 0x10
+            } else {
+                color = background
+            }
+        }
+        const c = PPU.PALETTE[this.readPalette((color)) % 64]
+        console.log(x, y, c)
+    }
+
+    private fetchSpritePattern(i: number, row: number): number {
+        let tile = this.oamData[i * 4 + 1]
+        let attributes = this.oamData[i * 4 + 2]
+        let address: number = 0
+        if (this.flagSpriteSize === 0) {
+            if ((attributes & 0x80) == 0x80) {
+                row = 7 - row
+            }
+            const table = this.flagSpriteTable
+            address = 0x1000 * (table) + (tile) * 16 + (row)
+        } else {
+            if ((attributes & 0x80) === 0x80) {
+                row = 15 - row
+            }
+            const table = tile & 1
+            tile &= 0xFE
+            if (row > 7) {
+                tile++
+                row -= 8
+            }
+            address = 0x1000 * (table) + (tile) * 16 + (row)
+        }
+        let a = (attributes & 3) << 2
+        let lowTileByte = this.read(address)
+        let highTileByte = this.read(address + 8)
+        let data: number = 0
+        for (let i = 0; i < 8; i++) {
+            let p1: number, p2: number
+
+            if ((attributes & 0x40) === 0x40) {
+                p1 = (lowTileByte & 1) << 0
+                p2 = (highTileByte & 1) << 1
+                lowTileByte >>= 1
+                highTileByte >>= 1
+            } else {
+                p1 = (lowTileByte & 0x80) >> 7
+                p2 = (highTileByte & 0x80) >> 6
+                lowTileByte <<= 1
+                highTileByte <<= 1
+            }
+            data <<= 4
+            data |= (a | p1 | p2)
+        }
+        return data
+    }
+
+    private evaluateSprites() {
+        let h: number
+        if (this.flagSpriteSize === 0) {
+            h = 8
+        } else {
+            h = 16
+        }
+        let count: number = 0
+        for (let i = 0; i < 64; i++) {
+            const y = this.oamData[i * 4]
+            const a = this.oamData[i * 4 + 2]
+            const x = this.oamData[i * 4 + 3]
+            const row = this.scanLine - (y)
+            if (row < 0 || row >= h) {
+                continue
+            }
+            if (count < 8) {
+                this.spritePatterns[count] = this.fetchSpritePattern(i, row)
+                this.spritePositions[count] = x
+                this.spritePriorities[count] = (a >> 5) & 1
+                this.spriteIndexes[count] = (i)
+            }
+            count++
+        }
+        if (count > 8) {
+            count = 8
+            this.flagSpriteOverflow = 1
+        }
+        this.spriteCount = count
+    }
+
+    private tick() {
+        if (this.nmiDelay > 0) {
+            this.nmiDelay--
+            if (this.nmiDelay === 0 && this.nmiOutput && this.nmiOccurred) {
+                this.bus.CPU.triggerNMI()
+            }
+        }
+
+        if (this.flagShowBackground !== 0 || this.flagShowSprites !== 0) {
+            if (this.f === 1 && this.scanLine === 261 && this.cycle === 339) {
+                this.cycle = 0
+                this.scanLine = 0
+                this.frame++
+                this.f ^= 1
+                return
+            }
+        }
+        this.cycle++
+        if (this.cycle > 340) {
+            this.cycle = 0
+            this.scanLine++
+            if (this.scanLine > 261) {
+                this.scanLine = 0
+                this.frame++
+                this.f ^= 1
+            }
+        }
+    }
+
+    public step() {
+        this.tick()
+
+        let renderingEnabled = this.flagShowBackground != 0 || this.flagShowSprites != 0
+        let preLine = this.scanLine == 261
+        let visibleLine = this.scanLine < 240
+        // postLine := ppu.ScanLine == 240
+        let renderLine = preLine || visibleLine
+        let preFetchCycle = this.cycle >= 321 && this.cycle <= 336
+        let visibleCycle = this.cycle >= 1 && this.cycle <= 256
+        let fetchCycle = preFetchCycle || visibleCycle
+
+        // background logic
+        if (renderingEnabled) {
+            if (visibleLine && visibleCycle) {
+                this.renderPixel()
+            }
+            if (renderLine && fetchCycle) {
+                this.tileData <<= 4
+                switch (this.cycle % 8) {
+                    case 1:
+                        this.fetchNameTableByte()
+                        break
+                    case 3:
+                        this.fetchAttributeTableByte()
+                        break
+                    case 5:
+                        this.fetchLowTileByte()
+                        break
+                    case 7:
+                        this.fetchHighTileByte()
+                        break
+                    case 0:
+                        this.storeTileData()
+                        break
+                }
+            }
+            if (preLine && this.cycle >= 280 && this.cycle <= 304) {
+                this.copyY()
+            }
+            if (renderLine) {
+                if (fetchCycle && this.cycle % 8 === 0) {
+                    this.incrementX()
+                }
+                if (this.cycle === 256) {
+                    this.incrementY()
+                }
+                if (this.cycle === 257) {
+                    this.copyX()
+                }
+            }
+        }
+
+        // sprite logic
+        if (renderingEnabled) {
+            if (this.cycle === 257) {
+                if (visibleLine) {
+                    this.evaluateSprites()
+                } else {
+                    this.spriteCount = 0
+                }
+            }
+        }
+
+        // vblank logic
+        if (this.scanLine === 241 && this.cycle === 1) {
+            this.setVerticalBlank()
+        }
+        if (preLine && this.cycle == 1) {
+            this.clearVerticalBlank()
+            this.flagSpriteZeroHit = 0
+            this.flagSpriteOverflow = 0
+        }
     }
 }
 

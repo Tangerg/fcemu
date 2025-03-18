@@ -11,7 +11,7 @@ export class Bus {
     private readonly ram: Uint8Array
     private readonly controller1: Controller
     private readonly controller2: Controller
-    private cartridge: Cartridge
+    public cartridge: Cartridge | undefined = undefined
 
     constructor() {
         this.ram = new Uint8Array(2048);

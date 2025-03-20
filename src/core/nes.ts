@@ -7,11 +7,11 @@ class NES {
         this.bus = new Bus()
     }
 
-    addAudioListener(monitor: (output: number) => Promise<void>): void {
+    addAudioListener(monitor: (output: number) => void | Promise<void>): void {
         this.bus.APU.addListener(monitor)
     }
 
-    addVideoListener(monitor: (output: number) => Promise<void>): void {
+    addVideoListener(monitor: (output: number) => void | Promise<void>): void {
         this.bus.PPU.addListener(monitor)
     }
 }

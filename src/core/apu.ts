@@ -737,7 +737,7 @@ class APU {
     // System components
     private readonly bus: Bus
     private readonly sampleRate: number = 0
-    private listeners: Array<(output: number) => Promise<void>> = [];
+    private readonly listeners: Array<(output: number) => void | Promise<void>> = [];
 
     // Frame counter state
     private cycle: number = 0
@@ -1052,7 +1052,7 @@ class APU {
         }
     }
 
-    public addListener(listener: (output: number) => Promise<void>): void {
+    public addListener(listener: (output: number) => void | Promise<void>): void {
         this.listeners.push(listener);
     }
 }

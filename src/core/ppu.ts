@@ -5,7 +5,7 @@ import {PPUMemory} from "./memory.ts";
 class PPU {
     private readonly memory: PPUMemory;
     private readonly bus: Bus;
-    private listeners: Array<(output: number) => Promise<void>> = [];
+    private readonly listeners: Array<(output: number) => void | Promise<void>> = [];
 
     public cycle: number = 0;
     public scanLine: number = 0
@@ -90,7 +90,7 @@ class PPU {
         this.memory.write(address, value);
     }
 
-    public addListener(listener: (output: number) => Promise<void>): void {
+    public addListener(listener: (output: number) => void | Promise<void>): void {
         this.listeners.push(listener);
     }
 
@@ -103,7 +103,7 @@ class PPU {
         this.writeOAMAddress(0)
     }
 
-    private readPalette(address: number): number {
+    public readPalette(address: number): number {
         if (address >= 16 && address % 4 == 0) {
             address -= 16
         }
@@ -258,15 +258,9 @@ class PPU {
 
     private writeAddress(value: number) {
         if (this.w === 0) {
-            // t: ..FEDCBA ........ = d: ..FEDCBA
-            // t: .X...... ........ = 0
-            // w:                   = 1
             this.t = (this.t & 0x80FF) | (((value) & 0x3F) << 8)
             this.w = 1
         } else {
-            // t: ........ HGFEDCBA = d: HGFEDCBA
-            // v                    = t
-            // w:                   = 0
             this.t = (this.t & 0xFF00) | (value)
             this.v = this.t
             this.w = 0
@@ -297,15 +291,10 @@ class PPU {
     }
 
     private incrementX() {
-        // increment hori(v)
-        // if coarse X == 31
         if ((this.v & 0x001F) === 31) {
-            // coarse X = 0
             this.v &= 0xFFE0
-            // switch horizontal nametable
             this.v ^= 0x0400
         } else {
-            // increment coarse X
             this.v++
         }
     }

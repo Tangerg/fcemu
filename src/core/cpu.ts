@@ -713,7 +713,7 @@ class CPU {
 
         // Execute the instruction
         const instructionExecutor = this.instructionExecutors[opcode]
-        instructionExecutor({
+        instructionExecutor.call(this, {
             address: address,          // Effective address for the instruction
             pc: this.PC,              // Current program counter
             addressingMode: instruction.addressingMode  // Addressing mode used

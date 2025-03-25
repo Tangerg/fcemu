@@ -21,7 +21,7 @@ export class CPUMemory extends Memory {
 
     public read(address: number): number {
         if (address < 0x2000) {
-            return this.bus.RAM[address & 0x0800]
+            return this.bus.RAM[address % 0x0800]
         }
         if (address < 0x4000) {
             return this.bus.PPU.read(0x2000 + address % 8)
@@ -39,7 +39,7 @@ export class CPUMemory extends Memory {
             return this.bus.Controller2.currentButton
         }
         if (address >= 0x6000) {
-            //TODO mapper
+            return this.bus.Mapper.read(address)
         }
         return 0
     }
@@ -75,7 +75,7 @@ export class CPUMemory extends Memory {
             return
         }
         if (address >= 0x6000) {
-            //TODO mapper
+            this.bus.Mapper.write(address, value)
         }
     }
 }
@@ -104,11 +104,10 @@ export class PPUMemory extends Memory {
     public read(address: number): number {
         address = address % 0x4000
         if (address < 0x2000) {
-            //TODO mapper
-            return 0
+            return this.bus.Mapper.read(address)
         }
         if (address < 0x3F00) {
-            const mode = this.bus.cartridge!.mirroringMode
+            const mode = this.bus.Cartridge.mirroringMode
             return this.bus.PPU.nameTableData[PPUMemory.mirrorAddress(mode, address) % 2048]
         }
         if (address === 0x4000) {
@@ -120,11 +119,11 @@ export class PPUMemory extends Memory {
     public write(address: number, value: number): void {
         address = address % 0x4000
         if (address < 0x2000) {
-            //TODO mapper
+            this.bus.Mapper.write(address, value)
             return
         }
         if (address < 0x3F00) {
-            const mode = this.bus.cartridge!.mirroringMode
+            const mode = this.bus.Cartridge.mirroringMode
             this.bus.PPU.nameTableData[PPUMemory.mirrorAddress(mode, address) % 2048] = value
             return;
         }

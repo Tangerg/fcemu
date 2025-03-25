@@ -1,6 +1,7 @@
 import './App.css'
 import * as React from "react";
 import Cartridge from "./core/cartridge.ts";
+import NES from "./core/nes.ts";
 
 const FileLoader: React.FC = () => {
     const handleFileChange = async (event: any) => {
@@ -9,6 +10,11 @@ const FileLoader: React.FC = () => {
         if (!file) return;
         const cart = await Cartridge.load(file);
         console.log(cart);
+        const nes = new NES(cart);
+        nes.addAudioListener((output) => {
+            console.log(output);
+        })
+        nes.run()
     };
 
     return (

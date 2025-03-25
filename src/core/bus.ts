@@ -3,6 +3,7 @@ import PPU from "./ppu.ts";
 import Controller from "./controller.ts";
 import Cartridge from "./cartridge.ts";
 import APU from "./apu.ts";
+import {Mapper, Mapper2} from "./mapper.ts";
 
 export class Bus {
     private readonly cpu: CPU
@@ -11,15 +12,18 @@ export class Bus {
     private readonly ram: Uint8Array
     private readonly controller1: Controller
     private readonly controller2: Controller
-    public cartridge: Cartridge | undefined = undefined
+    private readonly mapper: Mapper
+    private readonly cartridge: Cartridge
 
-    constructor() {
+    constructor(cartridge: Cartridge) {
+        this.cartridge = cartridge;
         this.ram = new Uint8Array(2048);
         this.cpu = new CPU(this)
         this.apu = new APU(this)
         this.ppu = new PPU(this)
         this.controller1 = new Controller()
         this.controller2 = new Controller()
+        this.mapper = new Mapper2(this.cartridge)
     }
 
 
@@ -47,8 +51,45 @@ export class Bus {
         return this.controller2
     }
 
-    loadCartridge(cartridge: Cartridge) {
-        this.cartridge = cartridge
+    get Cartridge(): Cartridge {
+        return this.cartridge
+    }
+
+    get Mapper(): Mapper {
+        return this.mapper
+    }
+
+    reset() {
+        this.cpu.reset()
+    }
+
+    private update(): number {
+        const cpuCycle = this.cpu.update()
+        const ppuCycle = cpuCycle * 3
+        for (let i = 0; i < ppuCycle; i++) {
+            this.ppu.update()
+            this.mapper.update()
+        }
+        for (let i = 0; i < cpuCycle; i++) {
+            this.apu.update()
+        }
+        return cpuCycle
+    }
+
+    updateFrame(): number {
+        let cpuCycle = 0
+        const frame = this.ppu.frame
+        while (frame === this.ppu.frame) {
+            cpuCycle += this.update()
+        }
+        return cpuCycle
+    }
+
+    updateSeconds(seconds: number) {
+        let cycles = CPU.FREQUENCY * seconds
+        while (cycles > 0) {
+            cycles -= this.update()
+        }
     }
 }
 

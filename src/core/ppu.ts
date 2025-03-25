@@ -1,11 +1,12 @@
 import Bus from "./bus.ts";
 import {PPUMemory} from "./memory.ts";
+import {Image} from "./image.ts";
 
 
 class PPU {
     private readonly memory: PPUMemory;
     private readonly bus: Bus;
-    private readonly listeners: Array<(output: number) => void | Promise<void>> = [];
+    private readonly listeners: Array<(output: Image) => void | Promise<void>> = [];
 
     public cycle: number = 0;
     public scanLine: number = 0
@@ -14,6 +15,9 @@ class PPU {
     private readonly paletteData: Int8Array = new Int8Array(32)
     public readonly nameTableData: Int8Array = new Int8Array(2048)
     private readonly oamData: Int8Array = new Int8Array(256)
+
+    public front: Image = new Image(256, 240)
+    private back: Image = new Image(256, 240)
 
     private v: number = 0;
     private t: number = 0;
@@ -90,7 +94,7 @@ class PPU {
         this.memory.write(address, value);
     }
 
-    public addListener(listener: (output: number) => void | Promise<void>): void {
+    public addListener(listener: (output: Image) => void | Promise<void>): void {
         this.listeners.push(listener);
     }
 
@@ -326,6 +330,9 @@ class PPU {
     }
 
     private setVerticalBlank() {
+        const tmp = this.front
+        this.front = this.back
+        this.back = tmp
         this.nmiOccurred = true
         this.nmiChange()
     }
@@ -451,7 +458,7 @@ class PPU {
             }
         }
         const c = PPU.PALETTE[this.readPalette((color)) % 64]
-        console.log(x, y, c)
+        this.back.setRGBA(x, y, c)
     }
 
     private fetchSpritePattern(i: number, row: number): number {
@@ -560,7 +567,7 @@ class PPU {
         }
     }
 
-    public step() {
+    public update() {
         this.tick()
 
         let renderingEnabled = this.flagShowBackground != 0 || this.flagShowSprites != 0
@@ -633,6 +640,9 @@ class PPU {
             this.flagSpriteZeroHit = 0
             this.flagSpriteOverflow = 0
         }
+        this.listeners.forEach((listener) => {
+            listener(this.front)
+        })
     }
 }
 

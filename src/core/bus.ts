@@ -3,7 +3,7 @@ import PPU from "./ppu.ts";
 import Controller from "./controller.ts";
 import Cartridge from "./cartridge.ts";
 import APU from "./apu.ts";
-import {Mapper, Mapper2} from "./mapper.ts";
+import {Mapper, Mapper4} from "./mapper.ts";
 
 export class Bus {
     private readonly cpu: CPU
@@ -23,7 +23,7 @@ export class Bus {
         this.ppu = new PPU(this)
         this.controller1 = new Controller()
         this.controller2 = new Controller()
-        this.mapper = new Mapper2(this.cartridge)
+        this.mapper = new Mapper4(this, this.cartridge)
     }
 
 

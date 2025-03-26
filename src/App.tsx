@@ -2,18 +2,23 @@ import './App.css'
 import * as React from "react";
 import Cartridge from "./core/cartridge.ts";
 import NES from "./core/nes.ts";
+import {CanvasRenderer} from "./core/video_render.ts";
+import {WebAudioRenderer} from "./core/audio_render.ts";
 
 const FileLoader: React.FC = () => {
+    const canvasRef = document.getElementById("nescanvas")! as HTMLCanvasElement;
     const handleFileChange = async (event: any) => {
         const file: File = event.target.files[0];
         console.log(file);
         if (!file) return;
         const cart = await Cartridge.load(file);
         console.log(cart);
+        console.log(cart.mapperNumber);
         const nes = new NES(cart);
-        nes.addAudioListener((output) => {
-            console.log(output);
-        })
+        nes.addVideoRenderer(new CanvasRenderer(canvasRef))
+        const ar = new WebAudioRenderer()
+        ar.start()
+        nes.addAudioRenderer(ar)
         nes.run()
     };
 

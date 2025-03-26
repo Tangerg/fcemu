@@ -1,31 +1,38 @@
 import Bus from "./bus.ts";
 import Cartridge from "./cartridge.ts";
-import {Image} from "./image.ts";
+import {VideoRenderer} from "./video_render.ts";
+import {AudioRenderer} from "./audio_render.ts";
 
 class NES {
     private readonly bus: Bus
+    private videoRenderer: VideoRenderer | undefined
+    private audioRenderer: AudioRenderer | undefined
 
     constructor(cartridge: Cartridge) {
         this.bus = new Bus(cartridge)
     }
 
-    addAudioListener(monitor: (output: number) => void | Promise<void>): void {
-        this.bus.APU.addListener(monitor)
+    addAudioRenderer(audioRenderer: AudioRenderer): void {
+        this.audioRenderer = audioRenderer;
+        this.bus.APU.addListener(this.audioRenderer.render.bind(this.audioRenderer));
     }
 
-    addVideoListener(monitor: (output: Image) => void | Promise<void>): void {
-        this.bus.PPU.addListener(monitor)
+    addVideoRenderer(videoRenderer: VideoRenderer): void {
+        this.videoRenderer = videoRenderer
     }
 
     update(): void {
-        this.bus.updateSeconds(0.5)
+        if (!this.videoRenderer) {
+            return
+        }
+        let time = this.videoRenderer.render(this.bus.PPU.front) / 1000
+        if (time > 1) {
+            time = 0
+        }
+        this.bus.updateSeconds(time)
     }
 
     run(): void {
-        this.addVideoListener((output) => {
-            console.log(output.value())
-        })
-
         while (true) {
             this.update()
         }

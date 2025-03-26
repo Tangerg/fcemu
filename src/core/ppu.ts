@@ -2,19 +2,17 @@ import Bus from "./bus.ts";
 import {PPUMemory} from "./memory.ts";
 import {Image} from "./image.ts";
 
-
 class PPU {
     private readonly memory: PPUMemory;
     private readonly bus: Bus;
-    private readonly listeners: Array<(output: Image) => void | Promise<void>> = [];
 
     public cycle: number = 0;
     public scanLine: number = 0
     public frame: number = 0
 
-    private readonly paletteData: Int8Array = new Int8Array(32)
-    public readonly nameTableData: Int8Array = new Int8Array(2048)
-    private readonly oamData: Int8Array = new Int8Array(256)
+    private readonly paletteData: Uint8Array = new Uint8Array(32)
+    public readonly nameTableData: Uint8Array = new Uint8Array(2048)
+    private readonly oamData: Uint8Array = new Uint8Array(256)
 
     public front: Image = new Image(256, 240)
     private back: Image = new Image(256, 240)
@@ -36,13 +34,16 @@ class PPU {
     private attributeTableByte: number = 0;
     private lowTileByte: number = 0;
     private highTileByte: number = 0;
-    private tileData: number = 0
+
+    // 将 tileData 拆分为高低两个 32 位整数
+    private tileDataLow: number = 0;
+    private tileDataHigh: number = 0;
 
     private spriteCount: number = 0;
-    private spritePatterns: Uint32Array = new Uint32Array(8)
-    private spritePositions: Int8Array = new Int8Array(8)
-    private spritePriorities: Int8Array = new Int8Array(8)
-    private spriteIndexes: Int8Array = new Int8Array(8)
+    private readonly spritePatterns: Uint32Array = new Uint32Array(8)
+    private readonly spritePositions: Uint8Array = new Uint8Array(8)
+    private readonly spritePriorities: Uint8Array = new Uint8Array(8)
+    private readonly spriteIndexes: Uint8Array = new Uint8Array(8)
 
     public flagNameTable: number = 0
     private flagIncrement: number = 0
@@ -54,16 +55,14 @@ class PPU {
     public flagGrayscale: number = 0
     private flagShowLeftBackground: number = 0
     private flagShowLeftSprites: number = 0
-    private flagShowBackground: number = 0
-    private flagShowSprites: number = 0
+    public flagShowBackground: number = 0
+    public flagShowSprites: number = 0
     public flagRedTint: number = 0
     public flagGreenTint: number = 0
     public flagBlueTint: number = 0
 
-
     private flagSpriteZeroHit: number = 0
     private flagSpriteOverflow: number = 0
-
 
     private oamAddress: number = 0
     private bufferedData: number = 0
@@ -79,12 +78,10 @@ class PPU {
         0xE4E594FF, 0xCFEF96FF, 0xBDF4ABFF, 0xB3F3CCFF, 0xB5EBF2FF, 0xB8B8B8FF, 0x000000FF, 0x000000FF,
     ]
 
-
     constructor(bus: Bus) {
         this.bus = bus;
         this.memory = new PPUMemory(bus)
     }
-
 
     public read(address: number): number {
         return this.memory.read(address);
@@ -92,10 +89,6 @@ class PPU {
 
     public write(address: number, value: number): void {
         this.memory.write(address, value);
-    }
-
-    public addListener(listener: (output: Image) => void | Promise<void>): void {
-        this.listeners.push(listener);
     }
 
     public reset() {
@@ -381,11 +374,14 @@ class PPU {
             data <<= 4
             data |= (a | p1 | p2)
         }
-        this.tileData |= (data)
+
+        // 修复精度问题：将data存储到tileDataLow，tileDataHigh没有变化
+        this.tileDataLow = data >>> 0;
     }
 
     private fetchTileData(): number {
-        return this.tileData >> 32
+        // 修复精度问题：直接返回高32位
+        return this.tileDataHigh;
     }
 
     private backgroundPixel(): number {
@@ -465,32 +461,44 @@ class PPU {
         let tile = this.oamData[i * 4 + 1]
         let attributes = this.oamData[i * 4 + 2]
         let address: number = 0
+
         if (this.flagSpriteSize === 0) {
-            if ((attributes & 0x80) == 0x80) {
-                row = 7 - row
+            // 8x8 精灵
+            if ((attributes & 0x80) === 0x80) {
+                row = 7 - row // 垂直翻转
             }
             const table = this.flagSpriteTable
             address = 0x1000 * (table) + (tile) * 16 + (row)
         } else {
+            // 8x16 精灵
+            // 修正垂直翻转逻辑
+            const isBottomTile = row >= 8;
             if ((attributes & 0x80) === 0x80) {
-                row = 15 - row
+                row = 15 - row // 整体翻转
             }
-            const table = tile & 1
-            tile &= 0xFE
-            if (row > 7) {
-                tile++
-                row -= 8
+
+            const table = tile & 1 // 确定使用哪个模式表
+            tile &= 0xFE // 将最低位清零，因为它用于表的选择
+
+            // 确定我们是使用上半部分还是下半部分瓦片
+            if (isBottomTile !== (row >= 8)) { // 如果翻转改变了瓦片部分
+                tile++; // 使用下一个瓦片
             }
+
+            row = row & 0x7; // 保持行在0-7范围内
             address = 0x1000 * (table) + (tile) * 16 + (row)
         }
+
         let a = (attributes & 3) << 2
         let lowTileByte = this.read(address)
         let highTileByte = this.read(address + 8)
         let data: number = 0
+
         for (let i = 0; i < 8; i++) {
             let p1: number, p2: number
 
             if ((attributes & 0x40) === 0x40) {
+                // 水平翻转
                 p1 = (lowTileByte & 1) << 0
                 p2 = (highTileByte & 1) << 1
                 lowTileByte >>= 1
@@ -585,7 +593,9 @@ class PPU {
                 this.renderPixel()
             }
             if (renderLine && fetchCycle) {
-                this.tileData <<= 4
+                this.tileDataHigh = ((this.tileDataHigh << 4) | ((this.tileDataLow >>> 28) & 0xF)) >>> 0;
+                this.tileDataLow = (this.tileDataLow << 4) >>> 0;
+
                 switch (this.cycle % 8) {
                     case 1:
                         this.fetchNameTableByte()
@@ -640,9 +650,6 @@ class PPU {
             this.flagSpriteZeroHit = 0
             this.flagSpriteOverflow = 0
         }
-        this.listeners.forEach((listener) => {
-            listener(this.front)
-        })
     }
 }
 

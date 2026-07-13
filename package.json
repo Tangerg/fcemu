@@ -1,29 +1,42 @@
 {
-  "name": "fcemu",
+  "name": "fcemu-workspace",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint fcemu",
-    "preview": "vite preview"
+  "version": "0.1.0",
+  "license": "UNLICENSED",
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "packages/*"
+  ],
+  "resolutions": {
+    "vite": "6.0.9"
   },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+  "scripts": {
+    "dev": "yarn workspace @fcemu/ui dev",
+    "build": "yarn workspace @fcemu/core build && yarn workspace @fcemu/ui build",
+    "benchmark:core": "yarn workspace @fcemu/core benchmark",
+    "conformance:rom": "yarn workspace @fcemu/core conformance:rom",
+    "conformance:accuracy-coin": "yarn workspace @fcemu/core conformance:accuracy-coin",
+    "conformance:mmc1": "yarn workspace @fcemu/core conformance:mmc1",
+    "conformance:mapper34": "yarn workspace @fcemu/core conformance:mapper34",
+    "conformance:oam-bus": "yarn workspace @fcemu/core conformance:oam-bus",
+    "conformance:pal-apu": "yarn workspace @fcemu/core conformance:pal-apu",
+    "conformance:cpu": "yarn conformance:rom",
+    "preview": "yarn workspace @fcemu/ui preview",
+    "typecheck": "yarn workspaces run typecheck",
+    "test": "yarn workspaces run test",
+    "lint": "oxlint packages --deny-warnings",
+    "lint:fix": "oxlint packages --fix --deny-warnings",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "check:layers": "node scripts/check-layers.mjs",
+    "check:circular": "node scripts/check-circular.mjs",
+    "quality": "yarn typecheck && yarn lint && yarn format:check && yarn test && yarn knip && yarn check:circular && yarn check:layers"
   },
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "eslint": "^9.17.0",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "eslint-plugin-react-refresh": "^0.4.16",
-    "globals": "^15.14.0",
-    "typescript": "~5.6.2",
-    "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5"
+    "knip": "^6.18.0",
+    "oxlint": "^1.71.0",
+    "prettier": "^3.8.4",
+    "typescript": "^5.6.3"
   }
 }

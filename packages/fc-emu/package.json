@@ -1,0 +1,36 @@
+{
+  "name": "@fcemu/core",
+  "version": "0.1.0",
+  "description": "Platform-independent FC/NES emulator core",
+  "license": "UNLICENSED",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "benchmark": "yarn build && node benchmarks/frame-buffer.mjs && node benchmarks/emulator-frame.mjs && node benchmarks/save-state.mjs",
+    "conformance:rom": "yarn build && node scripts/run-blargg-rom.mjs",
+    "conformance:accuracy-coin": "yarn build && node scripts/run-accuracy-coin.mjs",
+    "conformance:cpu": "yarn conformance:rom",
+    "conformance:mmc1": "yarn build && node scripts/run-holy-mapperel.mjs",
+    "conformance:mapper34": "yarn build && node scripts/run-holy-mapper34.mjs",
+    "conformance:oam-bus": "yarn build && node scripts/run-read2004.mjs",
+    "conformance:pal-apu": "yarn build && node scripts/run-pal-apu.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.5"
+  }
+}

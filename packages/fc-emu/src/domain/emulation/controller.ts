@@ -42,7 +42,7 @@ class Controller {
   }
 
   restoreState(state: ControllerState): void {
-    validateButtons(state.buttons, "Controller save state");
+    Controller.validateButtons(state.buttons, "Controller save state");
     if (
       !Number.isSafeInteger(state.currentButtonIndex) ||
       state.currentButtonIndex < 0 ||
@@ -75,7 +75,7 @@ class Controller {
    * @param state Array of button states
    */
   set buttonsState(state: readonly boolean[]) {
-    validateButtons(state, "Controller input");
+    Controller.validateButtons(state, "Controller input");
     this.buttons.splice(0, this.buttons.length, ...state);
   }
 
@@ -104,11 +104,11 @@ class Controller {
     if (!this.strobeSignal) this.currentButtonIndex = Math.min(8, this.currentButtonIndex + 1);
     return button;
   }
-}
 
-function validateButtons(buttons: readonly boolean[], label: string): void {
-  if (buttons.length !== 8 || buttons.some((button) => typeof button !== "boolean")) {
-    throw new RangeError(`${label} must contain exactly eight boolean button values`);
+  private static validateButtons(buttons: readonly boolean[], label: string): void {
+    if (buttons.length !== 8 || buttons.some((button) => typeof button !== "boolean")) {
+      throw new RangeError(`${label} must contain exactly eight boolean button values`);
+    }
   }
 }
 

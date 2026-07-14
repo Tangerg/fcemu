@@ -42,7 +42,7 @@ class Cartridge {
 
   static fromArrayBuffer(arrayBuffer: ArrayBuffer, sourceName = "ROM"): Cartridge {
     const header = parseCartridgeHeader(arrayBuffer, sourceName);
-    validateSupportedHeader(header, sourceName);
+    Cartridge.validateSupportedHeader(header, sourceName);
 
     let offset = CARTRIDGE_HEADER_SIZE;
     let trainer: Uint8Array | undefined;
@@ -143,75 +143,78 @@ class Cartridge {
   restoreMemoryState(state: CartridgeMemoryState): void {
     this.memory.restoreState(state);
   }
-}
 
-function validateSupportedHeader(header: CartridgeHeader, sourceName: string): void {
-  if (header.prgRomSize === 0) {
-    throw new CartridgeFormatError("MISSING_PRG_ROM", sourceName, "PRG ROM is missing");
-  }
-  if (header.consoleType !== 0) {
-    throw new CartridgeFormatError(
-      "UNSUPPORTED_CONSOLE_TYPE",
-      sourceName,
-      `console type ${header.consoleType} is not supported`,
-    );
-  }
-  if (header.miscellaneousRomCount !== 0) {
-    throw new CartridgeFormatError(
-      "UNSUPPORTED_MISC_ROM",
-      sourceName,
-      "miscellaneous ROM data is not supported",
-    );
-  }
-  if (header.defaultExpansionDevice > 1) {
-    throw new CartridgeFormatError(
-      "UNSUPPORTED_EXPANSION_DEVICE",
-      sourceName,
-      `default expansion device ${header.defaultExpansionDevice} is not supported`,
-    );
-  }
-  if (header.prgRamSize + header.prgNvRamSize > MAX_SUPPORTED_PRG_RAM_SIZE) {
-    throw unsupportedRamLayout(sourceName, "more than 32 KiB of combined PRG RAM");
-  }
-  if ((header.prgNvRamSize > 0 || header.chrNvRamSize > 0) && !header.hasBatteryFlag) {
-    throw new CartridgeFormatError(
-      "INVALID_NES2_RAM_FLAGS",
-      sourceName,
-      "NVRAM requires the battery flag",
-    );
-  }
-  if (header.hasBatteryFlag && header.prgNvRamSize === 0 && header.chrNvRamSize === 0) {
-    throw new CartridgeFormatError(
-      "UNSUPPORTED_BATTERY_MEMORY",
-      sourceName,
-      "battery-backed mapper-internal memory is not supported",
-    );
-  }
-  if (header.chrRomSize === 0) {
-    if (header.chrRamSize + header.chrNvRamSize === 0) {
+  private static validateSupportedHeader(header: CartridgeHeader, sourceName: string): void {
+    if (header.prgRomSize === 0) {
+      throw new CartridgeFormatError("MISSING_PRG_ROM", sourceName, "PRG ROM is missing");
+    }
+    if (header.consoleType !== 0) {
       throw new CartridgeFormatError(
-        "MISSING_CHR_MEMORY",
+        "UNSUPPORTED_CONSOLE_TYPE",
         sourceName,
-        "NES 2.0 image has neither CHR ROM nor explicitly-sized CHR RAM",
+        `console type ${header.consoleType} is not supported`,
       );
     }
-    if (header.chrRamSize > 0 && header.chrNvRamSize > 0) {
-      throw unsupportedRamLayout(sourceName, "simultaneous CHR RAM and CHR NVRAM");
+    if (header.miscellaneousRomCount !== 0) {
+      throw new CartridgeFormatError(
+        "UNSUPPORTED_MISC_ROM",
+        sourceName,
+        "miscellaneous ROM data is not supported",
+      );
     }
-  } else if (header.chrRamSize + header.chrNvRamSize > 0) {
-    throw unsupportedRamLayout(sourceName, "simultaneous CHR ROM and writable CHR memory");
+    if (header.defaultExpansionDevice > 1) {
+      throw new CartridgeFormatError(
+        "UNSUPPORTED_EXPANSION_DEVICE",
+        sourceName,
+        `default expansion device ${header.defaultExpansionDevice} is not supported`,
+      );
+    }
+    if (header.prgRamSize + header.prgNvRamSize > MAX_SUPPORTED_PRG_RAM_SIZE) {
+      throw Cartridge.unsupportedRamLayout(sourceName, "more than 32 KiB of combined PRG RAM");
+    }
+    if ((header.prgNvRamSize > 0 || header.chrNvRamSize > 0) && !header.hasBatteryFlag) {
+      throw new CartridgeFormatError(
+        "INVALID_NES2_RAM_FLAGS",
+        sourceName,
+        "NVRAM requires the battery flag",
+      );
+    }
+    if (header.hasBatteryFlag && header.prgNvRamSize === 0 && header.chrNvRamSize === 0) {
+      throw new CartridgeFormatError(
+        "UNSUPPORTED_BATTERY_MEMORY",
+        sourceName,
+        "battery-backed mapper-internal memory is not supported",
+      );
+    }
+    if (header.chrRomSize === 0) {
+      if (header.chrRamSize + header.chrNvRamSize === 0) {
+        throw new CartridgeFormatError(
+          "MISSING_CHR_MEMORY",
+          sourceName,
+          "NES 2.0 image has neither CHR ROM nor explicitly-sized CHR RAM",
+        );
+      }
+      if (header.chrRamSize > 0 && header.chrNvRamSize > 0) {
+        throw Cartridge.unsupportedRamLayout(sourceName, "simultaneous CHR RAM and CHR NVRAM");
+      }
+    } else if (header.chrRamSize + header.chrNvRamSize > 0) {
+      throw Cartridge.unsupportedRamLayout(
+        sourceName,
+        "simultaneous CHR ROM and writable CHR memory",
+      );
+    }
+    if (header.hasTrainer && header.prgRamSize + header.prgNvRamSize < 0x2000) {
+      throw Cartridge.unsupportedRamLayout(sourceName, "trainer without an 8 KiB PRG RAM window");
+    }
   }
-  if (header.hasTrainer && header.prgRamSize + header.prgNvRamSize < 0x2000) {
-    throw unsupportedRamLayout(sourceName, "trainer without an 8 KiB PRG RAM window");
-  }
-}
 
-function unsupportedRamLayout(sourceName: string, detail: string): CartridgeFormatError {
-  return new CartridgeFormatError(
-    "UNSUPPORTED_RAM_LAYOUT",
-    sourceName,
-    `${detail} is not supported yet`,
-  );
+  private static unsupportedRamLayout(sourceName: string, detail: string): CartridgeFormatError {
+    return new CartridgeFormatError(
+      "UNSUPPORTED_RAM_LAYOUT",
+      sourceName,
+      `${detail} is not supported yet`,
+    );
+  }
 }
 
 export default Cartridge;

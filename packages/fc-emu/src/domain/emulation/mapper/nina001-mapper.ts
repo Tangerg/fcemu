@@ -1,4 +1,5 @@
 import type Cartridge from "../../model/cartridge.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 const PRG_BANK_SIZE = 0x8000;
@@ -27,7 +28,7 @@ export class Nina001Mapper implements Mapper {
 
   captureState(): MapperState {
     return {
-      kind: "nina-001",
+      kind: MapperKind.Nina001,
       selectedPrgBank: this.selectedPrgBank,
       selectedChrBank0: this.selectedChrBank0,
       selectedChrBank1: this.selectedChrBank1,
@@ -35,7 +36,7 @@ export class Nina001Mapper implements Mapper {
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "nina-001") {
+    if (state.kind !== MapperKind.Nina001) {
       throw new Error(`Cannot restore ${state.kind} state into NINA-001`);
     }
     requireBank(state.selectedPrgBank, this.prgBankCount, "PRG");

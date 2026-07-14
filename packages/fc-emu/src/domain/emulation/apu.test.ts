@@ -84,6 +84,27 @@ describe("2A03 APU", () => {
     expect(writeSample).toHaveBeenCalledTimes(Math.floor((cpuCycles * sampleRate) / cpuFrequency));
   });
 
+  it("removes the DC bias from the mixed output through the analog output filters", () => {
+    const sampleRate = 8000;
+    const bus = new Bus(createTestCartridge(), sampleRate);
+    const samples: number[] = [];
+    bus.APU.addListener((sample) => {
+      samples.push(sample);
+    });
+
+    // $4011 drives a constant level onto the DMC DAC, so the raw mix is pure DC.
+    bus.APU.writeRegister(0x4011, 64);
+    for (let cycle = 0; cycle < 200_000; cycle++) bus.APU.update();
+
+    expect(samples.length).toBeGreaterThan(100);
+    // The high-pass stages let the initial step through, then drain the bias so
+    // the long-run average returns to zero instead of the ~0.34 raw DC level.
+    expect(Math.abs(samples[0] ?? 0)).toBeGreaterThan(0.05);
+    const average = samples.reduce((sum, sample) => sum + sample, 0) / samples.length;
+    expect(Math.abs(average)).toBeLessThan(0.02);
+    expect(Math.abs(samples[samples.length - 1] ?? 0)).toBeLessThan(0.01);
+  });
+
   it("rejects invalid audio sample rates", () => {
     expect(() => new Bus(createTestCartridge(), 0)).toThrow(/sample rate/i);
     expect(() => new Bus(createTestCartridge(), Number.NaN)).toThrow(/sample rate/i);

@@ -1,21 +1,21 @@
 /** Mutable NMOS 6502 status-register value object with byte packing semantics. */
 export class ProcessorStatus {
   // Carry Flag: Set if last operation resulted in a carry or if a borrow was not needed
-  public C: boolean = false;
+  public C = false;
   // Zero Flag: Set if the result of last operation was zero
-  private _Z: boolean = false;
+  private _Z = false;
   // Interrupt Disable Flag: When set, disables IRQ interrupts
-  public I: boolean = false;
+  public I = false;
   // Decimal Mode Flag: Controls whether arithmetic operations use binary or BCD arithmetic
-  public D: boolean = false;
+  public D = false;
   // Break Command Flag: Set when a BRK instruction is executed
-  public B: boolean = false;
+  public B = false;
   // Unused Flag: Bit 5 is always set to 1
-  public readonly U: boolean = true;
+  public readonly U = true;
   // Overflow Flag: Set when signed arithmetic operation results in overflow
-  public V: boolean = false;
+  public V = false;
   // Negative Flag: Set if bit 7 of the last operation result was 1
-  private _N: boolean = false;
+  private _N = false;
   // Power-on state: unused and interrupt-disable flags are set.
   private static readonly POWER_ON_FLAGS: number = 0b00100100;
 

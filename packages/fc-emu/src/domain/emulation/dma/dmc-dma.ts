@@ -1,3 +1,6 @@
+import { isWord } from "../numeric-range.js";
+import { DmaBusPhase } from "./dma-bus-phase.js";
+
 export interface DmcDmaPort {
   readDmcByteForDma(address: number, haltedCpuAddress: number): number;
 
@@ -14,7 +17,7 @@ export interface DmcDmaState {
   readonly preparationCycles: number;
   readonly requested: boolean;
   readonly running: boolean;
-  readonly haltPhase?: "get" | "put";
+  readonly haltPhase?: DmaBusPhase;
 }
 
 /** Owns one DMC sample fetch from CPU halt through its GET cycle. */
@@ -24,7 +27,7 @@ export class DmcDma {
   private preparationCycles = 0;
   private requested = false;
   private running = false;
-  private haltPhase: "get" | "put" | undefined;
+  private haltPhase: DmaBusPhase | undefined;
 
   get active(): boolean {
     return this.running;
@@ -34,7 +37,7 @@ export class DmcDma {
     return this.requested && !this.running;
   }
 
-  canBegin(phase: "get" | "put"): boolean {
+  canBegin(phase: DmaBusPhase): boolean {
     return this.pending && (this.haltPhase === undefined || this.haltPhase === phase);
   }
 
@@ -46,14 +49,14 @@ export class DmcDma {
     return this.running && this.preparationCycles === 0;
   }
 
-  start(address: number, haltPhase: "get" | "put"): void {
+  start(address: number, haltPhase: DmaBusPhase): void {
     if (this.requested) return;
     this.address = address & 0xffff;
     this.requested = true;
     this.haltPhase = haltPhase;
   }
 
-  missHaltOnWrite(phase: "get" | "put"): void {
+  missHaltOnWrite(phase: DmaBusPhase): void {
     if (this.canBegin(phase)) this.haltPhase = undefined;
   }
 
@@ -127,7 +130,11 @@ export class DmcDma {
     if (state.running && !state.requested) {
       throw new RangeError("A running DMC DMA save state must retain its request");
     }
-    if (state.haltPhase !== undefined && state.haltPhase !== "get" && state.haltPhase !== "put") {
+    if (
+      state.haltPhase !== undefined &&
+      state.haltPhase !== DmaBusPhase.Get &&
+      state.haltPhase !== DmaBusPhase.Put
+    ) {
       throw new RangeError("DMC DMA save state contains an invalid halt phase");
     }
     this.address = state.address;
@@ -141,8 +148,4 @@ export class DmcDma {
   private get haltedReadHasSingleSideEffect(): boolean {
     return this.haltAddress === 0x4016 || this.haltAddress === 0x4017;
   }
-}
-
-function isWord(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xffff;
 }

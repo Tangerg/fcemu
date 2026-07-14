@@ -266,6 +266,18 @@ the baseline, not proof that emulation is complete.
 - Move the DMC/controller extra-read distinction into `ConsoleTiming`. NTSC halt cycles delete one
   controller bit before the resumed CPU read; PAL 2A07 and unverified Dendy timing suppress that
   side effect. Focused bus tests assert both the returned button and final shift-register index.
+- Apply PPUMASK colour emphasis to the rendered output. Eight precomputed palettes attenuate the two
+  channels each active emphasis bit does not select, so a single bit tints the picture and all three
+  darken it. The 2C07 (PAL) red/green emphasis-line swap is modelled; NTSC/Dendy keep the 2C02
+  ordering. A rendering test asserts an unmodified white backdrop, the blue-emphasis channel pattern
+  and the all-emphasis darkening.
+- Add the console's analog RC output filters to the APU mixer: 90 Hz and 440 Hz high-pass stages plus
+  a 14 kHz low-pass, clocked at the output sample rate. The high-pass stages also remove the large DC
+  bias of the non-linear mixing tables, centering the waveform for the output device. A test drives a
+  constant DMC DAC level and asserts the long-run sample average returns to zero instead of the raw
+  DC level. Filter state is output-domain only and stays out of the save-state envelope.
+- Silence the triangle channel only for the genuinely ultrasonic timer periods 0 and 1 (previously
+  0-2), matching the common de-popping convention without muting the audible ~18.6 kHz period-2 note.
 
 ## Near-term direction
 
@@ -275,9 +287,12 @@ objects. Keep the two-package monorepo, the physical CPU/PPU/APU/cartridge/contr
 the mapper directory. Collapse internal objects that own only scalar state back into their physical
 owner while preserving conformance results. `DmaCadence` was the first such correction: its one-bit
 GET/PUT alignment now belongs directly to `DmaArbiter`, with the save-state shape unchanged.
-The same audit replaced `SpritePatternAddress` and `RomIdentity` wrapper objects with pure functions
-and consolidated the three public Mapper error types into one module. These changes remove invented
-lifecycle boundaries without weakening validation, error semantics or package exports.
+The same audit consolidated the three public Mapper error types into one module, removing invented
+lifecycle boundaries without weakening validation, error semantics or package exports. A later
+domain-modelling pass reversed the earlier `SpritePatternAddress`/`RomIdentity` extraction: both are
+now value objects again (the address computed and validated in the constructor, the identity CRC
+computed once and exposed through `toString`) so their behavior lives with their data rather than in
+free functions. Their focused unit tests construct the objects directly.
 The clock-domain audit then removed the unused `ClockRatioCounter` duplicate, replaced three
 field-only timing classes with immutable data and made CPU/PPU master dividers the sole source for
 the derived PPU frequency. `MachineClock` remains the only owner of fractional regional phase.

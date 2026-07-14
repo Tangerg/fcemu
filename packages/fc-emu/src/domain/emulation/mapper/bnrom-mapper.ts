@@ -1,4 +1,5 @@
 import type Cartridge from "../../model/cartridge.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 const PRG_BANK_SIZE = 0x8000;
@@ -19,11 +20,12 @@ export class BnromMapper implements Mapper {
   }
 
   captureState(): MapperState {
-    return { kind: "bnrom", selectedPrgBank: this.selectedPrgBank };
+    return { kind: MapperKind.Bnrom, selectedPrgBank: this.selectedPrgBank };
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "bnrom") throw new Error(`Cannot restore ${state.kind} state into BNROM`);
+    if (state.kind !== MapperKind.Bnrom)
+      throw new Error(`Cannot restore ${state.kind} state into BNROM`);
     if (
       !Number.isInteger(state.selectedPrgBank) ||
       state.selectedPrgBank < 0 ||

@@ -1,5 +1,17 @@
 export const NES_AUDIO_PROCESSOR_NAME = "fcemu-audio-output";
 
+/**
+ * Discriminants for the messages exchanged with the AudioWorklet. The message
+ * union types below remain the canonical type definitions; senders and receivers
+ * refer to these named constants instead of bare string literals.
+ */
+export const AudioWorkletMessageType = {
+  Samples: "samples",
+  Reset: "reset",
+  Underrun: "underrun",
+  Overflow: "overflow",
+} as const;
+
 export interface NesAudioProcessorOptions {
   readonly capacity: number;
   readonly startThreshold: number;

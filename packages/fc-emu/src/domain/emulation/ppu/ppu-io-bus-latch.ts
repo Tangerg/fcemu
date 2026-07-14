@@ -1,3 +1,5 @@
+import { isByte } from "../numeric-range.js";
+
 export interface PpuIoBusState {
   readonly value: number;
   readonly elapsedDots: number;
@@ -97,8 +99,4 @@ export class PpuIoBusLatch {
       }
     }
   }
-}
-
-function isByte(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xff;
 }

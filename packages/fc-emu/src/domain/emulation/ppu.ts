@@ -4,7 +4,7 @@ import type Bus from "./bus.js";
 import type { ConsoleTiming } from "./console-timing.js";
 import { PpuIoBusLatch, type PpuIoBusState } from "./ppu/ppu-io-bus-latch.js";
 import { SpriteEvaluator, type SpriteEvaluationState } from "./ppu/sprite-evaluator.js";
-import { resolveSpritePatternAddress } from "./ppu/sprite-pattern-address.js";
+import { SpritePatternAddress } from "./ppu/sprite-pattern-address.js";
 
 const BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS = 4;
 
@@ -83,9 +83,9 @@ class PPU {
   private readonly timing: ConsoleTiming;
   private readonly ioBus: PpuIoBusLatch;
 
-  public cycle: number = 0;
-  public scanLine: number = 0;
-  public frame: number = 0;
+  public cycle = 0;
+  public scanLine = 0;
+  public frame = 0;
 
   private readonly paletteData: Uint8Array = new Uint8Array(32);
   public readonly nameTableData: Uint8Array = new Uint8Array(4096);
@@ -94,27 +94,29 @@ class PPU {
   public front: FrameBuffer = new FrameBuffer(256, 240);
   private back: FrameBuffer = new FrameBuffer(256, 240);
 
-  private v: number = 0;
-  private t: number = 0;
-  private x: number = 0;
-  private w: number = 0;
-  private f: number = 0;
+  private v = 0;
+  private t = 0;
+  private x = 0;
+  private w = 0;
+  private f = 0;
 
-  private nmiOccurred: boolean = false;
-  private nmiOutput: boolean = false;
-  private nmiLineAsserted: boolean = false;
-  private suppressVblank: boolean = false;
+  private nmiOccurred = false;
+  private nmiOutput = false;
+  private nmiLineAsserted = false;
+  private suppressVblank = false;
 
-  private nameTableByte: number = 0;
-  private attributeTableByte: number = 0;
-  private lowTileByte: number = 0;
-  private highTileByte: number = 0;
+  private nameTableByte = 0;
+  private attributeTableByte = 0;
+  private lowTileByte = 0;
+  private highTileByte = 0;
 
-  // 将 tileData 拆分为高低两个 32 位整数
-  private tileDataLow: number = 0;
-  private tileDataHigh: number = 0;
+  // The hardware's 64-bit background shift register, split into two 32-bit
+  // halves because JavaScript bitwise operators only act on 32 bits. The high
+  // half holds the tile currently being drawn; the low half holds the next one.
+  private tileDataLow = 0;
+  private tileDataHigh = 0;
 
-  private spriteCount: number = 0;
+  private spriteCount = 0;
   private readonly spritePatterns: Uint32Array = new Uint32Array(8);
   private readonly spritePositions: Uint8Array = new Uint8Array(8);
   private readonly spritePriorities: Uint8Array = new Uint8Array(8);
@@ -124,35 +126,39 @@ class PPU {
   private spriteZeroHitPending = false;
   private spriteZeroHitLatched = false;
 
-  public flagNameTable: number = 0;
-  private flagIncrement: number = 0;
-  private flagSpriteTable: number = 0;
-  private flagBackgroundTable: number = 0;
-  private flagSpriteSize: number = 0;
-  public flagMasterSlave: number = 0;
+  public flagNameTable = 0;
+  private flagIncrement = 0;
+  private flagSpriteTable = 0;
+  private flagBackgroundTable = 0;
+  private flagSpriteSize = 0;
+  public flagMasterSlave = 0;
 
-  public flagGrayscale: number = 0;
-  private flagShowLeftBackground: number = 0;
-  private flagShowLeftSprites: number = 0;
-  public flagShowBackground: number = 0;
-  public flagShowSprites: number = 0;
-  private effectiveRenderingMask: number = 0;
-  private pendingRenderingMask: number = 0;
-  private renderingMaskDelay: number = 0;
-  public flagRedTint: number = 0;
-  public flagGreenTint: number = 0;
-  public flagBlueTint: number = 0;
+  public flagGrayscale = 0;
+  private flagShowLeftBackground = 0;
+  private flagShowLeftSprites = 0;
+  public flagShowBackground = 0;
+  public flagShowSprites = 0;
+  private effectiveRenderingMask = 0;
+  private pendingRenderingMask = 0;
+  private renderingMaskDelay = 0;
+  public flagRedTint = 0;
+  public flagGreenTint = 0;
+  public flagBlueTint = 0;
 
-  private flagSpriteOverflow: number = 0;
+  private flagSpriteOverflow = 0;
 
-  private oamAddress: number = 0;
-  private bufferedData: number = 0;
+  private oamAddress = 0;
+  private bufferedData = 0;
   private readonly pendingBackgroundMapperAddresses: Array<{
     address: number;
     remainingDots: number;
   }> = [];
 
-  static readonly PALETTE: readonly number[] = [
+  // Attenuation applied to a de-emphasized colour channel by the analog output
+  // stage. Each active emphasis bit dims the two channels it does not select.
+  private static readonly EMPHASIS_ATTENUATION = 0.746;
+
+  private static readonly PALETTE_RGBA_HEX: readonly number[] = [
     0x666666ff, 0x002a88ff, 0x1412a7ff, 0x3b00a4ff, 0x5c007eff, 0x6e0040ff, 0x6c0600ff, 0x561d00ff,
     0x333500ff, 0x0b4800ff, 0x005200ff, 0x004f08ff, 0x00404dff, 0x000000ff, 0x000000ff, 0x000000ff,
     0xadadadff, 0x155fd9ff, 0x4240ffff, 0x7527feff, 0xa01accff, 0xb71e7bff, 0xb53120ff, 0x994e00ff,
@@ -161,7 +167,16 @@ class PPU {
     0xbcbe00ff, 0x88d800ff, 0x5ce430ff, 0x45e082ff, 0x48cddeff, 0x4f4f4fff, 0x000000ff, 0x000000ff,
     0xfffeffff, 0xc0dfffff, 0xd3d2ffff, 0xe8c8ffff, 0xfbc2ffff, 0xfec4eaff, 0xfeccc5ff, 0xf7d8a5ff,
     0xe4e594ff, 0xcfef96ff, 0xbdf4abff, 0xb3f3ccff, 0xb5ebf2ff, 0xb8b8b8ff, 0x000000ff, 0x000000ff,
-  ].map((color) => FrameBuffer.fromRgbaHex(color));
+  ];
+
+  static readonly PALETTE: readonly number[] = PPU.PALETTE_RGBA_HEX.map((color) =>
+    FrameBuffer.fromRgbaHex(color),
+  );
+
+  // Eight precomputed palettes indexed by the PPUMASK emphasis bits
+  // (bit 0 red, bit 1 green, bit 2 blue). Index 0 is the unmodified palette.
+  private static readonly EMPHASIS_PALETTE: readonly (readonly number[])[] =
+    PPU.buildEmphasisPalettes();
 
   constructor(bus: Bus, timing: ConsoleTiming) {
     this.bus = bus;
@@ -242,7 +257,7 @@ class PPU {
   }
 
   restoreState(state: PpuSnapshot): void {
-    validatePpuSnapshot(state, this.timing);
+    this.validateSnapshot(state);
     this.paletteData.set(state.paletteData);
     this.nameTableData.set(state.nameTableData);
     this.oamData.set(state.oamData);
@@ -653,12 +668,13 @@ class PPU {
       data |= a | p1 | p2;
     }
 
-    // 修复精度问题：将data存储到tileDataLow，tileDataHigh没有变化
+    // The eight freshly fetched pixels enter the low half; the high half keeps
+    // shifting out the tile being drawn until the next store cycle.
     this.tileDataLow = data >>> 0;
   }
 
   private fetchTileData(): number {
-    // 修复精度问题：直接返回高32位
+    // The pixel currently being drawn lives in the high half of the register.
     return this.tileDataHigh;
   }
 
@@ -702,8 +718,8 @@ class PPU {
   }
 
   private renderPixel() {
-    let x = this.cycle - 1;
-    let y = this.scanLine;
+    const x = this.cycle - 1;
+    const y = this.scanLine;
     let background = this.backgroundPixel();
     const pixel = this.spritePixel();
     if (x < 8 && this.flagShowLeftBackground === 0) {
@@ -712,9 +728,9 @@ class PPU {
     if (x < 8 && this.flagShowLeftSprites == 0) {
       pixel.color = 0;
     }
-    let b = background % 4 != 0;
-    let s = pixel.color % 4 !== 0;
-    let color: number = 0;
+    const b = background % 4 != 0;
+    const s = pixel.color % 4 !== 0;
+    let color = 0;
     if (!b && !s) {
       color = 0;
     } else if (!b && s) {
@@ -731,12 +747,24 @@ class PPU {
         color = background;
       }
     }
-    const c = PPU.PALETTE[this.readPalette(color) % 64];
+    const c = PPU.EMPHASIS_PALETTE[this.emphasisIndex()][this.readPalette(color) % 64];
     this.back.setRGBA(x, y, c);
   }
 
+  /**
+   * Packs the active PPUMASK emphasis bits into a palette index. The 2C07 (PAL)
+   * swaps the red and green emphasis lines relative to the 2C02 (NTSC/Dendy).
+   */
+  private emphasisIndex(): number {
+    const red = this.flagRedTint;
+    const green = this.flagGreenTint;
+    const lowRed = this.timing.region === "pal" ? green : red;
+    const lowGreen = this.timing.region === "pal" ? red : green;
+    return lowRed | (lowGreen << 1) | (this.flagBlueTint << 2);
+  }
+
   private fetchSpritePattern(tile: number, attributes: number, row: number): number {
-    const lowPlaneAddress = resolveSpritePatternAddress({
+    const { lowPlaneAddress } = new SpritePatternAddress({
       tileIndex: tile,
       row,
       height: this.flagSpriteSize === 0 ? 8 : 16,
@@ -749,13 +777,13 @@ class PPU {
     // are emitted later at the hardware fetch dots by observeSpriteFetchAddress().
     let lowTileByte = this.memory.read(lowPlaneAddress, false);
     let highTileByte = this.memory.read(lowPlaneAddress + 8, false);
-    let data: number = 0;
+    let data = 0;
 
     for (let i = 0; i < 8; i++) {
       let p1: number, p2: number;
 
       if ((attributes & 0x40) === 0x40) {
-        // 水平翻转
+        // Horizontal flip: read the pattern bits from the low end instead.
         p1 = (lowTileByte & 1) << 0;
         p2 = (highTileByte & 1) << 1;
         lowTileByte >>= 1;
@@ -831,14 +859,14 @@ class PPU {
     this.tick();
     this.clockBackgroundMapperObservations();
 
-    let renderingEnabled = this.renderingEnabled;
-    let preLine = this.scanLine === this.timing.preRenderScanline;
-    let visibleLine = this.scanLine < 240;
+    const renderingEnabled = this.renderingEnabled;
+    const preLine = this.scanLine === this.timing.preRenderScanline;
+    const visibleLine = this.scanLine < 240;
     // postLine := ppu.ScanLine == 240
-    let renderLine = preLine || visibleLine;
-    let preFetchCycle = this.cycle >= 321 && this.cycle <= 336;
-    let visibleCycle = this.cycle >= 1 && this.cycle <= 256;
-    let fetchCycle = preFetchCycle || visibleCycle;
+    const renderLine = preLine || visibleLine;
+    const preFetchCycle = this.cycle >= 321 && this.cycle <= 336;
+    const visibleCycle = this.cycle >= 1 && this.cycle <= 256;
+    const fetchCycle = preFetchCycle || visibleCycle;
 
     // background logic
     if (renderingEnabled) {
@@ -976,81 +1004,112 @@ class PPU {
     this.spriteZeroHitPending = false;
     this.spriteZeroHitLatched = false;
   }
-}
 
-function validatePpuSnapshot(state: PpuSnapshot, timing: ConsoleTiming): void {
-  PpuIoBusLatch.validateState(state.ioBus);
-  if (!Number.isInteger(state.cycle) || state.cycle < 0 || state.cycle > 340) {
-    throw new RangeError("PPU save state contains an invalid dot");
+  /**
+   * Builds the eight emphasis-adjusted palettes. An emphasis bit attenuates the
+   * two colour channels it does not select, so red emphasis dims green and blue,
+   * green emphasis dims red and blue, and blue emphasis dims red and green.
+   */
+  private static buildEmphasisPalettes(): number[][] {
+    const palettes: number[][] = [];
+    for (let emphasis = 0; emphasis < 8; emphasis++) {
+      const redEmphasis = (emphasis & 1) !== 0;
+      const greenEmphasis = (emphasis & 2) !== 0;
+      const blueEmphasis = (emphasis & 4) !== 0;
+      const attenuateRed = greenEmphasis || blueEmphasis;
+      const attenuateGreen = redEmphasis || blueEmphasis;
+      const attenuateBlue = redEmphasis || greenEmphasis;
+      palettes[emphasis] = PPU.PALETTE_RGBA_HEX.map((hex) => {
+        const r = PPU.attenuateChannel((hex >>> 24) & 0xff, attenuateRed);
+        const g = PPU.attenuateChannel((hex >>> 16) & 0xff, attenuateGreen);
+        const b = PPU.attenuateChannel((hex >>> 8) & 0xff, attenuateBlue);
+        const a = hex & 0xff;
+        return FrameBuffer.fromRgbaHex(((r << 24) | (g << 16) | (b << 8) | a) >>> 0);
+      });
+    }
+    return palettes;
   }
-  if (
-    !Number.isInteger(state.scanLine) ||
-    state.scanLine < 0 ||
-    state.scanLine >= timing.scanlinesPerFrame
-  ) {
-    throw new RangeError("PPU save state contains an invalid scanline");
+
+  private static attenuateChannel(value: number, attenuate: boolean): number {
+    return attenuate ? Math.round(value * PPU.EMPHASIS_ATTENUATION) : value;
   }
-  if (
-    !Number.isInteger(state.effectiveRenderingMask) ||
-    state.effectiveRenderingMask < 0 ||
-    state.effectiveRenderingMask > 0x18 ||
-    (state.effectiveRenderingMask & ~0x18) !== 0 ||
-    !Number.isInteger(state.pendingRenderingMask) ||
-    state.pendingRenderingMask < 0 ||
-    state.pendingRenderingMask > 0x18 ||
-    (state.pendingRenderingMask & ~0x18) !== 0 ||
-    !Number.isInteger(state.renderingMaskDelay) ||
-    state.renderingMaskDelay < 0 ||
-    state.renderingMaskDelay > 2
-  ) {
-    throw new RangeError("PPU save state contains an invalid rendering-enable pipeline");
-  }
-  if (!Number.isSafeInteger(state.frame) || state.frame < 0) {
-    throw new RangeError("PPU save state contains an invalid frame number");
-  }
-  const arrays = [
-    [state.paletteData, Uint8Array, 32],
-    [state.nameTableData, Uint8Array, 4096],
-    [state.oamData, Uint8Array, 256],
-    [state.front, Uint32Array, 256 * 240],
-    [state.back, Uint32Array, 256 * 240],
-    [state.spritePatterns, Uint32Array, 8],
-    [state.spritePositions, Uint8Array, 8],
-    [state.spritePriorities, Uint8Array, 8],
-    [state.spriteIndexes, Uint8Array, 8],
-    [state.spritePatternTables, Uint8Array, 8],
-  ] as const;
-  for (const [value, constructor, length] of arrays) {
-    if (!(value instanceof constructor) || value.length !== length) {
-      throw new RangeError("PPU save state contains an invalid memory region");
+
+  private validateSnapshot(state: PpuSnapshot): void {
+    PpuIoBusLatch.validateState(state.ioBus);
+    if (!Number.isInteger(state.cycle) || state.cycle < 0 || state.cycle > 340) {
+      throw new RangeError("PPU save state contains an invalid dot");
+    }
+    if (
+      !Number.isInteger(state.scanLine) ||
+      state.scanLine < 0 ||
+      state.scanLine >= this.timing.scanlinesPerFrame
+    ) {
+      throw new RangeError("PPU save state contains an invalid scanline");
+    }
+    if (
+      !Number.isInteger(state.effectiveRenderingMask) ||
+      state.effectiveRenderingMask < 0 ||
+      state.effectiveRenderingMask > 0x18 ||
+      (state.effectiveRenderingMask & ~0x18) !== 0 ||
+      !Number.isInteger(state.pendingRenderingMask) ||
+      state.pendingRenderingMask < 0 ||
+      state.pendingRenderingMask > 0x18 ||
+      (state.pendingRenderingMask & ~0x18) !== 0 ||
+      !Number.isInteger(state.renderingMaskDelay) ||
+      state.renderingMaskDelay < 0 ||
+      state.renderingMaskDelay > 2
+    ) {
+      throw new RangeError("PPU save state contains an invalid rendering-enable pipeline");
+    }
+    if (!Number.isSafeInteger(state.frame) || state.frame < 0) {
+      throw new RangeError("PPU save state contains an invalid frame number");
+    }
+    const arrays = [
+      [state.paletteData, Uint8Array, 32],
+      [state.nameTableData, Uint8Array, 4096],
+      [state.oamData, Uint8Array, 256],
+      [state.front, Uint32Array, 256 * 240],
+      [state.back, Uint32Array, 256 * 240],
+      [state.spritePatterns, Uint32Array, 8],
+      [state.spritePositions, Uint8Array, 8],
+      [state.spritePriorities, Uint8Array, 8],
+      [state.spriteIndexes, Uint8Array, 8],
+      [state.spritePatternTables, Uint8Array, 8],
+    ] as const;
+    for (const [value, constructor, length] of arrays) {
+      if (!(value instanceof constructor) || value.length !== length) {
+        throw new RangeError("PPU save state contains an invalid memory region");
+      }
+    }
+    if (state.paletteData.some((value) => value > 0x3f)) {
+      throw new RangeError("PPU save state contains non-six-bit palette data");
+    }
+    SpriteEvaluator.validateState(state.spriteEvaluation);
+    PPU.validateSpriteZeroHitState(state.spriteZeroHit);
+    if (
+      state.pendingBackgroundMapperAddresses.some(
+        (item) =>
+          !Number.isInteger(item.address) ||
+          item.address < 0 ||
+          item.address > 0x3fff ||
+          !Number.isInteger(item.remainingDots) ||
+          item.remainingDots < 0 ||
+          item.remainingDots > BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS,
+      )
+    ) {
+      throw new RangeError("PPU save state contains an invalid mapper-address observation");
     }
   }
-  if (state.paletteData.some((value) => value > 0x3f)) {
-    throw new RangeError("PPU save state contains non-six-bit palette data");
-  }
-  SpriteEvaluator.validateState(state.spriteEvaluation);
-  validateSpriteZeroHitState(state.spriteZeroHit);
-  if (
-    state.pendingBackgroundMapperAddresses.some(
-      (item) =>
-        !Number.isInteger(item.address) ||
-        item.address < 0 ||
-        item.address > 0x3fff ||
-        !Number.isInteger(item.remainingDots) ||
-        item.remainingDots < 0 ||
-        item.remainingDots > BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS,
-    )
-  ) {
-    throw new RangeError("PPU save state contains an invalid mapper-address observation");
-  }
-}
 
-function validateSpriteZeroHitState(state: SpriteZeroHitState): void {
-  if (typeof state.pending !== "boolean" || typeof state.latched !== "boolean") {
-    throw new RangeError("PPU save state contains invalid sprite-zero hit state");
-  }
-  if (state.pending && state.latched) {
-    throw new RangeError("PPU save state cannot have pending and latched sprite-zero hit together");
+  private static validateSpriteZeroHitState(state: SpriteZeroHitState): void {
+    if (typeof state.pending !== "boolean" || typeof state.latched !== "boolean") {
+      throw new RangeError("PPU save state contains invalid sprite-zero hit state");
+    }
+    if (state.pending && state.latched) {
+      throw new RangeError(
+        "PPU save state cannot have pending and latched sprite-zero hit together",
+      );
+    }
   }
 }
 

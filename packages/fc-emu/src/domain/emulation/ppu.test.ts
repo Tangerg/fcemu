@@ -160,6 +160,26 @@ describe("PPU", () => {
     expect(ppu.readRegister(0x2000)).toBe(0xe0);
   });
 
+  it("applies PPUMASK colour emphasis to rendered pixels", () => {
+    const backdrop = 0x30; // white backdrop so every channel can be attenuated
+
+    const plain = renderBackdropPixel(backdrop, 0x08);
+    expect(plain).toEqual({ r: 0xff, g: 0xfe, b: 0xff, a: 0xff });
+
+    // Blue emphasis (PPUMASK bit 7) dims red and green while leaving blue alone.
+    const blueEmphasis = renderBackdropPixel(backdrop, 0x08 | 0x80);
+    expect(blueEmphasis.b).toBe(0xff);
+    expect(blueEmphasis.r).toBeLessThan(0xff);
+    expect(blueEmphasis.g).toBeLessThan(0xfe);
+    expect(blueEmphasis.r).toBe(Math.round(0xff * 0.746));
+
+    // All three emphasis bits darken every channel of the picture.
+    const dimmed = renderBackdropPixel(backdrop, 0x08 | 0xe0);
+    expect(dimmed.r).toBeLessThan(0xff);
+    expect(dimmed.g).toBeLessThan(0xfe);
+    expect(dimmed.b).toBeLessThan(0xff);
+  });
+
   it("treats OAMDMA as CPU-owned while its destination writes still drive the PPU latch", () => {
     const ppu = new Bus(createTestCartridge()).PPU;
     ppu.writeRegister(0x2002, 0x55);
@@ -262,4 +282,17 @@ function countFrameDots(ppu: PPU): number {
 
 function advanceTo(ppu: PPU, scanLine: number, cycle: number): void {
   while (ppu.scanLine !== scanLine || ppu.cycle !== cycle) ppu.update();
+}
+
+/** Renders a full frame of the backdrop colour and returns one visible pixel. */
+function renderBackdropPixel(
+  paletteIndex: number,
+  mask: number,
+): { r: number; g: number; b: number; a: number } {
+  const ppu = new Bus(createTestCartridge()).PPU;
+  ppu.write(0x3f00, paletteIndex);
+  ppu.writeRegister(0x2001, mask);
+  advanceToFrameStart(ppu); // finish the partial power-on frame
+  advanceToFrameStart(ppu); // render one full frame with the mask applied
+  return FrameBuffer.extractRGBA(ppu.front.getRGBA(10, 10));
 }

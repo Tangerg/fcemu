@@ -1,6 +1,7 @@
 import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
 import { Mmc1Board } from "./mmc1-board.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 /**
@@ -42,7 +43,7 @@ export class Mmc1Mapper implements Mapper {
 
   captureState(): MapperState {
     return {
-      kind: "mmc1",
+      kind: MapperKind.Mmc1,
       shiftRegister: this.shiftRegister,
       control: this.control,
       chrBank0: this.chrBank0,
@@ -54,7 +55,8 @@ export class Mmc1Mapper implements Mapper {
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "mmc1") throw new Error(`Cannot restore ${state.kind} state into MMC1`);
+    if (state.kind !== MapperKind.Mmc1)
+      throw new Error(`Cannot restore ${state.kind} state into MMC1`);
     for (const value of [
       state.shiftRegister,
       state.control,

@@ -1,3 +1,5 @@
+import { isByte } from "../numeric-range.js";
+
 export interface SpriteEvaluationState {
   readonly targetScanline: number;
   readonly spriteHeight: 8 | 16;
@@ -277,8 +279,4 @@ export class SpriteEvaluator {
 
 function isIntegerInRange(value: number, minimum: number, maximum: number): boolean {
   return Number.isInteger(value) && value >= minimum && value <= maximum;
-}
-
-function isByte(value: number): boolean {
-  return isIntegerInRange(value, 0, 0xff);
 }

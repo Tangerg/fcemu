@@ -131,7 +131,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (!(state.ram instanceof Uint8Array) || state.ram.byteLength !== this.ram.byteLength) {
       throw new RangeError("Bus save state contains invalid internal RAM");
     }
-    const irqSources = validateIRQSources(state.irqSources);
+    const irqSources = Bus.validateIRQSources(state.irqSources);
     if (state.pendingControllerWrite !== undefined && !isByte(state.pendingControllerWrite)) {
       throw new RangeError("Bus save state contains an invalid pending controller write");
     }
@@ -410,14 +410,14 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
       cycles -= this.update();
     }
   }
-}
 
-function validateIRQSources(sources: readonly IRQSource[]): readonly IRQSource[] {
-  const valid = new Set<IRQSource>([IRQSource.ApuDmc, IRQSource.ApuFrame, IRQSource.Mapper]);
-  if (sources.some((source) => !valid.has(source)) || new Set(sources).size !== sources.length) {
-    throw new RangeError("Bus save state contains invalid IRQ sources");
+  private static validateIRQSources(sources: readonly IRQSource[]): readonly IRQSource[] {
+    const valid = new Set<IRQSource>([IRQSource.ApuDmc, IRQSource.ApuFrame, IRQSource.Mapper]);
+    if (sources.some((source) => !valid.has(source)) || new Set(sources).size !== sources.length) {
+      throw new RangeError("Bus save state contains invalid IRQ sources");
+    }
+    return sources;
   }
-  return sources;
 }
 
 export default Bus;

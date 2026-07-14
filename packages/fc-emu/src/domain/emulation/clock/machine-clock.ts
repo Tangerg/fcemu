@@ -25,7 +25,7 @@ export class MachineClock {
   private cpuCycleAtUpdateStart = 0;
 
   constructor(private readonly timing: MachineClockTiming) {
-    validateTiming(timing);
+    MachineClock.validateTiming(timing);
   }
 
   get readSampleRequiresPpuSynchronization(): boolean {
@@ -44,7 +44,7 @@ export class MachineClock {
   }
 
   beginCpuUpdate(totalCpuCycles: number): void {
-    validateNonNegativeSafeInteger(totalCpuCycles, "CPU cycle watermark");
+    MachineClock.validateNonNegativeSafeInteger(totalCpuCycles, "CPU cycle watermark");
     this.cpuCycleAtUpdateStart = totalCpuCycles;
   }
 
@@ -57,7 +57,7 @@ export class MachineClock {
   }
 
   commitCpuCycles(cycles: number): void {
-    validateNonNegativeSafeInteger(cycles, "Committed CPU cycles");
+    MachineClock.validateNonNegativeSafeInteger(cycles, "Committed CPU cycles");
     const committedCpuCycle = this.committedCpuCycle + cycles;
     const committedMasterClock = committedCpuCycle * this.timing.cpuMasterClockDivider;
     if (!Number.isSafeInteger(committedCpuCycle) || !Number.isSafeInteger(committedMasterClock)) {
@@ -233,30 +233,30 @@ export class MachineClock {
     this.ppuClockRemainder = accumulatedMasterClocks % this.timing.ppuMasterClockDivider;
     this.synchronizedPpuMasterClock = targetMasterClock;
   }
-}
 
-function validateTiming(timing: MachineClockTiming): void {
-  const values = [
-    timing.cpuMasterClockDivider,
-    timing.ppuMasterClockDivider,
-    timing.readSampleMasterClock,
-    timing.writeSampleMasterClock,
-    timing.interruptSampleMasterClock,
-  ];
-  if (values.some((value) => !Number.isSafeInteger(value) || value <= 0)) {
-    throw new RangeError("Machine-clock timing must contain positive integers");
+  private static validateTiming(timing: MachineClockTiming): void {
+    const values = [
+      timing.cpuMasterClockDivider,
+      timing.ppuMasterClockDivider,
+      timing.readSampleMasterClock,
+      timing.writeSampleMasterClock,
+      timing.interruptSampleMasterClock,
+    ];
+    if (values.some((value) => !Number.isSafeInteger(value) || value <= 0)) {
+      throw new RangeError("Machine-clock timing must contain positive integers");
+    }
+    if (
+      timing.readSampleMasterClock >= timing.cpuMasterClockDivider ||
+      timing.writeSampleMasterClock >= timing.cpuMasterClockDivider ||
+      timing.interruptSampleMasterClock >= timing.cpuMasterClockDivider
+    ) {
+      throw new RangeError("CPU samples must occur within their master-clock cycle");
+    }
   }
-  if (
-    timing.readSampleMasterClock >= timing.cpuMasterClockDivider ||
-    timing.writeSampleMasterClock >= timing.cpuMasterClockDivider ||
-    timing.interruptSampleMasterClock >= timing.cpuMasterClockDivider
-  ) {
-    throw new RangeError("CPU samples must occur within their master-clock cycle");
-  }
-}
 
-function validateNonNegativeSafeInteger(value: number, label: string): void {
-  if (!Number.isSafeInteger(value) || value < 0) {
-    throw new RangeError(`${label} must be a non-negative safe integer`);
+  private static validateNonNegativeSafeInteger(value: number, label: string): void {
+    if (!Number.isSafeInteger(value) || value < 0) {
+      throw new RangeError(`${label} must be a non-negative safe integer`);
+    }
   }
 }

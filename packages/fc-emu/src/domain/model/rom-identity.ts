@@ -7,10 +7,18 @@ for (let byte = 0; byte < CRC32_TABLE.length; byte++) {
 }
 
 /** Stable, non-security identity used to reject save states from another ROM image. */
-export function createRomIdentity(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let crc = 0xffffffff;
-  for (const byte of bytes) crc = (crc >>> 8) ^ (CRC32_TABLE[(crc ^ byte) & 0xff] ?? 0);
-  const checksum = ((crc ^ 0xffffffff) >>> 0).toString(16).padStart(8, "0");
-  return `crc32:${checksum}:${bytes.byteLength}`;
+export class RomIdentity {
+  private readonly identity: string;
+
+  constructor(image: ArrayBuffer) {
+    const bytes = new Uint8Array(image);
+    let crc = 0xffffffff;
+    for (const byte of bytes) crc = (crc >>> 8) ^ (CRC32_TABLE[(crc ^ byte) & 0xff] ?? 0);
+    const checksum = ((crc ^ 0xffffffff) >>> 0).toString(16).padStart(8, "0");
+    this.identity = `crc32:${checksum}:${bytes.byteLength}`;
+  }
+
+  toString(): string {
+    return this.identity;
+  }
 }

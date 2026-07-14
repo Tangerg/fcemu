@@ -3,6 +3,7 @@ import type { AudioLifecyclePort } from "../../application/ports.js";
 import { AUDIO_BATCH_SIZE, createAudioBufferPolicy } from "./audio/audio-buffer-policy.js";
 import { AudioSampleBatcher } from "./audio/audio-sample-batcher.js";
 import {
+  AudioWorkletMessageType,
   NES_AUDIO_PROCESSOR_NAME,
   type AudioWorkletInputMessage,
   type AudioWorkletOutputMessage,
@@ -142,7 +143,7 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
       processorOptions,
     });
     node.port.onmessage = (event: MessageEvent<AudioWorkletOutputMessage>) => {
-      if (event.data.type === "underrun") this.underruns++;
+      if (event.data.type === AudioWorkletMessageType.Underrun) this.underruns++;
       else this.droppedSamples += event.data.droppedSamples;
     };
     node.connect(context.destination);
@@ -176,14 +177,14 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   }
 
   private postBatch(node: AudioWorkletNode, samples: Float32Array<ArrayBuffer>): void {
-    const message: AudioWorkletInputMessage = { type: "samples", samples };
+    const message: AudioWorkletInputMessage = { type: AudioWorkletMessageType.Samples, samples };
     node.port.postMessage(message, [samples.buffer]);
   }
 
   private resetBufferedAudio(node = this.node): void {
     this.batcher.reset();
     this.pendingBatches.length = 0;
-    const message: AudioWorkletInputMessage = { type: "reset" };
+    const message: AudioWorkletInputMessage = { type: AudioWorkletMessageType.Reset };
     node?.port.postMessage(message);
   }
 }

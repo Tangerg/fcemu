@@ -1,8 +1,10 @@
+import { DmaBusPhase } from "../dma/dma-bus-phase.js";
+
 export interface DmcChannelPort {
-  requestDma(address: number, haltPhase: "get" | "put"): void;
+  requestDma(address: number, haltPhase: DmaBusPhase): void;
   cancelDma(): void;
   setIrq(asserted: boolean): void;
-  currentDmaPhase(): "get" | "put";
+  currentDmaPhase(): DmaBusPhase;
 }
 
 export interface DmcSiliconProfile {
@@ -78,7 +80,8 @@ export class DeltaModulationChannel {
     // Full DMC periods are even, so the first expiration fixes the output
     // unit's APU half-cycle forever. Align it with this power-on GET/PUT
     // selection instead of accidentally tying it to CPU cycle-number parity.
-    this.tickValue = this.port.currentDmaPhase() === "get" ? this.tickPeriod : this.tickPeriod - 1;
+    this.tickValue =
+      this.port.currentDmaPhase() === DmaBusPhase.Get ? this.tickPeriod : this.tickPeriod - 1;
   }
 
   set control(value: number) {
@@ -105,7 +108,7 @@ export class DeltaModulationChannel {
     this.currentLength = this.sampleLength;
   }
 
-  private requestReaderDma(haltPhase: "get" | "put"): void {
+  private requestReaderDma(haltPhase: DmaBusPhase): void {
     if (
       this.transferStartDelay === 0 &&
       this.currentLength > 0 &&
@@ -127,7 +130,7 @@ export class DeltaModulationChannel {
       }
     }
     if (this.transferStartDelay > 0 && --this.transferStartDelay === 0) {
-      this.requestReaderDma("get");
+      this.requestReaderDma(DmaBusPhase.Get);
     }
   }
 
@@ -151,13 +154,13 @@ export class DeltaModulationChannel {
   setEnabled(enabled: boolean): void {
     if (!enabled) {
       if (this.disableDelay === 0) {
-        this.disableDelay = this.port.currentDmaPhase() === "get" ? 2 : 3;
+        this.disableDelay = this.port.currentDmaPhase() === DmaBusPhase.Get ? 2 : 3;
       }
     } else if (this.currentLength === 0) {
       this.restart();
       // The sample fetch halts the CPU on the third or fourth cycle after the
       // $4015 write, depending on whether that write landed on GET or PUT.
-      this.transferStartDelay = this.port.currentDmaPhase() === "get" ? 3 : 4;
+      this.transferStartDelay = this.port.currentDmaPhase() === DmaBusPhase.Get ? 3 : 4;
     }
   }
 
@@ -179,7 +182,7 @@ export class DeltaModulationChannel {
       this.sampleBuffer = undefined;
       // Emptying the reader buffer schedules a reload DMA immediately. Waiting
       // for the next timer tick shifts the request by a complete DMC period.
-      this.requestReaderDma("put");
+      this.requestReaderDma(DmaBusPhase.Put);
     }
   }
 
@@ -226,7 +229,7 @@ export class DeltaModulationChannel {
       this.silence = false;
       this.sampleBuffer = undefined;
       this.restart();
-      this.requestReaderDma("put");
+      this.requestReaderDma(DmaBusPhase.Put);
       return;
     }
 

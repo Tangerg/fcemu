@@ -1,5 +1,7 @@
 import type Bus from "./bus.js";
 import type { ConsoleTiming } from "./console-timing.js";
+import { DmaBusPhase } from "./dma/dma-bus-phase.js";
+import { IRQSource } from "./irq-source.js";
 import { Envelope, type EnvelopeState } from "./apu/envelope.js";
 import { FrameSequencer, type FrameSequencerState } from "./apu/frame-sequencer.js";
 import { LengthCounter, type LengthCounterState } from "./apu/length-counter.js";
@@ -74,18 +76,18 @@ class PulseChannel {
   private readonly applyExtraSweep;
   // Length counter
   // Timer/frequency control
-  private timerPeriod: number = 0;
-  private timerValue: number = 0;
+  private timerPeriod = 0;
+  private timerValue = 0;
   // Duty cycle control (wave shape)
-  private dutyCycleIndex: number = 0;
-  private dutyStep: number = 0;
+  private dutyCycleIndex = 0;
+  private dutyStep = 0;
   // Frequency sweep control
-  private sweepReload: boolean = false;
-  private sweepEnabled: boolean = false;
-  private sweepNegative: boolean = false;
-  private sweepShift: number = 0;
-  private sweepPeriod: number = 0;
-  private sweepValue: number = 0;
+  private sweepReload = false;
+  private sweepEnabled = false;
+  private sweepNegative = false;
+  private sweepShift = 0;
+  private sweepPeriod = 0;
+  private sweepValue = 0;
   private readonly envelope = new Envelope();
 
   /**
@@ -93,7 +95,7 @@ class PulseChannel {
    * Each array represents a different duty cycle (12.5%, 25%, 50%, 75% negated)
    * Values: 0 = low, 1 = high
    */
-  private static DUTY_TABLE: number[][] = [
+  private static readonly DUTY_TABLE: readonly (readonly number[])[] = [
     [0, 1, 0, 0, 0, 0, 0, 0], // 12.5%
     [0, 1, 1, 0, 0, 0, 0, 0], // 25%
     [0, 1, 1, 1, 1, 0, 0, 0], // 50%
@@ -104,7 +106,7 @@ class PulseChannel {
    * Creates a new Pulse Channel instance
    * @param applyExtraSweep - Whether to apply an extra decrement during sweep calculations
    */
-  constructor(applyExtraSweep: boolean = false) {
+  constructor(applyExtraSweep = false) {
     this.applyExtraSweep = applyExtraSweep;
   }
 
@@ -289,20 +291,20 @@ class TriangleChannel {
   private readonly lengthCounter = new LengthCounter();
   // Length counter control
   // Timer/frequency control
-  private timerPeriod: number = 0;
-  private timerValue: number = 0;
-  private dutyIndex: number = 0;
+  private timerPeriod = 0;
+  private timerValue = 0;
+  private dutyIndex = 0;
   // Linear counter control
-  private counterReload: boolean = false;
-  private counterPeriod: number = 0;
-  private counterValue: number = 0;
+  private counterReload = false;
+  private counterPeriod = 0;
+  private counterValue = 0;
 
   /**
    * Sequence of 32 values that form the triangle wave
    * Values decrease from 15 to 0, then increase from 0 to 15
    * Creates a triangle shape when plotted
    */
-  private static TRIANGLE_TABLE: number[] = [
+  private static readonly TRIANGLE_TABLE: readonly number[] = [
     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
     13, 14, 15,
   ];
@@ -382,7 +384,9 @@ class TriangleChannel {
    * @returns The current output level (0-15)
    */
   public output(): number {
-    if (this.timerPeriod < 3) {
+    // Hardware never mutes the triangle by period; emulators silence only the
+    // genuinely ultrasonic periods 0 and 1 (>27 kHz) to avoid aliasing pops.
+    if (this.timerPeriod < 2) {
       return 0;
     }
     if (this.lengthCounter.value === 0) {
@@ -442,12 +446,12 @@ class NoiseChannel {
   // Channel state
   private readonly lengthCounter = new LengthCounter();
   // Noise generation control
-  private mode: boolean = false; // Mode flag (0: 93-bit sequence, 1: 32767-bit sequence)
-  private shiftRegister: number = 1; // 15-bit shift register for noise generation
+  private mode = false; // Mode flag (0: 93-bit sequence, 1: 32767-bit sequence)
+  private shiftRegister = 1; // 15-bit shift register for noise generation
   // Length counter control
   // Timer control
-  private timerPeriod: number = 0;
-  private timerValue: number = 0;
+  private timerPeriod = 0;
+  private timerValue = 0;
   private readonly envelope = new Envelope();
 
   /**
@@ -566,6 +570,63 @@ class NoiseChannel {
 }
 
 /**
+ * Analog RC output filters on the RP2A03 audio pin.
+ *
+ * The console applies a 90 Hz high-pass, a 440 Hz high-pass and a 14 kHz
+ * low-pass to the mixed signal. The high-pass stages also remove the large DC
+ * bias present in the non-linear mixing tables, centering the waveform for the
+ * output device. Each stage is a first-order filter clocked at the output
+ * sample rate; the coefficients are derived from the RC time constants.
+ */
+class NesAudioFilterChain {
+  private highPass90PreviousInput = 0;
+  private highPass90PreviousOutput = 0;
+  private highPass440PreviousInput = 0;
+  private highPass440PreviousOutput = 0;
+  private lowPass14kPreviousOutput = 0;
+  private readonly highPass90Alpha: number;
+  private readonly highPass440Alpha: number;
+  private readonly lowPass14kAlpha: number;
+
+  constructor(sampleRate: number) {
+    this.highPass90Alpha = NesAudioFilterChain.highPassAlpha(90, sampleRate);
+    this.highPass440Alpha = NesAudioFilterChain.highPassAlpha(440, sampleRate);
+    this.lowPass14kAlpha = NesAudioFilterChain.lowPassAlpha(14_000, sampleRate);
+  }
+
+  process(sample: number): number {
+    let output =
+      this.highPass90Alpha *
+      (this.highPass90PreviousOutput + sample - this.highPass90PreviousInput);
+    this.highPass90PreviousInput = sample;
+    this.highPass90PreviousOutput = output;
+
+    const highPass440Input = output;
+    output =
+      this.highPass440Alpha *
+      (this.highPass440PreviousOutput + highPass440Input - this.highPass440PreviousInput);
+    this.highPass440PreviousInput = highPass440Input;
+    this.highPass440PreviousOutput = output;
+
+    this.lowPass14kPreviousOutput +=
+      this.lowPass14kAlpha * (output - this.lowPass14kPreviousOutput);
+    return this.lowPass14kPreviousOutput;
+  }
+
+  private static highPassAlpha(cutoffHz: number, sampleRate: number): number {
+    const rc = 1 / (2 * Math.PI * cutoffHz);
+    const dt = 1 / sampleRate;
+    return rc / (rc + dt);
+  }
+
+  private static lowPassAlpha(cutoffHz: number, sampleRate: number): number {
+    const rc = 1 / (2 * Math.PI * cutoffHz);
+    const dt = 1 / sampleRate;
+    return dt / (rc + dt);
+  }
+}
+
+/**
  * Handles mixing and output processing for all Audio Processing Unit (APU) channels
  * Implements the NES/Famicom audio mixing circuit emulation
  * Uses non-linear mixing tables to accurately reproduce the hardware behavior
@@ -576,6 +637,7 @@ class AudioMixer {
   private readonly triangleChannel: TriangleChannel;
   private readonly noiseChannel: NoiseChannel;
   private readonly deltaModulationChannel: DeltaModulationChannel;
+  private readonly filters: NesAudioFilterChain;
 
   /**
    * Lookup table for pulse channel mixing
@@ -607,18 +669,22 @@ class AudioMixer {
    * Creates a new AudioMixer instance
    * @param channels - Object containing references to all APU channels
    */
-  constructor(channels: {
-    pulseChannel1: PulseChannel;
-    pulseChannel2: PulseChannel;
-    triangleChannel: TriangleChannel;
-    noiseChannel: NoiseChannel;
-    deltaModulationChannel: DeltaModulationChannel;
-  }) {
+  constructor(
+    channels: {
+      pulseChannel1: PulseChannel;
+      pulseChannel2: PulseChannel;
+      triangleChannel: TriangleChannel;
+      noiseChannel: NoiseChannel;
+      deltaModulationChannel: DeltaModulationChannel;
+    },
+    sampleRate: number,
+  ) {
     this.pulseChannel1 = channels.pulseChannel1;
     this.pulseChannel2 = channels.pulseChannel2;
     this.triangleChannel = channels.triangleChannel;
     this.noiseChannel = channels.noiseChannel;
     this.deltaModulationChannel = channels.deltaModulationChannel;
+    this.filters = new NesAudioFilterChain(sampleRate);
   }
 
   /**
@@ -640,13 +706,12 @@ class AudioMixer {
   }
 
   /**
-   * Applies additional filtering to the mixed output
-   * Can be used for low-pass filtering or other audio processing
+   * Applies the console's analog RC output filters to the mixed sample.
    * @param num - Input sample value
    * @returns Processed sample value
    */
   private filter(num: number): number {
-    return num;
+    return this.filters.process(num);
   }
 
   /**
@@ -679,7 +744,7 @@ class APU {
   private readonly listeners: Array<(output: number) => void | Promise<void>> = [];
 
   // Frame counter state
-  private cycle: number = 0;
+  private cycle = 0;
   private frameIRQPending = false;
   private frameIrqClearDelay = 0;
   private readonly pendingRegisterWrites: Array<{
@@ -738,7 +803,7 @@ class APU {
   }
 
   restoreState(state: ApuSnapshot): void {
-    validateApuSnapshot(state, this.sampleRate);
+    this.validateSnapshot(state);
     this.pulseChannel1.restoreState(state.pulseChannel1);
     this.pulseChannel2.restoreState(state.pulseChannel2);
     this.triangleChannel.restoreState(state.triangleChannel);
@@ -770,19 +835,22 @@ class APU {
       {
         requestDma: (address, haltPhase) => this.bus.requestDmcDma(address, haltPhase),
         cancelDma: () => this.bus.cancelDmcDma(),
-        setIrq: (asserted) => this.bus.setIRQSource("apu-dmc", asserted),
+        setIrq: (asserted) => this.bus.setIRQSource(IRQSource.ApuDmc, asserted),
         currentDmaPhase: () => this.bus.currentDmaPhase(),
       },
       this.timing.apu.dmcTimerPeriods,
       this.timing.region === "ntsc" ? RP2A03H_DMC_PROFILE : CONSERVATIVE_DMC_PROFILE,
     );
-    this.audioMixer = new AudioMixer({
-      pulseChannel1: this.pulseChannel1,
-      pulseChannel2: this.pulseChannel2,
-      triangleChannel: this.triangleChannel,
-      noiseChannel: this.noiseChannel,
-      deltaModulationChannel: this.deltaModulationChannel,
-    });
+    this.audioMixer = new AudioMixer(
+      {
+        pulseChannel1: this.pulseChannel1,
+        pulseChannel2: this.pulseChannel2,
+        triangleChannel: this.triangleChannel,
+        noiseChannel: this.noiseChannel,
+        deltaModulationChannel: this.deltaModulationChannel,
+      },
+      this.sampleRate,
+    );
   }
 
   /**
@@ -791,7 +859,7 @@ class APU {
   private irq() {
     this.frameIRQPending = true;
     this.frameIrqClearDelay = 0;
-    this.bus.setIRQSource("apu-frame", true);
+    this.bus.setIRQSource(IRQSource.ApuFrame, true);
   }
 
   /**
@@ -1051,14 +1119,14 @@ class APU {
   private clearFrameIRQ(): void {
     this.frameIRQPending = false;
     this.frameIrqClearDelay = 0;
-    this.bus.setIRQSource("apu-frame", false);
+    this.bus.setIRQSource(IRQSource.ApuFrame, false);
   }
 
   /** A status read drops /IRQ now; its internal flag clears on the next APU-cycle boundary. */
   private acknowledgeFrameIRQRead(): void {
-    this.bus.setIRQSource("apu-frame", false);
+    this.bus.setIRQSource(IRQSource.ApuFrame, false);
     if (this.frameIRQPending && this.frameIrqClearDelay === 0) {
-      this.frameIrqClearDelay = this.bus.currentDmaPhase() === "get" ? 1 : 2;
+      this.frameIrqClearDelay = this.bus.currentDmaPhase() === DmaBusPhase.Get ? 1 : 2;
     }
   }
 
@@ -1077,40 +1145,40 @@ class APU {
   private clearPendingRegisterWrite(): void {
     this.pendingRegisterWrites.length = 0;
   }
-}
 
-function validateApuSnapshot(state: ApuSnapshot, expectedSampleRate: number): void {
-  validateNonNegativeIntegers(state);
-  if (state.sampleRate !== expectedSampleRate) {
-    throw new Error("APU save state was created for another audio sample rate");
-  }
-  if (
-    (state.frameSequencer.period !== 4 && state.frameSequencer.period !== 5) ||
-    (state.frameSequencer.pendingPeriod !== 4 && state.frameSequencer.pendingPeriod !== 5)
-  ) {
-    throw new RangeError("APU save state contains an invalid frame-sequencer period");
-  }
-  if (state.frameIrqClearDelay > 2) {
-    throw new RangeError("APU save state contains an invalid frame-IRQ clear delay");
-  }
-  if (
-    state.pendingRegisterWrites.some(
-      (write) => write.address < 0x4000 || write.address > 0x4017 || write.value > 0xff,
-    )
-  ) {
-    throw new RangeError("APU save state contains an invalid pending register write");
-  }
-}
-
-function validateNonNegativeIntegers(value: unknown): void {
-  if (typeof value === "number") {
-    if (!Number.isSafeInteger(value) || value < 0) {
-      throw new RangeError("APU save state contains an invalid numeric value");
+  private validateSnapshot(state: ApuSnapshot): void {
+    APU.validateNonNegativeIntegers(state);
+    if (state.sampleRate !== this.sampleRate) {
+      throw new Error("APU save state was created for another audio sample rate");
     }
-    return;
+    if (
+      (state.frameSequencer.period !== 4 && state.frameSequencer.period !== 5) ||
+      (state.frameSequencer.pendingPeriod !== 4 && state.frameSequencer.pendingPeriod !== 5)
+    ) {
+      throw new RangeError("APU save state contains an invalid frame-sequencer period");
+    }
+    if (state.frameIrqClearDelay > 2) {
+      throw new RangeError("APU save state contains an invalid frame-IRQ clear delay");
+    }
+    if (
+      state.pendingRegisterWrites.some(
+        (write) => write.address < 0x4000 || write.address > 0x4017 || write.value > 0xff,
+      )
+    ) {
+      throw new RangeError("APU save state contains an invalid pending register write");
+    }
   }
-  if (!value || typeof value !== "object") return;
-  for (const nested of Object.values(value)) validateNonNegativeIntegers(nested);
+
+  private static validateNonNegativeIntegers(value: unknown): void {
+    if (typeof value === "number") {
+      if (!Number.isSafeInteger(value) || value < 0) {
+        throw new RangeError("APU save state contains an invalid numeric value");
+      }
+      return;
+    }
+    if (!value || typeof value !== "object") return;
+    for (const nested of Object.values(value)) APU.validateNonNegativeIntegers(nested);
+  }
 }
 
 export default APU;

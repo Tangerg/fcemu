@@ -1,5 +1,7 @@
 import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
+import { isBit, isByte } from "../numeric-range.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
 
 /** iNES mapper 4: Nintendo MMC3 with revision-B IRQ counter behavior. */
@@ -7,10 +9,10 @@ export class Mmc3Mapper implements Mapper {
   private static readonly A12_LOW_FILTER_PPU_CYCLES = 10;
   readonly observesPpuAddress = true;
 
-  private register: number = 0;
+  private register = 0;
   private registers: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
-  private prgMode: number = 0;
-  private chrMode: number = 0;
+  private prgMode = 0;
+  private chrMode = 0;
   private prgOffsets: number[] = [0, 0, 0, 0];
   private chrOffsets: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
   private reload = 0;
@@ -57,7 +59,7 @@ export class Mmc3Mapper implements Mapper {
 
   captureState(): MapperState {
     return {
-      kind: "mmc3",
+      kind: MapperKind.Mmc3,
       register: this.register,
       registers: [...this.registers],
       prgMode: this.prgMode,
@@ -76,7 +78,8 @@ export class Mmc3Mapper implements Mapper {
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "mmc3") throw new Error(`Cannot restore ${state.kind} state into MMC3`);
+    if (state.kind !== MapperKind.Mmc3)
+      throw new Error(`Cannot restore ${state.kind} state into MMC3`);
     if (state.registers.length !== 8 || state.registers.some((value) => !isByte(value))) {
       throw new RangeError("MMC3 save state contains invalid bank registers");
     }
@@ -302,12 +305,4 @@ export class Mmc3Mapper implements Mapper {
         break;
     }
   }
-}
-
-function isByte(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xff;
-}
-
-function isBit(value: number): boolean {
-  return value === 0 || value === 1;
 }

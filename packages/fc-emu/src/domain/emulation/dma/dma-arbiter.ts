@@ -5,8 +5,7 @@ import {
   type SpriteDmaPort,
   type SpriteDmaState,
 } from "./sprite-dma.js";
-
-export type DmaBusPhase = "get" | "put";
+import { DmaBusPhase } from "./dma-bus-phase.js";
 
 interface DmaAlignmentState {
   readonly getCycleParity: 0 | 1;
@@ -46,7 +45,7 @@ export class DmaArbiter {
   }
 
   phaseAt(completedCpuCycle: number): DmaBusPhase {
-    return completedCpuCycle % 2 === this.getCycleParity ? "get" : "put";
+    return completedCpuCycle % 2 === this.getCycleParity ? DmaBusPhase.Get : DmaBusPhase.Put;
   }
 
   startSprite(page: number): void {
@@ -74,7 +73,7 @@ export class DmaArbiter {
   }
 
   clock(completedCpuCycles: number, port: DmaArbiterPort): DmaCycle {
-    const getCycle = this.phaseAt(completedCpuCycles) === "get";
+    const getCycle = this.phaseAt(completedCpuCycles) === DmaBusPhase.Get;
 
     if (this.dmc.preparing) {
       const dmcCycle = this.dmc.clockPreparation(port);
@@ -87,7 +86,7 @@ export class DmaArbiter {
 
     if (this.dmc.ready && getCycle) return this.dmc.clockGet(port);
     if (this.canClockSprite(getCycle)) return this.sprite.clock(port);
-    if (this.sprite.nextCycle === "get") return "alignment";
+    if (this.sprite.nextCycle === DmaBusPhase.Get) return "alignment";
     if (this.dmc.ready) return this.dmc.clockAlignment(port);
     return "idle";
   }
@@ -117,6 +116,10 @@ export class DmaArbiter {
   private canClockSprite(getCycle: boolean): boolean {
     if (!this.sprite.active) return false;
     const next = this.sprite.nextCycle;
-    return next === "halt" || (next === "get" && getCycle) || (next === "put" && !getCycle);
+    return (
+      next === "halt" ||
+      (next === DmaBusPhase.Get && getCycle) ||
+      (next === DmaBusPhase.Put && !getCycle)
+    );
   }
 }

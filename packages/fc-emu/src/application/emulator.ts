@@ -8,7 +8,7 @@ import type {
 } from "../domain/model/cartridge.js";
 import type { ConsoleRegion } from "../domain/emulation/console-timing.js";
 import type { EmulatorOutputPorts, VideoFrame } from "./ports/emulator-output.js";
-import { createRomIdentity } from "../domain/model/rom-identity.js";
+import { RomIdentity } from "../domain/model/rom-identity.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
 const SAVE_STATE_VERSION = 12;
@@ -106,7 +106,7 @@ export class Emulator {
   ): Emulator {
     return new Emulator(
       Cartridge.fromArrayBuffer(rom, sourceName),
-      createRomIdentity(rom),
+      new RomIdentity(rom).toString(),
       outputs,
       configuration,
     );

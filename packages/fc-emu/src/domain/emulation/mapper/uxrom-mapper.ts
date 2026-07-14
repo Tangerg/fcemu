@@ -1,4 +1,5 @@
 import type Cartridge from "../../model/cartridge.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 /**
@@ -28,11 +29,12 @@ export class UxromMapper implements Mapper {
   }
 
   captureState(): MapperState {
-    return { kind: "uxrom", selectedPrgBank: this.selectedPrgBank };
+    return { kind: MapperKind.Uxrom, selectedPrgBank: this.selectedPrgBank };
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "uxrom") throw new Error(`Cannot restore ${state.kind} state into UxROM`);
+    if (state.kind !== MapperKind.Uxrom)
+      throw new Error(`Cannot restore ${state.kind} state into UxROM`);
     if (
       !Number.isInteger(state.selectedPrgBank) ||
       state.selectedPrgBank < 0 ||

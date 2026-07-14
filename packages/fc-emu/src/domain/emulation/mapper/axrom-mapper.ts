@@ -1,5 +1,6 @@
 import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 const PRG_BANK_SIZE = 0x8000;
@@ -35,14 +36,15 @@ export class AxromMapper implements Mapper {
 
   captureState(): MapperState {
     return {
-      kind: "axrom",
+      kind: MapperKind.Axrom,
       selectedPrgBank: this.selectedPrgBank,
       mirroring: this.cartridge.mirroringMode,
     };
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "axrom") throw new Error(`Cannot restore ${state.kind} state into AxROM`);
+    if (state.kind !== MapperKind.Axrom)
+      throw new Error(`Cannot restore ${state.kind} state into AxROM`);
     if (
       !Number.isInteger(state.selectedPrgBank) ||
       state.selectedPrgBank < 0 ||

@@ -1,4 +1,5 @@
 import type Cartridge from "../../model/cartridge.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 /** iNES mapper 0: fixed PRG/CHR layout (NROM). */
@@ -10,11 +11,12 @@ export class NromMapper implements Mapper {
   powerOn(): void {}
 
   captureState(): MapperState {
-    return { kind: "nrom" };
+    return { kind: MapperKind.Nrom };
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "nrom") throw new Error(`Cannot restore ${state.kind} state into NROM`);
+    if (state.kind !== MapperKind.Nrom)
+      throw new Error(`Cannot restore ${state.kind} state into NROM`);
   }
 
   read(address: number): number {

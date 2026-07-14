@@ -1,10 +1,13 @@
+import { isByte } from "../numeric-range.js";
+import { DmaBusPhase } from "./dma-bus-phase.js";
+
 export interface SpriteDmaPort {
   readCpuByteForDma(address: number): number;
 
   writeOamByteForDma(value: number): void;
 }
 
-export type SpriteDmaCycle = "idle" | "halt" | "get" | "put";
+export type SpriteDmaCycle = "idle" | "halt" | DmaBusPhase;
 
 export interface SpriteDmaState {
   readonly page: number;
@@ -48,16 +51,16 @@ export class SpriteDma {
       case "idle":
         return currentPhase;
       case "halt":
-        this.phase = "get";
+        this.phase = DmaBusPhase.Get;
         return currentPhase;
-      case "get":
+      case DmaBusPhase.Get:
         this.readValue = port.readCpuByteForDma((this.page << 8) | this.index);
-        this.phase = "put";
+        this.phase = DmaBusPhase.Put;
         return currentPhase;
-      case "put":
+      case DmaBusPhase.Put:
         port.writeOamByteForDma(this.readValue);
         this.index++;
-        this.phase = this.index === 0x100 ? "idle" : "get";
+        this.phase = this.index === 0x100 ? "idle" : DmaBusPhase.Get;
         return currentPhase;
     }
   }
@@ -88,7 +91,7 @@ export class SpriteDma {
     ) {
       throw new RangeError("Sprite DMA save state contains an invalid transfer value");
     }
-    if (!["idle", "halt", "get", "put"].includes(state.phase)) {
+    if (!["idle", "halt", DmaBusPhase.Get, DmaBusPhase.Put].includes(state.phase)) {
       throw new RangeError("Sprite DMA save state contains an invalid phase");
     }
     this.page = state.page;
@@ -96,8 +99,4 @@ export class SpriteDma {
     this.readValue = state.readValue;
     this.phase = state.phase;
   }
-}
-
-function isByte(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xff;
 }

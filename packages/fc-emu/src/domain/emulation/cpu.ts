@@ -1,4 +1,5 @@
 import { CPUMemory } from "./memory.js";
+import { isByte, isWord } from "./numeric-range.js";
 import type Bus from "./bus.js";
 import { CpuInterruptState, type CpuInterruptSnapshot } from "./cpu/cpu-interrupt-state.js";
 import {
@@ -103,15 +104,15 @@ export interface CpuSnapshot {
 class CPU {
   private readonly memory: CPUMemory;
   // Accumulator register
-  private A: number = 0;
+  private A = 0;
   // X index register
-  private X: number = 0;
+  private X = 0;
   // Y index register
-  private Y: number = 0;
+  private Y = 0;
   // Program Counter - holds the address of the next instruction to execute
-  private PC: number = 0x0000;
+  private PC = 0x0000;
   // Stack Pointer - points to the current top of the stack (0x0100-0x01FF)
-  private SP: number = 0xff;
+  private SP = 0xff;
   // Processor Status register - contains various status flags
   private readonly P: ProcessorStatus = new ProcessorStatus();
   private readonly interrupts = new CpuInterruptState();
@@ -126,7 +127,7 @@ class CPU {
   // STP/KIL opcodes jam the NMOS CPU until reset.
   private halted = false;
   // Total number of CPU cycles executed
-  public cpuCycles: number = 0;
+  public cpuCycles = 0;
   // Array of instruction execution functions
   private readonly instructionExecutors: InstructionExecutor[] = [];
 
@@ -463,7 +464,7 @@ class CPU {
   }
 
   restoreState(snapshot: CpuSnapshot): void {
-    validateCpuSnapshot(snapshot);
+    this.validateSnapshot(snapshot);
     this.state = snapshot.registers;
     this.memory.restoreDataBuses(snapshot.internalDataBus, snapshot.externalDataBus);
     this.cpuCycles = snapshot.cpuCycles;
@@ -1165,9 +1166,7 @@ class CPU {
    * Transfer accumulator (A) to register X.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private TAX(_: InstructionExecutionContext) {
+   */ private TAX(_: InstructionExecutionContext) {
     this.X = this.A;
     this.P.ZN = this.X;
   }
@@ -1176,9 +1175,7 @@ class CPU {
    * Transfer accumulator (A) to register Y.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private TAY(_: InstructionExecutionContext) {
+   */ private TAY(_: InstructionExecutionContext) {
     this.Y = this.A;
     this.P.ZN = this.Y;
   }
@@ -1187,9 +1184,7 @@ class CPU {
    * Transfer register X to accumulator (A).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private TXA(_: InstructionExecutionContext) {
+   */ private TXA(_: InstructionExecutionContext) {
     this.A = this.X;
     this.P.ZN = this.A;
   }
@@ -1198,9 +1193,7 @@ class CPU {
    * Transfer register Y to accumulator (A).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private TYA(_: InstructionExecutionContext) {
+   */ private TYA(_: InstructionExecutionContext) {
     this.A = this.Y;
     this.P.ZN = this.A;
   }
@@ -1209,9 +1202,7 @@ class CPU {
    * Transfer stack pointer (SP) to register X.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private TSX(_: InstructionExecutionContext) {
+   */ private TSX(_: InstructionExecutionContext) {
     this.X = this.SP;
     this.P.ZN = this.X;
   }
@@ -1220,9 +1211,7 @@ class CPU {
    * Transfer register X to stack pointer (SP).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private TXS(_: InstructionExecutionContext) {
+   */ private TXS(_: InstructionExecutionContext) {
     this.SP = this.X;
   }
 
@@ -1286,9 +1275,7 @@ class CPU {
    * Increment register X by 1.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private INX(_: InstructionExecutionContext) {
+   */ private INX(_: InstructionExecutionContext) {
     this.X = (this.X + 1) & 0xff;
     this.P.ZN = this.X;
   }
@@ -1297,9 +1284,7 @@ class CPU {
    * Increment register Y by 1.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private INY(_: InstructionExecutionContext) {
+   */ private INY(_: InstructionExecutionContext) {
     this.Y = (this.Y + 1) & 0xff;
     this.P.ZN = this.Y;
   }
@@ -1319,9 +1304,7 @@ class CPU {
    * Decrement register X by 1.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private DEX(_: InstructionExecutionContext) {
+   */ private DEX(_: InstructionExecutionContext) {
     this.X = (this.X - 1) & 0xff;
     this.P.ZN = this.X;
   }
@@ -1330,9 +1313,7 @@ class CPU {
    * Decrement register Y by 1.
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private DEY(_: InstructionExecutionContext) {
+   */ private DEY(_: InstructionExecutionContext) {
     this.Y = (this.Y - 1) & 0xff;
     this.P.ZN = this.Y;
   }
@@ -1495,7 +1476,6 @@ class CPU {
    * @param _
    * @constructor
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private CLC(_: InstructionExecutionContext) {
     this.P.C = false;
   }
@@ -1504,9 +1484,7 @@ class CPU {
    * Set carry flag (C = 1).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private SEC(_: InstructionExecutionContext) {
+   */ private SEC(_: InstructionExecutionContext) {
     this.P.C = true;
   }
 
@@ -1514,9 +1492,7 @@ class CPU {
    * Clear decimal mode (D = 0).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private CLD(_: InstructionExecutionContext) {
+   */ private CLD(_: InstructionExecutionContext) {
     this.P.D = false;
   }
 
@@ -1524,9 +1500,7 @@ class CPU {
    * Set decimal mode (D = 1).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private SED(_: InstructionExecutionContext) {
+   */ private SED(_: InstructionExecutionContext) {
     this.P.D = true;
   }
 
@@ -1534,9 +1508,7 @@ class CPU {
    * Clear interrupt disable flag (I = 0).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private CLI(_: InstructionExecutionContext) {
+   */ private CLI(_: InstructionExecutionContext) {
     this.P.I = false;
   }
 
@@ -1544,9 +1516,7 @@ class CPU {
    * Set interrupt disable flag (I = 1).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private SEI(_: InstructionExecutionContext) {
+   */ private SEI(_: InstructionExecutionContext) {
     this.P.I = true;
   }
 
@@ -1554,9 +1524,7 @@ class CPU {
    * Clear overflow flag (V = 0).
    * @param _
    * @constructor
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private CLV(_: InstructionExecutionContext) {
+   */ private CLV(_: InstructionExecutionContext) {
     this.P.V = false;
   }
 
@@ -1608,10 +1576,9 @@ class CPU {
    * -----------No-Operation Instruction-----------
    * Used for delaying or placeholder operations.
    * No operation (takes one cycle).
-   * @param _
+   * @param ctx
    * @constructor
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private NOP(ctx: InstructionExecutionContext) {
     if (
       ctx.addressingMode !== AddressingMode.Implied &&
@@ -1739,50 +1706,42 @@ class CPU {
       : effectiveAddress;
     this.writeByte(address, storedValue);
   }
-}
 
-function validateCpuSnapshot(snapshot: CpuSnapshot): void {
-  const registers = snapshot.registers;
-  if (
-    !isByte(registers.A) ||
-    !isByte(registers.X) ||
-    !isByte(registers.Y) ||
-    !isWord(registers.PC) ||
-    !isByte(registers.SP) ||
-    !isByte(registers.P)
-  ) {
-    throw new RangeError("CPU save state contains an invalid register");
+  private validateSnapshot(snapshot: CpuSnapshot): void {
+    const registers = snapshot.registers;
+    if (
+      !isByte(registers.A) ||
+      !isByte(registers.X) ||
+      !isByte(registers.Y) ||
+      !isWord(registers.PC) ||
+      !isByte(registers.SP) ||
+      !isByte(registers.P)
+    ) {
+      throw new RangeError("CPU save state contains an invalid register");
+    }
+    if (!isByte(snapshot.internalDataBus) || !isByte(snapshot.externalDataBus)) {
+      throw new RangeError("CPU save state contains an invalid data-bus latch");
+    }
+    if (!Number.isSafeInteger(snapshot.cpuCycles) || snapshot.cpuCycles < 0) {
+      throw new RangeError("CPU save state contains an invalid cycle count");
+    }
+    if (snapshot.interruptEntry && snapshot.activeInstruction) {
+      throw new Error("CPU save state cannot contain both an instruction and interrupt entry");
+    }
+    if (
+      snapshot.indexedReadResult &&
+      (!isWord(snapshot.indexedReadResult.address) || !isByte(snapshot.indexedReadResult.value))
+    ) {
+      throw new RangeError("CPU save state contains an invalid indexed-read latch");
+    }
+    const active = snapshot.activeInstruction;
+    if (
+      active &&
+      (!isByte(active.opcode) || typeof active.interruptDisableBeforeInstruction !== "boolean")
+    ) {
+      throw new RangeError("CPU save state contains an invalid active instruction");
+    }
   }
-  if (!isByte(snapshot.internalDataBus) || !isByte(snapshot.externalDataBus)) {
-    throw new RangeError("CPU save state contains an invalid data-bus latch");
-  }
-  if (!Number.isSafeInteger(snapshot.cpuCycles) || snapshot.cpuCycles < 0) {
-    throw new RangeError("CPU save state contains an invalid cycle count");
-  }
-  if (snapshot.interruptEntry && snapshot.activeInstruction) {
-    throw new Error("CPU save state cannot contain both an instruction and interrupt entry");
-  }
-  if (
-    snapshot.indexedReadResult &&
-    (!isWord(snapshot.indexedReadResult.address) || !isByte(snapshot.indexedReadResult.value))
-  ) {
-    throw new RangeError("CPU save state contains an invalid indexed-read latch");
-  }
-  const active = snapshot.activeInstruction;
-  if (
-    active &&
-    (!isByte(active.opcode) || typeof active.interruptDisableBeforeInstruction !== "boolean")
-  ) {
-    throw new RangeError("CPU save state contains an invalid active instruction");
-  }
-}
-
-function isByte(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xff;
-}
-
-function isWord(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xffff;
 }
 
 export default CPU;

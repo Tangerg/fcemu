@@ -1,4 +1,5 @@
 import {
+  AudioWorkletMessageType,
   NES_AUDIO_PROCESSOR_NAME,
   type AudioWorkletInputMessage,
   type AudioWorkletOutputMessage,
@@ -38,13 +39,13 @@ class NesAudioWorkletProcessor extends AudioWorkletProcessor {
       processorOptions.startThreshold,
     );
     this.port.onmessage = (event: MessageEvent<AudioWorkletInputMessage>) => {
-      if (event.data.type === "reset") {
+      if (event.data.type === AudioWorkletMessageType.Reset) {
         this.buffer.reset();
         return;
       }
       const droppedSamples = this.buffer.push(event.data.samples);
       if (droppedSamples > 0) {
-        this.postMetric({ type: "overflow", droppedSamples });
+        this.postMetric({ type: AudioWorkletMessageType.Overflow, droppedSamples });
       }
     };
   }
@@ -57,7 +58,7 @@ class NesAudioWorkletProcessor extends AudioWorkletProcessor {
     const output = outputs[0]?.[0];
     if (!output) return true;
     const result = this.buffer.pull(output);
-    if (result.underrunStarted) this.postMetric({ type: "underrun" });
+    if (result.underrunStarted) this.postMetric({ type: AudioWorkletMessageType.Underrun });
     return true;
   }
 

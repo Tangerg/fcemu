@@ -22,7 +22,7 @@ export interface AppProps {
 export function App({ createApplication }: AppProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const applicationRef = useRef<EmulatorApplication>();
+  const applicationRef = useRef<EmulatorApplication | undefined>(undefined);
   const [snapshot, setSnapshot] = useState<SessionSnapshot>(INITIAL_SNAPSHOT);
   const [isDragging, setDragging] = useState(false);
 

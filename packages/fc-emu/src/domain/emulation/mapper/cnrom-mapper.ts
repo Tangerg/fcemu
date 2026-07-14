@@ -1,4 +1,5 @@
 import type Cartridge from "../../model/cartridge.js";
+import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
 
 const CHR_BANK_SIZE = 0x2000;
@@ -30,11 +31,12 @@ export class CnromMapper implements Mapper {
   }
 
   captureState(): MapperState {
-    return { kind: "cnrom", selectedChrBank: this.selectedChrBank };
+    return { kind: MapperKind.Cnrom, selectedChrBank: this.selectedChrBank };
   }
 
   restoreState(state: MapperState): void {
-    if (state.kind !== "cnrom") throw new Error(`Cannot restore ${state.kind} state into CNROM`);
+    if (state.kind !== MapperKind.Cnrom)
+      throw new Error(`Cannot restore ${state.kind} state into CNROM`);
     if (
       !Number.isInteger(state.selectedChrBank) ||
       state.selectedChrBank < 0 ||

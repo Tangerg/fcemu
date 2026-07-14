@@ -7,15 +7,11 @@ import type { Mapper, MapperInterruptPort, MapperState } from "./mapper/index.js
 import type Cartridge from "../model/cartridge.js";
 import type { CartridgeMemoryState } from "../model/cartridge-memory.js";
 import { resolveConsoleTiming, type ConsoleRegion, type ConsoleTiming } from "./console-timing.js";
-import {
-  DmaArbiter,
-  type DmaArbiterPort,
-  type DmaArbiterState,
-  type DmaBusPhase,
-} from "./dma/dma-arbiter.js";
+import { DmaArbiter, type DmaArbiterPort, type DmaArbiterState } from "./dma/dma-arbiter.js";
+import { DmaBusPhase } from "./dma/dma-bus-phase.js";
+import { IRQSource } from "./irq-source.js";
+import { isByte } from "./numeric-range.js";
 import { MachineClock, type MachineClockState } from "./clock/machine-clock.js";
-
-type IRQSource = "apu-dmc" | "apu-frame" | "mapper";
 
 export interface BusSnapshot {
   readonly ram: Uint8Array;
@@ -135,7 +131,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (!(state.ram instanceof Uint8Array) || state.ram.byteLength !== this.ram.byteLength) {
       throw new RangeError("Bus save state contains invalid internal RAM");
     }
-    const irqSources = validateIrqSources(state.irqSources);
+    const irqSources = validateIRQSources(state.irqSources);
     if (state.pendingControllerWrite !== undefined && !isByte(state.pendingControllerWrite)) {
       throw new RangeError("Bus save state contains an invalid pending controller write");
     }
@@ -189,13 +185,13 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     else this.irqSources.delete(source);
     this.cpu.setIRQLine(this.irqSources.size > 0);
     const remainingInstructionCycles = this.clock.remainingCommittedApuCycles;
-    if (asserted && (source === "mapper" || remainingInstructionCycles >= 2)) {
-      this.cpu.sampleIRQLine(source === "mapper" || remainingInstructionCycles >= 3);
+    if (asserted && (source === IRQSource.Mapper || remainingInstructionCycles >= 2)) {
+      this.cpu.sampleIRQLine(source === IRQSource.Mapper || remainingInstructionCycles >= 3);
     }
   }
 
   setMapperIrq(asserted: boolean): void {
-    this.setIRQSource("mapper", asserted);
+    this.setIRQSource(IRQSource.Mapper, asserted);
   }
 
   setPpuNmiLine(asserted: boolean): void {
@@ -352,7 +348,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
   private commitControllerWrite(): void {
     const value = this.pendingControllerWrite;
     const completedCycle = this.cpu.cpuCycles - 1;
-    if (value === undefined || this.dma.phaseAt(completedCycle) !== "put") return;
+    if (value === undefined || this.dma.phaseAt(completedCycle) !== DmaBusPhase.Put) return;
     this.pendingControllerWrite = undefined;
     this.controller1.strobe = value;
     this.controller2.strobe = value;
@@ -416,16 +412,12 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
   }
 }
 
-function validateIrqSources(sources: readonly IRQSource[]): readonly IRQSource[] {
-  const valid = new Set<IRQSource>(["apu-dmc", "apu-frame", "mapper"]);
+function validateIRQSources(sources: readonly IRQSource[]): readonly IRQSource[] {
+  const valid = new Set<IRQSource>([IRQSource.ApuDmc, IRQSource.ApuFrame, IRQSource.Mapper]);
   if (sources.some((source) => !valid.has(source)) || new Set(sources).size !== sources.length) {
     throw new RangeError("Bus save state contains invalid IRQ sources");
   }
   return sources;
-}
-
-function isByte(value: number): boolean {
-  return Number.isInteger(value) && value >= 0 && value <= 0xff;
 }
 
 export default Bus;

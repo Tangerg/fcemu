@@ -58,6 +58,28 @@ describe("Emulator save states", () => {
     expect(emulator.diagnostics).toEqual(expectedDiagnostics);
   });
 
+  it("replays the startup audio transient exactly", () => {
+    const samples: number[] = [];
+    const emulator = Emulator.fromRom(
+      createTestRom({
+        program: [0xa9, 0x40, 0x8d, 0x11, 0x40, 0x4c, 0x05, 0x80],
+      }),
+      "audio-filter-state.nes",
+      { audio: { sampleRate: 44_100, writeSample: (sample) => samples.push(sample) } },
+    );
+    const snapshot = emulator.captureSaveState();
+
+    emulator.runFrame();
+    const expectedSamples = [...samples];
+    expect(expectedSamples.length).toBeGreaterThan(0);
+
+    emulator.restoreSaveState(snapshot);
+    samples.length = 0;
+    emulator.runFrame();
+
+    expect(samples).toEqual(expectedSamples);
+  });
+
   it("restores a snapshot into another instance of the same ROM and retains mapper mirroring", () => {
     const rom = createTestRom({
       mapper: 7,
@@ -176,11 +198,25 @@ describe("Emulator save states", () => {
     expect(emulator.captureSaveState()).toEqual(before);
   });
 
+  it("rejects invalid APU audio-filter history transactionally", () => {
+    const emulator = Emulator.fromRom(createTestRom());
+    const corrupted = structuredClone(emulator.captureSaveState());
+    (
+      corrupted.state.apu.audioFilter as {
+        highPass90PreviousInput: number;
+      }
+    ).highPass90PreviousInput = Number.NaN;
+    const before = emulator.captureSaveState();
+
+    expect(() => emulator.restoreSaveState(corrupted)).toThrow(/audio filter/i);
+    expect(emulator.captureSaveState()).toEqual(before);
+  });
+
   it("rejects unknown state versions", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const snapshot = emulator.captureSaveState();
-    expect(snapshot.version).toBe(12);
-    const future = { ...snapshot, version: 13 } as unknown as EmulatorSaveState;
+    expect(snapshot.version).toBe(13);
+    const future = { ...snapshot, version: 14 } as unknown as EmulatorSaveState;
     expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
   });
 });

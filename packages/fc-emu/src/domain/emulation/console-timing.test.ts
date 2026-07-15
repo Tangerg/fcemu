@@ -73,6 +73,10 @@ describe("ConsoleTiming", () => {
         cpuPpu,
         apu,
       });
+      expect(resolveConsoleTiming(mode).frameRateHz).toBeCloseTo(
+        region === "ntsc" ? 60.0988 : 50.007,
+        3,
+      );
     },
   );
 

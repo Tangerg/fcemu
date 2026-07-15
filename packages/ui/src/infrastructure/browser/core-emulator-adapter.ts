@@ -16,6 +16,10 @@ class CoreEmulatorRuntime implements EmulatorRuntimePort {
     return this.emulator.cartridge;
   }
 
+  get frameRateHz(): number {
+    return this.emulator.frameRateHz;
+  }
+
   runFrame(): EmulatorFrameResult {
     return this.emulator.runFrame();
   }

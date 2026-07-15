@@ -36,6 +36,7 @@ export interface EmulatorRuntimeState {
 
 export interface EmulatorRuntimePort {
   readonly cartridge: EmulatorCartridgeInfo;
+  readonly frameRateHz: number;
   runFrame(): EmulatorFrameResult;
   reset(): void;
   powerCycle(): void;
@@ -65,7 +66,8 @@ export interface ScheduledFrame {
 }
 
 export interface FrameSchedulerPort {
-  schedule(callback: () => void): ScheduledFrame;
+  /** Invokes `callback` on the next frame with a monotonic millisecond timestamp. */
+  schedule(callback: (timestamp: number) => void): ScheduledFrame;
 }
 
 export type GameButton = "a" | "b" | "select" | "start" | "up" | "down" | "left" | "right";

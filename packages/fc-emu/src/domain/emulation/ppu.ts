@@ -4,7 +4,7 @@ import type Bus from "./bus.js";
 import type { ConsoleTiming } from "./console-timing.js";
 import { PpuIoBusLatch, type PpuIoBusState } from "./ppu/ppu-io-bus-latch.js";
 import { SpriteEvaluator, type SpriteEvaluationState } from "./ppu/sprite-evaluator.js";
-import { SpritePatternAddress } from "./ppu/sprite-pattern-address.js";
+import { resolveSpritePatternAddress } from "./ppu/sprite-pattern-address.js";
 
 const BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS = 4;
 
@@ -764,7 +764,7 @@ class PPU {
   }
 
   private fetchSpritePattern(tile: number, attributes: number, row: number): number {
-    const { lowPlaneAddress } = new SpritePatternAddress({
+    const lowPlaneAddress = resolveSpritePatternAddress({
       tileIndex: tile,
       row,
       height: this.flagSpriteSize === 0 ? 8 : 16,

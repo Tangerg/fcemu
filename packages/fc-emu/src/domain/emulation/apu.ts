@@ -47,6 +47,14 @@ interface NoiseChannelState {
   readonly envelope: EnvelopeState;
 }
 
+interface NesAudioFilterState {
+  readonly highPass90PreviousInput: number;
+  readonly highPass90PreviousOutput: number;
+  readonly highPass440PreviousInput: number;
+  readonly highPass440PreviousOutput: number;
+  readonly lowPass14kPreviousOutput: number;
+}
+
 export interface ApuSnapshot {
   readonly sampleRate: number;
   readonly pulseChannel1: PulseChannelState;
@@ -58,6 +66,7 @@ export interface ApuSnapshot {
   readonly cycle: number;
   readonly frameIRQPending: boolean;
   readonly frameIrqClearDelay: number;
+  readonly audioFilter: NesAudioFilterState;
   readonly pendingRegisterWrites: readonly {
     readonly address: number;
     readonly value: number;
@@ -613,6 +622,42 @@ class NesAudioFilterChain {
     return this.lowPass14kPreviousOutput;
   }
 
+  captureState(): NesAudioFilterState {
+    return {
+      highPass90PreviousInput: this.highPass90PreviousInput,
+      highPass90PreviousOutput: this.highPass90PreviousOutput,
+      highPass440PreviousInput: this.highPass440PreviousInput,
+      highPass440PreviousOutput: this.highPass440PreviousOutput,
+      lowPass14kPreviousOutput: this.lowPass14kPreviousOutput,
+    };
+  }
+
+  restoreState(state: NesAudioFilterState): void {
+    this.highPass90PreviousInput = state.highPass90PreviousInput;
+    this.highPass90PreviousOutput = state.highPass90PreviousOutput;
+    this.highPass440PreviousInput = state.highPass440PreviousInput;
+    this.highPass440PreviousOutput = state.highPass440PreviousOutput;
+    this.lowPass14kPreviousOutput = state.lowPass14kPreviousOutput;
+  }
+
+  static validateState(state: NesAudioFilterState): void {
+    const values = state
+      ? [
+          state.highPass90PreviousInput,
+          state.highPass90PreviousOutput,
+          state.highPass440PreviousInput,
+          state.highPass440PreviousOutput,
+          state.lowPass14kPreviousOutput,
+        ]
+      : [];
+    if (
+      values.length !== 5 ||
+      values.some((value) => typeof value !== "number" || !Number.isFinite(value))
+    ) {
+      throw new RangeError("APU save state contains an invalid audio filter value");
+    }
+  }
+
   private static highPassAlpha(cutoffHz: number, sampleRate: number): number {
     const rc = 1 / (2 * Math.PI * cutoffHz);
     const dt = 1 / sampleRate;
@@ -721,6 +766,14 @@ class AudioMixer {
   public output(): number {
     return this.filter(this.mix());
   }
+
+  captureFilterState(): NesAudioFilterState {
+    return this.filters.captureState();
+  }
+
+  restoreFilterState(state: NesAudioFilterState): void {
+    this.filters.restoreState(state);
+  }
 }
 
 /**
@@ -798,6 +851,7 @@ class APU {
       cycle: this.cycle,
       frameIRQPending: this.frameIRQPending,
       frameIrqClearDelay: this.frameIrqClearDelay,
+      audioFilter: this.audioMixer.captureFilterState(),
       pendingRegisterWrites: this.pendingRegisterWrites.map((write) => ({ ...write })),
     };
   }
@@ -810,6 +864,7 @@ class APU {
     this.noiseChannel.restoreState(state.noiseChannel);
     this.deltaModulationChannel.restoreState(state.deltaModulationChannel);
     this.frameSequencer.restoreState(state.frameSequencer);
+    this.audioMixer.restoreFilterState(state.audioFilter);
     this.cycle = state.cycle;
     this.frameIRQPending = state.frameIRQPending;
     this.frameIrqClearDelay = state.frameIrqClearDelay;
@@ -1147,7 +1202,9 @@ class APU {
   }
 
   private validateSnapshot(state: ApuSnapshot): void {
-    APU.validateNonNegativeIntegers(state);
+    const { audioFilter, ...integerState } = state;
+    APU.validateNonNegativeIntegers(integerState);
+    NesAudioFilterChain.validateState(audioFilter);
     if (state.sampleRate !== this.sampleRate) {
       throw new Error("APU save state was created for another audio sample rate");
     }

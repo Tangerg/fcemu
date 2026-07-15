@@ -26,6 +26,8 @@ export interface EmulatorApplicationDependencies {
 }
 
 const SAVE_CHECKPOINT_FRAMES = 300;
+const MAX_FRAMES_PER_CALLBACK = 3;
+const MAX_BACKLOG_INTERVALS = 4;
 const GAME_BUTTONS: readonly GameButton[] = [
   "a",
   "b",
@@ -49,6 +51,8 @@ export class EmulatorApplication {
   private session = EmulationSession.idle();
   private runtime: EmulatorRuntimePort | undefined;
   private scheduledFrame: ScheduledFrame | undefined;
+  private lastFrameTime: number | undefined;
+  private frameTimeDebtMs = 0;
   private readonly listeners = new Set<() => void>();
   private operationSequence = 0;
   private disposed = false;
@@ -146,6 +150,8 @@ export class EmulatorApplication {
     try {
       this.session = this.session.play();
       this.emit();
+      this.lastFrameTime = undefined;
+      this.frameTimeDebtMs = 0;
       this.scheduleNextFrame();
       const audioResult = await this.dependencies.audio.resume();
       if (
@@ -319,14 +325,22 @@ export class EmulatorApplication {
 
   private scheduleNextFrame(): void {
     if (this.session.snapshot.status !== "running") return;
-    this.scheduledFrame = this.dependencies.scheduler.schedule(() => {
-      if (!this.runtime || this.session.snapshot.status !== "running") return;
+    this.scheduledFrame = this.dependencies.scheduler.schedule((timestamp) => {
+      const runtime = this.runtime;
+      if (!runtime || this.session.snapshot.status !== "running") return;
       try {
-        const result = this.runtime.runFrame();
-        this.session = this.session.frameCompleted(result.cpuCycles);
-        this.emit();
-        if (this.currentRomId && this.session.snapshot.frameCount % SAVE_CHECKPOINT_FRAMES === 0) {
-          void this.persistRuntime(this.runtime, this.currentRomId);
+        const framesDue = this.framesDue(timestamp);
+        for (let frame = 0; frame < framesDue; frame++) {
+          if (this.runtime !== runtime || this.session.snapshot.status !== "running") break;
+          const result = runtime.runFrame();
+          this.session = this.session.frameCompleted(result.cpuCycles);
+          this.emit();
+          if (
+            this.currentRomId &&
+            this.session.snapshot.frameCount % SAVE_CHECKPOINT_FRAMES === 0
+          ) {
+            void this.persistRuntime(runtime, this.currentRomId);
+          }
         }
         this.scheduleNextFrame();
       } catch (error) {
@@ -334,6 +348,30 @@ export class EmulatorApplication {
         this.emit();
       }
     });
+  }
+
+  /** Returns a bounded number of emulated frames due at this display timestamp. */
+  private framesDue(timestamp: number): number {
+    const runtime = this.runtime;
+    if (!runtime || !Number.isFinite(runtime.frameRateHz) || runtime.frameRateHz <= 0) {
+      throw new RangeError("Emulator frame rate must be a positive finite number");
+    }
+    const interval = 1000 / runtime.frameRateHz;
+    if (this.lastFrameTime === undefined) {
+      this.lastFrameTime = timestamp;
+      this.frameTimeDebtMs = 0;
+      return 1;
+    }
+    const elapsed = Math.max(0, timestamp - this.lastFrameTime);
+    this.lastFrameTime = timestamp;
+    if (elapsed > interval * MAX_BACKLOG_INTERVALS) {
+      this.frameTimeDebtMs = 0;
+      return 1;
+    }
+    this.frameTimeDebtMs += elapsed;
+    const due = Math.min(Math.floor(this.frameTimeDebtMs / interval), MAX_FRAMES_PER_CALLBACK);
+    this.frameTimeDebtMs -= due * interval;
+    return due;
   }
 
   private cancelScheduledFrame(): void {

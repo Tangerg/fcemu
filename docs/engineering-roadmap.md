@@ -289,10 +289,10 @@ owner while preserving conformance results. `DmaCadence` was the first such corr
 GET/PUT alignment now belongs directly to `DmaArbiter`, with the save-state shape unchanged.
 The same audit consolidated the three public Mapper error types into one module, removing invented
 lifecycle boundaries without weakening validation, error semantics or package exports. A later
-domain-modelling pass reversed the earlier `SpritePatternAddress`/`RomIdentity` extraction: both are
-now value objects again (the address computed and validated in the constructor, the identity CRC
-computed once and exposed through `toString`) so their behavior lives with their data rather than in
-free functions. Their focused unit tests construct the objects directly.
+domain-modelling audit kept sprite-pattern address resolution and ROM identity generation as pure
+functions: both perform one stateless calculation, so wrapping their scalar result in a short-lived
+object added ceremony without protecting a longer-lived invariant. Their focused unit tests exercise
+the functions directly.
 The clock-domain audit then removed the unused `ClockRatioCounter` duplicate, replaced three
 field-only timing classes with immutable data and made CPU/PPU master dividers the sole source for
 the derived PPU frequency. `MachineClock` remains the only owner of fractional regional phase.

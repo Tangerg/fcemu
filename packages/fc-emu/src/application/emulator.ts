@@ -8,10 +8,10 @@ import type {
 } from "../domain/model/cartridge.js";
 import type { ConsoleRegion } from "../domain/emulation/console-timing.js";
 import type { EmulatorOutputPorts, VideoFrame } from "./ports/emulator-output.js";
-import { RomIdentity } from "../domain/model/rom-identity.js";
+import { createRomIdentity } from "../domain/model/rom-identity.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
-const SAVE_STATE_VERSION = 12;
+const SAVE_STATE_VERSION = 13;
 
 export interface CartridgeInfo {
   readonly format: CartridgeFormat;
@@ -63,6 +63,7 @@ export interface EmulatorConfiguration {
 /** Application facade for a single emulation session. */
 export class Emulator {
   readonly cartridge: CartridgeInfo;
+  readonly frameRateHz: number;
   private readonly bus: Bus;
   private readonly outputs: EmulatorOutputPorts;
 
@@ -73,6 +74,7 @@ export class Emulator {
     configuration: EmulatorConfiguration,
   ) {
     this.bus = new Bus(cartridge, outputs.audio?.sampleRate, configuration.consoleRegion);
+    this.frameRateHz = this.bus.Timing.frameRateHz;
     this.outputs = outputs;
     this.cartridge = Object.freeze({
       format: cartridge.format,
@@ -106,7 +108,7 @@ export class Emulator {
   ): Emulator {
     return new Emulator(
       Cartridge.fromArrayBuffer(rom, sourceName),
-      new RomIdentity(rom).toString(),
+      createRomIdentity(rom),
       outputs,
       configuration,
     );

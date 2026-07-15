@@ -14,6 +14,7 @@ describe("CoreEmulatorFactory", () => {
     );
 
     expect(runtime.cartridge.consoleRegion).toBe("pal");
+    expect(runtime.frameRateHz).toBeCloseTo(50.007, 3);
   });
 
   it("overrides cartridge metadata for an explicit region preference", () => {

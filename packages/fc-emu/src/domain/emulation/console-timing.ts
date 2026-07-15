@@ -32,6 +32,7 @@ export interface ConsoleTiming {
   readonly preRenderScanline: number;
   readonly vblankStartScanline: number;
   readonly ppuFrequencyHz: number;
+  readonly frameRateHz: number;
   readonly skipsOddFrameDot: boolean;
   readonly dmcDmaControllerReadGlitch: boolean;
   readonly cpuPpu: CpuPpuTiming;
@@ -150,13 +151,16 @@ function defineApuTiming(
 }
 
 function defineConsoleTiming(
-  input: Omit<ConsoleTiming, "preRenderScanline" | "ppuFrequencyHz">,
+  input: Omit<ConsoleTiming, "preRenderScanline" | "ppuFrequencyHz" | "frameRateHz">,
 ): ConsoleTiming {
+  const ppuFrequencyHz =
+    (input.cpuFrequencyHz * input.cpuPpu.cpuMasterClockDivider) /
+    input.cpuPpu.ppuMasterClockDivider;
+  const averageDotsPerFrame = input.scanlinesPerFrame * 341 - (input.skipsOddFrameDot ? 0.5 : 0);
   return Object.freeze({
     ...input,
     preRenderScanline: input.scanlinesPerFrame - 1,
-    ppuFrequencyHz:
-      (input.cpuFrequencyHz * input.cpuPpu.cpuMasterClockDivider) /
-      input.cpuPpu.ppuMasterClockDivider,
+    ppuFrequencyHz,
+    frameRateHz: ppuFrequencyHz / averageDotsPerFrame,
   });
 }

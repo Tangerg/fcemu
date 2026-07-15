@@ -12,9 +12,10 @@ import type {
 import type { RegionPreference } from "../domain/execution-region.js";
 
 class TestScheduler implements FrameSchedulerPort {
-  private tasks: Array<{ callback: () => void; cancelled: boolean }> = [];
+  private tasks: Array<{ callback: (timestamp: number) => void; cancelled: boolean }> = [];
+  private clock = 0;
 
-  schedule(callback: () => void): ScheduledFrame {
+  schedule(callback: (timestamp: number) => void): ScheduledFrame {
     const task = { callback, cancelled: false };
     this.tasks.push(task);
     return {
@@ -26,7 +27,17 @@ class TestScheduler implements FrameSchedulerPort {
 
   runNext(): void {
     const task = this.tasks.shift();
-    if (task && !task.cancelled) task.callback();
+    if (task && !task.cancelled) {
+      // Advance well past one frame interval so each tick runs exactly one frame.
+      this.clock += 1000;
+      task.callback(this.clock);
+    }
+  }
+
+  /** Runs the next scheduled callback with an explicit display timestamp (ms). */
+  runNextAt(timestamp: number): void {
+    const task = this.tasks.shift();
+    if (task && !task.cancelled) task.callback(timestamp);
   }
 }
 
@@ -50,6 +61,36 @@ class TestControllerInput implements ControllerInputPort {
 }
 
 describe("EmulatorApplication", () => {
+  it.each([30, 50, 60, 120])(
+    "paces emulation to the console frame rate on a %i Hz display",
+    async (displayHz) => {
+      const scheduler = new TestScheduler();
+      const runFrame = vi.fn<() => { cpuCycles: number }>(() => ({ cpuCycles: 100 }));
+      const application = createScheduledApplication(scheduler, runFrame);
+
+      await application.loadRom({ name: "game.nes", arrayBuffer: async () => new ArrayBuffer(16) });
+
+      for (let tick = 1; tick <= displayHz; tick++) {
+        scheduler.runNextAt((tick * 1000) / displayHz);
+      }
+
+      expect(runFrame.mock.calls.length).toBeGreaterThanOrEqual(58);
+      expect(runFrame.mock.calls.length).toBeLessThanOrEqual(62);
+    },
+  );
+
+  it("drops a background-tab backlog instead of sprinting to catch up", async () => {
+    const scheduler = new TestScheduler();
+    const runFrame = vi.fn<() => { cpuCycles: number }>(() => ({ cpuCycles: 100 }));
+    const application = createScheduledApplication(scheduler, runFrame);
+    await application.loadRom(testFile("game.nes"));
+
+    scheduler.runNextAt(0);
+    scheduler.runNextAt(5000);
+
+    expect(runFrame).toHaveBeenCalledTimes(2);
+  });
+
   it("loads a ROM, schedules frames and can pause", async () => {
     const scheduler = new TestScheduler();
     const controllerInput = new TestControllerInput();
@@ -83,6 +124,7 @@ describe("EmulatorApplication", () => {
             prgRomBytes: 16_384,
             chrRomBytes: 8192,
           },
+          frameRateHz: 60.0988,
           runFrame,
           reset,
           powerCycle,
@@ -172,6 +214,7 @@ describe("EmulatorApplication", () => {
         prgRomBytes: 16_384,
         chrRomBytes: 8192,
       },
+      frameRateHz: 60.0988,
       runFrame: () => ({ cpuCycles: 100 }),
       reset: () => undefined,
       powerCycle: () => undefined,
@@ -424,6 +467,7 @@ function createApplication(
         prgRomBytes: number;
         chrRomBytes: number;
       };
+      frameRateHz: number;
       runFrame: () => { cpuCycles: number };
       reset: () => void;
       powerCycle: () => void;
@@ -443,6 +487,7 @@ function createApplication(
       prgRomBytes: 16_384,
       chrRomBytes: 8192,
     },
+    frameRateHz: 60.0988,
     runFrame: () => ({ cpuCycles: 100 }),
     reset: () => undefined,
     powerCycle: () => undefined,
@@ -493,6 +538,7 @@ function createRuntime({
       prgRomBytes: 16_384,
       chrRomBytes: 8192,
     },
+    frameRateHz: consoleRegion === "ntsc" ? 60.0988 : 50.007,
     runFrame: () => ({ cpuCycles: 100 }),
     reset: () => undefined,
     powerCycle: () => undefined,
@@ -502,6 +548,28 @@ function createRuntime({
     restoreBatterySave,
     setControllerButton,
   };
+}
+
+function createScheduledApplication(
+  scheduler: TestScheduler,
+  runFrame: () => { cpuCycles: number },
+): EmulatorApplication {
+  const runtime = { ...createRuntime({ consoleRegion: "ntsc" }), runFrame };
+  return new EmulatorApplication({
+    romReader: {
+      read: async (file) => ({ id: file.name, name: file.name, bytes: await file.arrayBuffer() }),
+    },
+    emulatorFactory: { create: () => runtime },
+    scheduler,
+    audio: {
+      activate: vi.fn<() => void>(),
+      resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
+      suspend: vi.fn<() => Promise<void>>().mockResolvedValue(),
+      dispose: vi.fn<() => Promise<void>>().mockResolvedValue(),
+    },
+    controllerInput: new TestControllerInput(),
+    saveRamStorage: { load: async () => undefined, save: async () => undefined },
+  });
 }
 
 function testFile(name: string) {

@@ -61,8 +61,26 @@ export function App({ createApplication }: AppProps) {
     };
   }, [createApplication]);
 
+  const focusGameplay = () => {
+    if (!applicationRef.current?.getSnapshot().rom) return;
+    canvasRef.current?.focus({ preventScroll: true });
+  };
+
+  const runApplicationAction = (
+    action: (application: EmulatorApplication) => void | Promise<void>,
+  ) => {
+    const application = applicationRef.current;
+    if (!application) return;
+    void action(application);
+    focusGameplay();
+  };
+
   const loadFile = (file?: File) => {
-    if (file) void applicationRef.current?.loadRom(file);
+    const application = applicationRef.current;
+    if (!file || !application) return;
+    void application.loadRom(file).then(() => {
+      if (applicationRef.current === application) focusGameplay();
+    });
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +115,14 @@ export function App({ createApplication }: AppProps) {
             <span className={`status status-${snapshot.status}`}>{statusLabel(snapshot)}</span>
           </div>
           <div className="screen-bezel">
-            <canvas ref={canvasRef} width="256" height="240" aria-label="FC 模拟器画面" />
+            <canvas
+              ref={canvasRef}
+              width="256"
+              height="240"
+              tabIndex={0}
+              aria-label="FC 模拟器画面"
+              aria-describedby="controller-help"
+            />
             {snapshot.status === "idle" && (
               <div className="screen-empty" aria-hidden="true">
                 <span className="screen-mark">FC</span>
@@ -148,8 +173,10 @@ export function App({ createApplication }: AppProps) {
                   value={preference}
                   aria-pressed={snapshot.regionPreference === preference}
                   onClick={(event) =>
-                    void applicationRef.current?.setRegionPreference(
-                      parseRegionPreference(event.currentTarget.value),
+                    runApplicationAction((application) =>
+                      application.setRegionPreference(
+                        parseRegionPreference(event.currentTarget.value),
+                      ),
                     )
                   }
                 >
@@ -196,7 +223,9 @@ export function App({ createApplication }: AppProps) {
               type="button"
               disabled={!canToggle}
               onClick={() =>
-                void (isRunning ? applicationRef.current?.pause() : applicationRef.current?.play())
+                runApplicationAction((application) =>
+                  isRunning ? application.pause() : application.play(),
+                )
               }
             >
               <span className="transport-icon" aria-hidden="true">
@@ -210,7 +239,7 @@ export function App({ createApplication }: AppProps) {
                 type="button"
                 disabled={!canToggle}
                 aria-label="软复位，保留内存与电池存档"
-                onClick={() => void applicationRef.current?.reset()}
+                onClick={() => runApplicationAction((application) => application.reset())}
               >
                 <span aria-hidden="true">↻</span>
                 软复位
@@ -220,7 +249,7 @@ export function App({ createApplication }: AppProps) {
                 type="button"
                 disabled={!canToggle}
                 aria-label="重新开机，清除易失内存并保留电池存档"
-                onClick={() => void applicationRef.current?.powerCycle()}
+                onClick={() => runApplicationAction((application) => application.powerCycle())}
               >
                 <span aria-hidden="true">⏻</span>
                 重新开机
@@ -239,7 +268,9 @@ export function App({ createApplication }: AppProps) {
                     aria-pressed={isSelected}
                     data-saved={hasSave || undefined}
                     disabled={!canToggle}
-                    onClick={() => applicationRef.current?.selectQuickSaveSlot(slot)}
+                    onClick={() =>
+                      runApplicationAction((application) => application.selectQuickSaveSlot(slot))
+                    }
                   >
                     <span>SLOT {slot}</span>
                     <i aria-hidden="true" />
@@ -252,7 +283,9 @@ export function App({ createApplication }: AppProps) {
                 className="state-button"
                 type="button"
                 disabled={!canToggle}
-                onClick={() => applicationRef.current?.quickSaveCurrentState()}
+                onClick={() =>
+                  runApplicationAction((application) => application.quickSaveCurrentState())
+                }
               >
                 <span aria-hidden="true">◇</span>
                 {snapshot.hasQuickSave ? "覆盖槽位" : "保存槽位"}
@@ -261,13 +294,15 @@ export function App({ createApplication }: AppProps) {
                 className="state-button"
                 type="button"
                 disabled={!canToggle || !snapshot.hasQuickSave}
-                onClick={() => void applicationRef.current?.quickLoadCurrentState()}
+                onClick={() =>
+                  runApplicationAction((application) => application.quickLoadCurrentState())
+                }
               >
                 <span aria-hidden="true">↶</span>
                 读取槽位
               </button>
             </div>
-            <p className="controls-hint">
+            <p id="controller-help" className="controls-hint">
               P1：WASD 移动 · J / K 操作 · Enter 开始 · Space 选择 · P2：方向键移动 · 0 / 1 操作
             </p>
           </div>

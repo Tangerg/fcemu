@@ -26,9 +26,11 @@ export interface WebAudioEnvironment {
 }
 
 export interface WebAudioDiagnostics {
+  readonly sampleRate: number;
   readonly underruns: number;
   readonly droppedSamples: number;
   readonly pendingSamples: number;
+  readonly bufferedSamples: number;
 }
 
 const browserEnvironment: WebAudioEnvironment = {
@@ -49,6 +51,7 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   );
   private underruns = 0;
   private droppedSamples = 0;
+  private bufferedSamples = 0;
 
   constructor(private readonly environment: WebAudioEnvironment = browserEnvironment) {}
 
@@ -58,10 +61,12 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
 
   get diagnostics(): WebAudioDiagnostics {
     return Object.freeze({
+      sampleRate: this.context?.sampleRate ?? 44_100,
       underruns: this.underruns,
       droppedSamples: this.droppedSamples,
       pendingSamples:
         this.batcher.pendingSamples + this.pendingBatches.length * this.batcher.batchSize,
+      bufferedSamples: this.bufferedSamples,
     });
   }
 
@@ -143,8 +148,17 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
       processorOptions,
     });
     node.port.onmessage = (event: MessageEvent<AudioWorkletOutputMessage>) => {
-      if (event.data.type === AudioWorkletMessageType.Underrun) this.underruns++;
-      else this.droppedSamples += event.data.droppedSamples;
+      switch (event.data.type) {
+        case AudioWorkletMessageType.Underrun:
+          this.underruns++;
+          break;
+        case AudioWorkletMessageType.Overflow:
+          this.droppedSamples += event.data.droppedSamples;
+          break;
+        case AudioWorkletMessageType.BufferLevel:
+          this.bufferedSamples = event.data.bufferedSamples;
+          break;
+      }
     };
     node.connect(context.destination);
     this.node = node;
@@ -184,6 +198,7 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   private resetBufferedAudio(node = this.node): void {
     this.batcher.reset();
     this.pendingBatches.length = 0;
+    this.bufferedSamples = 0;
     const message: AudioWorkletInputMessage = { type: AudioWorkletMessageType.Reset };
     node?.port.postMessage(message);
   }

@@ -19,6 +19,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "benchmark": "yarn build && node benchmarks/frame-buffer.mjs && node benchmarks/emulator-frame.mjs && node benchmarks/save-state.mjs",
+    "smoke:real-rom": "yarn build && node scripts/run-real-rom-smoke.mjs",
     "conformance:rom": "yarn build && node scripts/run-blargg-rom.mjs",
     "conformance:accuracy-coin": "yarn build && node scripts/run-accuracy-coin.mjs",
     "conformance:cpu": "yarn conformance:rom",

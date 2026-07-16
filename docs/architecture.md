@@ -206,7 +206,9 @@ pipeline used by background, sprite, OAM and odd-frame skip logic.
 Browser audio separates lifecycle orchestration from data policy. `AudioSampleBatcher` bounds
 main-thread message frequency, while `RebufferingAudioRing` owns capacity, startup and underrun
 invariants inside a separately bundled AudioWorklet. The Workbench application sees only
-`AudioLifecyclePort`; worklet messages and WebAudio nodes remain infrastructure details.
+`AudioLifecyclePort`; worklet messages and WebAudio nodes remain infrastructure details. Measured
+frame cadence and audio queue/ring/underrun counters are read-only application diagnostics rather
+than session state, so observing runtime health cannot change emulation transitions or save states.
 
 `CartridgeMemory` owns four physically distinct regions: volatile PRG RAM, PRG NVRAM, volatile CHR
 RAM and CHR NVRAM. It presents mapper-selected logical address spaces without exposing mutable
@@ -225,6 +227,9 @@ fails. The public envelope carries a schema version, console region, audio sampl
 image CRC-32 identity (compatibility guard, not a security primitive). The Workbench sees the core
 snapshot only through an opaque runtime port, owns its matching UI timeline, clears buffered audio
 before restore and reapplies current input intents so stale saved buttons cannot remain held.
+`QuickSaveStoragePort` persists three versioned Workbench envelopes through IndexedDB. Each key and
+record includes the content-addressed ROM identity, actual execution region and slot; incompatible
+or corrupt records are discarded without coupling the core to browser storage.
 
 `PpuIoBusLatch` owns the PPU's CPU-facing dynamic data bus independently from VRAM. Each bit keeps
 its own deterministic decay deadline, partial reads drive only their physical lines, and passive
@@ -239,9 +244,10 @@ internal and external data-bus latches advanced the envelope to version 8. Persi
 RP2A03 controller OUT write advanced it to version 9. Version 10 also persists whether
 RDY stretched an indexed dummy read in an active CPU memory cycle, because that signal changes the
 following SHA/SHS/SHX/SHY write. Version 11 persists the delayed internal frame-IRQ clear following
-a `$4015` read. The current version 12 persists MMC1's previous CPU R/W level so restoring between
+a `$4015` read. Version 12 persists MMC1's previous CPU R/W level so restoring between
 the two writes of an RMW instruction cannot admit a serial bit that hardware would ignore. Older
-in-memory snapshots are rejected explicitly instead of being restored with ambiguous state.
+in-memory snapshots are rejected explicitly instead of being restored with ambiguous state. The
+current version 13 also captures the APU output-filter history.
 
 Sprite processing is split into small timing-domain objects rather than one scanline batch inside
 `PPU`. A pure sprite-pattern address function interprets 8×8/8×16 table, tile and vertical-flip
@@ -280,7 +286,8 @@ their domain-level intents with source-aware pressed-state semantics; browser ke
 indexes and axes never cross the UI application port or enter `@fcemu/core`.
 
 The UI package owns the **Workbench** context: ROM loading, session lifecycle, execution-region
-preference, scheduling, controller intent, quick-save slot, runtime statistics and user feedback.
+preference, scheduling, controller intent, three persistent quick-save slots, runtime statistics
+and user feedback.
 Canvas, WebAudio, requestAnimationFrame, keyboard input and the core emulator are replaceable
 adapters around that context.
 
@@ -290,6 +297,7 @@ adapters around that context.
 React presentation
   -> EmulatorApplication
     -> RomReaderPort / FrameSchedulerPort / AudioLifecyclePort / ControllerInputPort
+       / SaveRamStoragePort / QuickSaveStoragePort
       -> browser adapters / CoreEmulatorFactory
         -> @fcemu/core Emulator
           -> domain hardware model

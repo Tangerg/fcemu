@@ -6,12 +6,13 @@ import { CanvasVideoOutput } from "../infrastructure/browser/canvas-video-output
 import { CoreEmulatorFactory } from "../infrastructure/browser/core-emulator-adapter.js";
 import { GamepadControllerInput } from "../infrastructure/browser/gamepad-controller-input.js";
 import { KeyboardControllerInput } from "../infrastructure/browser/keyboard-controller-input.js";
-import { IndexedDbSaveRamStorage } from "../infrastructure/browser/indexed-db-save-ram-storage.js";
+import { IndexedDbEmulatorStorage } from "../infrastructure/browser/indexed-db-emulator-storage.js";
 import { WebAudioOutput } from "../infrastructure/browser/web-audio-output.js";
 
 export function createBrowserApplication(canvas: HTMLCanvasElement): EmulatorApplication {
   const audio = new WebAudioOutput();
   const video = new CanvasVideoOutput(canvas);
+  const storage = new IndexedDbEmulatorStorage();
   return new EmulatorApplication({
     romReader: new BrowserRomReader(),
     emulatorFactory: new CoreEmulatorFactory(video, audio),
@@ -21,6 +22,7 @@ export function createBrowserApplication(canvas: HTMLCanvasElement): EmulatorApp
       new KeyboardControllerInput(),
       new GamepadControllerInput(),
     ]),
-    saveRamStorage: new IndexedDbSaveRamStorage(),
+    saveRamStorage: storage,
+    quickSaveStorage: storage,
   });
 }

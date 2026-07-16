@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 import type { EmulatorApplication } from "../application/emulator-application.js";
+import type { EmulatorApplicationDiagnostics } from "../application/emulator-application.js";
+import { QUICK_SAVE_SLOTS } from "../domain/emulation-session.js";
 import type { SessionSnapshot } from "../domain/emulation-session.js";
 import { parseRegionPreference, REGION_PREFERENCES } from "../domain/execution-region.js";
 import "./App.css";
@@ -12,7 +14,21 @@ const INITIAL_SNAPSHOT: SessionSnapshot = {
   regionPreference: "auto",
   frameCount: 0,
   cpuCycles: 0,
+  selectedQuickSaveSlot: 1,
+  quickSaveSlots: [],
   hasQuickSave: false,
+};
+
+const INITIAL_DIAGNOSTICS: EmulatorApplicationDiagnostics = {
+  actualFrameRateHz: 0,
+  targetFrameRateHz: 0,
+  audio: {
+    sampleRate: 44_100,
+    underruns: 0,
+    droppedSamples: 0,
+    pendingSamples: 0,
+    bufferedSamples: 0,
+  },
 };
 
 export interface AppProps {
@@ -24,6 +40,8 @@ export function App({ createApplication }: AppProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const applicationRef = useRef<EmulatorApplication | undefined>(undefined);
   const [snapshot, setSnapshot] = useState<SessionSnapshot>(INITIAL_SNAPSHOT);
+  const [diagnostics, setDiagnostics] =
+    useState<EmulatorApplicationDiagnostics>(INITIAL_DIAGNOSTICS);
   const [isDragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -31,7 +49,11 @@ export function App({ createApplication }: AppProps) {
     const application = createApplication(canvasRef.current);
     applicationRef.current = application;
     setSnapshot(application.getSnapshot());
-    const unsubscribe = application.subscribe(() => setSnapshot(application.getSnapshot()));
+    setDiagnostics(application.getDiagnostics());
+    const unsubscribe = application.subscribe(() => {
+      setSnapshot(application.getSnapshot());
+      setDiagnostics(application.getDiagnostics());
+    });
     return () => {
       unsubscribe();
       applicationRef.current = undefined;
@@ -90,6 +112,26 @@ export function App({ createApplication }: AppProps) {
             <Metric label="FRAME" value={snapshot.frameCount.toLocaleString()} />
             <Metric label="CPU CYCLES" value={snapshot.cpuCycles.toLocaleString()} />
             <Metric label="MAPPER" value={snapshot.rom ? formatMapperLabel(snapshot.rom) : "—"} />
+            <Metric
+              label="FPS ACT / TARGET"
+              value={`${formatRate(diagnostics.actualFrameRateHz)} / ${formatRate(
+                diagnostics.targetFrameRateHz,
+              )}`}
+            />
+            <Metric
+              label="AUDIO MS RING / QUEUE"
+              value={`${formatAudioMilliseconds(
+                diagnostics.audio.bufferedSamples,
+                diagnostics.audio.sampleRate,
+              )} / ${formatAudioMilliseconds(
+                diagnostics.audio.pendingSamples,
+                diagnostics.audio.sampleRate,
+              )}`}
+            />
+            <Metric
+              label="XRUN / DROPPED"
+              value={`${diagnostics.audio.underruns} / ${diagnostics.audio.droppedSamples}`}
+            />
           </div>
 
           <fieldset className="region-control">
@@ -162,7 +204,28 @@ export function App({ createApplication }: AppProps) {
               </span>
               {isRunning ? "暂停" : "继续"}
             </button>
-            <div className="state-actions" aria-label="即时存档">
+            <div className="quick-save-slots" aria-label="快速存档槽位">
+              {QUICK_SAVE_SLOTS.map((slot) => {
+                const isSelected = snapshot.selectedQuickSaveSlot === slot;
+                const hasSave = snapshot.quickSaveSlots.includes(slot);
+                return (
+                  <button
+                    key={slot}
+                    className="quick-save-slot"
+                    type="button"
+                    aria-label={`槽位 ${slot}${hasSave ? "，已有存档" : "，空"}`}
+                    aria-pressed={isSelected}
+                    data-saved={hasSave || undefined}
+                    disabled={!canToggle}
+                    onClick={() => applicationRef.current?.selectQuickSaveSlot(slot)}
+                  >
+                    <span>SLOT {slot}</span>
+                    <i aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
+            <div className="state-actions" aria-label="快速存档操作">
               <button
                 className="state-button"
                 type="button"
@@ -170,7 +233,7 @@ export function App({ createApplication }: AppProps) {
                 onClick={() => applicationRef.current?.quickSaveCurrentState()}
               >
                 <span aria-hidden="true">◇</span>
-                {snapshot.hasQuickSave ? "覆盖快照" : "保存快照"}
+                {snapshot.hasQuickSave ? "覆盖槽位" : "保存槽位"}
               </button>
               <button
                 className="state-button"
@@ -179,7 +242,7 @@ export function App({ createApplication }: AppProps) {
                 onClick={() => void applicationRef.current?.quickLoadCurrentState()}
               >
                 <span aria-hidden="true">↶</span>
-                恢复快照
+                读取槽位
               </button>
             </div>
             <p className="controls-hint">
@@ -207,6 +270,15 @@ function Metric({ label, value }: { readonly label: string; readonly value: stri
       <strong>{value}</strong>
     </div>
   );
+}
+
+function formatRate(rate: number): string {
+  return rate > 0 ? rate.toFixed(1) : "—";
+}
+
+function formatAudioMilliseconds(samples: number, sampleRate: number): string {
+  if (sampleRate <= 0) return "—";
+  return ((samples * 1000) / sampleRate).toFixed(1);
 }
 
 function statusLabel(snapshot: SessionSnapshot): string {

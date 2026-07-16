@@ -1,4 +1,5 @@
 import type { ExecutionRegion, RegionPreference } from "../domain/execution-region.js";
+import type { QuickSaveSlot } from "../domain/emulation-session.js";
 
 export interface BinaryFile {
   readonly name: string;
@@ -30,7 +31,7 @@ export interface EmulatorFrameResult {
 }
 
 /** Opaque state owned and interpreted only by one emulator runtime adapter. */
-export interface EmulatorRuntimeState {
+interface EmulatorRuntimeState {
   readonly data: unknown;
 }
 
@@ -55,6 +56,31 @@ interface BatterySaveSnapshot {
 export interface SaveRamStoragePort {
   load(cartridgeId: string): Promise<Uint8Array | undefined>;
   save(cartridgeId: string, data: Uint8Array): Promise<void>;
+}
+
+export interface PersistedQuickSave {
+  readonly format: "fcemu-quick-save";
+  readonly version: 1;
+  readonly cartridgeId: string;
+  readonly executionRegion: ExecutionRegion;
+  readonly slot: QuickSaveSlot;
+  readonly frameCount: number;
+  readonly cpuCycles: number;
+  readonly runtimeState: EmulatorRuntimeState;
+}
+
+export interface QuickSaveStoragePort {
+  loadQuickSave(
+    cartridgeId: string,
+    executionRegion: ExecutionRegion,
+    slot: QuickSaveSlot,
+  ): Promise<PersistedQuickSave | undefined>;
+  saveQuickSave(snapshot: PersistedQuickSave): Promise<void>;
+  removeQuickSave(
+    cartridgeId: string,
+    executionRegion: ExecutionRegion,
+    slot: QuickSaveSlot,
+  ): Promise<void>;
 }
 
 export interface EmulatorFactoryPort {
@@ -84,7 +110,16 @@ export interface ControllerInputPort {
 
 type AudioResumeResult = "running" | "blocked";
 
+export interface AudioDiagnostics {
+  readonly sampleRate: number;
+  readonly underruns: number;
+  readonly droppedSamples: number;
+  readonly pendingSamples: number;
+  readonly bufferedSamples: number;
+}
+
 export interface AudioLifecyclePort {
+  readonly diagnostics: AudioDiagnostics;
   activate(): void;
   resume(): Promise<AudioResumeResult>;
   suspend(): Promise<void>;

@@ -6,10 +6,25 @@ import type {
   EmulatorFactoryPort,
   FrameSchedulerPort,
   GameButton,
+  PersistedQuickSave,
   RomImage,
   ScheduledFrame,
 } from "./ports.js";
 import type { RegionPreference } from "../domain/execution-region.js";
+
+const NO_AUDIO_DIAGNOSTICS = {
+  sampleRate: 44_100,
+  underruns: 0,
+  droppedSamples: 0,
+  pendingSamples: 0,
+  bufferedSamples: 0,
+};
+
+const NO_QUICK_SAVE_STORAGE = {
+  loadQuickSave: async () => undefined,
+  saveQuickSave: async () => undefined,
+  removeQuickSave: async () => undefined,
+};
 
 class TestScheduler implements FrameSchedulerPort {
   private tasks: Array<{ callback: (timestamp: number) => void; cancelled: boolean }> = [];
@@ -91,10 +106,34 @@ describe("EmulatorApplication", () => {
     expect(runFrame).toHaveBeenCalledTimes(2);
   });
 
+  it("reports measured frame rate and audio health without adding them to session state", async () => {
+    const scheduler = new TestScheduler();
+    const runFrame = vi.fn<() => { cpuCycles: number }>(() => ({ cpuCycles: 100 }));
+    const audioDiagnostics = {
+      sampleRate: 48_000,
+      underruns: 2,
+      droppedSamples: 128,
+      pendingSamples: 512,
+      bufferedSamples: 2048,
+    };
+    const application = createScheduledApplication(scheduler, runFrame, audioDiagnostics);
+    await application.loadRom(testFile("game.nes"));
+
+    for (let tick = 1; tick <= 121; tick++) scheduler.runNextAt((tick * 1000) / 60);
+
+    expect(application.getDiagnostics()).toMatchObject({
+      actualFrameRateHz: expect.closeTo(60, 1),
+      targetFrameRateHz: 60.0988,
+      audio: audioDiagnostics,
+    });
+    expect(application.getSnapshot()).not.toHaveProperty("actualFrameRateHz");
+  });
+
   it("loads a ROM, schedules frames and can pause", async () => {
     const scheduler = new TestScheduler();
     const controllerInput = new TestControllerInput();
     const audio = {
+      diagnostics: NO_AUDIO_DIAGNOSTICS,
       activate: vi.fn<() => void>(),
       resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
       suspend: vi.fn<() => Promise<void>>().mockResolvedValue(),
@@ -139,6 +178,7 @@ describe("EmulatorApplication", () => {
       audio,
       controllerInput,
       saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
     });
 
     await application.loadRom({ name: "game.nes", arrayBuffer: async () => new ArrayBuffer(16) });
@@ -231,6 +271,7 @@ describe("EmulatorApplication", () => {
       emulatorFactory: { create: () => runtime },
       scheduler: new TestScheduler(),
       audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
         activate: () => undefined,
         resume: async () => "running" as const,
         suspend: async () => undefined,
@@ -238,6 +279,7 @@ describe("EmulatorApplication", () => {
       },
       controllerInput: new TestControllerInput(),
       saveRamStorage: { load, save },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
     });
 
     await application.loadRom(testFile("zelda.nes"));
@@ -269,6 +311,7 @@ describe("EmulatorApplication", () => {
       .mockReturnValueOnce(firstRuntime)
       .mockReturnValueOnce(replacementRuntime);
     const audio = {
+      diagnostics: NO_AUDIO_DIAGNOSTICS,
       activate: vi.fn<() => void>(),
       resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
       suspend: vi.fn<() => Promise<void>>().mockResolvedValue(),
@@ -284,6 +327,7 @@ describe("EmulatorApplication", () => {
       audio,
       controllerInput,
       saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
     });
 
     await application.loadRom(testFile("game.nes"));
@@ -345,6 +389,7 @@ describe("EmulatorApplication", () => {
       emulatorFactory: { create },
       scheduler,
       audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
         activate: () => undefined,
         resume: async () => "running" as const,
         suspend: async () => undefined,
@@ -352,6 +397,7 @@ describe("EmulatorApplication", () => {
       },
       controllerInput: new TestControllerInput(),
       saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
     });
 
     await application.loadRom(testFile("game.nes"));
@@ -405,6 +451,7 @@ describe("EmulatorApplication", () => {
       setControllerButton,
     });
     const audio = {
+      diagnostics: NO_AUDIO_DIAGNOSTICS,
       activate: vi.fn<() => void>(),
       resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
       suspend: vi.fn<() => Promise<void>>().mockResolvedValue(),
@@ -419,6 +466,7 @@ describe("EmulatorApplication", () => {
       audio,
       controllerInput,
       saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
     });
 
     await application.loadRom(testFile("game.nes"));
@@ -448,6 +496,263 @@ describe("EmulatorApplication", () => {
     });
     expect(audio.suspend).toHaveBeenCalledOnce();
     expect(audio.resume).toHaveBeenCalledTimes(2);
+  });
+
+  it("hydrates and persists three quick-save slots by ROM and execution region", async () => {
+    const scheduler = new TestScheduler();
+    const persisted: PersistedQuickSave = {
+      format: "fcemu-quick-save",
+      version: 1,
+      cartridgeId: "game-sha",
+      executionRegion: "ntsc",
+      slot: 2,
+      frameCount: 40,
+      cpuCycles: 4000,
+      runtimeState: { data: { slot: 2 } },
+    };
+    const loadQuickSave = vi.fn<
+      (
+        cartridgeId: string,
+        executionRegion: "ntsc" | "pal" | "dendy",
+        slot: 1 | 2 | 3,
+      ) => Promise<PersistedQuickSave | undefined>
+    >(async (_cartridgeId, _executionRegion, slot) => (slot === 2 ? persisted : undefined));
+    const saveQuickSave = vi
+      .fn<(snapshot: PersistedQuickSave) => Promise<void>>()
+      .mockResolvedValue();
+    const restoreSaveState = vi.fn<({ data }: { data: unknown }) => void>();
+    const runtime = createRuntime({
+      consoleRegion: "ntsc",
+      captureSaveState: () => ({ data: { slot: 3 } }),
+      restoreSaveState,
+    });
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game-sha", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create: () => runtime },
+      scheduler,
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave,
+        saveQuickSave,
+        removeQuickSave: async () => undefined,
+      },
+    });
+
+    await application.loadRom(testFile("game.nes"));
+
+    expect(loadQuickSave.mock.calls).toEqual([
+      ["game-sha", "ntsc", 1],
+      ["game-sha", "ntsc", 2],
+      ["game-sha", "ntsc", 3],
+    ]);
+    expect(application.getSnapshot()).toMatchObject({
+      selectedQuickSaveSlot: 1,
+      quickSaveSlots: [2],
+      hasQuickSave: false,
+    });
+
+    application.selectQuickSaveSlot(2);
+    expect(application.getSnapshot().hasQuickSave).toBe(true);
+    await application.quickLoadCurrentState();
+    expect(restoreSaveState).toHaveBeenCalledWith({ data: { slot: 2 } });
+    expect(application.getSnapshot()).toMatchObject({ frameCount: 40, cpuCycles: 4000 });
+
+    application.selectQuickSaveSlot(3);
+    application.quickSaveCurrentState();
+    expect(application.getSnapshot()).toMatchObject({
+      selectedQuickSaveSlot: 3,
+      quickSaveSlots: [2, 3],
+      hasQuickSave: true,
+    });
+    expect(saveQuickSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        format: "fcemu-quick-save",
+        version: 1,
+        cartridgeId: "game-sha",
+        executionRegion: "ntsc",
+        slot: 3,
+        frameCount: 40,
+        cpuCycles: 4000,
+      }),
+    );
+  });
+
+  it("ignores a persisted quick save whose envelope disagrees with its requested slot", async () => {
+    const mismatched: PersistedQuickSave = {
+      format: "fcemu-quick-save",
+      version: 1,
+      cartridgeId: "game-sha",
+      executionRegion: "ntsc",
+      slot: 2,
+      frameCount: 40,
+      cpuCycles: 4000,
+      runtimeState: { data: { slot: 2 } },
+    };
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game-sha", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create: () => createRuntime({ consoleRegion: "ntsc" }) },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave: async (_cartridgeId, _executionRegion, slot) =>
+          slot === 1 ? mismatched : undefined,
+        saveQuickSave: async () => undefined,
+        removeQuickSave: async () => undefined,
+      },
+    });
+
+    await application.loadRom(testFile("game.nes"));
+
+    expect(application.getSnapshot()).toMatchObject({
+      quickSaveSlots: [],
+      hasQuickSave: false,
+    });
+  });
+
+  it("removes an incompatible persisted quick save after the core rejects it", async () => {
+    const persisted: PersistedQuickSave = {
+      format: "fcemu-quick-save",
+      version: 1,
+      cartridgeId: "game-sha",
+      executionRegion: "ntsc",
+      slot: 1,
+      frameCount: 40,
+      cpuCycles: 4000,
+      runtimeState: { data: { incompatible: true } },
+    };
+    const removeQuickSave = vi
+      .fn<
+        (
+          cartridgeId: string,
+          executionRegion: "ntsc" | "pal" | "dendy",
+          slot: 1 | 2 | 3,
+        ) => Promise<void>
+      >()
+      .mockResolvedValue();
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game-sha", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: () =>
+          createRuntime({
+            consoleRegion: "ntsc",
+            restoreSaveState: () => {
+              throw new Error("Unsupported emulator save-state format or version");
+            },
+          }),
+      },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave: async (_cartridgeId, _executionRegion, slot) =>
+          slot === 1 ? persisted : undefined,
+        saveQuickSave: async () => undefined,
+        removeQuickSave,
+      },
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    expect(application.getSnapshot().hasQuickSave).toBe(true);
+
+    await application.quickLoadCurrentState();
+
+    expect(removeQuickSave).toHaveBeenCalledWith("game-sha", "ntsc", 1);
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      quickSaveSlots: [],
+      hasQuickSave: false,
+    });
+  });
+
+  it("does not let stale quick-save hydration overwrite the latest ROM", async () => {
+    const firstHydration = deferred<PersistedQuickSave | undefined>();
+    const loadQuickSave = vi.fn<
+      (
+        cartridgeId: string,
+        executionRegion: "ntsc" | "pal" | "dendy",
+        slot: 1 | 2 | 3,
+      ) => Promise<PersistedQuickSave | undefined>
+    >((cartridgeId, _executionRegion, slot) =>
+      cartridgeId === "first" && slot === 1 ? firstHydration.promise : Promise.resolve(undefined),
+    );
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async (file) => ({
+          id: file.name === "first.nes" ? "first" : "second",
+          name: file.name,
+          bytes: new ArrayBuffer(1),
+        }),
+      },
+      emulatorFactory: { create: () => createRuntime({ consoleRegion: "ntsc" }) },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave,
+        saveQuickSave: async () => undefined,
+        removeQuickSave: async () => undefined,
+      },
+    });
+
+    const firstLoad = application.loadRom(testFile("first.nes"));
+    await vi.waitFor(() => {
+      expect(loadQuickSave).toHaveBeenCalledWith("first", "ntsc", 1);
+    });
+    const secondLoad = application.loadRom(testFile("second.nes"));
+    await secondLoad;
+    firstHydration.resolve({
+      format: "fcemu-quick-save",
+      version: 1,
+      cartridgeId: "first",
+      executionRegion: "ntsc",
+      slot: 1,
+      frameCount: 40,
+      cpuCycles: 4000,
+      runtimeState: { data: { slot: 1 } },
+    });
+    await firstLoad;
+
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      rom: { name: "second.nes" },
+      quickSaveSlots: [],
+    });
   });
 });
 
@@ -503,6 +808,7 @@ function createApplication(
     emulatorFactory: { create },
     scheduler: new TestScheduler(),
     audio: {
+      diagnostics: NO_AUDIO_DIAGNOSTICS,
       activate: () => undefined,
       resume: async () => "running" as const,
       suspend: async () => undefined,
@@ -510,6 +816,7 @@ function createApplication(
     },
     controllerInput: new TestControllerInput(),
     saveRamStorage: { load: async () => undefined, save: async () => undefined },
+    quickSaveStorage: NO_QUICK_SAVE_STORAGE,
   });
 }
 
@@ -553,6 +860,7 @@ function createRuntime({
 function createScheduledApplication(
   scheduler: TestScheduler,
   runFrame: () => { cpuCycles: number },
+  diagnostics = NO_AUDIO_DIAGNOSTICS,
 ): EmulatorApplication {
   const runtime = { ...createRuntime({ consoleRegion: "ntsc" }), runFrame };
   return new EmulatorApplication({
@@ -562,6 +870,7 @@ function createScheduledApplication(
     emulatorFactory: { create: () => runtime },
     scheduler,
     audio: {
+      diagnostics,
       activate: vi.fn<() => void>(),
       resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
       suspend: vi.fn<() => Promise<void>>().mockResolvedValue(),
@@ -569,6 +878,7 @@ function createScheduledApplication(
     },
     controllerInput: new TestControllerInput(),
     saveRamStorage: { load: async () => undefined, save: async () => undefined },
+    quickSaveStorage: NO_QUICK_SAVE_STORAGE,
   });
 }
 

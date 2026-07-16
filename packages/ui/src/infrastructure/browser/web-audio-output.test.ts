@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AudioWorkletInputMessage } from "./audio/audio-worklet-messages.js";
+import type {
+  AudioWorkletInputMessage,
+  AudioWorkletOutputMessage,
+} from "./audio/audio-worklet-messages.js";
 import { WebAudioOutput, type WebAudioEnvironment } from "./web-audio-output.js";
 
 describe("WebAudioOutput", () => {
@@ -29,6 +32,7 @@ describe("WebAudioOutput", () => {
     for (let index = 0; index < 19 * 512; index++) output.writeSample(0.25);
 
     expect(output.diagnostics).toMatchObject({
+      sampleRate: 48_000,
       droppedSamples: 512,
       pendingSamples: 9216,
     });
@@ -64,6 +68,22 @@ describe("WebAudioOutput", () => {
     expect(fixture.createNode).not.toHaveBeenCalled();
     expect(fixture.close).toHaveBeenCalledOnce();
   });
+
+  it("reports worklet buffer depth and audio failures", async () => {
+    const fixture = createAudioFixture();
+    const output = new WebAudioOutput(fixture.environment);
+    expect(await output.resume()).toBe("running");
+
+    fixture.emitFromWorklet({ type: "buffer-level", bufferedSamples: 2048 });
+    fixture.emitFromWorklet({ type: "underrun" });
+    fixture.emitFromWorklet({ type: "overflow", droppedSamples: 128 });
+
+    expect(output.diagnostics).toMatchObject({
+      bufferedSamples: 2048,
+      underruns: 1,
+      droppedSamples: 128,
+    });
+  });
 });
 
 function createAudioFixture(loadModule: () => Promise<void> = async () => undefined) {
@@ -87,6 +107,7 @@ function createAudioFixture(loadModule: () => Promise<void> = async () => undefi
     },
   };
   const node = { port, connect, disconnect };
+  const audioNode = node as unknown as AudioWorkletNode;
   const context = {
     state: "suspended" as AudioContextState,
     sampleRate: 48_000,
@@ -98,7 +119,7 @@ function createAudioFixture(loadModule: () => Promise<void> = async () => undefi
   };
   const createNode = vi.fn<
     (context: AudioContext, name: string, options: AudioWorkletNodeOptions) => AudioWorkletNode
-  >(() => node as unknown as AudioWorkletNode);
+  >(() => audioNode);
   const environment: WebAudioEnvironment = {
     createContext: () => context as unknown as AudioContext,
     createWorkletNode: createNode,
@@ -111,6 +132,11 @@ function createAudioFixture(loadModule: () => Promise<void> = async () => undefi
     connect,
     createNode,
     environment,
+    emitFromWorklet(message: unknown) {
+      audioNode.port.onmessage?.call(audioNode.port, {
+        data: message,
+      } as MessageEvent<AudioWorkletOutputMessage>);
+    },
     messages,
     resume,
     suspend,

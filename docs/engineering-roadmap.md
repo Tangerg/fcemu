@@ -332,6 +332,10 @@ The console lifecycle controls now expose the existing soft-reset and power-cycl
 adding another domain abstraction. A running restart cancels frame scheduling, clears queued audio,
 resets the displayed timeline, reapplies held controller buttons and resumes playback; a paused
 restart remains paused. Battery-backed RAM and the three quick-save slots stay intact.
+The keyboard-focus audit then separated browser controls from gameplay ownership. Focused buttons,
+inputs and links retain their default Enter/Space behavior; the focusable Canvas owns P1/P2
+bindings, receives focus after successful ROM loading and regains it after Workbench actions. A
+held game key still releases correctly if focus moves mid-press.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.

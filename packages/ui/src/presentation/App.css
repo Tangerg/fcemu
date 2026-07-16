@@ -170,6 +170,11 @@
   outline-offset: -1px;
 }
 
+.screen-bezel canvas:focus-visible {
+  outline: 2px solid var(--red-bright);
+  outline-offset: -2px;
+}
+
 .screen-empty {
   position: absolute;
   inset: 0;
@@ -689,7 +694,9 @@
 
   .rom-picker,
   .region-option,
-  .transport-button {
+  .transport-button,
+  .quick-save-slot,
+  .state-button {
     transition-duration: 0.01ms;
   }
 }

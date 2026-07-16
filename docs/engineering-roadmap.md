@@ -328,6 +328,10 @@ bytes remain outside the repository and `.nes` files are ignored.
 The browser audit then exercised both ROMs through the production UI. It verified measured cadence,
 autoplay-blocked recovery, pause/resume buffer clearing, Mapper 0/2 rendering, full-page refresh
 persistence for quick-save slot 2, and NTSC/PAL slot isolation.
+The console lifecycle controls now expose the existing soft-reset and power-cycle commands without
+adding another domain abstraction. A running restart cancels frame scheduling, clears queued audio,
+resets the displayed timeline, reapplies held controller buttons and resumes playback; a paused
+restart remains paused. Battery-backed RAM and the three quick-save slots stay intact.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.

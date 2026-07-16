@@ -126,7 +126,13 @@ export class EmulationSession {
     ) {
       throw new Error(`Cannot restart a session while it is ${this.state.status}`);
     }
-    return new EmulationSession({ ...this.state, frameCount: 0, cpuCycles: 0 });
+    return new EmulationSession({
+      ...this.state,
+      status: this.state.status === "paused" ? "paused" : "ready",
+      audioStatus: "inactive",
+      frameCount: 0,
+      cpuCycles: 0,
+    });
   }
 
   quickSaveCreated(): EmulationSession {

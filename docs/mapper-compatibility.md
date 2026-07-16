@@ -7,9 +7,9 @@ and that mirroring values may be unreliable.
 
 | Mapper | Board family   | Status    | Current evidence                                 |
 | ------ | -------------- | --------- | ------------------------------------------------ |
-| 0      | NROM           | Supported | Unit tests; `MARIO.NES` 300-frame smoke          |
+| 0      | NROM           | Supported | Unit tests; pinned `MARIO.NES` real-ROM runner   |
 | 1      | MMC1/SxROM     | Supported | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5    |
-| 2      | UxROM/UNROM    | Supported | Unit tests; `CONTRA.NES` 300-frame smoke         |
+| 2      | UxROM/UNROM    | Supported | Unit tests; pinned `CONTRA.NES` real-ROM runner  |
 | 3      | CNROM          | Supported | PRG/CHR/conflict/oversize tests; facade smoke    |
 | 4      | MMC3           | Supported | Unit tests; blargg `mmc3_test_2` tests 1-5       |
 | 7      | AxROM          | Supported | Unit tests; CC0 BNTest banks and nametables pass |

@@ -1,15 +1,18 @@
 import { EmulationSession } from "../domain/emulation-session.js";
-import type { RomDetails, SessionSnapshot } from "../domain/emulation-session.js";
+import { QUICK_SAVE_SLOTS } from "../domain/emulation-session.js";
+import type { QuickSaveSlot, RomDetails, SessionSnapshot } from "../domain/emulation-session.js";
 import type { RegionPreference } from "../domain/execution-region.js";
 import type {
+  AudioDiagnostics,
   AudioLifecyclePort,
   BinaryFile,
   ControllerInputPort,
   EmulatorFactoryPort,
   EmulatorRuntimePort,
-  EmulatorRuntimeState,
   FrameSchedulerPort,
   GameButton,
+  PersistedQuickSave,
+  QuickSaveStoragePort,
   RomImage,
   RomReaderPort,
   SaveRamStoragePort,
@@ -23,6 +26,13 @@ export interface EmulatorApplicationDependencies {
   readonly audio: AudioLifecyclePort;
   readonly controllerInput: ControllerInputPort;
   readonly saveRamStorage: SaveRamStoragePort;
+  readonly quickSaveStorage: QuickSaveStoragePort;
+}
+
+export interface EmulatorApplicationDiagnostics {
+  readonly actualFrameRateHz: number;
+  readonly targetFrameRateHz: number;
+  readonly audio: AudioDiagnostics;
 }
 
 const SAVE_CHECKPOINT_FRAMES = 300;
@@ -39,27 +49,22 @@ const GAME_BUTTONS: readonly GameButton[] = [
   "right",
 ];
 
-interface QuickSave {
-  readonly romId: string;
-  readonly regionPreference: RegionPreference;
-  readonly frameCount: number;
-  readonly cpuCycles: number;
-  readonly runtimeState: EmulatorRuntimeState;
-}
-
 export class EmulatorApplication {
   private session = EmulationSession.idle();
   private runtime: EmulatorRuntimePort | undefined;
   private scheduledFrame: ScheduledFrame | undefined;
   private lastFrameTime: number | undefined;
   private frameTimeDebtMs = 0;
+  private frameRateWindowStartedAt: number | undefined;
+  private framesInRateWindow = 0;
+  private actualFrameRateHz = 0;
   private readonly listeners = new Set<() => void>();
   private operationSequence = 0;
   private disposed = false;
   private readonly unsubscribeControllerInput: () => void;
   private currentRomId: string | undefined;
   private currentRom: RomImage | undefined;
-  private quickSave: QuickSave | undefined;
+  private readonly quickSaves = new Map<QuickSaveSlot, PersistedQuickSave>();
   private readonly pressedButtons = {
     1: new Set<GameButton>(),
     2: new Set<GameButton>(),
@@ -76,6 +81,13 @@ export class EmulatorApplication {
   }
 
   getSnapshot = (): SessionSnapshot => this.session.snapshot;
+
+  getDiagnostics = (): EmulatorApplicationDiagnostics =>
+    Object.freeze({
+      actualFrameRateHz: this.actualFrameRateHz,
+      targetFrameRateHz: this.runtime?.frameRateHz ?? 0,
+      audio: Object.freeze({ ...this.dependencies.audio.diagnostics }),
+    });
 
   subscribe = (listener: () => void): (() => void) => {
     if (this.disposed) return () => undefined;
@@ -95,15 +107,16 @@ export class EmulatorApplication {
     this.runtime = undefined;
     this.currentRomId = undefined;
     this.currentRom = undefined;
-    this.quickSave = undefined;
+    this.quickSaves.clear();
+    this.resetFrameRateDiagnostics();
     this.session = this.session.beginLoading(file.name);
     this.emit();
 
     try {
       this.dependencies.audio.activate();
-      if (shouldSuspendAudio) {
-        void this.dependencies.audio.suspend().catch(() => undefined);
-      }
+      const audioSuspension = shouldSuspendAudio
+        ? this.dependencies.audio.suspend().catch(() => undefined)
+        : Promise.resolve();
       const rom = await this.dependencies.romReader.read(file);
       if (!this.isCurrent(operation)) return;
       const runtime = this.dependencies.emulatorFactory.create(
@@ -128,6 +141,10 @@ export class EmulatorApplication {
       this.currentRom = rom;
       this.persistedRevisions.set(runtime, runtime.captureBatterySave()?.revision ?? 0);
       this.session = this.session.romLoaded(toRomDetails(rom, runtime));
+      await this.hydrateQuickSaves(operation, rom.id, runtime);
+      if (!this.isCurrent(operation) || this.runtime !== runtime) return;
+      await audioSuspension;
+      if (!this.isCurrent(operation) || this.runtime !== runtime) return;
       await this.play();
     } catch (error) {
       this.failIfCurrent(operation, error);
@@ -152,6 +169,7 @@ export class EmulatorApplication {
       this.emit();
       this.lastFrameTime = undefined;
       this.frameTimeDebtMs = 0;
+      this.resetFrameRateDiagnostics();
       this.scheduleNextFrame();
       const audioResult = await this.dependencies.audio.resume();
       if (
@@ -176,12 +194,14 @@ export class EmulatorApplication {
   async pause(): Promise<void> {
     if (this.session.snapshot.status !== "running") return;
     this.cancelScheduledFrame();
+    const audioSuspension = this.dependencies.audio.suspend().catch(() => undefined);
     this.session = this.session.pause();
     this.emit();
-    if (this.runtime && this.currentRomId) {
-      await this.persistRuntime(this.runtime, this.currentRomId);
-    }
-    void this.dependencies.audio.suspend().catch(() => undefined);
+    const persistence =
+      this.runtime && this.currentRomId
+        ? this.persistRuntime(this.runtime, this.currentRomId)
+        : Promise.resolve();
+    await Promise.all([audioSuspension, persistence]);
   }
 
   reset(): void {
@@ -203,26 +223,36 @@ export class EmulatorApplication {
     const romId = this.currentRomId;
     const snapshot = this.session.snapshot;
     if (!runtime || !romId || !["ready", "running", "paused"].includes(snapshot.status)) return;
-    this.quickSave = {
-      romId,
-      regionPreference: snapshot.regionPreference,
+    const quickSave: PersistedQuickSave = {
+      format: "fcemu-quick-save",
+      version: 1,
+      cartridgeId: romId,
+      executionRegion: runtime.cartridge.consoleRegion,
+      slot: snapshot.selectedQuickSaveSlot,
       frameCount: snapshot.frameCount,
       cpuCycles: snapshot.cpuCycles,
       runtimeState: runtime.captureSaveState(),
     };
+    this.quickSaves.set(quickSave.slot, quickSave);
     this.session = this.session.quickSaveCreated();
+    this.emit();
+    void this.dependencies.quickSaveStorage.saveQuickSave(quickSave).catch(() => undefined);
+  }
+
+  selectQuickSaveSlot(slot: QuickSaveSlot): void {
+    this.session = this.session.quickSaveSlotSelected(slot);
     this.emit();
   }
 
   async quickLoadCurrentState(): Promise<void> {
     const runtime = this.runtime;
-    const quickSave = this.quickSave;
     const snapshot = this.session.snapshot;
+    const quickSave = this.quickSaves.get(snapshot.selectedQuickSaveSlot);
     if (
       !runtime ||
       !quickSave ||
-      quickSave.romId !== this.currentRomId ||
-      quickSave.regionPreference !== snapshot.regionPreference ||
+      quickSave.cartridgeId !== this.currentRomId ||
+      quickSave.executionRegion !== runtime.cartridge.consoleRegion ||
       !["ready", "running", "paused"].includes(snapshot.status)
     )
       return;
@@ -242,6 +272,12 @@ export class EmulatorApplication {
       this.emit();
       if (wasRunning) await this.play();
     } catch {
+      this.quickSaves.delete(quickSave.slot);
+      this.session = this.session.quickSaveRemoved(quickSave.slot);
+      this.emit();
+      void this.dependencies.quickSaveStorage
+        .removeQuickSave(quickSave.cartridgeId, quickSave.executionRegion, quickSave.slot)
+        .catch(() => undefined);
       if (wasRunning && this.isCurrent(operation) && this.runtime === runtime) {
         this.scheduleNextFrame();
         void this.dependencies.audio.resume().catch(() => undefined);
@@ -274,35 +310,53 @@ export class EmulatorApplication {
       return;
     }
 
-    this.operationSequence += 1;
+    const operation = ++this.operationSequence;
     this.cancelScheduledFrame();
     if (this.currentRomId) void this.persistRuntime(previousRuntime, this.currentRomId);
-    if (previousStatus === "running") {
-      void this.dependencies.audio.suspend().catch(() => undefined);
-    }
+    const audioSuspension =
+      previousStatus === "running"
+        ? this.dependencies.audio.suspend().catch(() => undefined)
+        : Promise.resolve();
 
     this.runtime = runtime;
-    this.quickSave = undefined;
     this.persistedRevisions.set(runtime, runtime.captureBatterySave()?.revision ?? 0);
     this.session = this.session.romReconfigured(toRomDetails(rom, runtime));
+    if (previousRuntime.cartridge.consoleRegion === runtime.cartridge.consoleRegion) {
+      this.session = this.session.quickSaveAvailabilityChanged([...this.quickSaves.keys()]);
+    } else {
+      this.quickSaves.clear();
+    }
     this.emit();
-    if (previousStatus === "running") await this.play();
+    if (
+      previousRuntime.cartridge.consoleRegion !== runtime.cartridge.consoleRegion &&
+      this.currentRomId
+    ) {
+      await this.hydrateQuickSaves(operation, this.currentRomId, runtime);
+      if (!this.isCurrent(operation) || this.runtime !== runtime) return;
+    }
+    if (previousStatus === "running") {
+      await audioSuspension;
+      if (!this.isCurrent(operation) || this.runtime !== runtime) return;
+      await this.play();
+    }
   }
 
   async stop(): Promise<void> {
     if (this.disposed) return;
     this.operationSequence += 1;
     this.cancelScheduledFrame();
+    const audioSuspension = this.dependencies.audio.suspend().catch(() => undefined);
     if (this.runtime && this.currentRomId) {
       await this.persistRuntime(this.runtime, this.currentRomId);
     }
     this.runtime = undefined;
     this.currentRomId = undefined;
     this.currentRom = undefined;
-    this.quickSave = undefined;
+    this.quickSaves.clear();
+    this.resetFrameRateDiagnostics();
     this.session = this.session.stop();
     this.emit();
-    void this.dependencies.audio.suspend().catch(() => undefined);
+    await audioSuspension;
   }
 
   async dispose(): Promise<void> {
@@ -316,7 +370,8 @@ export class EmulatorApplication {
     this.runtime = undefined;
     this.currentRomId = undefined;
     this.currentRom = undefined;
-    this.quickSave = undefined;
+    this.quickSaves.clear();
+    this.resetFrameRateDiagnostics();
     this.session = this.session.stop();
     this.unsubscribeControllerInput();
     this.listeners.clear();
@@ -334,6 +389,7 @@ export class EmulatorApplication {
           if (this.runtime !== runtime || this.session.snapshot.status !== "running") break;
           const result = runtime.runFrame();
           this.session = this.session.frameCompleted(result.cpuCycles);
+          this.recordCompletedFrame(timestamp);
           this.emit();
           if (
             this.currentRomId &&
@@ -379,6 +435,26 @@ export class EmulatorApplication {
     this.scheduledFrame = undefined;
   }
 
+  private recordCompletedFrame(timestamp: number): void {
+    if (this.frameRateWindowStartedAt === undefined) {
+      this.frameRateWindowStartedAt = timestamp;
+      this.framesInRateWindow = 0;
+      return;
+    }
+    this.framesInRateWindow++;
+    const elapsed = timestamp - this.frameRateWindowStartedAt;
+    if (elapsed < 1000) return;
+    this.actualFrameRateHz = (this.framesInRateWindow * 1000) / elapsed;
+    this.frameRateWindowStartedAt = timestamp;
+    this.framesInRateWindow = 0;
+  }
+
+  private resetFrameRateDiagnostics(): void {
+    this.frameRateWindowStartedAt = undefined;
+    this.framesInRateWindow = 0;
+    this.actualFrameRateHz = 0;
+  }
+
   private emit(): void {
     if (this.disposed) return;
     this.listeners.forEach((listener) => listener());
@@ -394,7 +470,8 @@ export class EmulatorApplication {
     this.runtime = undefined;
     this.currentRom = undefined;
     this.currentRomId = undefined;
-    this.quickSave = undefined;
+    this.quickSaves.clear();
+    this.resetFrameRateDiagnostics();
     this.session = this.session.fail(toErrorMessage(error));
     this.emit();
   }
@@ -408,6 +485,38 @@ export class EmulatorApplication {
     } catch {
       // Persistence is best-effort; emulation must remain available if storage is denied.
     }
+  }
+
+  private async hydrateQuickSaves(
+    operation: number,
+    cartridgeId: string,
+    runtime: EmulatorRuntimePort,
+  ): Promise<void> {
+    const executionRegion = runtime.cartridge.consoleRegion;
+    const savedSlots = await Promise.all(
+      QUICK_SAVE_SLOTS.map(async (slot) => ({
+        slot,
+        quickSave: await this.dependencies.quickSaveStorage
+          .loadQuickSave(cartridgeId, executionRegion, slot)
+          .catch(() => undefined),
+      })),
+    );
+    if (!this.isCurrent(operation) || this.runtime !== runtime) return;
+
+    this.quickSaves.clear();
+    for (const { slot, quickSave } of savedSlots) {
+      if (
+        quickSave?.format === "fcemu-quick-save" &&
+        quickSave.version === 1 &&
+        quickSave.cartridgeId === cartridgeId &&
+        quickSave.executionRegion === executionRegion &&
+        quickSave.slot === slot
+      ) {
+        this.quickSaves.set(quickSave.slot, quickSave);
+      }
+    }
+    this.session = this.session.quickSaveAvailabilityChanged([...this.quickSaves.keys()]);
+    this.emit();
   }
 
   private restoreControllerState(runtime: EmulatorRuntimePort): void {

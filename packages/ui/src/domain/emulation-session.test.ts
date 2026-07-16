@@ -119,8 +119,14 @@ describe("EmulationSession", () => {
       status: "ready",
       audioStatus: "inactive",
       hasQuickSave: true,
+      selectedQuickSaveSlot: 1,
+      quickSaveSlots: [1],
       frameCount: 1,
       cpuCycles: 100,
+    });
+    expect(running.quickSaveSlotSelected(2).snapshot).toMatchObject({
+      selectedQuickSaveSlot: 2,
+      hasQuickSave: false,
     });
     expect(() => EmulationSession.idle().quickSaveCreated()).toThrow(/Cannot create/);
   });

@@ -10,6 +10,7 @@ export const AudioWorkletMessageType = {
   Reset: "reset",
   Underrun: "underrun",
   Overflow: "overflow",
+  BufferLevel: "buffer-level",
 } as const;
 
 export interface NesAudioProcessorOptions {
@@ -21,4 +22,6 @@ export type AudioWorkletInputMessage =
   { readonly type: "samples"; readonly samples: Float32Array } | { readonly type: "reset" };
 
 export type AudioWorkletOutputMessage =
-  { readonly type: "underrun" } | { readonly type: "overflow"; readonly droppedSamples: number };
+  | { readonly type: "underrun" }
+  | { readonly type: "overflow"; readonly droppedSamples: number }
+  | { readonly type: "buffer-level"; readonly bufferedSamples: number };

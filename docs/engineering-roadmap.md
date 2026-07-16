@@ -150,6 +150,12 @@ the baseline, not proof that emulation is complete.
   mapper latches and writable cartridge memory. Restore is ROM/region/sample-rate compatible and
   transactional; the Workbench keeps the core payload opaque, restores its timeline, flushes audio
   and reapplies live controller intent. Mid-instruction and in-flight OAM-DMA continuation tests pass.
+- Add three persistent Workbench quick-save slots behind a storage port. IndexedDB records use an
+  outer format version and are isolated by content-addressed ROM identity plus actual execution
+  region; selecting an empty slot never exposes another ROM or region's state.
+- Expose measured frame cadence and AudioWorklet ring/queue/underrun/drop counters as read-only
+  application diagnostics. Real Mario and Contra browser runs hold about 60 FPS, pause without
+  advancing frames, clear buffered audio on pause, and resume audio after a user gesture.
 - Extract MMC1 board wiring into an immutable `Mmc1Board` value object. Accept geometry-consistent
   NES 2.0 SUROM/SOROM/SXROM submappers 1/2/4, implement fixed-PRG submapper 5, and model SNROM's
   redundant CHR-A16 WRAM disable. Holy Mapperel 0.02 passes SKROM, SGROM, SNROM, SUROM and SXROM 5/5.
@@ -275,7 +281,8 @@ the baseline, not proof that emulation is complete.
   a 14 kHz low-pass, clocked at the output sample rate. The high-pass stages also remove the large DC
   bias of the non-linear mixing tables, centering the waveform for the output device. A test drives a
   constant DMC DAC level and asserts the long-run sample average returns to zero instead of the raw
-  DC level. Filter state is output-domain only and stays out of the save-state envelope.
+  DC level. Save-state version 13 captures the filter history so restoring an early-game snapshot
+  reproduces the startup audio transient exactly.
 - Silence the triangle channel only for the genuinely ultrasonic timer periods 0 and 1 (previously
   0-2), matching the common de-popping convention without muting the audible ~18.6 kHz period-2 note.
 
@@ -314,6 +321,13 @@ longer leaks negative addresses outside the `$0000-$3FFF` bus domain.
 The PPU audit then folded the two-boolean sprite-zero delay back into its sole owner. The public
 snapshot shape and one-dot behavior remain unchanged, but the standalone latch class and test file
 are gone; focused snapshot coverage and the hardware ROM matrix verify the same transition.
+The real-ROM audit added checksum-pinned Mario and Contra profiles outside the normal test suite.
+Their local runner verifies cartridge identity, a 300-frame no-input sequence, deterministic
+Start/A/B/directional input, exact audio output and a 120-frame Save State replay. Commercial ROM
+bytes remain outside the repository and `.nes` files are ignored.
+The browser audit then exercised both ROMs through the production UI. It verified measured cadence,
+autoplay-blocked recovery, pause/resume buffer clearing, Mapper 0/2 rendering, full-page refresh
+persistence for quick-save slot 2, and NTSC/PAL slot isolation.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.
@@ -333,13 +347,13 @@ signals and pass both tests without a ROM-specific exception.
 
 ## Real-ROM smoke evidence
 
-- `CONTRA.NES`: iNES Mapper 2, 300 core frames completed, changing frame hashes, title screen
-  rendered in Chromium. Correct secondary-OAM selection changes the 300-frame SHA-256 from the old
-  predictive value to `afc7b953c0ad2c909a9fbf260c271132349b6f108ddc6e4732b06f75e91c0ff3`; the resulting
-  title screen was visually inspected and remains intact.
-- `MARIO.NES`: iNES Mapper 0, 300 core frames completed, changing frame hashes, title/game screens
-  rendered in Chromium; pause held the frame counter stable and Enter reached the game screen. Its
-  current 300-frame RGBA SHA-256 is
+- `CONTRA.NES`: the checksum-pinned Mapper 2 profile automates a 300-frame title-screen baseline,
+  Start plus movement/fire/jump input, exact audio output and a 120-frame Save State replay. Its
+  no-input frame-300 SHA-256 is
+  `afc7b953c0ad2c909a9fbf260c271132349b6f108ddc6e4732b06f75e91c0ff3`.
+- `MARIO.NES`: the checksum-pinned Mapper 0 profile automates a 300-frame title-screen baseline,
+  Start plus movement/run/jump input, exact audio output and a 120-frame Save State replay. Its
+  no-input frame-300 SHA-256 is
   `b4c7057486daed529336c7fe1dd25aced70dc52d69e2a03ed5c719fd1263776f`.
 - CC0 `bntest-aorom.nes`: iNES Mapper 7, all sixteen 32 KiB PRG banks reported as
   `0123456789ABCDEF`; switched nametable pages reported as `00004444` in Chromium. The legacy image

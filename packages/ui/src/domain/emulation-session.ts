@@ -2,6 +2,9 @@ import type { ExecutionRegion, RegionPreference } from "./execution-region.js";
 
 export type SessionStatus = "idle" | "loading" | "ready" | "running" | "paused" | "error";
 export type AudioStatus = "inactive" | "starting" | "running" | "blocked";
+export type QuickSaveSlot = 1 | 2 | 3;
+
+export const QUICK_SAVE_SLOTS: readonly QuickSaveSlot[] = Object.freeze([1, 2, 3]);
 
 export interface RomDetails {
   readonly name: string;
@@ -21,6 +24,8 @@ export interface SessionSnapshot {
   readonly pendingRomName?: string;
   readonly frameCount: number;
   readonly cpuCycles: number;
+  readonly selectedQuickSaveSlot: QuickSaveSlot;
+  readonly quickSaveSlots: readonly QuickSaveSlot[];
   readonly hasQuickSave: boolean;
   readonly error?: string;
 }
@@ -29,18 +34,29 @@ export class EmulationSession {
   private readonly state: SessionSnapshot;
 
   private constructor(state: SessionSnapshot) {
-    this.state = state.rom
-      ? Object.freeze({ ...state, rom: Object.freeze({ ...state.rom }) })
-      : Object.freeze({ ...state });
+    const quickSaveSlots = Object.freeze([...state.quickSaveSlots]);
+    const snapshot = {
+      ...state,
+      quickSaveSlots,
+      hasQuickSave: quickSaveSlots.includes(state.selectedQuickSaveSlot),
+    };
+    this.state = snapshot.rom
+      ? Object.freeze({ ...snapshot, rom: Object.freeze({ ...snapshot.rom }) })
+      : Object.freeze(snapshot);
   }
 
-  static idle(regionPreference: RegionPreference = "auto"): EmulationSession {
+  static idle(
+    regionPreference: RegionPreference = "auto",
+    selectedQuickSaveSlot: QuickSaveSlot = 1,
+  ): EmulationSession {
     return new EmulationSession({
       status: "idle",
       audioStatus: "inactive",
       regionPreference,
       frameCount: 0,
       cpuCycles: 0,
+      selectedQuickSaveSlot,
+      quickSaveSlots: [],
       hasQuickSave: false,
     });
   }
@@ -57,6 +73,8 @@ export class EmulationSession {
       pendingRomName: name,
       frameCount: 0,
       cpuCycles: 0,
+      selectedQuickSaveSlot: this.state.selectedQuickSaveSlot,
+      quickSaveSlots: [],
       hasQuickSave: false,
     });
   }
@@ -70,6 +88,8 @@ export class EmulationSession {
       rom,
       frameCount: 0,
       cpuCycles: 0,
+      selectedQuickSaveSlot: this.state.selectedQuickSaveSlot,
+      quickSaveSlots: [],
       hasQuickSave: false,
     });
   }
@@ -117,7 +137,25 @@ export class EmulationSession {
     ) {
       throw new Error(`Cannot create a quick save while session is ${this.state.status}`);
     }
-    return new EmulationSession({ ...this.state, hasQuickSave: true });
+    return new EmulationSession({
+      ...this.state,
+      quickSaveSlots: uniqueSlots([...this.state.quickSaveSlots, this.state.selectedQuickSaveSlot]),
+    });
+  }
+
+  quickSaveRemoved(slot: QuickSaveSlot): EmulationSession {
+    return new EmulationSession({
+      ...this.state,
+      quickSaveSlots: this.state.quickSaveSlots.filter((candidate) => candidate !== slot),
+    });
+  }
+
+  quickSaveSlotSelected(slot: QuickSaveSlot): EmulationSession {
+    return new EmulationSession({ ...this.state, selectedQuickSaveSlot: slot });
+  }
+
+  quickSaveAvailabilityChanged(slots: readonly QuickSaveSlot[]): EmulationSession {
+    return new EmulationSession({ ...this.state, quickSaveSlots: uniqueSlots(slots) });
   }
 
   quickSaveRestored(frameCount: number, cpuCycles: number): EmulationSession {
@@ -164,6 +202,7 @@ export class EmulationSession {
       rom,
       frameCount: 0,
       cpuCycles: 0,
+      quickSaveSlots: [],
       hasQuickSave: false,
     });
   }
@@ -183,7 +222,7 @@ export class EmulationSession {
   }
 
   stop(): EmulationSession {
-    return EmulationSession.idle(this.state.regionPreference);
+    return EmulationSession.idle(this.state.regionPreference, this.state.selectedQuickSaveSlot);
   }
 
   private assertStatus(expected: SessionStatus): void {
@@ -191,4 +230,8 @@ export class EmulationSession {
       throw new Error(`Expected session to be ${expected}, received ${this.state.status}`);
     }
   }
+}
+
+function uniqueSlots(slots: readonly QuickSaveSlot[]): readonly QuickSaveSlot[] {
+  return [...new Set(slots)].sort((left, right) => left - right);
 }

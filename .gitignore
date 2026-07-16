@@ -14,6 +14,7 @@ coverage
 .yarn-integrity
 *.tsbuildinfo
 *.local
+*.nes
 
 # Editor directories and files
 .vscode/*

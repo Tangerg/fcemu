@@ -7,6 +7,8 @@ import {
 } from "./audio-worklet-messages.js";
 import { RebufferingAudioRing } from "./rebuffering-audio-ring.js";
 
+const BUFFER_LEVEL_REPORT_QUANTA = 32;
+
 interface ProcessorConstructionOptions {
   readonly processorOptions?: unknown;
 }
@@ -30,6 +32,7 @@ declare function registerProcessor(
 
 class NesAudioWorkletProcessor extends AudioWorkletProcessor {
   private readonly buffer: RebufferingAudioRing;
+  private renderQuantaSinceMetric = 0;
 
   constructor(options: ProcessorConstructionOptions) {
     super(options);
@@ -41,6 +44,8 @@ class NesAudioWorkletProcessor extends AudioWorkletProcessor {
     this.port.onmessage = (event: MessageEvent<AudioWorkletInputMessage>) => {
       if (event.data.type === AudioWorkletMessageType.Reset) {
         this.buffer.reset();
+        this.renderQuantaSinceMetric = 0;
+        this.postBufferLevel();
         return;
       }
       const droppedSamples = this.buffer.push(event.data.samples);
@@ -59,7 +64,19 @@ class NesAudioWorkletProcessor extends AudioWorkletProcessor {
     if (!output) return true;
     const result = this.buffer.pull(output);
     if (result.underrunStarted) this.postMetric({ type: AudioWorkletMessageType.Underrun });
+    this.renderQuantaSinceMetric++;
+    if (this.renderQuantaSinceMetric >= BUFFER_LEVEL_REPORT_QUANTA) {
+      this.renderQuantaSinceMetric = 0;
+      this.postBufferLevel();
+    }
     return true;
+  }
+
+  private postBufferLevel(): void {
+    this.postMetric({
+      type: AudioWorkletMessageType.BufferLevel,
+      bufferedSamples: this.buffer.bufferedSamples,
+    });
   }
 
   private postMetric(message: AudioWorkletOutputMessage): void {

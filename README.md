@@ -13,10 +13,12 @@
 持续演进与已知正确性工作见 [docs/engineering-roadmap.md](./docs/engineering-roadmap.md)。
 Mapper 支持证据见 [docs/mapper-compatibility.md](./docs/mapper-compatibility.md)。
 iNES / NES 2.0 格式边界见 [docs/cartridge-formats.md](./docs/cartridge-formats.md)。
+仓库外真实 ROM 的自动回归流程见
+[packages/fc-emu/test-support/real-roms.md](./packages/fc-emu/test-support/real-roms.md)。
 
 ## Development
 
-要求 Node.js 20+ 与 Yarn 1.22。
+要求 Node.js 22 与 Yarn 1.22。
 
 ```bash
 yarn install
@@ -31,7 +33,9 @@ yarn dev
 标准 Gamepad 会按稳定连接槽映射到玩家一、玩家二，并支持方向轴与 D-pad。
 带电池的卡带会按 ROM 内容标识自动从 IndexedDB 恢复并定期保存进度。
 工作台可选择 `AUTO` / `NTSC` / `PAL` / `DENDY` 执行区域；切换时会保留电池存档和当前暂停状态。
-当前会话支持内存内快速快照与恢复；快照独立于电池存档，不会写入 ROM 或 IndexedDB。
+工作台提供 3 个持久化快速存档槽；它们按 ROM 内容标识和实际执行区域隔离，并使用独立的版本化
+IndexedDB 记录。快速存档与电池存档互不覆盖，也不会写入 ROM。
+运行面板会显示实测/目标 FPS、AudioWorklet 环形缓冲与主线程队列时长，以及欠载和丢弃样本计数。
 
 ## Quality gates
 
@@ -41,6 +45,9 @@ yarn build          # build core package and production UI
 yarn check:layers   # clean-architecture and package-boundary rules
 yarn check:circular # runtime import cycles
 yarn benchmark:core # FrameBuffer、整机帧循环与 Save State 基准
+yarn smoke:real-rom -- mario /path/to/MARIO.NES
+yarn smoke:real-rom -- contra /path/to/CONTRA.NES
+yarn smoke:real-rom -- all /path/to/rom-directory
 yarn conformance:rom -- /path/test.nes [frames] [ntsc|pal|dendy] [blargg|zero-page]
 yarn conformance:mmc1 -- /path/to/holy-mapperel-bin-0.02
 yarn conformance:mapper34 -- /path/to/holy-mapperel-bin-0.02

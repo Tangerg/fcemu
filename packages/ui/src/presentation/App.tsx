@@ -204,6 +204,28 @@ export function App({ createApplication }: AppProps) {
               </span>
               {isRunning ? "暂停" : "继续"}
             </button>
+            <div className="machine-actions" aria-label="主机控制">
+              <button
+                className="state-button machine-button"
+                type="button"
+                disabled={!canToggle}
+                aria-label="软复位，保留内存与电池存档"
+                onClick={() => void applicationRef.current?.reset()}
+              >
+                <span aria-hidden="true">↻</span>
+                软复位
+              </button>
+              <button
+                className="state-button machine-button"
+                type="button"
+                disabled={!canToggle}
+                aria-label="重新开机，清除易失内存并保留电池存档"
+                onClick={() => void applicationRef.current?.powerCycle()}
+              >
+                <span aria-hidden="true">⏻</span>
+                重新开机
+              </button>
+            </div>
             <div className="quick-save-slots" aria-label="快速存档槽位">
               {QUICK_SAVE_SLOTS.map((slot) => {
                 const isSelected = snapshot.selectedQuickSaveSlot === slot;

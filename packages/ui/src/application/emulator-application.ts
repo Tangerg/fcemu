@@ -60,6 +60,7 @@ export class EmulatorApplication {
   private actualFrameRateHz = 0;
   private readonly listeners = new Set<() => void>();
   private operationSequence = 0;
+  private restartInFlight = false;
   private disposed = false;
   private readonly unsubscribeControllerInput: () => void;
   private currentRomId: string | undefined;
@@ -156,6 +157,7 @@ export class EmulatorApplication {
     const runtime = this.runtime;
     const status = this.session.snapshot.status;
     if (
+      this.restartInFlight ||
       !this.isCurrent(operation) ||
       !runtime ||
       status === "running" ||
@@ -204,18 +206,12 @@ export class EmulatorApplication {
     await Promise.all([audioSuspension, persistence]);
   }
 
-  reset(): void {
-    if (!this.runtime) return;
-    this.runtime.reset();
-    this.session = this.session.restarted();
-    this.emit();
+  async reset(): Promise<void> {
+    await this.restartRuntime((runtime) => runtime.reset());
   }
 
-  powerCycle(): void {
-    if (!this.runtime) return;
-    this.runtime.powerCycle();
-    this.session = this.session.restarted();
-    this.emit();
+  async powerCycle(): Promise<void> {
+    await this.restartRuntime((runtime) => runtime.powerCycle());
   }
 
   quickSaveCurrentState(): void {
@@ -249,6 +245,7 @@ export class EmulatorApplication {
     const snapshot = this.session.snapshot;
     const quickSave = this.quickSaves.get(snapshot.selectedQuickSaveSlot);
     if (
+      this.restartInFlight ||
       !runtime ||
       !quickSave ||
       quickSave.cartridgeId !== this.currentRomId ||
@@ -524,6 +521,42 @@ export class EmulatorApplication {
       for (const button of GAME_BUTTONS) {
         runtime.setControllerButton(player, button, this.pressedButtons[player].has(button));
       }
+    }
+  }
+
+  private async restartRuntime(command: (runtime: EmulatorRuntimePort) => void): Promise<void> {
+    const runtime = this.runtime;
+    const snapshot = this.session.snapshot;
+    if (
+      this.restartInFlight ||
+      !runtime ||
+      !["ready", "running", "paused"].includes(snapshot.status)
+    ) {
+      return;
+    }
+
+    const operation = this.operationSequence;
+    const wasRunning = snapshot.status === "running";
+    this.restartInFlight = true;
+    try {
+      if (wasRunning) {
+        this.cancelScheduledFrame();
+        await this.dependencies.audio.suspend().catch(() => undefined);
+        if (!this.isCurrent(operation) || this.runtime !== runtime) return;
+      }
+
+      const shouldResume = wasRunning && this.session.snapshot.status === "running";
+      command(runtime);
+      this.restoreControllerState(runtime);
+      this.resetFrameRateDiagnostics();
+      this.session = this.session.restarted();
+      this.emit();
+      this.restartInFlight = false;
+      if (shouldResume) await this.play();
+    } catch (error) {
+      this.failIfCurrent(operation, error);
+    } finally {
+      this.restartInFlight = false;
     }
   }
 }

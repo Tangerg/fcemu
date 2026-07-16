@@ -191,15 +191,120 @@ describe("EmulatorApplication", () => {
     expect(audio.suspend).toHaveBeenCalledOnce();
     controllerInput.emit({ player: 1, button: "a", pressed: true });
     expect(setControllerButton).toHaveBeenCalledWith(1, "a", true);
-    application.reset();
+    await application.reset();
     expect(reset).toHaveBeenCalledOnce();
     expect(application.getSnapshot()).toMatchObject({ frameCount: 0, cpuCycles: 0 });
-    application.powerCycle();
+    await application.powerCycle();
     expect(powerCycle).toHaveBeenCalledOnce();
     await application.stop();
     expect(controllerInput.isSubscribed).toBe(true);
     await application.dispose();
     expect(controllerInput.isSubscribed).toBe(false);
+  });
+
+  it("flushes audio and resumes emulation after a running console restart", async () => {
+    const scheduler = new TestScheduler();
+    const audio = {
+      diagnostics: NO_AUDIO_DIAGNOSTICS,
+      activate: vi.fn<() => void>(),
+      resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
+      suspend: vi.fn<() => Promise<void>>().mockResolvedValue(),
+      dispose: vi.fn<() => Promise<void>>().mockResolvedValue(),
+    };
+    const reset = vi.fn<() => void>();
+    const setControllerButton =
+      vi.fn<(player: 1 | 2, button: GameButton, pressed: boolean) => void>();
+    const runtime = {
+      ...createRuntime({ consoleRegion: "ntsc", setControllerButton }),
+      reset,
+    };
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async (file) => ({
+          id: file.name,
+          name: file.name,
+          bytes: await file.arrayBuffer(),
+        }),
+      },
+      emulatorFactory: { create: () => runtime },
+      scheduler,
+      audio,
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    scheduler.runNext();
+    expect(application.getSnapshot().frameCount).toBe(1);
+    setControllerButton.mockClear();
+
+    await application.reset();
+
+    expect(reset).toHaveBeenCalledOnce();
+    expect(audio.suspend).toHaveBeenCalledOnce();
+    expect(audio.resume).toHaveBeenCalledTimes(2);
+    expect(setControllerButton).toHaveBeenCalledTimes(16);
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      audioStatus: "running",
+      frameCount: 0,
+      cpuCycles: 0,
+    });
+    scheduler.runNext();
+    scheduler.runNext();
+    expect(application.getSnapshot().frameCount).toBe(1);
+  });
+
+  it("honors a pause requested while a running restart is flushing audio", async () => {
+    const restartSuspension = deferred<void>();
+    const scheduler = new TestScheduler();
+    const audio = {
+      diagnostics: NO_AUDIO_DIAGNOSTICS,
+      activate: vi.fn<() => void>(),
+      resume: vi.fn<() => Promise<"running">>().mockResolvedValue("running"),
+      suspend: vi
+        .fn<() => Promise<void>>()
+        .mockImplementationOnce(() => restartSuspension.promise)
+        .mockResolvedValue(),
+      dispose: vi.fn<() => Promise<void>>().mockResolvedValue(),
+    };
+    const reset = vi.fn<() => void>();
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async (file) => ({
+          id: file.name,
+          name: file.name,
+          bytes: await file.arrayBuffer(),
+        }),
+      },
+      emulatorFactory: {
+        create: () => ({
+          ...createRuntime({ consoleRegion: "ntsc" }),
+          reset,
+        }),
+      },
+      scheduler,
+      audio,
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    const restart = application.reset();
+    await application.pause();
+    restartSuspension.resolve();
+    await restart;
+
+    expect(reset).toHaveBeenCalledOnce();
+    expect(audio.resume).toHaveBeenCalledOnce();
+    expect(application.getSnapshot()).toMatchObject({
+      status: "paused",
+      audioStatus: "inactive",
+      frameCount: 0,
+      cpuCycles: 0,
+    });
   });
 
   it("keeps the latest ROM when overlapping reads resolve out of order", async () => {

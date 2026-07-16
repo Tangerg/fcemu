@@ -19,12 +19,18 @@ describe("EmulationSession", () => {
       .frameCompleted(29_780);
     expect(running.snapshot).toMatchObject({ status: "running", frameCount: 1, cpuCycles: 29_780 });
     expect(running.restarted().snapshot).toMatchObject({
-      status: "running",
+      status: "ready",
+      audioStatus: "inactive",
       frameCount: 0,
       cpuCycles: 0,
     });
     expect(running.audioChanged("blocked").snapshot.audioStatus).toBe("blocked");
-    expect(running.pause().snapshot.status).toBe("paused");
+    expect(running.pause().restarted().snapshot).toMatchObject({
+      status: "paused",
+      audioStatus: "inactive",
+      frameCount: 0,
+      cpuCycles: 0,
+    });
   });
 
   it("rejects invalid transitions", () => {

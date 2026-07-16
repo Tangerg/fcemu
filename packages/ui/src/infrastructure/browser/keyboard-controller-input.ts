@@ -28,6 +28,17 @@ const KEY_TO_INPUT: Readonly<Record<string, KeyboardBinding>> = {
   Numpad1: { player: 2, button: "b" },
 };
 
+const INTERACTIVE_TARGET_SELECTOR = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "[contenteditable='true']",
+  "[role='button']",
+  "[role='link']",
+].join(",");
+
 export class KeyboardControllerInput implements ControllerInputPort {
   private readonly listeners = new Set<(event: ControllerInputEvent) => void>();
   private readonly pressedCodes = new Set<string>();
@@ -45,6 +56,7 @@ export class KeyboardControllerInput implements ControllerInputPort {
   private readonly handleKeyDown = (event: KeyboardEvent) => {
     const binding = KEY_TO_INPUT[event.code];
     if (!binding) return;
+    if (!this.pressedCodes.has(event.code) && isInteractiveControl(event.target)) return;
     event.preventDefault();
     if (event.repeat || this.pressedCodes.has(event.code)) return;
     this.pressedCodes.add(event.code);
@@ -57,9 +69,9 @@ export class KeyboardControllerInput implements ControllerInputPort {
 
   private readonly handleKeyUp = (event: KeyboardEvent) => {
     const binding = KEY_TO_INPUT[event.code];
-    if (!binding) return;
+    if (!binding || !this.pressedCodes.has(event.code)) return;
     event.preventDefault();
-    if (!this.pressedCodes.delete(event.code)) return;
+    this.pressedCodes.delete(event.code);
 
     const input = inputKey(binding);
     const remainsPressed = [...this.pressedCodes].some(
@@ -97,4 +109,15 @@ export class KeyboardControllerInput implements ControllerInputPort {
 
 function inputKey(binding: KeyboardBinding): string {
   return `${binding.player}:${binding.button}`;
+}
+
+function isInteractiveControl(target: EventTarget | null): boolean {
+  if (!target) return false;
+  const candidate = target as EventTarget & {
+    closest?: (selector: string) => unknown;
+  };
+  return (
+    typeof candidate.closest === "function" &&
+    candidate.closest(INTERACTIVE_TARGET_SELECTOR) !== null
+  );
 }

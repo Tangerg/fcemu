@@ -283,7 +283,10 @@ unaware of mapper identity; D0 is suppressed on the second write cycle but D7 re
 
 Keyboard and Gamepad are independent controller-input adapters. `CompositeControllerInput` merges
 their domain-level intents with source-aware pressed-state semantics; browser key codes, button
-indexes and axes never cross the UI application port or enter `@fcemu/core`.
+indexes and axes never cross the UI application port or enter `@fcemu/core`. Keyboard input yields
+Enter, Space and the other game bindings when an interactive browser control owns focus. The
+focusable Canvas is the explicit gameplay target, and completed Workbench actions return focus to
+it so controller shortcuts cannot accidentally reactivate the last button.
 
 The UI package owns the **Workbench** context: ROM loading, session lifecycle, execution-region
 preference, scheduling, controller intent, three persistent quick-save slots, runtime statistics

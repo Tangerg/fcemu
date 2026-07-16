@@ -435,6 +435,27 @@
   opacity: 0.35;
 }
 
+.machine-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.machine-button {
+  padding: 0 14px 0 12px;
+  border-color: transparent;
+  color: #c9c4ba;
+  background: rgb(0 0 0 / 17%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%);
+}
+
+.machine-button:hover:not(:disabled) {
+  border-color: transparent;
+  color: var(--cream);
+  background: rgb(255 255 255 / 6%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 13%);
+}
+
 .quick-save-slots {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

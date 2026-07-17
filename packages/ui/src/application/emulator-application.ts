@@ -63,7 +63,6 @@ export class EmulatorApplication {
   private restartInFlight = false;
   private disposed = false;
   private readonly unsubscribeControllerInput: () => void;
-  private currentRomId: string | undefined;
   private currentRom: RomImage | undefined;
   private readonly quickSaves = new Map<QuickSaveSlot, PersistedQuickSave>();
   private readonly pressedButtons = {
@@ -101,12 +100,11 @@ export class EmulatorApplication {
     const operation = ++this.operationSequence;
     const shouldSuspendAudio =
       this.session.snapshot.status === "running" || this.session.snapshot.status === "paused";
-    if (this.runtime && this.currentRomId) {
-      void this.persistRuntime(this.runtime, this.currentRomId);
+    if (this.runtime && this.currentRom) {
+      void this.persistRuntime(this.runtime, this.currentRom.id);
     }
     this.cancelScheduledFrame();
     this.runtime = undefined;
-    this.currentRomId = undefined;
     this.currentRom = undefined;
     this.quickSaves.clear();
     this.resetFrameRateDiagnostics();
@@ -138,7 +136,6 @@ export class EmulatorApplication {
       }
       this.restoreControllerState(runtime);
       this.runtime = runtime;
-      this.currentRomId = rom.id;
       this.currentRom = rom;
       this.persistedRevisions.set(runtime, runtime.captureBatterySave()?.revision ?? 0);
       this.session = this.session.romLoaded(toRomDetails(rom, runtime));
@@ -231,10 +228,9 @@ export class EmulatorApplication {
     const audioSuspension = this.dependencies.audio.suspend().catch(() => undefined);
     this.session = this.session.pause();
     this.emit();
+    const romId = this.currentRom?.id;
     const persistence =
-      this.runtime && this.currentRomId
-        ? this.persistRuntime(this.runtime, this.currentRomId)
-        : Promise.resolve();
+      this.runtime && romId ? this.persistRuntime(this.runtime, romId) : Promise.resolve();
     await Promise.all([audioSuspension, persistence]);
   }
 
@@ -248,7 +244,7 @@ export class EmulatorApplication {
 
   quickSaveCurrentState(): void {
     const runtime = this.runtime;
-    const romId = this.currentRomId;
+    const romId = this.currentRom?.id;
     const snapshot = this.session.snapshot;
     if (!runtime || !romId || !["ready", "running", "paused"].includes(snapshot.status)) return;
     const quickSave: PersistedQuickSave = {
@@ -274,7 +270,7 @@ export class EmulatorApplication {
 
   async removeCurrentQuickSave(): Promise<void> {
     const runtime = this.runtime;
-    const romId = this.currentRomId;
+    const romId = this.currentRom?.id;
     const snapshot = this.session.snapshot;
     const quickSave = this.quickSaves.get(snapshot.selectedQuickSaveSlot);
     if (
@@ -321,13 +317,15 @@ export class EmulatorApplication {
 
   async quickLoadCurrentState(): Promise<void> {
     const runtime = this.runtime;
+    const romId = this.currentRom?.id;
     const snapshot = this.session.snapshot;
     const quickSave = this.quickSaves.get(snapshot.selectedQuickSaveSlot);
     if (
       this.restartInFlight ||
       !runtime ||
+      !romId ||
       !quickSave ||
-      quickSave.cartridgeId !== this.currentRomId ||
+      quickSave.cartridgeId !== romId ||
       quickSave.executionRegion !== runtime.cartridge.consoleRegion ||
       !["ready", "running", "paused"].includes(snapshot.status)
     )
@@ -388,7 +386,7 @@ export class EmulatorApplication {
 
     const operation = ++this.operationSequence;
     this.cancelScheduledFrame();
-    if (this.currentRomId) void this.persistRuntime(previousRuntime, this.currentRomId);
+    void this.persistRuntime(previousRuntime, rom.id);
     const audioSuspension =
       previousStatus === "running"
         ? this.dependencies.audio.suspend().catch(() => undefined)
@@ -403,11 +401,8 @@ export class EmulatorApplication {
       this.quickSaves.clear();
     }
     this.emit();
-    if (
-      previousRuntime.cartridge.consoleRegion !== runtime.cartridge.consoleRegion &&
-      this.currentRomId
-    ) {
-      await this.hydrateQuickSaves(operation, this.currentRomId, runtime);
+    if (previousRuntime.cartridge.consoleRegion !== runtime.cartridge.consoleRegion) {
+      await this.hydrateQuickSaves(operation, rom.id, runtime);
       if (!this.isCurrent(operation) || this.runtime !== runtime) return;
     }
     if (previousStatus === "running") {
@@ -422,11 +417,10 @@ export class EmulatorApplication {
     this.operationSequence += 1;
     this.cancelScheduledFrame();
     const runtime = this.runtime;
-    const romId = this.currentRomId;
+    const romId = this.currentRom?.id;
     const audioSuspension = this.dependencies.audio.suspend().catch(() => undefined);
     const persistence = runtime && romId ? this.persistRuntime(runtime, romId) : Promise.resolve();
     this.runtime = undefined;
-    this.currentRomId = undefined;
     this.currentRom = undefined;
     this.quickSaves.clear();
     this.resetFrameRateDiagnostics();
@@ -440,11 +434,12 @@ export class EmulatorApplication {
     this.disposed = true;
     this.operationSequence += 1;
     this.cancelScheduledFrame();
-    if (this.runtime && this.currentRomId) {
-      await this.persistRuntime(this.runtime, this.currentRomId);
+    const runtime = this.runtime;
+    const rom = this.currentRom;
+    if (runtime && rom) {
+      await this.persistRuntime(runtime, rom.id);
     }
     this.runtime = undefined;
-    this.currentRomId = undefined;
     this.currentRom = undefined;
     this.quickSaves.clear();
     this.resetFrameRateDiagnostics();
@@ -467,11 +462,9 @@ export class EmulatorApplication {
           this.session = this.session.frameCompleted(result.cpuCycles);
           this.recordCompletedFrame(timestamp);
           this.emit();
-          if (
-            this.currentRomId &&
-            this.session.snapshot.frameCount % SAVE_CHECKPOINT_FRAMES === 0
-          ) {
-            void this.persistRuntime(runtime, this.currentRomId);
+          const romId = this.currentRom?.id;
+          if (romId && this.session.snapshot.frameCount % SAVE_CHECKPOINT_FRAMES === 0) {
+            void this.persistRuntime(runtime, romId);
           }
         }
         this.scheduleNextFrame();
@@ -545,7 +538,6 @@ export class EmulatorApplication {
     this.cancelScheduledFrame();
     this.runtime = undefined;
     this.currentRom = undefined;
-    this.currentRomId = undefined;
     this.quickSaves.clear();
     this.resetFrameRateDiagnostics();
     this.session = this.session.fail(toErrorMessage(error));

@@ -240,6 +240,53 @@ export class EmulatorApplication {
     this.emit();
   }
 
+  async removeCurrentQuickSave(): Promise<void> {
+    const runtime = this.runtime;
+    const romId = this.currentRomId;
+    const snapshot = this.session.snapshot;
+    const quickSave = this.quickSaves.get(snapshot.selectedQuickSaveSlot);
+    if (
+      !runtime ||
+      !romId ||
+      !quickSave ||
+      quickSave.cartridgeId !== romId ||
+      quickSave.executionRegion !== runtime.cartridge.consoleRegion ||
+      !["ready", "running", "paused"].includes(snapshot.status)
+    ) {
+      return;
+    }
+
+    const operation = this.operationSequence;
+    try {
+      await this.dependencies.quickSaveStorage.removeQuickSave(
+        quickSave.cartridgeId,
+        quickSave.executionRegion,
+        quickSave.slot,
+      );
+    } catch {
+      return;
+    }
+    if (!this.isCurrent(operation) || this.runtime !== runtime) {
+      return;
+    }
+    const currentQuickSave = this.quickSaves.get(quickSave.slot);
+    if (currentQuickSave !== quickSave) {
+      if (
+        currentQuickSave?.cartridgeId === romId &&
+        currentQuickSave.executionRegion === runtime.cartridge.consoleRegion
+      ) {
+        await this.dependencies.quickSaveStorage
+          .saveQuickSave(currentQuickSave)
+          .catch(() => undefined);
+      }
+      return;
+    }
+
+    this.quickSaves.delete(quickSave.slot);
+    this.session = this.session.quickSaveRemoved(quickSave.slot);
+    this.emit();
+  }
+
   async quickLoadCurrentState(): Promise<void> {
     const runtime = this.runtime;
     const snapshot = this.session.snapshot;

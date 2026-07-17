@@ -336,6 +336,11 @@ The keyboard-focus audit then separated browser controls from gameplay ownership
 inputs and links retain their default Enter/Space behavior; the focusable Canvas owns P1/P2
 bindings, receives focus after successful ROM loading and regains it after Workbench actions. A
 held game key still releases correctly if focus moves mid-press.
+Persistent quick saves can now be removed through the same application storage port that hydrates
+them. The Workbench requires an explicit second activation, cancels confirmation on blur or slot
+change, and keeps the in-memory slot available when IndexedDB removal fails or a newer snapshot
+replaces the pending deletion. In the latter race, the newer snapshot is written again after the
+older removal finishes so it also survives a page reload.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.

@@ -193,6 +193,38 @@ export class EmulatorApplication {
     }
   }
 
+  async retryAudio(): Promise<void> {
+    const operation = this.operationSequence;
+    const runtime = this.runtime;
+    const snapshot = this.session.snapshot;
+    if (!runtime || snapshot.status !== "running" || snapshot.audioStatus !== "blocked") return;
+
+    try {
+      await this.dependencies.audio.suspend().catch(() => undefined);
+      if (
+        !this.isCurrent(operation) ||
+        this.runtime !== runtime ||
+        this.session.snapshot.status !== "running" ||
+        this.session.snapshot.audioStatus !== "blocked"
+      ) {
+        return;
+      }
+      const audioResult = await this.dependencies.audio.resume();
+      if (
+        !this.isCurrent(operation) ||
+        this.runtime !== runtime ||
+        this.session.snapshot.status !== "running" ||
+        this.session.snapshot.audioStatus !== "blocked"
+      ) {
+        return;
+      }
+      this.session = this.session.audioChanged(audioResult);
+      this.emit();
+    } catch {
+      // Keep the explicit blocked state so another user gesture can retry.
+    }
+  }
+
   async pause(): Promise<void> {
     if (this.session.snapshot.status !== "running") return;
     this.cancelScheduledFrame();

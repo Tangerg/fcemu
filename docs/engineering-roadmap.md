@@ -345,6 +345,12 @@ The existing application stop command is now exposed as cartridge ejection witho
 new lifecycle abstraction. Ejection clears the active runtime and returns the Workbench to standby
 before best-effort battery persistence finishes, so a slow IndexedDB write cannot later stop a ROM
 the user loaded in the meantime. Persisted battery data and quick-save records remain available.
+The autoplay-recovery audit turned the transport control into an explicit `Enable audio` action
+while emulation is running with blocked WebAudio. A new application use case retries the existing
+audio port without pausing or rescheduling the console timeline, clears buffered samples before
+resuming, and ignores stale completions after another session transition. Quick-save slot buttons
+now meet the Workbench's 40-pixel hit-area baseline; the transport icon cross-fades between play,
+pause and audio states without a new motion dependency.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.

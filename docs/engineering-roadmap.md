@@ -318,6 +318,10 @@ copied into immutable session snapshots. Cartridge format, mapper/submapper, exe
 battery capability remain because Workbench behavior or presentation consumes them; capacity stays
 inside the core until a real UI use case needs it. Mapper label formatting now accepts only its
 three identity fields instead of the complete ROM-detail shape.
+The session-state audit removed the derived `hasQuickSave` flag. Available slots and the selected
+slot remain the two domain facts; the Workbench derives its button labels and disabled state from
+their membership relation, so initialization, transitions and test fixtures no longer repeat a
+boolean projection.
 An XML-driven visual audit matched 87 input-free, supported-Mapper fixtures exactly and separated
 hardware tests from protocol/palette/power-up-policy differences. The controller audit then removed
 the internal `Buttons` wrapper and sixteen unused convenience methods, represented the standard

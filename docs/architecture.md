@@ -120,9 +120,10 @@ Instruction definitions and their addressing/read-write classifications live in 
 `cpu/instruction-set` domain module. CPU execution consumes immutable table data through a byte-domain
 lookup function instead of owning the 256-opcode table, so micro-operation schedulers can depend on instruction metadata
 without depending on the CPU aggregate.
-`ProcessorStatus` is a separate mutable value object for byte packing, cold-start state, reset-line
-IRQ masking and Z/N result projection. The CPU aggregate coordinates it but no longer owns flag
-encoding rules.
+`ProcessorStatus` owns the six physical C/Z/I/D/V/N latches, cold-start state, reset-line IRQ
+masking and Z/N result projection. Its byte view canonicalizes bit 5 high and bit 4 low; PHP and BRK
+set the stack-only B bit at the push boundary, while IRQ/NMI clear it. Pull and save-state restore
+ignore both non-latched input bits, so the CPU aggregate does not preserve debugger-only B/U state.
 `CPUMemory` owns the RP2A03's two byte-wide data paths without introducing another bus object:
 ordinary CPU reads update the internal and external latches, CPU writes drive both, and DMA memory
 fetches drive only the external pins. Unmapped and write-only I/O reads retain the external byte;

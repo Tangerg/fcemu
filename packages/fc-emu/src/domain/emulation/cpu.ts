@@ -982,7 +982,7 @@ class CPU {
       this.A = result.value;
       this.P.ZN = this.A;
     } else if (result.kind === "pulled" && state.operation === "plp") {
-      this.P.flags = (result.value & 0xef) | 0x20;
+      this.P.flags = result.value;
     }
     this.completeActiveInstruction(state);
   }

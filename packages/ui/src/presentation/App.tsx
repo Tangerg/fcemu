@@ -38,6 +38,7 @@ export interface AppProps {
 export function App({ createApplication }: AppProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const romPickerRef = useRef<HTMLButtonElement>(null);
   const applicationRef = useRef<EmulatorApplication | undefined>(undefined);
   const [snapshot, setSnapshot] = useState<SessionSnapshot>(INITIAL_SNAPSHOT);
   const [diagnostics, setDiagnostics] =
@@ -109,6 +110,13 @@ export function App({ createApplication }: AppProps) {
     }
     setQuickSaveRemovalConfirmation(undefined);
     runApplicationAction((application) => application.removeCurrentQuickSave());
+  };
+
+  const handleCartridgeEjection = () => {
+    const application = applicationRef.current;
+    if (!application) return;
+    void application.stop();
+    romPickerRef.current?.focus({ preventScroll: true });
   };
 
   const isRunning = snapshot.status === "running";
@@ -220,6 +228,7 @@ export function App({ createApplication }: AppProps) {
               onChange={handleFileChange}
             />
             <button
+              ref={romPickerRef}
               className={`rom-picker ${isDragging ? "is-dragging" : ""}`}
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -270,6 +279,16 @@ export function App({ createApplication }: AppProps) {
               >
                 <span aria-hidden="true">⏻</span>
                 重新开机
+              </button>
+              <button
+                className="state-button machine-button machine-button-eject"
+                type="button"
+                disabled={!canToggle}
+                aria-label="取出卡带，保留电池存档与快速存档"
+                onClick={handleCartridgeEjection}
+              >
+                <span aria-hidden="true">⏏</span>
+                取出卡带
               </button>
             </div>
             <div className="quick-save-slots" aria-label="快速存档槽位">

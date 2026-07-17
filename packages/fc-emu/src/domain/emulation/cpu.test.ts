@@ -8,6 +8,17 @@ describe("2A03 CPU", () => {
     expect(bus.CPU.state).toMatchObject({ PC: 0x8123, SP: 0xfd, P: 0x24 });
   });
 
+  it("ignores the stack-only status bits restored by RTI", () => {
+    const bus = createBus([0x40]);
+    bus.RAM[0x01fe] = 0x10;
+    bus.RAM[0x01ff] = 0x34;
+    bus.RAM[0x0100] = 0x12;
+
+    bus.CPU.update();
+
+    expect(bus.CPU.state).toMatchObject({ PC: 0x1234, SP: 0, P: 0x20 });
+  });
+
   it("preserves registers and arithmetic flags while consuming three stack bytes on reset", () => {
     const bus = createBus([0xea], { resetVector: 0x8123 });
     bus.CPU.state = { A: 1, X: 2, Y: 3, PC: 0x9000, SP: 0x10, P: 0xc9 };

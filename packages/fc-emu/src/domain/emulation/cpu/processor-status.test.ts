@@ -20,16 +20,18 @@ describe("6502 processor status", () => {
     expect(status.flags).toBe(0xed);
   });
 
-  it("packs and unpacks every writable status flag", () => {
+  it("packs the six physical flags and normalizes the stack-only bits", () => {
     const status = new ProcessorStatus();
 
     status.flags = 0xdf;
 
-    expect(status).toMatchObject({ C: true, I: true, D: true, B: true, V: true });
+    expect(status).toMatchObject({ C: true, I: true, D: true, V: true });
     expect(status.Z).toBe(true);
     expect(status.N).toBe(true);
-    expect(status.U).toBe(true);
-    expect(status.flags).toBe(0xff);
+    expect(status.flags).toBe(0xef);
+
+    status.flags = 0x10;
+    expect(status.flags).toBe(0x20);
   });
 
   it.each([

@@ -389,10 +389,10 @@ export class EmulatorApplication {
     if (this.disposed) return;
     this.operationSequence += 1;
     this.cancelScheduledFrame();
+    const runtime = this.runtime;
+    const romId = this.currentRomId;
     const audioSuspension = this.dependencies.audio.suspend().catch(() => undefined);
-    if (this.runtime && this.currentRomId) {
-      await this.persistRuntime(this.runtime, this.currentRomId);
-    }
+    const persistence = runtime && romId ? this.persistRuntime(runtime, romId) : Promise.resolve();
     this.runtime = undefined;
     this.currentRomId = undefined;
     this.currentRom = undefined;
@@ -400,7 +400,7 @@ export class EmulatorApplication {
     this.resetFrameRateDiagnostics();
     this.session = this.session.stop();
     this.emit();
-    await audioSuspension;
+    await Promise.all([audioSuspension, persistence]);
   }
 
   async dispose(): Promise<void> {

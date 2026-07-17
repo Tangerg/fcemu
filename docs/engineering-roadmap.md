@@ -322,6 +322,10 @@ The session-state audit removed the derived `hasQuickSave` flag. Available slots
 slot remain the two domain facts; the Workbench derives its button labels and disabled state from
 their membership relation, so initialization, transitions and test fixtures no longer repeat a
 boolean projection.
+The application-lifecycle audit then removed `currentRomId`, which always duplicated
+`currentRom.id`. Persistence, quick saves, region changes and periodic checkpoints now use the ID
+from the current or already captured `RomImage`, reducing the mutable state that load, error, stop
+and disposal paths must update in lockstep.
 An XML-driven visual audit matched 87 input-free, supported-Mapper fixtures exactly and separated
 hardware tests from protocol/palette/power-up-policy differences. The controller audit then removed
 the internal `Buttons` wrapper and sixteen unused convenience methods, represented the standard

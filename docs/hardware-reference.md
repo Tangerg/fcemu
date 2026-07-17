@@ -21,7 +21,7 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
 
 | Hardware boundary     | Primary evidence                                                                                                                                                                         | Core module                                                                     |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| RP2A03 NMOS 6502 core | [CPU](https://www.nesdev.org/wiki/CPU), [CPU interrupts](https://www.nesdev.org/wiki/Interrupts), MOS manual                                                                             | `domain/emulation/cpu.ts`, `domain/emulation/cpu/`                              |
+| RP2A03 NMOS 6502 core | [CPU](https://www.nesdev.org/wiki/CPU), [status flags](https://www.nesdev.org/wiki/Status_flags), [CPU interrupts](https://www.nesdev.org/wiki/Interrupts), MOS manual                   | `domain/emulation/cpu.ts`, `domain/emulation/cpu/`                              |
 | RP2C02 PPU            | [PPU rendering](https://www.nesdev.org/wiki/PPU_rendering), [PPU frame timing](https://www.nesdev.org/wiki/PPU_frame_timing), [PPU registers](https://www.nesdev.org/wiki/PPU_registers) | `domain/emulation/ppu.ts`, `domain/emulation/ppu/`                              |
 | RP2A03 APU            | [APU](https://www.nesdev.org/wiki/APU), [APU frame counter](https://www.nesdev.org/wiki/APU_Frame_Counter), [APU DMC](https://www.nesdev.org/wiki/APU_DMC)                               | `domain/emulation/apu.ts`, `domain/emulation/apu/`                              |
 | OAM and DMC DMA       | [DMA](https://www.nesdev.org/wiki/DMA)                                                                                                                                                   | `domain/emulation/dma/`                                                         |
@@ -36,6 +36,9 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   interrupt polls occur on named CPU cycles.
 - Every branch polls interrupts before its operand fetch. A taken page-crossing branch polls again
   before PCH fixup, and a successful first poll cannot be revoked by an unsuccessful second poll.
+- Processor status contains six physical C/Z/I/D/V/N latches. Bits 4 and 5 have no corresponding
+  CPU state and are ignored by PLP/RTI: PHP and BRK push both high, while IRQ/NMI push bit 5 high and
+  bit 4 low. Save-state projection therefore uses the same canonical bit-5-high, bit-4-low form.
 - SHA/SHS/SHX/SHY normally mask their stored value with the literal address high byte plus one. If
   RDY stretches the indexed dummy read immediately before the write, that data mask disappears;
   page-crossing address-high corruption remains independent of the stalled read.

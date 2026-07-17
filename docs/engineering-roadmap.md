@@ -93,8 +93,9 @@ the baseline, not proof that emulation is complete.
   representative official opcodes, bus behavior and rejection of out-of-range opcode values; the
   CPU aggregate no longer owns decoder metadata.
 - Extract status-byte packing, power-on reset and Z/N projection into the `ProcessorStatus` value
-  object. Pure tests cover all writable flags and the signed/wrapped result cases used by ALU
-  instructions, leaving the CPU aggregate responsible for coordination rather than flag encoding.
+  object. Pure tests cover the six physical flags, stack-only bit normalization and the
+  signed/wrapped result cases used by ALU instructions, leaving the CPU aggregate responsible for
+  coordination rather than flag encoding.
 - Extract relative branches into `CpuBranchCycle`, including offset reads, taken dummy reads,
   wrong-page reads and wrapped targets. The entity exposes the taken/non-crossing early interrupt
   poll explicitly. A production experiment passed `cpu_interrupts_v2` 5/5 but changed the combined
@@ -306,6 +307,10 @@ the derived PPU frequency. `MachineClock` remains the only owner of fractional r
 The CPU instruction-set audit replaced the field-only `Instruction` class/static namespace with a
 frozen 256-entry definition table and a byte-domain lookup function. Lookup now rejects fractional
 and non-finite opcodes instead of leaking `undefined`; table-wide tests validate every definition.
+The processor-status audit removed B and U pseudo-fields from `ProcessorStatus`: the NMOS core has
+only six physical status latches, while PHP/BRK and IRQ/NMI already synthesize the stack-only bits at
+their push boundary. PLP, RTI and old save states remain byte-compatible but now ignore those two
+non-latched input bits; the canonical snapshot form keeps bit 5 high and bit 4 low.
 The cartridge-format audit likewise replaced the field-only `CartridgeHeader` class with a parser
 that returns frozen metadata. Header interpretation remains isolated from supported-layout policy
 and cartridge memory ownership, but no longer pretends that parsed bytes have an object lifecycle.

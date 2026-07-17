@@ -2,7 +2,7 @@ import type Cartridge from "../../model/cartridge.js";
 import { AxromMapper } from "./axrom-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
-import { Mapper34Board } from "./mapper34-board.js";
+import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
 import { Mmc3Mapper } from "./mmc3-mapper.js";
@@ -56,8 +56,8 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       return new AxromMapper(cartridge, resolveBusConflicts(cartridge, false));
     case 34: {
-      const board = Mapper34Board.resolve(cartridge);
-      return board.kind === "nina-001" ? new Nina001Mapper(cartridge) : new BnromMapper(cartridge);
+      const board = resolveMapper34Board(cartridge);
+      return board === "nina-001" ? new Nina001Mapper(cartridge) : new BnromMapper(cartridge);
     }
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);

@@ -209,6 +209,55 @@ describe("EmulatorApplication", () => {
     expect(controllerInput.isSubscribed).toBe(false);
   });
 
+  it("recovers blocked audio without interrupting the running timeline", async () => {
+    const scheduler = new TestScheduler();
+    const recovery = deferred<"running" | "blocked">();
+    const resume = vi
+      .fn<() => Promise<"running" | "blocked">>()
+      .mockResolvedValueOnce("blocked")
+      .mockReturnValueOnce(recovery.promise);
+    const suspend = vi.fn<() => Promise<void>>().mockResolvedValue();
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create: () => createRuntime({ consoleRegion: "ntsc" }) },
+      scheduler,
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume,
+        suspend,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    scheduler.runNext();
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      audioStatus: "blocked",
+      frameCount: 1,
+    });
+
+    const recovering = application.retryAudio();
+    scheduler.runNext();
+    recovery.resolve("running");
+    await recovering;
+    await application.retryAudio();
+
+    expect(resume).toHaveBeenCalledTimes(2);
+    expect(suspend).toHaveBeenCalledOnce();
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      audioStatus: "running",
+      frameCount: 2,
+    });
+  });
+
   it("flushes audio and resumes emulation after a running console restart", async () => {
     const scheduler = new TestScheduler();
     const audio = {

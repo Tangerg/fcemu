@@ -326,6 +326,11 @@ The application-lifecycle audit then removed `currentRomId`, which always duplic
 `currentRom.id`. Persistence, quick saves, region changes and periodic checkpoints now use the ID
 from the current or already captured `RomImage`, reducing the mutable state that load, error, stop
 and disposal paths must update in lockstep.
+A follow-up unified the runtime and loaded image into one private `ActiveEmulation` record because
+neither has a valid independent lifecycle. Load, region replacement, load failure, ejection and
+disposal now replace or clear that pair atomically, and asynchronous continuations compare the
+captured pair before committing. The record deliberately remains a plain application detail rather
+than a new lifecycle aggregate.
 An XML-driven visual audit matched 87 input-free, supported-Mapper fixtures exactly and separated
 hardware tests from protocol/palette/power-up-policy differences. The controller audit then removed
 the internal `Buttons` wrapper and sixteen unused convenience methods, represented the standard

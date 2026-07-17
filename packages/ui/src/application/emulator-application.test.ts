@@ -197,6 +197,13 @@ describe("EmulatorApplication", () => {
     await application.powerCycle();
     expect(powerCycle).toHaveBeenCalledOnce();
     await application.stop();
+    expect(application.getSnapshot()).toMatchObject({
+      status: "idle",
+      frameCount: 0,
+      cpuCycles: 0,
+    });
+    expect(application.getSnapshot().rom).toBeUndefined();
+    expect(application.getDiagnostics().targetFrameRateHz).toBe(0);
     expect(controllerInput.isSubscribed).toBe(true);
     await application.dispose();
     expect(controllerInput.isSubscribed).toBe(false);
@@ -322,6 +329,63 @@ describe("EmulatorApplication", () => {
     first.resolve({ id: "first", name: "first.nes", bytes: new ArrayBuffer(1) });
     await firstLoad;
 
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      rom: { name: "second.nes" },
+    });
+  });
+
+  it("does not let slow eject persistence stop a subsequently loaded ROM", async () => {
+    const persistence = deferred<void>();
+    const save = vi
+      .fn<(cartridgeId: string, data: Uint8Array) => Promise<void>>()
+      .mockReturnValue(persistence.promise);
+    let revision = 0;
+    const firstRuntime = createRuntime({
+      consoleRegion: "ntsc",
+      batterySave: { revision: 0, data: Uint8Array.of(0) },
+    });
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async (file) => ({ id: file.name, name: file.name, bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: (rom) =>
+          rom.name === "first.nes"
+            ? {
+                ...firstRuntime,
+                captureBatterySave: () => ({ revision, data: Uint8Array.of(revision) }),
+              }
+            : createRuntime({ consoleRegion: "ntsc" }),
+      },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("first.nes"));
+    revision = 1;
+    const ejecting = application.stop();
+    expect(application.getSnapshot().status).toBe("idle");
+
+    await application.loadRom(testFile("second.nes"));
+    expect(application.getSnapshot()).toMatchObject({
+      status: "running",
+      rom: { name: "second.nes" },
+    });
+
+    persistence.resolve();
+    await ejecting;
+
+    expect(save).toHaveBeenCalledWith("first.nes", Uint8Array.of(1));
     expect(application.getSnapshot()).toMatchObject({
       status: "running",
       rom: { name: "second.nes" },

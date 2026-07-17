@@ -341,6 +341,10 @@ them. The Workbench requires an explicit second activation, cancels confirmation
 change, and keeps the in-memory slot available when IndexedDB removal fails or a newer snapshot
 replaces the pending deletion. In the latter race, the newer snapshot is written again after the
 older removal finishes so it also survives a page reload.
+The existing application stop command is now exposed as cartridge ejection without introducing a
+new lifecycle abstraction. Ejection clears the active runtime and returns the Workbench to standby
+before best-effort battery persistence finishes, so a slow IndexedDB write cannot later stop a ROM
+the user loaded in the meantime. Persisted battery data and quick-save records remain available.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.

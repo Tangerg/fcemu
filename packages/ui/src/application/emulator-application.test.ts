@@ -160,8 +160,6 @@ describe("EmulatorApplication", () => {
             submapperNumber: 0,
             consoleRegion: "ntsc",
             hasBatteryBackup: false,
-            prgRomBytes: 16_384,
-            chrRomBytes: 8192,
           },
           frameRateHz: 60.0988,
           runFrame,
@@ -469,8 +467,6 @@ describe("EmulatorApplication", () => {
         submapperNumber: 0,
         consoleRegion: "ntsc" as const,
         hasBatteryBackup: true,
-        prgRomBytes: 16_384,
-        chrRomBytes: 8192,
       },
       frameRateHz: 60.0988,
       runFrame: () => ({ cpuCycles: 100 }),
@@ -1093,8 +1089,6 @@ function createApplication(
         submapperNumber: number;
         consoleRegion: "ntsc" | "pal" | "dendy";
         hasBatteryBackup: boolean;
-        prgRomBytes: number;
-        chrRomBytes: number;
       };
       frameRateHz: number;
       runFrame: () => { cpuCycles: number };
@@ -1113,8 +1107,6 @@ function createApplication(
       submapperNumber: 0,
       consoleRegion: "ntsc",
       hasBatteryBackup: false,
-      prgRomBytes: 16_384,
-      chrRomBytes: 8192,
     },
     frameRateHz: 60.0988,
     runFrame: () => ({ cpuCycles: 100 }),
@@ -1166,8 +1158,6 @@ function createRuntime({
       submapperNumber: 0,
       consoleRegion,
       hasBatteryBackup: batterySave !== undefined,
-      prgRomBytes: 16_384,
-      chrRomBytes: 8192,
     },
     frameRateHz: consoleRegion === "ntsc" ? 60.0988 : 50.007,
     runFrame: () => ({ cpuCycles: 100 }),

@@ -12,8 +12,6 @@ export interface RomDetails {
   readonly mapperNumber: number;
   readonly submapperNumber: number;
   readonly consoleRegion: ExecutionRegion;
-  readonly prgRomBytes: number;
-  readonly chrRomBytes: number;
 }
 
 export interface SessionSnapshot {

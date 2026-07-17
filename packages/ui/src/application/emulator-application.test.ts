@@ -689,7 +689,8 @@ describe("EmulatorApplication", () => {
     scheduler.runNext();
     application.quickSaveCurrentState();
     expect(application.getSnapshot()).toMatchObject({
-      hasQuickSave: true,
+      selectedQuickSaveSlot: 1,
+      quickSaveSlots: [1],
       frameCount: 2,
       cpuCycles: 200,
     });
@@ -704,7 +705,7 @@ describe("EmulatorApplication", () => {
     expect(setControllerButton).toHaveBeenCalledWith(1, "a", false);
     expect(application.getSnapshot()).toMatchObject({
       status: "running",
-      hasQuickSave: true,
+      quickSaveSlots: [1],
       frameCount: 2,
       cpuCycles: 200,
     });
@@ -781,11 +782,13 @@ describe("EmulatorApplication", () => {
     expect(application.getSnapshot()).toMatchObject({
       selectedQuickSaveSlot: 1,
       quickSaveSlots: [2],
-      hasQuickSave: false,
     });
 
     application.selectQuickSaveSlot(2);
-    expect(application.getSnapshot().hasQuickSave).toBe(true);
+    expect(application.getSnapshot()).toMatchObject({
+      selectedQuickSaveSlot: 2,
+      quickSaveSlots: [2],
+    });
     await application.quickLoadCurrentState();
     expect(restoreSaveState).toHaveBeenCalledWith({ data: { slot: 2 } });
     expect(application.getSnapshot()).toMatchObject({ frameCount: 40, cpuCycles: 4000 });
@@ -795,7 +798,6 @@ describe("EmulatorApplication", () => {
     expect(application.getSnapshot()).toMatchObject({
       selectedQuickSaveSlot: 3,
       quickSaveSlots: [2, 3],
-      hasQuickSave: true,
     });
     expect(saveQuickSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -815,7 +817,6 @@ describe("EmulatorApplication", () => {
     expect(application.getSnapshot()).toMatchObject({
       selectedQuickSaveSlot: 3,
       quickSaveSlots: [2],
-      hasQuickSave: false,
       frameCount: 40,
       cpuCycles: 4000,
     });
@@ -852,7 +853,6 @@ describe("EmulatorApplication", () => {
 
     expect(application.getSnapshot()).toMatchObject({
       quickSaveSlots: [1],
-      hasQuickSave: true,
     });
   });
 
@@ -899,7 +899,6 @@ describe("EmulatorApplication", () => {
 
     expect(application.getSnapshot()).toMatchObject({
       quickSaveSlots: [1],
-      hasQuickSave: true,
     });
     expect(saveQuickSave).toHaveBeenCalledTimes(3);
     expect(saveQuickSave).toHaveBeenLastCalledWith(
@@ -945,7 +944,6 @@ describe("EmulatorApplication", () => {
 
     expect(application.getSnapshot()).toMatchObject({
       quickSaveSlots: [],
-      hasQuickSave: false,
     });
   });
 
@@ -1001,7 +999,7 @@ describe("EmulatorApplication", () => {
     });
 
     await application.loadRom(testFile("game.nes"));
-    expect(application.getSnapshot().hasQuickSave).toBe(true);
+    expect(application.getSnapshot().quickSaveSlots).toEqual([1]);
 
     await application.quickLoadCurrentState();
 
@@ -1009,7 +1007,6 @@ describe("EmulatorApplication", () => {
     expect(application.getSnapshot()).toMatchObject({
       status: "running",
       quickSaveSlots: [],
-      hasQuickSave: false,
     });
   });
 

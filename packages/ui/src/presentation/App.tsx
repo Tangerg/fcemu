@@ -16,7 +16,6 @@ const INITIAL_SNAPSHOT: SessionSnapshot = {
   cpuCycles: 0,
   selectedQuickSaveSlot: 1,
   quickSaveSlots: [],
-  hasQuickSave: false,
 };
 
 const INITIAL_DIAGNOSTICS: EmulatorApplicationDiagnostics = {
@@ -47,6 +46,7 @@ export function App({ createApplication }: AppProps) {
   const [quickSaveRemovalConfirmation, setQuickSaveRemovalConfirmation] = useState<
     QuickSaveSlot | undefined
   >();
+  const hasQuickSave = snapshot.quickSaveSlots.includes(snapshot.selectedQuickSaveSlot);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -67,7 +67,7 @@ export function App({ createApplication }: AppProps) {
 
   useEffect(() => {
     setQuickSaveRemovalConfirmation(undefined);
-  }, [snapshot.selectedQuickSaveSlot, snapshot.hasQuickSave]);
+  }, [snapshot.selectedQuickSaveSlot, hasQuickSave]);
 
   const focusGameplay = () => {
     if (!applicationRef.current?.getSnapshot().rom) return;
@@ -353,12 +353,12 @@ export function App({ createApplication }: AppProps) {
                 }
               >
                 <span aria-hidden="true">◇</span>
-                {snapshot.hasQuickSave ? "覆盖槽位" : "保存槽位"}
+                {hasQuickSave ? "覆盖槽位" : "保存槽位"}
               </button>
               <button
                 className="state-button"
                 type="button"
-                disabled={!canToggle || !snapshot.hasQuickSave}
+                disabled={!canToggle || !hasQuickSave}
                 onClick={() =>
                   runApplicationAction((application) => application.quickLoadCurrentState())
                 }
@@ -369,7 +369,7 @@ export function App({ createApplication }: AppProps) {
               <button
                 className="state-button state-button-danger"
                 type="button"
-                disabled={!canToggle || !snapshot.hasQuickSave}
+                disabled={!canToggle || !hasQuickSave}
                 aria-label={`${
                   quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
                     ? "确认清空"

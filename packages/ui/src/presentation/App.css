@@ -461,6 +461,10 @@
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 13%);
 }
 
+.machine-button-eject {
+  grid-column: 1 / -1;
+}
+
 .quick-save-slots {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

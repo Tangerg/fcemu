@@ -351,6 +351,10 @@ audio port without pausing or rescheduling the console timeline, clears buffered
 resuming, and ignores stale completions after another session transition. Quick-save slot buttons
 now meet the Workbench's 40-pixel hit-area baseline; the transport icon cross-fades between play,
 pause and audio states without a new motion dependency.
+The ROM-loading interaction audit now removes the inactive Canvas from the keyboard tab order,
+announces each complete status label through a polite live region and labels the picker as `Replace
+ROM` while a cartridge is active. Internal drag transitions no longer clear the drop-target state,
+and the Workbench exposes its loading state with `aria-busy` without adding a UI state abstraction.
 
 New mapper families are outside the current scope; compatibility work stays on the already supported
 Mapper 0/1/2/3/4/7/34 board variants and their verified hardware behavior.

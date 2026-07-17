@@ -577,6 +577,23 @@
   opacity: 0.32;
 }
 
+.state-button-danger {
+  grid-column: 1 / -1;
+  color: #9b928a;
+}
+
+.state-button-danger:hover:not(:disabled) {
+  border-color: rgb(241 74 60 / 28%);
+  color: #e4b3ad;
+  background: rgb(226 56 43 / 8%);
+}
+
+.state-button-danger[data-confirm] {
+  border-color: rgb(241 74 60 / 48%);
+  color: #fff5f2;
+  background: rgb(226 56 43 / 18%);
+}
+
 .transport-icon {
   display: grid;
   min-width: 14px;

@@ -274,7 +274,8 @@ SUROM/SXROM outer PRG selection, SOROM/SXROM/SZROM WRAM banking, SNROM's CHR-A16
 SEROM-family fixed PRG wiring; `Mmc1Mapper` consumes those board capabilities without reinterpreting
 headers. Unsupported or contradictory combinations fail at the factory boundary. MMC3 owns its
 `$A001` RAM enable/write-protect state instead of treating the direct window as permanently writable.
-`Mapper34Board` similarly resolves the unrelated NINA-001 and BNROM identities before execution.
+The pure `resolveMapper34Board` function similarly resolves and validates the unrelated NINA-001
+and BNROM identities before execution.
 The resulting aggregate owns only its physical register decoder: NINA's three PRG-RAM-overlay
 registers cannot leak into BNROM, and BNROM's bus-conflicted high-address latch cannot leak into NINA.
 MMC1 additionally observes the CPU bus's R/W sequence through an optional mapper capability. This

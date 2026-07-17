@@ -12,8 +12,6 @@ describe("EmulationSession", () => {
         mapperNumber: 4,
         submapperNumber: 1,
         consoleRegion: "pal",
-        prgRomBytes: 1,
-        chrRomBytes: 2,
       })
       .play()
       .frameCompleted(29_780);
@@ -42,8 +40,6 @@ describe("EmulationSession", () => {
         mapperNumber: 0,
         submapperNumber: 0,
         consoleRegion: "ntsc",
-        prgRomBytes: 1,
-        chrRomBytes: 1,
       }),
     ).toThrow(/Cannot reconfigure/);
   });
@@ -58,8 +54,6 @@ describe("EmulationSession", () => {
         mapperNumber: 0,
         submapperNumber: 0,
         consoleRegion: "pal",
-        prgRomBytes: 1,
-        chrRomBytes: 1,
       })
       .play()
       .frameCompleted(33_247)
@@ -70,8 +64,6 @@ describe("EmulationSession", () => {
         mapperNumber: 0,
         submapperNumber: 0,
         consoleRegion: "pal",
-        prgRomBytes: 1,
-        chrRomBytes: 1,
       });
 
     expect(paused.snapshot).toMatchObject({
@@ -94,8 +86,6 @@ describe("EmulationSession", () => {
         mapperNumber: 0,
         submapperNumber: 0,
         consoleRegion: "ntsc",
-        prgRomBytes: 1,
-        chrRomBytes: 1,
       })
       .play();
     expect(Object.isFrozen(running.snapshot)).toBe(true);
@@ -112,8 +102,6 @@ describe("EmulationSession", () => {
         mapperNumber: 0,
         submapperNumber: 0,
         consoleRegion: "ntsc",
-        prgRomBytes: 1,
-        chrRomBytes: 1,
       })
       .play()
       .frameCompleted(100)

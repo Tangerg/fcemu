@@ -313,6 +313,11 @@ The Mapper 34 board audit applied the same rule to its field-only identity wrapp
 `resolveMapper34Board` function still owns submapper and memory-geometry validation, but returns the
 single discriminator consumed by the mapper factory; the stateful NINA-001 and BNROM aggregates
 remain separate.
+The UI boundary audit then removed PRG/CHR capacity fields that crossed the core adapter only to be
+copied into immutable session snapshots. Cartridge format, mapper/submapper, execution region and
+battery capability remain because Workbench behavior or presentation consumes them; capacity stays
+inside the core until a real UI use case needs it. Mapper label formatting now accepts only its
+three identity fields instead of the complete ROM-detail shape.
 An XML-driven visual audit matched 87 input-free, supported-Mapper fixtures exactly and separated
 hardware tests from protocol/palette/power-up-policy differences. The controller audit then removed
 the internal `Buttons` wrapper and sixteen unused convenience methods, represented the standard

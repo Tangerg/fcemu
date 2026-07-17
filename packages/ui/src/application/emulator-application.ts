@@ -647,8 +647,6 @@ function toRomDetails(rom: RomImage, runtime: EmulatorRuntimePort): RomDetails {
     mapperNumber: runtime.cartridge.mapperNumber,
     submapperNumber: runtime.cartridge.submapperNumber,
     consoleRegion: runtime.cartridge.consoleRegion,
-    prgRomBytes: runtime.cartridge.prgRomBytes,
-    chrRomBytes: runtime.cartridge.chrRomBytes,
   };
 }
 

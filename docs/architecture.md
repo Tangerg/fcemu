@@ -294,6 +294,9 @@ preference, scheduling, controller intent, three persistent quick-save slots, ru
 and user feedback.
 Canvas, WebAudio, requestAnimationFrame, keyboard input and the core emulator are replaceable
 adapters around that context.
+Its runtime port carries only cartridge metadata consumed by Workbench policy or presentation.
+PRG/CHR capacities remain core cartridge facts instead of being copied into every UI session
+snapshot without a consumer.
 
 ## Composition flow
 

@@ -24,7 +24,6 @@ export interface SessionSnapshot {
   readonly cpuCycles: number;
   readonly selectedQuickSaveSlot: QuickSaveSlot;
   readonly quickSaveSlots: readonly QuickSaveSlot[];
-  readonly hasQuickSave: boolean;
   readonly error?: string;
 }
 
@@ -36,7 +35,6 @@ export class EmulationSession {
     const snapshot = {
       ...state,
       quickSaveSlots,
-      hasQuickSave: quickSaveSlots.includes(state.selectedQuickSaveSlot),
     };
     this.state = snapshot.rom
       ? Object.freeze({ ...snapshot, rom: Object.freeze({ ...snapshot.rom }) })
@@ -55,7 +53,6 @@ export class EmulationSession {
       cpuCycles: 0,
       selectedQuickSaveSlot,
       quickSaveSlots: [],
-      hasQuickSave: false,
     });
   }
 
@@ -73,7 +70,6 @@ export class EmulationSession {
       cpuCycles: 0,
       selectedQuickSaveSlot: this.state.selectedQuickSaveSlot,
       quickSaveSlots: [],
-      hasQuickSave: false,
     });
   }
 
@@ -88,7 +84,6 @@ export class EmulationSession {
       cpuCycles: 0,
       selectedQuickSaveSlot: this.state.selectedQuickSaveSlot,
       quickSaveSlots: [],
-      hasQuickSave: false,
     });
   }
 
@@ -207,7 +202,6 @@ export class EmulationSession {
       frameCount: 0,
       cpuCycles: 0,
       quickSaveSlots: [],
-      hasQuickSave: false,
     });
   }
 

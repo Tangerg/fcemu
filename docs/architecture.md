@@ -230,6 +230,9 @@ before restore and reapplies current input intents so stale saved buttons cannot
 `QuickSaveStoragePort` persists three versioned Workbench envelopes through IndexedDB. Each key and
 record includes the content-addressed ROM identity, actual execution region and slot; incompatible
 or corrupt records are discarded without coupling the core to browser storage.
+The session snapshot stores the selected slot and the set of available slots as its only quick-save
+facts. Whether the selected slot currently has a save is a presentation projection of those values,
+not a second boolean state that can drift from them.
 
 `PpuIoBusLatch` owns the PPU's CPU-facing dynamic data bus independently from VRAM. Each bit keeps
 its own deterministic decay deadline, partial reads drive only their physical lines, and passive

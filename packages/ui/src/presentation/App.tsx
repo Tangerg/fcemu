@@ -120,6 +120,8 @@ export function App({ createApplication }: AppProps) {
   };
 
   const isRunning = snapshot.status === "running";
+  const needsAudioRecovery = isRunning && snapshot.audioStatus === "blocked";
+  const transportLabel = needsAudioRecovery ? "启用声音" : isRunning ? "暂停" : "继续";
   const canToggle = isRunning || snapshot.status === "paused" || snapshot.status === "ready";
 
   return (
@@ -248,16 +250,28 @@ export function App({ createApplication }: AppProps) {
               className="transport-button"
               type="button"
               disabled={!canToggle}
+              aria-label={needsAudioRecovery ? "启用声音，不中断游戏" : undefined}
               onClick={() =>
                 runApplicationAction((application) =>
-                  isRunning ? application.pause() : application.play(),
+                  needsAudioRecovery
+                    ? application.retryAudio()
+                    : isRunning
+                      ? application.pause()
+                      : application.play(),
                 )
               }
             >
               <span className="transport-icon" aria-hidden="true">
-                {isRunning ? "Ⅱ" : "▶"}
+                <span data-active={needsAudioRecovery || undefined}>♪</span>
+                <span data-active={(isRunning && !needsAudioRecovery) || undefined}>Ⅱ</span>
+                <span
+                  className="transport-icon-play"
+                  data-active={(!isRunning && !needsAudioRecovery) || undefined}
+                >
+                  ▶
+                </span>
               </span>
-              {isRunning ? "暂停" : "继续"}
+              {transportLabel}
             </button>
             <div className="machine-actions" aria-label="主机控制">
               <button

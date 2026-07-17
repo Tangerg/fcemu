@@ -22,8 +22,6 @@ interface EmulatorCartridgeInfo {
   readonly submapperNumber: number;
   readonly consoleRegion: ExecutionRegion;
   readonly hasBatteryBackup: boolean;
-  readonly prgRomBytes: number;
-  readonly chrRomBytes: number;
 }
 
 export interface EmulatorFrameResult {

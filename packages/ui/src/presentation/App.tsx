@@ -3,7 +3,7 @@ import type { ChangeEvent, DragEvent } from "react";
 import type { EmulatorApplication } from "../application/emulator-application.js";
 import type { EmulatorApplicationDiagnostics } from "../application/emulator-application.js";
 import { QUICK_SAVE_SLOTS } from "../domain/emulation-session.js";
-import type { SessionSnapshot } from "../domain/emulation-session.js";
+import type { QuickSaveSlot, SessionSnapshot } from "../domain/emulation-session.js";
 import { parseRegionPreference, REGION_PREFERENCES } from "../domain/execution-region.js";
 import "./App.css";
 import { formatMapperLabel } from "./mapper-label.js";
@@ -43,6 +43,9 @@ export function App({ createApplication }: AppProps) {
   const [diagnostics, setDiagnostics] =
     useState<EmulatorApplicationDiagnostics>(INITIAL_DIAGNOSTICS);
   const [isDragging, setDragging] = useState(false);
+  const [quickSaveRemovalConfirmation, setQuickSaveRemovalConfirmation] = useState<
+    QuickSaveSlot | undefined
+  >();
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -60,6 +63,10 @@ export function App({ createApplication }: AppProps) {
       void application.dispose();
     };
   }, [createApplication]);
+
+  useEffect(() => {
+    setQuickSaveRemovalConfirmation(undefined);
+  }, [snapshot.selectedQuickSaveSlot, snapshot.hasQuickSave]);
 
   const focusGameplay = () => {
     if (!applicationRef.current?.getSnapshot().rom) return;
@@ -92,6 +99,16 @@ export function App({ createApplication }: AppProps) {
     event.preventDefault();
     setDragging(false);
     loadFile(event.dataTransfer.files[0]);
+  };
+
+  const handleQuickSaveRemoval = () => {
+    const slot = snapshot.selectedQuickSaveSlot;
+    if (quickSaveRemovalConfirmation !== slot) {
+      setQuickSaveRemovalConfirmation(slot);
+      return;
+    }
+    setQuickSaveRemovalConfirmation(undefined);
+    runApplicationAction((application) => application.removeCurrentQuickSave());
   };
 
   const isRunning = snapshot.status === "running";
@@ -300,6 +317,28 @@ export function App({ createApplication }: AppProps) {
               >
                 <span aria-hidden="true">↶</span>
                 读取槽位
+              </button>
+              <button
+                className="state-button state-button-danger"
+                type="button"
+                disabled={!canToggle || !snapshot.hasQuickSave}
+                aria-label={`${
+                  quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
+                    ? "确认清空"
+                    : "清空"
+                }槽位 ${snapshot.selectedQuickSaveSlot}`}
+                data-confirm={
+                  quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot || undefined
+                }
+                onBlur={() => setQuickSaveRemovalConfirmation(undefined)}
+                onClick={handleQuickSaveRemoval}
+              >
+                <span aria-hidden="true">×</span>
+                <span aria-live="polite">
+                  {quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
+                    ? "确认清空"
+                    : "清空槽位"}
+                </span>
               </button>
             </div>
             <p id="controller-help" className="controls-hint">

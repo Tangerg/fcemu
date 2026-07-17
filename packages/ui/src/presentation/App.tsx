@@ -102,6 +102,11 @@ export function App({ createApplication }: AppProps) {
     loadFile(event.dataTransfer.files[0]);
   };
 
+  const handleDragLeave = (event: DragEvent<HTMLButtonElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    setDragging(false);
+  };
+
   const handleQuickSaveRemoval = () => {
     const slot = snapshot.selectedQuickSaveSlot;
     if (quickSaveRemovalConfirmation !== slot) {
@@ -135,18 +140,28 @@ export function App({ createApplication }: AppProps) {
         <p>平台无关的模拟器核心，配上一层克制的浏览器工作台。</p>
       </header>
 
-      <section className="console-card enter-two" aria-label="模拟器工作台">
+      <section
+        className="console-card enter-two"
+        aria-label="模拟器工作台"
+        aria-busy={snapshot.status === "loading"}
+      >
         <div className="screen-shell">
           <div className="screen-header">
             <span>{snapshot.rom?.name ?? snapshot.pendingRomName ?? "NO CARTRIDGE"}</span>
-            <span className={`status status-${snapshot.status}`}>{statusLabel(snapshot)}</span>
+            <output
+              className={`status status-${snapshot.status}`}
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {statusLabel(snapshot)}
+            </output>
           </div>
           <div className="screen-bezel">
             <canvas
               ref={canvasRef}
               width="256"
               height="240"
-              tabIndex={0}
+              tabIndex={canToggle ? 0 : -1}
               aria-label="FC 模拟器画面"
               aria-describedby="controller-help"
             />
@@ -239,10 +254,10 @@ export function App({ createApplication }: AppProps) {
                 setDragging(true);
               }}
               onDragOver={(event) => event.preventDefault()}
-              onDragLeave={() => setDragging(false)}
+              onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <span className="picker-title">选择 ROM</span>
+              <span className="picker-title">{canToggle ? "更换 ROM" : "选择 ROM"}</span>
               <span className="picker-hint">或拖放 .nes 文件到这里</span>
             </button>
 

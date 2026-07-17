@@ -301,8 +301,10 @@ Its runtime port carries only cartridge metadata consumed by Workbench policy or
 PRG/CHR capacities remain core cartridge facts instead of being copied into every UI session
 snapshot without a consumer.
 `EmulatorApplication` retains the loaded `RomImage` for region reconfiguration; its content ID is
-also the sole key source for battery and quick-save persistence. The application does not maintain
-a second mutable ID that must be synchronized across load, failure, stop and disposal paths.
+also the sole key source for battery and quick-save persistence. The loaded image and its runtime
+live in one private `ActiveEmulation` record, so lifecycle transitions install or clear the pair
+atomically instead of synchronizing independent nullable fields. This is an application-layer
+invariant, not another domain object or public model.
 
 ## Composition flow
 

@@ -163,7 +163,7 @@ the baseline, not proof that emulation is complete.
   cycles while still accepting D7 reset. A real `INC $E000` CPU-cycle regression now commits control
   value `$01` with an empty shift register instead of the incorrect `$02`/half-filled state; the
   previous R/W level advances the save-state envelope to version 12. Holy Mapperel remains 5/5.
-- Split Mapper 34 into immutable `Mapper34Board` identity plus independent NINA-001 and BNROM
+- Split Mapper 34 through one validated board-selection function plus independent NINA-001 and BNROM
   aggregates. NES 2.0 submappers 1/2 are explicit; legacy submapper 0 selects one board from CHR
   geometry. Holy Mapperel's BNROM fixture reaches detailed result `0000` after 1200 frames.
 - Replace PPU's ambiguous last-written `register` byte with a dedicated `PpuIoBusLatch`. Writes,
@@ -309,6 +309,10 @@ and non-finite opcodes instead of leaking `undefined`; table-wide tests validate
 The cartridge-format audit likewise replaced the field-only `CartridgeHeader` class with a parser
 that returns frozen metadata. Header interpretation remains isolated from supported-layout policy
 and cartridge memory ownership, but no longer pretends that parsed bytes have an object lifecycle.
+The Mapper 34 board audit applied the same rule to its field-only identity wrapper. The pure
+`resolveMapper34Board` function still owns submapper and memory-geometry validation, but returns the
+single discriminator consumed by the mapper factory; the stateful NINA-001 and BNROM aggregates
+remain separate.
 An XML-driven visual audit matched 87 input-free, supported-Mapper fixtures exactly and separated
 hardware tests from protocol/palette/power-up-policy differences. The controller audit then removed
 the internal `Buttons` wrapper and sixteen unused convenience methods, represented the standard

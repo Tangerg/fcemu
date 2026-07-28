@@ -2,10 +2,16 @@ import type Cartridge from "../../model/cartridge.js";
 import { AxromMapper } from "./axrom-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
+import { CodemastersMapper } from "./codemasters-mapper.js";
+import { ColorDreamsMapper } from "./color-dreams-mapper.js";
+import { CpromMapper } from "./cprom-mapper.js";
+import { GxromMapper } from "./gxrom-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
+import { Mmc2Mapper } from "./mmc2-mapper.js";
 import { Mmc3Mapper } from "./mmc3-mapper.js";
+import { Mmc4Mapper } from "./mmc4-mapper.js";
 import type { Mapper, MapperInterruptPort } from "./mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
@@ -55,10 +61,48 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
         throw configurationError(cartridge, "AxROM does not map PRG RAM");
       }
       return new AxromMapper(cartridge, resolveBusConflicts(cartridge, false));
+    case 9:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x1000, 0x1000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x40_000);
+      requireDirectPrgRam(cartridge);
+      return new Mmc2Mapper(cartridge);
+    case 10:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x1000, 0x1000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireDirectPrgRam(cartridge);
+      return new Mmc4Mapper(cartridge);
+    case 11:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireDirectPrgRam(cartridge);
+      return new ColorDreamsMapper(cartridge);
+    case 13:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x8000], 0x4000);
+      if (!cartridge.hasWritableChrMemory) {
+        throw configurationError(cartridge, "CPROM requires 16 KiB of writable CHR RAM");
+      }
+      requireDirectPrgRam(cartridge);
+      return new CpromMapper(cartridge);
     case 34: {
       const board = resolveMapper34Board(cartridge);
       return board === "nina-001" ? new Nina001Mapper(cartridge) : new BnromMapper(cartridge);
     }
+    case 66:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x8000);
+      requireDirectPrgRam(cartridge);
+      return new GxromMapper(cartridge);
+    case 71:
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x2000);
+      requireWritableChrSize(cartridge, 0x2000);
+      requireDirectPrgRam(cartridge);
+      return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
   }
@@ -118,6 +162,18 @@ function resolveBusConflicts(cartridge: Cartridge, legacyDefault: boolean): bool
 function requireBaseSubmapper(cartridge: Cartridge): void {
   if (cartridge.submapperNumber !== 0) {
     throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+}
+
+/** Resolves whether the Codemasters board exposes BF9097 single-screen mirroring control. */
+function requireCodemastersMirroring(cartridge: Cartridge): boolean {
+  switch (cartridge.submapperNumber) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }
 }
 

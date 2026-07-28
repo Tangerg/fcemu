@@ -325,8 +325,63 @@ describe("cartridge mappers", () => {
     mmc3.write(0xc001, 0);
     mmc3.write(0xe001, 0);
     clockMmc3A12(mmc3, 10);
+    const gxromCartridge = createTestCartridge({ mapper: 66, prgBanks: 4, chrBanks: 2 });
+    gxromCartridge.prgRom[0] = 0xff;
+    const gxrom = createMapper(gxromCartridge, interruptPort);
+    gxrom.write(0x8000, 0x11);
+    const colorDreamsCartridge = createTestCartridge({ mapper: 11, prgBanks: 4, chrBanks: 4 });
+    colorDreamsCartridge.prgRom[0] = 0xff;
+    const colorDreams = createMapper(colorDreamsCartridge, interruptPort);
+    colorDreams.write(0x8000, 0x21);
+    const cpromCartridge = createTestCartridge({
+      mapper: 13,
+      nes2: true,
+      prgBanks: 2,
+      chrBanks: 0,
+      chrRamShift: 8,
+    });
+    cpromCartridge.prgRom[0] = 0xff;
+    const cprom = createMapper(cpromCartridge, interruptPort);
+    cprom.write(0x8000, 0x02);
+    const codemasters = createMapper(
+      createTestCartridge({ nes2: true, mapper: 71, submapper: 1, prgBanks: 4 }),
+      interruptPort,
+    );
+    codemasters.write(0xc000, 0x02);
+    codemasters.write(0x9000, 0x10);
+    const mmc2 = createMapper(
+      createTestCartridge({ mapper: 9, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    mmc2.write(0xa000, 5);
+    mmc2.write(0xb000, 1);
+    mmc2.observePpuAddress(0x0fe8);
+    mmc2.write(0xf000, 1);
+    const mmc4 = createMapper(
+      createTestCartridge({ mapper: 10, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    mmc4.write(0xa000, 3);
+    mmc4.write(0xc000, 2);
+    mmc4.observePpuAddress(0x0fe8);
+    mmc4.write(0xf000, 1);
 
-    for (const mapper of [nrom, uxrom, cnrom, axrom, bnrom, nina001, mmc1, mmc3]) {
+    for (const mapper of [
+      nrom,
+      uxrom,
+      cnrom,
+      axrom,
+      bnrom,
+      nina001,
+      mmc1,
+      mmc3,
+      gxrom,
+      colorDreams,
+      cprom,
+      codemasters,
+      mmc2,
+      mmc4,
+    ]) {
       const state = mapper.captureState();
       mapper.powerOn();
       mapper.restoreState(state);
@@ -441,6 +496,12 @@ describe("cartridge mappers", () => {
     ],
     ["MMC3 beyond its 512 KiB PRG capacity", { nes2: true, mapper: 4, prgBanks: 33, chrBanks: 1 }],
     ["MMC3 beyond its 256 KiB CHR capacity", { nes2: true, mapper: 4, prgBanks: 2, chrBanks: 33 }],
+    ["GxROM beyond its 32 KiB CHR capacity", { mapper: 66, prgBanks: 2, chrBanks: 8 }],
+    ["CPROM without its implied 16 KiB CHR RAM", { mapper: 13, prgBanks: 2, chrBanks: 0 }],
+    [
+      "Codemasters with an unmodeled submapper",
+      { nes2: true, mapper: 71, submapper: 2, prgBanks: 4 },
+    ],
   ] as const)("rejects %s instead of exposing unreachable memory", (_name, options) => {
     const cartridge = createTestCartridge(options);
     expect(() => createMapper(cartridge, { setMapperIrq() {} })).toThrow(

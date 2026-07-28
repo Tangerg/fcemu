@@ -10,8 +10,14 @@ export const MapperKind = {
   Bnrom: "bnrom",
   Nina001: "nina-001",
   Axrom: "axrom",
+  Gxrom: "gxrom",
+  ColorDreams: "color-dreams",
+  Cprom: "cprom",
+  Codemasters: "codemasters",
   Mmc1: "mmc1",
+  Mmc2: "mmc2",
   Mmc3: "mmc3",
+  Mmc4: "mmc4",
 } as const;
 
 export type MapperKind = (typeof MapperKind)[keyof typeof MapperKind];

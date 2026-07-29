@@ -37,6 +37,30 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "bandai-74";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+      readonly mirroring: number;
+    }
+  | { readonly kind: "jaleco-87"; readonly selectedChrBank: number }
+  | {
+      readonly kind: "namco-118";
+      readonly register: number;
+      readonly registers: readonly number[];
+    }
+  | {
+      readonly kind: "fme7";
+      readonly command: number;
+      readonly chrBanks: readonly number[];
+      readonly prgBank0: number;
+      readonly prgBanks: readonly number[];
+      readonly mirroring: number;
+      readonly irqCounter: number;
+      readonly irqCounterEnabled: boolean;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+    }
+  | {
       readonly kind: "mmc2";
       readonly prgBank: number;
       readonly chrBank0Fd: number;

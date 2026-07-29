@@ -14,10 +14,14 @@ export const MapperKind = {
   ColorDreams: "color-dreams",
   Cprom: "cprom",
   Codemasters: "codemasters",
+  Bandai74: "bandai-74",
+  Jaleco87: "jaleco-87",
+  Namco118: "namco-118",
   Mmc1: "mmc1",
   Mmc2: "mmc2",
   Mmc3: "mmc3",
   Mmc4: "mmc4",
+  Fme7: "fme7",
 } as const;
 
 export type MapperKind = (typeof MapperKind)[keyof typeof MapperKind];

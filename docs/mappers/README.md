@@ -1,0 +1,237 @@
+# Mapper reference
+
+The mapper module (`packages/fc-emu/src/domain/emulation/mapper/`) is the cartridge-hardware submodule
+of the Emulation bounded context. It translates CPU `$4020-$FFFF` and PPU `$0000-$1FFF` accesses into
+ROM/RAM offsets, owns bank latches, nametable mirroring and any board IRQ, and hides every
+board-specific register behind one contract. CPU and PPU devices never see mapper registers; they see
+only the `Mapper` interface.
+
+This document describes the contract, the selection factory, save-state handling and every supported
+board. Support status and evidence are tracked separately in
+[../mapper-compatibility.md](../mapper-compatibility.md); accepted header/board shapes are in
+[../cartridge-formats.md](../cartridge-formats.md).
+
+## The `Mapper` contract
+
+`mapper.ts` defines the address-space contract. Every board implements it and nothing else is exposed
+to the rest of core.
+
+| Member                       | Role                                                                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `read(address)`              | Reads a CPU (`$4020-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout.   |
+| `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                    |
+| `observesPpuAddress`         | When true, the bus forwards `observePpuAddress`/`tickPpu` so the board can watch A12/dots. |
+| `observePpuAddress(address)` | PPU bus snoop for scanline/latch boards (MMC2/MMC4 CHR latch, MMC3 A12 IRQ).               |
+| `tickPpu()`                  | One PPU dot; used by A12-timing boards to filter rising edges.                             |
+| `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (MMC1 serial filter, FME-7 IRQ counter).               |
+| `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                             |
+| `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                                |
+| `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.     |
+
+IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
+on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
+so a board asserts and acknowledges independently.
+
+`observeCpuBusCycle` is invoked once per CPU (M2) bus cycle — every CPU read, DMA read and CPU write
+routes through it, including dummy and DMA-stall cycles — so a board that counts CPU cycles (FME-7)
+sees an accurate total.
+
+## The selection factory
+
+`create-mapper.ts` is the only mapper-number selection point. `createMapper(cartridge, interruptPort)`:
+
+1. Switches on `cartridge.mapperNumber`.
+2. Resolves the submapper/board variant (base submapper, bus-conflict variant, or board-specific
+   choice) and rejects unmodeled variants with `UnsupportedMapperVariantError`.
+3. Validates the PRG/CHR bank geometry the implementation requires, raising
+   `UnsupportedMapperConfigurationError` before any address calculation can hit an empty or partial
+   bank.
+4. Constructs the board, passing `interruptPort` only to IRQ-capable boards.
+
+Unknown mapper numbers raise `UnsupportedMapperError`. The shared validators
+(`requireBankedLayout`, `requireRomLayout`, `requireMaximumRomSize`, `requireWritableChrSize`,
+`requireDirectPrgRam`, `resolveBusConflicts`, `requireBaseSubmapper`) keep the accept/reject policy in
+one place. Declared capacity is accepted only when the selected board can address every byte.
+
+## Save state
+
+`MapperState` (in `mapper.ts`) is a discriminated union keyed by `MapperKind` (`mapper-kind.ts`). Each
+board's `captureState`/`restoreState` refer to the same named kind. `restoreState` re-validates every
+untrusted field (bank indexes against the live bank count, mirroring against `NametableMirroring`,
+counters against their bit width) and throws `RangeError`/`TypeError` rather than trust a snapshot.
+IRQ-capable boards re-assert their line from the restored state.
+
+## Supported boards
+
+| #   | Family         | Kind               | Implementation               | Bus conflicts | IRQ  |
+| --- | -------------- | ------------------ | ---------------------------- | ------------- | ---- |
+| 0   | NROM           | `nrom`             | `nrom-mapper.ts`             | n/a           | no   |
+| 1   | MMC1 / SxROM   | `mmc1`             | `mmc1-mapper.ts` + board     | no            | no   |
+| 2   | UxROM          | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
+| 3   | CNROM          | `cnrom`            | `cnrom-mapper.ts`            | default AND   | no   |
+| 4   | MMC3           | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
+| 7   | AxROM          | `axrom`            | `axrom-mapper.ts`            | submapper     | no   |
+| 9   | MMC2 / PxROM   | `mmc2`             | `mmc2-mapper.ts`             | no            | no   |
+| 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
+| 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
+| 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
+| 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
+| 66  | GxROM / MHROM  | `gxrom`            | `gxrom-mapper.ts`            | AND           | no   |
+| 69  | Sunsoft FME-7  | `fme7`             | `fme7-mapper.ts`             | no            | cyc. |
+| 70  | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
+| 71  | Codemasters    | `codemasters`      | `codemasters-mapper.ts`      | no            | no   |
+| 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
+| 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
+| 206 | Namco 118      | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
+
+The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
+lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`.
+
+---
+
+## NROM (0)
+
+Fixed layout, no banking. PRG ROM is 16 KiB (mirrored across `$8000-$FFFF`) or 32 KiB; CHR is a single
+8 KiB ROM or RAM bank. An explicitly declared PRG-RAM window is mirrored through `$6000-$7FFF`.
+
+## MMC1 / SxROM (1)
+
+A serial shift register clocked by five consecutive `$8000-$FFFF` D0 writes commits one of four
+registers (control, CHR bank 0, CHR bank 1, PRG bank). Control selects mirroring (one-screen
+lower/upper, vertical, horizontal), the PRG mode (32 KiB, fix-first, or fix-last 16 KiB) and the CHR
+mode (8 KiB or two 4 KiB banks). A D7 write resets the shift register and forces fix-last PRG.
+
+`Mmc1Board` (`mmc1-board.ts`) is an immutable value selected from ROM/RAM geometry plus explicit
+submapper constraints. It reinterprets the ASIC's generic CHR outputs as SUROM/SXROM outer PRG,
+SOROM/SXROM/SZROM 8 KiB PRG-RAM banking and SNROM CHR-A16 WRAM protection, and hardwires the two
+16 KiB halves for SEROM/SHROM/SH1ROM (submapper 5). MMC1 observes the CPU R/W pin via
+`observeCpuBusCycle`: of consecutive writes it accepts only the first D0, so an RMW instruction's
+write-new cycle is invisible to the shift register while a D7 reset still applies. See the
+[NESdev MMC1 page](https://www.nesdev.org/wiki/MMC1).
+
+## UxROM (2)
+
+16 KiB switchable PRG bank at `$8000-$BFFF`; `$C000-$FFFF` fixed to the last bank. The generic iNES
+convention uses a full-byte no-conflict register; NES 2.0 submapper 2 selects UNROM/UOROM AND
+conflicts.
+
+## CNROM (3)
+
+Fixed PRG; a `$8000-$FFFF` register selects an 8 KiB CHR bank. The legacy default applies original
+CNROM AND bus conflicts; NES 2.0 submapper 1 disables them and submapper 2 makes them explicit. A
+declared 2 KiB PRG RAM is mirrored through the 8 KiB `$6000-$7FFF` window.
+
+## MMC3 (4)
+
+`$8000` (even) selects one of eight bank registers and the PRG/CHR banking modes; `$8001` (odd) writes
+it. CHR is two 2 KiB plus four 1 KiB banks; PRG is two switchable 8 KiB banks with two fixed banks,
+swappable between `$8000` and `$C000` by the PRG mode. `$A000`/`$A001` set mirroring and PRG-RAM
+enable/write-protect. The revision-B IRQ counter clocks on filtered PPU A12 rising edges (`tickPpu`
+counts low dots; a rise after ≥10 low dots clocks the counter), so `observesPpuAddress` is true. See
+the [NESdev MMC3 page](https://www.nesdev.org/wiki/MMC3).
+
+## AxROM (7)
+
+32 KiB switchable PRG bank over the whole `$8000-$FFFF` window with single-screen mirroring selected by
+register bit 4; CHR is 8 KiB RAM. The legacy default is no bus conflicts (ANROM); NES 2.0 submapper 2
+selects AMROM/AOROM AND conflicts. The 512 KiB bit-3 PRG extension is supported. PRG-RAM declarations
+are rejected because AxROM has no PRG-RAM window.
+
+## MMC2 / PxROM (9)
+
+`$A000` selects the 8 KiB PRG bank at `$8000-$9FFF`; `$A000-$FFFF` is three fixed 8 KiB banks.
+`$B000`/`$C000`/`$D000`/`$E000` set four 4 KiB CHR banks chosen by two PPU latches. The left latch
+flips on the exact PPU fetches `$0FD8` (→ FD) and `$0FE8` (→ FE); the right latch flips across
+`$1FD8-$1FDF` and `$1FE8-$1FEF`. `$F000` bit 0 selects vertical/horizontal mirroring. `observesPpuAddress`
+is true. See the [NESdev MMC2 page](https://www.nesdev.org/wiki/MMC2). Representative title:
+Punch-Out!!.
+
+## MMC4 / FxROM (10)
+
+Like MMC2 but with a 16 KiB `$8000-$BFFF` bank (fixed last at `$C000-$FFFF`), an 8 KiB PRG-RAM window
+at `$6000-$7FFF`, and both CHR latches flipping across the full `$xFD8-$xFDF`/`$xFE8-$xFEF` ranges.
+MMC2 and MMC4 share `ChrLatchBanks` (`chr-latch-banks.ts`). Representative titles: Fire Emblem,
+Famicom Wars.
+
+## Color Dreams (11)
+
+One `$8000-$FFFF` latch: bits 1-0 select a 32 KiB PRG bank, bits 7-4 an 8 KiB CHR bank, with documented
+AND-type bus conflicts. The no-conflict prototype board variant is out of scope.
+
+## CPROM (13)
+
+Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and a `$1000-$1FFF` bank
+selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
+cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
+
+## BNROM / NINA-001 (34)
+
+`resolveMapper34Board` (`mapper34-board.ts`) chooses exactly one board and never combines their
+register sets. BNROM switches a 32 KiB PRG bank with original-board AND conflicts. NINA-001 maps three
+registers (`$7FFD` PRG, `$7FFE`/`$7FFF` two 4 KiB CHR banks) over an 8 KiB PRG-RAM window. Legacy CHR
+ROM above 8 KiB selects NINA-001; CHR RAM or ≤8 KiB CHR ROM selects BNROM; NES 2.0 submapper 1/2 name
+the board explicitly.
+
+## GxROM / MHROM (66)
+
+One `$8000-$FFFF` latch: bits 5-4 select a 32 KiB PRG bank, bits 1-0 an 8 KiB CHR bank, with AND-type
+bus conflicts. MHROM images simply never use the high PRG bit.
+
+## Sunsoft FME-7 (69)
+
+A command register at `$8000-$9FFF` selects one of sixteen internal registers that a following
+`$A000-$BFFF` parameter write commits:
+
+| Command   | Effect                                                                               |
+| --------- | ------------------------------------------------------------------------------------ |
+| `$0`-`$7` | Eight 1 KiB CHR banks for PPU `$0000-$1FFF`.                                         |
+| `$8`      | `$6000-$7FFF` window: bits 5-0 bank; bit 6 = RAM/ROM select; bit 7 = RAM enable.     |
+| `$9`-`$B` | 8 KiB PRG banks at `$8000`/`$A000`/`$C000`; `$E000-$FFFF` fixed to the last bank.    |
+| `$C`      | Mirroring: 0 vertical, 1 horizontal, 2 one-screen lower, 3 one-screen upper.         |
+| `$D`      | IRQ control: bit 7 counter enable, bit 0 IRQ enable; any write acknowledges the IRQ. |
+| `$E`/`$F` | Low/high byte of the 16-bit IRQ counter.                                             |
+
+The IRQ counter decrements every CPU cycle while enabled (via `observeCpuBusCycle`) and asserts the
+mapper IRQ line when it wraps `$0000`→`$FFFF`. The Sunsoft 5B expansion audio at `$C000-$FFFF` is not
+emulated. See the [NESdev FME-7 page](https://www.nesdev.org/wiki/Sunsoft_FME-7). Representative
+titles: Gimmick!, Batman: Return of the Joker.
+
+## Bandai 74xx (70, 152)
+
+One `$8000-$FFFF` latch with AND-type bus conflicts: a 16 KiB `$8000-$BFFF` bank (fixed last at
+`$C000-$FFFF`) and an 8 KiB CHR bank. Mapper 70 uses bits 7-4 for PRG and keeps mirroring hardwired.
+Mapper 152 spends bit 7 on single-screen mirroring (0 = screen A, 1 = screen B), leaving a 3-bit PRG
+field. Both are implemented by `Bandai74Mapper` with a `hasMirroringControl` flag.
+
+## Codemasters / Camerica (71)
+
+A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `$C000-$FFFF` is fixed
+to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire Hawk) adds single-screen
+mirroring from `$9000-$9FFF` bit 4; submapper 0 (BF9093) keeps the header's fixed mirroring.
+
+## Jaleco CHR (87)
+
+A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →
+CHR line 0, value bit 0 → CHR line 1). PRG ROM stays NROM-fixed; no bus conflicts because the latch
+occupies the otherwise-unmapped `$6000-$7FFF` space.
+
+## Namco 118 / DxROM (206)
+
+The discrete predecessor to MMC3. `$8000` (even) selects one of eight bank registers and `$8001` (odd)
+writes it: R0/R1 are 2 KiB CHR banks at PPU `$0000`/`$0800`, R2-R5 are 1 KiB CHR banks at
+`$1000-$1FFF`, and R6/R7 are 8 KiB PRG banks at `$8000`/`$A000` with the final two banks fixed. There
+is no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the header. Writes
+to `$A000-$FFFF` are ignored.
+
+## Adding a mapper
+
+1. Add one implementation file named after the board family.
+2. Add its `MapperKind` discriminant and `MapperState` shape.
+3. Register its iNES number in `create-mapper.ts` with the geometry/submapper validation it needs.
+4. Add focused unit tests for PRG, CHR, mirroring, RAM and IRQ behavior the board supports, plus a
+   save-state round-trip, and extend the factory integration tests in `mapper.test.ts`.
+5. Add an external conformance ROM result when a suitable one exists; never commit commercial ROMs.
+6. Update [../mapper-compatibility.md](../mapper-compatibility.md) and this reference.
+
+Board behavior must come from technical documentation and executable conformance evidence, not from
+ROM title lists.

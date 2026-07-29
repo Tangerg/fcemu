@@ -19,11 +19,17 @@ and that mirroring values may be unreliable.
 | 13     | CPROM          | Supported | CHR-RAM banking/conflict unit tests; no conf. ROM   |
 | 34     | BNROM/NINA-001 | Supported | Board tests; Holy Mapperel BNROM result `0000`      |
 | 66     | GxROM/MHROM    | Supported | PRG/CHR/bus-conflict unit tests; no conformance ROM |
+| 69     | Sunsoft FME-7  | Supported | Banking/mirroring/IRQ unit tests; no 5B audio       |
+| 70     | Bandai 74xx    | Supported | PRG/CHR/bus-conflict unit tests; no conformance ROM |
 | 71     | Codemasters    | Supported | PRG/mirroring unit tests; no conformance ROM        |
+| 87     | Jaleco CHR     | Supported | CHR-bit-swap unit tests; no conformance ROM         |
+| 152    | Bandai 74xx    | Supported | PRG/CHR/mirroring unit tests; no conformance ROM    |
+| 206    | Namco 118      | Supported | PRG/CHR bank unit tests; no conformance ROM         |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
-[cartridge-formats.md](./cartridge-formats.md). Mapper 0/4/9/10/11/13/66 currently accept only
-submapper 0. Mapper 1 accepts submapper 0, deprecated geometry-qualified SUROM/SOROM/SXROM
+[cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
+[mappers/README.md](./mappers/README.md). Mapper 0/4/9/10/11/13/66/69/70/87/152/206 currently accept
+only submapper 0. Mapper 1 accepts submapper 0, deprecated geometry-qualified SUROM/SOROM/SXROM
 identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7 accept submapper 0
 plus the NES 2.0 bus-conflict variants below. Mapper 34 accepts submapper 0 through a single-board
 CHR-geometry decision, submapper 1 as NINA-001 and submapper 2 as BNROM. Mapper 71 accepts
@@ -70,6 +76,21 @@ submapper 0 (fixed-mirroring BF9093) and submapper 1 (single-screen-controlled B
 - Mapper 71 (Codemasters/Camerica) switches a 16 KiB `$8000-$BFFF` bank from `$C000-$FFFF` with the
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
   single-screen mirroring; submapper 0 keeps the header's fixed mirroring.
+- Mapper 69 (Sunsoft FME-7) commits a `$8000-$9FFF` command register with a following `$A000-$BFFF`
+  parameter write: eight 1 KiB CHR banks, a `$6000-$7FFF` window that selects PRG ROM or enabled PRG
+  RAM through bits 6-7, three 8 KiB PRG banks with `$E000` fixed, four-way mirroring, and a 16-bit IRQ
+  counter decremented every CPU cycle that asserts on the `$0000`→`$FFFF` wrap. The Sunsoft 5B
+  expansion audio at `$C000-$FFFF` is not emulated, so the audio submapper stays out of scope.
+- Mappers 70 and 152 share the Bandai 74\*161/32 latch: a 16 KiB `$8000-$BFFF` bank with `$C000-$FFFF`
+  fixed, an 8 KiB CHR bank and AND-type bus conflicts. Mapper 152 spends bit 7 on single-screen
+  mirroring, leaving a 3-bit PRG field; mapper 70 keeps mirroring hardwired and uses four PRG bits.
+- Mapper 87 (Jaleco/Konami) latches an 8 KiB CHR bank at `$6000-$7FFF` with its two select lines
+  reversed (value bit 1 drives CHR line 0, value bit 0 drives CHR line 1); PRG ROM stays NROM-fixed
+  and there are no bus conflicts.
+- Mapper 206 (Namco 118 / DxROM) is the discrete predecessor to MMC3. It reuses the `$8000`/`$8001`
+  bank-select and bank-data ports for two 2 KiB plus four 1 KiB CHR windows and two 8 KiB PRG banks
+  with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring
+  stays hardwired from the header. MMC3-family supersets that add those features remain separate.
 
 New mapper families are intentionally outside the current scope. Coverage work is limited to the
 listed board families and does not silently approximate unsupported mapper numbers.

@@ -365,6 +365,41 @@ describe("cartridge mappers", () => {
     mmc4.write(0xc000, 2);
     mmc4.observePpuAddress(0x0fe8);
     mmc4.write(0xf000, 1);
+    const bandai70 = createMapper(
+      createTestCartridge({ mapper: 70, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    bandai70.write(0x8000, 0x35);
+    const bandai152 = createMapper(
+      createTestCartridge({ mapper: 152, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    bandai152.write(0x8000, 0xb5);
+    const jaleco = createMapper(
+      createTestCartridge({ mapper: 87, prgBanks: 2, chrBanks: 4 }),
+      interruptPort,
+    );
+    jaleco.write(0x6000, 0x03);
+    const namco118 = createMapper(
+      createTestCartridge({ mapper: 206, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    namco118.write(0x8000, 0);
+    namco118.write(0x8001, 4);
+    namco118.write(0x8000, 6);
+    namco118.write(0x8001, 3);
+    const fme7 = createMapper(
+      createTestCartridge({ mapper: 69, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    fme7.write(0x8000, 0x09);
+    fme7.write(0xa000, 4);
+    fme7.write(0x8000, 0x0c);
+    fme7.write(0xa000, 2);
+    fme7.write(0x8000, 0x0e);
+    fme7.write(0xa000, 0x34);
+    fme7.write(0x8000, 0x0d);
+    fme7.write(0xa000, 0x81);
 
     for (const mapper of [
       nrom,
@@ -381,6 +416,11 @@ describe("cartridge mappers", () => {
       codemasters,
       mmc2,
       mmc4,
+      bandai70,
+      bandai152,
+      jaleco,
+      namco118,
+      fme7,
     ]) {
       const state = mapper.captureState();
       mapper.powerOn();
@@ -502,6 +542,9 @@ describe("cartridge mappers", () => {
       "Codemasters with an unmodeled submapper",
       { nes2: true, mapper: 71, submapper: 2, prgBanks: 4 },
     ],
+    ["FME-7 beyond its 512 KiB PRG capacity", { mapper: 69, prgBanks: 33, chrBanks: 1 }],
+    ["Jaleco 87 with a non-NROM PRG size", { mapper: 87, prgBanks: 4, chrBanks: 1 }],
+    ["Namco 118 beyond its 64 KiB CHR capacity", { mapper: 206, prgBanks: 8, chrBanks: 9 }],
   ] as const)("rejects %s instead of exposing unreachable memory", (_name, options) => {
     const cartridge = createTestCartridge(options);
     expect(() => createMapper(cartridge, { setMapperIrq() {} })).toThrow(

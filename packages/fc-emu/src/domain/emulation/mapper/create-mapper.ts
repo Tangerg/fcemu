@@ -1,11 +1,14 @@
 import type Cartridge from "../../model/cartridge.js";
 import { AxromMapper } from "./axrom-mapper.js";
+import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
 import { CodemastersMapper } from "./codemasters-mapper.js";
 import { ColorDreamsMapper } from "./color-dreams-mapper.js";
 import { CpromMapper } from "./cprom-mapper.js";
+import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
+import { JalecoMapper } from "./jaleco-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
@@ -13,6 +16,7 @@ import { Mmc2Mapper } from "./mmc2-mapper.js";
 import { Mmc3Mapper } from "./mmc3-mapper.js";
 import { Mmc4Mapper } from "./mmc4-mapper.js";
 import type { Mapper, MapperInterruptPort } from "./mapper.js";
+import { Namco118Mapper } from "./namco118-mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
 import {
@@ -97,12 +101,41 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x8000);
       requireDirectPrgRam(cartridge);
       return new GxromMapper(cartridge);
+    case 69:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireDirectPrgRam(cartridge);
+      return new Fme7Mapper(interruptPort, cartridge);
+    case 70:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
+      requireDirectPrgRam(cartridge);
+      return new Bandai74Mapper(cartridge, false);
     case 71:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x2000);
       requireWritableChrSize(cartridge, 0x2000);
       requireDirectPrgRam(cartridge);
       return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
+    case 87:
+      requireBaseSubmapper(cartridge);
+      requireJalecoLayout(cartridge);
+      requireDirectPrgRam(cartridge);
+      return new JalecoMapper(cartridge);
+    case 152:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireDirectPrgRam(cartridge);
+      return new Bandai74Mapper(cartridge, true);
+    case 206:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x10_000);
+      requireDirectPrgRam(cartridge);
+      return new Namco118Mapper(cartridge);
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
   }
@@ -211,6 +244,19 @@ function requireBankedLayout(
       cartridge,
       `CHR memory must be at least ${formatBytes(minimumChrSize)} in ${formatBytes(chrBankSize)} banks`,
     );
+  }
+}
+
+function requireJalecoLayout(cartridge: Cartridge): void {
+  if (cartridge.prgRom.byteLength !== 0x4000 && cartridge.prgRom.byteLength !== 0x8000) {
+    throw configurationError(cartridge, "PRG ROM must be 16 KiB or 32 KiB");
+  }
+  if (
+    cartridge.chrMemoryBytes < 0x2000 ||
+    cartridge.chrMemoryBytes > 0x8000 ||
+    cartridge.chrMemoryBytes % 0x2000 !== 0
+  ) {
+    throw configurationError(cartridge, "CHR ROM must contain one to four 8 KiB banks");
   }
 }
 

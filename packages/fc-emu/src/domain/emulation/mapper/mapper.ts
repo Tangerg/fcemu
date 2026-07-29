@@ -21,6 +21,44 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "gxrom";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+    }
+  | {
+      readonly kind: "color-dreams";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+    }
+  | { readonly kind: "cprom"; readonly selectedChrBank: number }
+  | {
+      readonly kind: "codemasters";
+      readonly selectedPrgBank: number;
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "mmc2";
+      readonly prgBank: number;
+      readonly chrBank0Fd: number;
+      readonly chrBank0Fe: number;
+      readonly chrBank1Fd: number;
+      readonly chrBank1Fe: number;
+      readonly latch0Fe: boolean;
+      readonly latch1Fe: boolean;
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "mmc4";
+      readonly prgBank: number;
+      readonly chrBank0Fd: number;
+      readonly chrBank0Fe: number;
+      readonly chrBank1Fd: number;
+      readonly chrBank1Fe: number;
+      readonly latch0Fe: boolean;
+      readonly latch1Fe: boolean;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "mmc1";
       readonly shiftRegister: number;
       readonly control: number;

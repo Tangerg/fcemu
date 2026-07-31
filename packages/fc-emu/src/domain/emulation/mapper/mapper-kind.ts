@@ -18,6 +18,8 @@ export const MapperKind = {
   Jaleco87: "jaleco-87",
   JalecoJf: "jaleco-jf",
   JalecoSs8806: "jaleco-ss8806",
+  Jy830623c: "jy-830623c",
+  Ej0061: "ej-006-1",
   Namco118: "namco-118",
   Sunsoft1: "sunsoft-1",
   Sunsoft2: "sunsoft-2",

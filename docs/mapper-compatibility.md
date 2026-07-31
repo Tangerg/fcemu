@@ -41,6 +41,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                    |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM              |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM           |
+| 91     | JY/EJ bootleg  | Implemented | Outer-bank/A12/M2/submapper/state tests; no conformance ROM    |
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM     |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM    |
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM          |
@@ -72,6 +73,9 @@ wiring and fails closed. Mapper 48 accepts submapper 0 for the original 22-cycle
 and the community/Mesen-compatible submapper 1 timing variant with a six-cycle delay and adjusted
 counter bias.
 
+Mapper 91 accepts submapper 0 for JY830623C/YY840238C outer banking and fixed 64-rise A12 IRQs,
+and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counter.
+
 ## Legacy-header assumptions
 
 - Mapper 3 follows original CNROM AND-type bus conflicts. NES 2.0 submapper 1 (no conflicts) and
@@ -84,7 +88,7 @@ counter bias.
   because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/66/70/71/75/76/78/79/87/88/89/93/94/95/97/119/140/152/180/184/185/206 because those
+  9/11/13/32/33/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/119/140/152/180/184/185/206 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -197,6 +201,14 @@ counter bias.
 - Mapper 89 (Sunsoft-2 on Sunsoft-3) uses one AND-conflicted `$8000-$FFFF` latch for a switchable
   16 KiB PRG bank, split-field 8 KiB CHR bank and lower/upper one-screen mirroring. The final 16 KiB
   PRG bank is fixed and no PRG RAM is decoded.
+- Mapper 91 denotes two related but electrically distinct boards sharing two switchable 8 KiB PRG
+  windows and four 2 KiB CHR windows. Submapper 0 (JY830623C/YY840238C) uses write-address bits
+  A2-A0 to select an outer 128 KiB PRG/512 KiB CHR region; its fixed tail follows the selected PRG
+  region, mirroring is hardwired, and IRQ asserts after exactly 64 unfiltered PPU-A12 rises.
+  Submapper 1 (EJ-006-1) has no outer latch, adds horizontal/vertical registers and exposes a 16-bit
+  IRQ counter whose subtractor removes five every fourth CPU M2 cycle and asserts on borrow. Both
+  variants decode their `$6000-$7FFF` ports with the documented, different masks and leave reads
+  there open bus. Neither board exposes PRG RAM.
 - Mapper 93 (Sunsoft-2 on Sunsoft-3R) uses bits 6-4 of one AND-conflicted `$8000-$FFFF` latch for a
   switchable 16 KiB PRG bank and D0 as the fixed 8 KiB CHR-RAM enable. Disabled RAM ignores writes
   and tri-states PPU pattern reads; mirroring remains hardwired and no PRG RAM is decoded.

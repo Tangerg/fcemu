@@ -122,6 +122,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
 | 88  | Namco 3433     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
+| 91  | JY/EJ bootleg  | board-specific     | two boards + shared banking  | no            | both |
 | 93  | Sunsoft-3R     | `sunsoft-3r`       | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
 | 95  | Namco 3425     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
@@ -143,6 +144,8 @@ Taito TC0190/TC0690 similarly share `TaitoTc0x90Banking`; their mirroring and IR
 their board-specific owners.
 X1-005/X1-017 share only `TaitoX1Banking`, the three-PRG/eight-CHR data path actually common to both
 ASICs. Register layout, internal RAM, pull-down and IRQ behavior stay separate.
+Mapper-91's JY830623C and EJ-006-1 boards likewise share only `Mapper91Banking`; their outer-bank,
+mirroring and IRQ circuits remain separate concrete mappers and save-state kinds.
 
 ---
 
@@ -435,6 +438,26 @@ bits 6-4 while fixing the final bank at `$C000-$FFFF`. Bits 2-0 select the low C
 mirroring. The board maps no PRG RAM. See
 [NESdev mapper 89](https://www.nesdev.org/wiki/INES_Mapper_089) and the
 [Sunsoft-2 pinout](https://www.nesdev.org/wiki/Sunsoft_2_pinout).
+
+## JY830623C / EJ-006-1 (91)
+
+Both mapper-91 boards use two switchable 8 KiB PRG windows followed by a fixed 16 KiB tail and four
+independent 2 KiB CHR-ROM windows. They map no PRG RAM, and reads from their write-only
+`$6000-$7FFF` registers remain open bus. `Mapper91Banking` owns only this common data path.
+
+Submapper 0 models JY830623C/YY840238C. `$6000-$6003` select CHR and `$7000-$7001` select the low
+PRG bank bits under mask `$F003`. A write anywhere in `$8000-$9FFF` ignores its data and latches
+address A2-A0: A2-A1 select one of four 128 KiB PRG regions (including that region's fixed final
+16 KiB), while A0 selects one of two 512 KiB CHR regions. Mirroring is hardwired. `$7007` resets and
+starts an IRQ counter that asserts after exactly 64 unfiltered low→high PPU-A12 transitions;
+`$7006` stops and acknowledges it.
+
+Submapper 1 models EJ-006-1 and has no outer latch. Its `$F007` decode adds `$6004/$6005`
+horizontal/vertical mirroring and `$6006/$6007` low/high bytes of a 16-bit IRQ counter. `$7007`
+resets the M2 divider and starts counting; every fourth CPU cycle subtracts five, and a borrow
+asserts IRQ. `$7006` stops counting and acknowledges the line. This board reaches at most 128 KiB
+PRG and 512 KiB CHR, while submapper 0 reaches 512 KiB/1 MiB. See
+[NESdev mapper 91](https://www.nesdev.org/wiki/INES_Mapper_091).
 
 ## Sunsoft-2 / Sunsoft-3R (93)
 

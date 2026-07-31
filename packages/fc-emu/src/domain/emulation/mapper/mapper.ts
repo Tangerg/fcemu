@@ -116,6 +116,27 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "jy-830623c";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly outerBank: number;
+      readonly irqRiseCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly a12High: boolean;
+    }
+  | {
+      readonly kind: "ej-006-1";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly outerBank: number;
+      readonly irqCounter: number;
+      readonly irqDivider: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-g101";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];

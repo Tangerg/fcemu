@@ -8,6 +8,7 @@ import { CnromMapper } from "./cnrom-mapper.js";
 import { CodemastersMapper } from "./codemasters-mapper.js";
 import { ColorDreamsMapper } from "./color-dreams-mapper.js";
 import { CpromMapper } from "./cprom-mapper.js";
+import { Ej0061Mapper } from "./ej-006-1-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
@@ -17,6 +18,7 @@ import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
 import { JalecoSs8806Mapper } from "./jaleco-ss8806-mapper.js";
+import { Jy830623cMapper } from "./jy-830623c-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
@@ -258,6 +260,24 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Sunsoft-2");
       requireNoPrgRam(cartridge);
       return new Sunsoft2Mapper(cartridge);
+    case 91:
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0800, 0x2000);
+      requireChrRom(cartridge, "mapper 91");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "mapper 91");
+      switch (cartridge.submapperNumber) {
+        case 0:
+          requireMaximumRomSize(cartridge, 0x80_000, 0x100_000);
+          return new Jy830623cMapper(interruptPort, cartridge);
+        case 1:
+          requireMaximumRomSize(cartridge, 0x20_000, 0x80_000);
+          return new Ej0061Mapper(interruptPort, cartridge);
+        default:
+          throw new UnsupportedMapperVariantError(
+            cartridge.mapperNumber,
+            cartridge.submapperNumber,
+          );
+      }
     case 93:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x8000, 0x10_000, 0x20_000], 0x2000);

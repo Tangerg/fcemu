@@ -296,6 +296,87 @@ describe("basic ASIC mappers", () => {
     ).toThrowError(UnsupportedMapperConfigurationError);
   });
 
+  it("selects both Mapper 91 boards and rejects unreachable variants and geometry", () => {
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 91, prgBanks: 32, chrBanks: 128 }), interruptPort),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 91,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 8,
+          chrBanks: 64,
+        }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 91,
+          nes2: true,
+          submapper: 2,
+          prgBanks: 8,
+          chrBanks: 64,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperVariantError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 91,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 9,
+          chrBanks: 64,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 91,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 8,
+          chrBanks: 65,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 91,
+          nes2: true,
+          prgBanks: 32,
+          chrBanks: 128,
+          prgRamShift: 7,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 91, prgBanks: 8, chrBanks: 8, fourScreen: true }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 91, prgBanks: 8 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 91, prgBanks: 33, chrBanks: 128 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 91, prgBanks: 32, chrBanks: 129 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+  });
+
   it("rejects invalid state that cannot exist on the selected boards", () => {
     const mapper = createMapper(
       createTestCartridge({ mapper: 68, prgBanks: 8, chrBanks: 32 }),

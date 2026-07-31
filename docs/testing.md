@@ -92,6 +92,8 @@ yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 Profiles verify cartridge identity, several visual checkpoints, a deterministic input sequence,
 audio output, CPU-cycle counts and two identical save-state replays. Full details live in
 [`packages/fc-emu/test-support/real-roms.md`](../packages/fc-emu/test-support/real-roms.md).
+The title, region and board candidates for extending that corpus across every implemented ID live
+in [Mapper real-ROM validation plan](./mapper-real-rom-plan.md).
 
 The runner must never:
 

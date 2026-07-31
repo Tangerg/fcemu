@@ -61,6 +61,10 @@ For each board family:
 4. Add an automated runner with a machine-readable result or pinned visual hash.
 5. Promote status to `Verified` only after the runner passes through the public emulator facade.
 
+The title, region and board candidates for this work are tracked in
+[Mapper real-ROM validation plan](./mapper-real-rom-plan.md); candidate names do not replace parsed
+header and checksum verification.
+
 MMC2/MMC4 work should emphasize real PPU background/sprite trigger sequences. FME-7 work must keep
 Sunsoft 5B expansion audio explicitly separate from mapper-69 base behavior.
 

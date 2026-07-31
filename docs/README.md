@@ -9,7 +9,9 @@ question, then follow links into the chip- or board-level references.
    and troubleshooting.
 2. [Mapper compatibility](./mapper-compatibility.md) — whether a cartridge board is implemented and
    what evidence supports that status.
-3. [Cartridge formats](./cartridge-formats.md) — the accepted iNES/NES 2.0 subset and rejection
+3. [Mapper real-ROM validation plan](./mapper-real-rom-plan.md) — representative user-supplied
+   images and the intake checklist for each implemented mapper.
+4. [Cartridge formats](./cartridge-formats.md) — the accepted iNES/NES 2.0 subset and rejection
    policy.
 
 ## I want to integrate the core

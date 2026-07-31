@@ -95,6 +95,7 @@ the normal test command. Their provenance, pinned checksums and exact runners ar
 - [Architecture](./docs/architecture.md)
 - [Hardware evidence policy](./docs/hardware-reference.md)
 - [Mapper compatibility](./docs/mapper-compatibility.md)
+- [Mapper real-ROM validation plan](./docs/mapper-real-rom-plan.md)
 - [Testing and conformance](./docs/testing.md)
 - [Engineering roadmap](./docs/engineering-roadmap.md)
 

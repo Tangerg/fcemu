@@ -430,6 +430,10 @@ memory, reset behavior and IRQ semantics where applicable, then record executabl
 Submapper and board variants must remain explicit rather than being silently approximated by the
 base mapper number.
 
+Representative title and variant candidates are maintained in
+[Mapper real-ROM validation plan](./mapper-real-rom-plan.md). A title becomes evidence only after
+its exact image identity and exercised checkpoints are pinned.
+
 Historical local runs without a recorded fixture checksum remain useful engineering notes but do not
 satisfy the current `Verified` definition. See [Testing](./testing.md) for evidence and baseline
 rules.

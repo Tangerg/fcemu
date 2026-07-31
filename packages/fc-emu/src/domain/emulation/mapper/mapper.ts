@@ -104,6 +104,18 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "jaleco-ss8806";
+      readonly prgRegisters: readonly number[];
+      readonly chrRegisters: readonly number[];
+      readonly ramProtection: number;
+      readonly irqReload: number;
+      readonly irqCounter: number;
+      readonly irqCounterBits: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-g101";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];

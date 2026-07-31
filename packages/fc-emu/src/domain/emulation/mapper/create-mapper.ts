@@ -16,6 +16,7 @@ import { IremH3001Mapper } from "./irem-h3001-mapper.js";
 import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
+import { JalecoSs8806Mapper } from "./jaleco-ss8806-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
@@ -121,6 +122,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       requireNoPrgRam(cartridge);
       return new CpromMapper(cartridge);
+    case 18:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireChrRom(cartridge, "Jaleco SS8806");
+      requireOptional8KiBPrgRam(cartridge, "Jaleco SS8806");
+      requireTwoScreenNametables(cartridge, "Jaleco SS8806");
+      return new JalecoSs8806Mapper(interruptPort, cartridge);
     case 32:
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
@@ -421,6 +430,13 @@ function requireDirectPrgRam(cartridge: Cartridge): void {
   }
   if (cartridge.prgRamBytes > 0 && cartridge.prgNvRamBytes > 0) {
     throw configurationError(cartridge, "mixed PRG RAM/NVRAM requires mapper-controlled banking");
+  }
+}
+
+function requireOptional8KiBPrgRam(cartridge: Cartridge, board: string): void {
+  requireDirectPrgRam(cartridge);
+  if (cartridge.prgWritableBytes !== 0 && cartridge.prgWritableBytes !== 0x2000) {
+    throw configurationError(cartridge, `${board} PRG RAM must be 8 KiB when present`);
   }
 }
 

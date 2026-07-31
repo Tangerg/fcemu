@@ -21,6 +21,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM              |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM        |
+| 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture       |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM     |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM      |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                 |
@@ -56,7 +57,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/33/65/66/68/69/70/75/76/79/80/82/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
+0/4/9/10/11/13/18/33/65/66/68/69/70/75/76/79/80/82/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -116,6 +117,17 @@ counter bias.
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.
+- Mapper 18 (Jaleco SS8806) exposes three switchable and one fixed 8 KiB PRG windows plus eight
+  1 KiB CHR-ROM windows. Because the ASIC sees only CPU A12-A14/A0-A1 and data D0-D3, every bank and
+  16-bit IRQ reload value is assembled from mirrored nibble writes under the `$F003` address mask.
+  `$9002` independently enables and write-enables an optional exact 8 KiB PRG-RAM/NVRAM window;
+  `$F002` selects horizontal, vertical or either one-screen layout. Its continuously counting IRQ
+  can inhibit borrow at 4, 8 or 12 bits while retaining the upper counter bits. The implementation
+  follows the current NESdev borrow/underflow description; older Mesen/Nestopia sources instead
+  assert on the preceding 1→0 transition, so the chosen boundary is explicit in focused tests.
+  Legacy iNES cannot say that the optional RAM is absent and therefore keeps its conventional 8 KiB
+  allocation; NES 2.0 can declare zero. Optional boards' external µPD7755/7756 sample-playback chip
+  is not emulated.
 - Mapper 32 (Irem G-101) exposes two switchable 8 KiB PRG banks, two fixed tail banks and eight
   1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
   windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major

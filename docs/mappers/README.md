@@ -74,7 +74,8 @@ sees an accurate total.
 
 Unknown mapper numbers raise `UnsupportedMapperError`. The shared validators
 (`requireBankedLayout`, `requireRomLayout`, `requireMaximumRomSize`, `requireWritableChrSize`,
-`requireChrRom`, `requireChrRam`, `requireDirectPrgRam`, `requireNoPrgRam`,
+`requireChrRom`, `requireChrRam`, `requireDirectPrgRam`, `requireOptional8KiBPrgRam`,
+`requireNoPrgRam`,
 `resolveBusConflicts`, `requireBaseSubmapper`) keep the accept/reject policy in one place. Declared
 capacity is accepted only when the selected board can address every byte.
 
@@ -101,6 +102,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
 | 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
 | 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
+| 18  | Jaleco SS8806  | `jaleco-ss8806`    | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
 | 32  | Irem G-101     | `irem-g101`        | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
@@ -219,6 +221,29 @@ AND-type bus conflicts. The no-conflict prototype board variant is out of scope.
 Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and a `$1000-$1FFF` bank
 selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
 cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
+
+## Jaleco SS8806 (18)
+
+Three 8 KiB registers select PRG at `$8000`, `$A000` and `$C000`; `$E000-$FFFF` is fixed to the
+last bank. Eight registers independently select the 1 KiB CHR-ROM windows. The ASIC decodes
+registers through mask `$F003`: CPU A2-A11 are ignored, and each low/high address pair supplies the
+low/high four bits of a bank. PRG has only six physical bank bits (512 KiB maximum), while CHR has
+all eight (256 KiB maximum).
+
+An optional exact 8 KiB PRG-RAM/NVRAM window occupies `$6000-$7FFF`. `$9002` bit 0 enables reads and
+bit 1 permits writes, so disabled reads remain CPU open bus and read-only state is distinct from
+chip disable. Legacy iNES retains its conventional 8 KiB allocation because it cannot encode the
+RAM-absent board; NES 2.0 may explicitly declare zero. `$F002` selects horizontal, vertical,
+lower-one-screen or upper-one-screen nametables.
+
+`$E000-$E003` assemble a 16-bit IRQ reload value; `$F000` reloads the live counter and acknowledges
+the line. `$F001` acknowledges, enables counting and selects 16/12/8/4-bit width with bit 3 taking
+precedence over bit 2 over bit 1. Counting continues each CPU cycle. At a selected-width underflow,
+the borrow asserts IRQ and wraps only those low bits; upper bits remain unchanged. This follows the
+current [NESdev mapper 18](https://www.nesdev.org/wiki/INES_Mapper_018) hardware description.
+Mesen and Nestopia currently assert one cycle earlier on the 1→0 transition, so focused tests pin the
+underflow interpretation rather than hiding the contradiction. `$F003` is the port for an optional
+external µPD7755/7756 sample player; that separate audio device is not emulated.
 
 ## Irem G-101 (32)
 

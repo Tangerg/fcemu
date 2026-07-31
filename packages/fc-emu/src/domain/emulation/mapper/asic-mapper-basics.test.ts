@@ -180,6 +180,62 @@ describe("basic ASIC mappers", () => {
     ).toThrowError(UnsupportedMapperVariantError);
   });
 
+  it("accepts only reachable Jaleco SS8806 ROM/RAM geometry and base wiring", () => {
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 18, prgBanks: 32, chrBanks: 32 }), interruptPort),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 18,
+          nes2: true,
+          prgBanks: 2,
+          chrBanks: 1,
+        }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 18,
+          nes2: true,
+          prgBanks: 2,
+          chrBanks: 1,
+          prgRamShift: 6,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 18, prgBanks: 2, chrBanks: 1, fourScreen: true }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 18,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 2,
+          chrBanks: 1,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperVariantError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 18, prgBanks: 2 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 18, prgBanks: 33, chrBanks: 1 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 18, prgBanks: 2, chrBanks: 33 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+  });
+
   it("fails closed on Mapper 48/65 memory the physical boards cannot reach", () => {
     expect(() =>
       createMapper(

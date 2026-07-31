@@ -421,7 +421,7 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   supplies the low CHR bits. The rumored `$4020-$5FFF` nibble RAM is intentionally absent because
   hardware inspection says neither cartridge contains it.
 
-The finite mapper-completion track and its still-planned families are recorded in
+The completed finite mapper track and the external-verification follow-up are recorded in
 [Engineering roadmap](./engineering-roadmap.md). Numbers outside that boundary remain unsupported
 unless the roadmap is changed explicitly; no unknown mapper is silently approximated.
 

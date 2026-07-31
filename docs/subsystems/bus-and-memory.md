@@ -232,10 +232,11 @@ the DMA/OAM fixtures in
 evidence for interactions that isolated device tests cannot prove.
 
 The supported CPU map is the standard NES/Famicom Control Deck map plus explicitly decoded cartridge
-devices; Mapper 79 currently uses a write-only expansion latch. VS System wiring and PlayChoice-10
-behavior are not approximated. A mapper may expose a current cartridge-audio voltage through
-`expansionAudioSample`; the bus presents that narrow capability to the APU mixer without teaching
-the APU any mapper register protocol.
+and VS UniSystem devices; Mapper 79 uses a write-only expansion latch, while the VS cabinet owns its
+controller-bit overlays, protection reads and mirrored coin-counter output. VS DualSystem and
+PlayChoice-10 behavior are rejected rather than approximated with a single standard-console bus. A
+mapper may expose a current cartridge-audio voltage through `expansionAudioSample`; the bus presents
+that narrow capability to the APU mixer without teaching the APU any mapper register protocol.
 
 ## Source files
 

@@ -301,11 +301,11 @@ version 15 added mapper-owned RAM/NVRAM for Namco 163; version 16 adds VS cabine
 The native pulse and TND nonlinear outputs are combined with the mapper's optional cartridge-audio
 voltage before the shared 90 Hz/440 Hz high-pass and 14 kHz low-pass chain. The APU sees only
 `cartridgeAudioSample()` on its bus port: oscillator clocks, registers and snapshot state remain
-owned by the mapper. VRC6 pulse/saw, VRC7 six-channel FM and Namco 163 eight-channel wavetable
-output all enter through this boundary. Their devices advance from CPU M2 through the same mapper
-bus observation used by cycle IRQs. Namco 163 preserves the chip's time-division output: one
-enabled channel advances every 15 CPU cycles and its voltage remains held until the next channel is
-serviced.
+owned by the mapper. VRC6 pulse/saw, VRC7 six-channel FM, Namco 163 eight-channel wavetable and
+MMC5 dual-pulse/direct-or-read-mode PCM output all enter through this boundary. Their devices
+advance from CPU M2 through the same mapper bus observation used by cycle IRQs. Namco 163 preserves
+the chip's time-division output: one enabled channel advances every 15 CPU cycles and its voltage
+remains held until the next channel is serviced.
 
 The core produces one filtered sample per output tick and pushes it to listeners registered through
 `addListener`; the application layer wires that to the audio output port
@@ -321,11 +321,11 @@ checksum-pinned AccuracyCoin bus/DMA matrix, both Sprite/DMC collision ROMs and 
 APU visual matrix documented in
 [External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md).
 
-VRC6, VRC7 and Namco 163 cartridge audio are mixed and stateful. Sunsoft 5B and MMC5 audio remain
-separate mapper-device work until their own chip models are connected through the same narrow
-boundary. NTSC uses the measured RP2A03H/late-G implicit-stop behavior; PAL and Dendy intentionally
-use the conservative DMC silicon profile until equivalent measurements exist. These are explicit
-evidence limits, not automatic inheritance from a shared timer table.
+VRC6, VRC7, Namco 163 and MMC5 cartridge audio are mixed, mapper-owned and included in full save
+states. Sunsoft 5B audio remains separate mapper-device work; mapper 69 currently implements the
+FME-7 banking and IRQ half only. NTSC uses the measured RP2A03H/late-G implicit-stop behavior; PAL
+and Dendy intentionally use the conservative DMC silicon profile until equivalent measurements
+exist. These are explicit evidence limits, not automatic inheritance from a shared timer table.
 
 ## Source files
 

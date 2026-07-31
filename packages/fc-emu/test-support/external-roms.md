@@ -3,6 +3,17 @@
 Commercial ROMs never belong in this repository. External mapper conformance uses redistributable
 upstream fixtures kept outside the worktree.
 
+## Runner guarantees
+
+Specialized runners (`accuracy-coin`, `mapper34`, `oam-bus`, the Holy Mapperel matrix and PAL APU)
+pin either the input fixture checksum, the published archive revision plus exact output, or both.
+They fail closed when identity or expected output changes.
+
+`conformance:rom` is a generic protocol reader. It validates completion/status but does **not**
+identify its input image. A result from that runner is reproducible evidence only when the caller
+records the ROM filename, upstream revision, SHA-256, region, frame limit, protocol and output.
+Unrecorded historical runs do not promote a mapper to `Verified`.
+
 ## AccuracyCoin CPU data buses
 
 - Upstream: <https://github.com/100thCoin/AccuracyCoin>
@@ -74,6 +85,30 @@ yarn conformance:rom -- /path/to/ppu_open_bus.nes 3600 ntsc blargg
 The fixture completes in 250 frames and reports `Passed`. It covers full and partial PPU I/O-bus
 drives, non-refreshing open-bus reads, palette high bits, OAM attribute masking and decay after one
 second of emulated time.
+
+## Generic Blargg protocol suites
+
+`packages/fc-emu/scripts/run-blargg-rom.mjs` supports two result protocols:
+
+- `blargg` reads the `$6000` status/signature/message block, handles the standard reset request and
+  exits 0 only for status 0;
+- `zero-page` runs the fixed frame count and reads result byte `$00F8`, where 1 passes.
+
+```bash
+yarn conformance:rom -- /path/to/test.nes 3600 ntsc blargg
+yarn conformance:rom -- /path/to/sprite-test.nes 600 ntsc zero-page
+```
+
+The command prints the explicit ROM path, resolved region, frame count and result as JSON. Before
+citing a result in compatibility documentation, calculate and record the fixture SHA-256:
+
+```bash
+shasum -a 256 /path/to/test.nes
+```
+
+Historical runs of instruction, CPU interrupt, vblank/NMI, APU and MMC3 suites helped shape the
+current tests, but suites without a recorded fixture identity are not listed as current
+checksum-pinned evidence.
 
 ## Blargg sprite and OAM suites
 

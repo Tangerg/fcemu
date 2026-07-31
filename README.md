@@ -1,61 +1,116 @@
 # FC Emu
 
-一个按真实 NES 硬件边界组织的 FC/NES 浏览器模拟器 monorepo。CPU、PPU、APU、卡带与控制器
-是天然限界上下文；工程只借用领域驱动和整洁架构的依赖思想，不套用业务系统目录模板。
+[![CI](https://github.com/Tangerg/fcemu/actions/workflows/ci.yml/badge.svg)](https://github.com/Tangerg/fcemu/actions/workflows/ci.yml)
 
-## Packages
+An accuracy-oriented FC/NES emulator for the browser, built as a TypeScript monorepo. The core models
+the console around its physical CPU, PPU, APU, cartridge, controller and bus boundaries; the React
+workbench is a separate application that adapts those boundaries to Canvas, Web Audio, browser
+storage and user input.
 
-- `@fcemu/core`：平台无关的模拟器核心，可独立构建；不依赖 React 或浏览器 API。
-- `@fcemu/ui`：React 工作台，拥有独立的领域、应用、基础设施、表现层与组合根。
+FC Emu is pre-1.0 software. It has strong automated evidence for the hardware paths listed in the
+[compatibility matrix](./docs/mapper-compatibility.md), but it does not claim universal game or
+mapper compatibility.
 
-详细边界见 [docs/architecture.md](./docs/architecture.md)。
-硬件资料优先级与代码映射见 [docs/hardware-reference.md](./docs/hardware-reference.md)。
-持续演进与已知正确性工作见 [docs/engineering-roadmap.md](./docs/engineering-roadmap.md)。
-Mapper 支持证据见 [docs/mapper-compatibility.md](./docs/mapper-compatibility.md)。
-iNES / NES 2.0 格式边界见 [docs/cartridge-formats.md](./docs/cartridge-formats.md)。
-仓库外真实 ROM 的自动回归流程见
-[packages/fc-emu/test-support/real-roms.md](./packages/fc-emu/test-support/real-roms.md)。
+## Highlights
 
-## Development
+- Cycle-stepped RP2A03 CPU, interrupt entry and OAM/DMC DMA arbitration.
+- Dot-stepped RP2C02 rendering, sprite evaluation, open bus and mapper-visible PPU transactions.
+- Region-specific NTSC, PAL and Dendy CPU/PPU/APU timing.
+- iNES and a deliberately constrained NES 2.0 subset with explicit board validation.
+- Battery-backed PRG/CHR persistence and versioned, transactional save states.
+- Keyboard and two-player gamepad input, AudioWorklet output and three persistent quick-save slots.
+- Independent `@fcemu/core` and `@fcemu/ui` packages with enforced clean-architecture boundaries.
 
-要求 Node.js 22 与 Yarn 1.22。
+Implemented mapper IDs: **0, 1, 2, 3, 4, 7, 9, 10, 11, 13, 34, 66, 69, 70, 71, 87, 152 and
+206**. “Implemented” and “verified” have different evidence requirements; see
+[Mapper compatibility](./docs/mapper-compatibility.md) before filing a game-compatibility report.
+
+## Quick start
+
+Requirements:
+
+- Node.js 22
+- Yarn 1.22.22
+- A legally obtained iNES or supported NES 2.0 ROM image
 
 ```bash
-yarn install
+git clone https://github.com/Tangerg/fcemu.git
+cd fcemu
+yarn install --frozen-lockfile
 yarn dev
 ```
 
-浏览器键盘控制：
+Open the Vite URL printed in the terminal, choose a ROM, then use the controls below. ROM images are
+loaded locally in the browser and are never part of this repository.
 
-- P1：`W` / `A` / `S` / `D` 移动，`J` / `K` 对应 A / B，`Enter` 开始，`Space` 选择。
-- P2：方向键移动，主键盘或小键盘的 `0` / `1` 对应 A / B。
+| Player | Direction       | A   | B   | Start   | Select  |
+| ------ | --------------- | --- | --- | ------- | ------- |
+| P1     | `W` `A` `S` `D` | `J` | `K` | `Enter` | `Space` |
+| P2     | Arrow keys      | `0` | `1` | —       | —       |
 
-ROM 加载成功后，游戏画面会获得键盘焦点；待机时画面不会进入 `Tab` 顺序。使用 `Tab` 聚焦工作台
-按钮时，游戏按键会让给浏览器；用 `Enter` / `Space` 执行操作后，焦点会回到画面继续游戏。
-标准 Gamepad 会按稳定连接槽映射到玩家一、玩家二，并支持方向轴与 D-pad。
-带电池的卡带会按 ROM 内容标识自动从 IndexedDB 恢复并定期保存进度。
-工作台可选择 `AUTO` / `NTSC` / `PAL` / `DENDY` 执行区域；切换时会保留电池存档和当前暂停状态。
-工作台提供 3 个持久化快速存档槽；它们按 ROM 内容标识和实际执行区域隔离，并使用独立的版本化
-IndexedDB 记录。快速存档与电池存档互不覆盖，也不会写入 ROM；已有槽位可通过二次确认单独清空。
-软复位会保留主机内存，重新开机会清除易失内存；两者都会保留电池存档和快速存档槽。运行中执行
-任一操作时，工作台会先清空旧音频缓冲，再从新的主机时间线继续运行。
-取出卡带会立即停止当前主机、把焦点交还 ROM 选择器并回到待机态；电池存档和持久化快速存档仍可
-在下次加载时恢复。
-浏览器阻止自动播放时，主操作会显示“启用声音”；再次点击会丢弃旧音频缓冲并恢复声音，不会暂停游戏。
-运行面板会显示实测/目标 FPS、AudioWorklet 环形缓冲与主线程队列时长，以及欠载和丢弃样本计数。
+Standard gamepads are assigned to stable player-one/player-two slots. When a game is loaded, the
+canvas owns gameplay keys; tabbing to a workbench control returns those keys to the browser until
+the action completes.
 
-## Quality gates
+For installation details, browser-storage behavior and troubleshooting, read
+[Getting started](./docs/getting-started.md).
+
+## Workspace
+
+```text
+packages/
+  fc-emu/  @fcemu/core — platform-independent emulator and public application facade
+  ui/      @fcemu/ui   — browser workbench and infrastructure adapters
+docs/                  — architecture, hardware, compatibility and contributor references
+```
+
+`@fcemu/core` has no dependency on React, the DOM, Canvas, Web Audio, browser files or IndexedDB.
+The only supported integration surface is its package-root export. See
+[Core API](./docs/core-api.md) and [Architecture](./docs/architecture.md).
+
+## Development
 
 ```bash
-yarn quality        # typecheck + lint + format + tests + knip + architecture
-yarn build          # build core package and production UI
-yarn check:layers   # clean-architecture and package-boundary rules
-yarn check:circular # runtime import cycles
-yarn benchmark:core # FrameBuffer、整机帧循环与 Save State 基准
-yarn smoke:real-rom -- mario /path/to/MARIO.NES
-yarn smoke:real-rom -- contra /path/to/CONTRA.NES
-yarn smoke:real-rom -- all /path/to/rom-directory
-yarn conformance:rom -- /path/test.nes [frames] [ntsc|pal|dendy] [blargg|zero-page]
-yarn conformance:mmc1 -- /path/to/holy-mapperel-bin-0.02
-yarn conformance:mapper34 -- /path/to/holy-mapperel-bin-0.02
+yarn dev              # start the browser workbench
+yarn build            # build the core and production UI
+yarn quality          # complete required local/CI quality gate
+yarn test             # core and UI unit/integration tests
+yarn check:docs       # Markdown structure and local-link validation
+yarn benchmark:core   # frame-buffer, full-frame and save-state benchmarks
 ```
+
+Redistributable conformance ROMs and local commercial-ROM smoke profiles are intentionally outside
+the normal test command. Their provenance, pinned checksums and exact runners are documented in
+[Testing](./docs/testing.md).
+
+## Documentation
+
+- [Documentation index](./docs/README.md)
+- [Getting started](./docs/getting-started.md)
+- [Core API](./docs/core-api.md)
+- [Browser workbench](./docs/workbench.md)
+- [Architecture](./docs/architecture.md)
+- [Hardware evidence policy](./docs/hardware-reference.md)
+- [Mapper compatibility](./docs/mapper-compatibility.md)
+- [Testing and conformance](./docs/testing.md)
+- [Engineering roadmap](./docs/engineering-roadmap.md)
+
+## Contributing
+
+Hardware changes need an explicit source, a focused state-transition test and the relevant
+conformance evidence. Start with [CONTRIBUTING.md](./CONTRIBUTING.md); report vulnerabilities through
+the private process in [SECURITY.md](./SECURITY.md). By participating, you agree to follow the
+[Code of Conduct](./CODE_OF_CONDUCT.md).
+
+## ROMs and trademarks
+
+No commercial ROM is distributed, downloaded or searched for by this project. `.nes` files are
+ignored by Git, and real-ROM runners accept only explicit local paths with pinned identities. FC,
+Famicom, NES and Nintendo are trademarks of their respective owners; this project is not affiliated
+with or endorsed by Nintendo.
+
+## License status
+
+The package metadata currently declares `UNLICENSED`; no open-source license has been granted yet.
+Repository owners must select and add a license before presenting the project as open source or
+accepting contributions under an open-source license.

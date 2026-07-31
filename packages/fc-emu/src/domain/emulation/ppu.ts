@@ -6,8 +6,6 @@ import { PpuIoBusLatch, type PpuIoBusState } from "./ppu/ppu-io-bus-latch.js";
 import { SpriteEvaluator, type SpriteEvaluationState } from "./ppu/sprite-evaluator.js";
 import { resolveSpritePatternAddress } from "./ppu/sprite-pattern-address.js";
 
-const BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS = 4;
-
 interface SpriteZeroHitState {
   readonly pending: boolean;
   readonly latched: boolean;
@@ -40,10 +38,10 @@ export interface PpuSnapshot {
   readonly tileDataHigh: number;
   readonly spriteCount: number;
   readonly spritePatterns: Uint32Array;
+  readonly spriteLowTileBytes: Uint8Array;
   readonly spritePositions: Uint8Array;
   readonly spritePriorities: Uint8Array;
   readonly spriteIndexes: Uint8Array;
-  readonly spritePatternTables: Uint8Array;
   readonly spriteEvaluation: SpriteEvaluationState;
   readonly flagNameTable: number;
   readonly flagIncrement: number;
@@ -66,17 +64,9 @@ export interface PpuSnapshot {
   readonly flagSpriteOverflow: number;
   readonly oamAddress: number;
   readonly bufferedData: number;
-  readonly pendingBackgroundMapperAddresses: readonly {
-    readonly address: number;
-    readonly remainingDots: number;
-  }[];
 }
 
 class PPU {
-  // Sprite pixels are evaluated in a batch, so their cartridge bus addresses
-  // still need an explicit dot-aligned observation path.
-  private static readonly SPRITE_A12_START_DOT = 265;
-  private static readonly LATER_SPRITE_FETCH_DOT = 267;
   private static readonly IO_BUS_DECAY_SECONDS = 0.6;
   private readonly memory: PPUMemory;
   private readonly bus: Bus;
@@ -118,10 +108,10 @@ class PPU {
 
   private spriteCount = 0;
   private readonly spritePatterns: Uint32Array = new Uint32Array(8);
+  private readonly spriteLowTileBytes: Uint8Array = new Uint8Array(8);
   private readonly spritePositions: Uint8Array = new Uint8Array(8);
   private readonly spritePriorities: Uint8Array = new Uint8Array(8);
   private readonly spriteIndexes: Uint8Array = new Uint8Array(8);
-  private readonly spritePatternTables: Uint8Array = new Uint8Array(8);
   private readonly spriteEvaluator = new SpriteEvaluator();
   private spriteZeroHitPending = false;
   private spriteZeroHitLatched = false;
@@ -149,10 +139,6 @@ class PPU {
 
   private oamAddress = 0;
   private bufferedData = 0;
-  private readonly pendingBackgroundMapperAddresses: Array<{
-    address: number;
-    remainingDots: number;
-  }> = [];
 
   // Attenuation applied to a de-emphasized colour channel by the analog output
   // stage. Each active emphasis bit dims the two channels it does not select.
@@ -221,10 +207,10 @@ class PPU {
       tileDataHigh: this.tileDataHigh,
       spriteCount: this.spriteCount,
       spritePatterns: this.spritePatterns.slice(),
+      spriteLowTileBytes: this.spriteLowTileBytes.slice(),
       spritePositions: this.spritePositions.slice(),
       spritePriorities: this.spritePriorities.slice(),
       spriteIndexes: this.spriteIndexes.slice(),
-      spritePatternTables: this.spritePatternTables.slice(),
       spriteEvaluation: this.spriteEvaluator.captureState(),
       flagNameTable: this.flagNameTable,
       flagIncrement: this.flagIncrement,
@@ -250,9 +236,6 @@ class PPU {
       flagSpriteOverflow: this.flagSpriteOverflow,
       oamAddress: this.oamAddress,
       bufferedData: this.bufferedData,
-      pendingBackgroundMapperAddresses: this.pendingBackgroundMapperAddresses.map((item) => ({
-        ...item,
-      })),
     };
   }
 
@@ -264,18 +247,13 @@ class PPU {
     this.front.restoreState(state.front);
     this.back.restoreState(state.back);
     this.spritePatterns.set(state.spritePatterns);
+    this.spriteLowTileBytes.set(state.spriteLowTileBytes);
     this.spritePositions.set(state.spritePositions);
     this.spritePriorities.set(state.spritePriorities);
     this.spriteIndexes.set(state.spriteIndexes);
-    this.spritePatternTables.set(state.spritePatternTables);
     this.spriteEvaluator.restoreState(state.spriteEvaluation);
     this.spriteZeroHitPending = state.spriteZeroHit.pending;
     this.spriteZeroHitLatched = state.spriteZeroHit.latched;
-    this.pendingBackgroundMapperAddresses.splice(
-      0,
-      this.pendingBackgroundMapperAddresses.length,
-      ...state.pendingBackgroundMapperAddresses.map((item) => ({ ...item })),
-    );
     this.ioBus.restoreState(state.ioBus);
     Object.assign(this, {
       cycle: state.cycle,
@@ -362,12 +340,11 @@ class PPU {
     this.tileDataHigh = 0;
     this.spriteCount = 0;
     this.spritePatterns.fill(0);
+    this.spriteLowTileBytes.fill(0);
     this.spritePositions.fill(0);
     this.spritePriorities.fill(0);
     this.spriteIndexes.fill(0);
-    this.spritePatternTables.fill(0);
     this.spriteEvaluator.powerOn();
-    this.pendingBackgroundMapperAddresses.length = 0;
   }
 
   public readPalette(address: number): number {
@@ -763,20 +740,8 @@ class PPU {
     return lowRed | (lowGreen << 1) | (this.flagBlueTint << 2);
   }
 
-  private fetchSpritePattern(tile: number, attributes: number, row: number): number {
-    const lowPlaneAddress = resolveSpritePatternAddress({
-      tileIndex: tile,
-      row,
-      height: this.flagSpriteSize === 0 ? 8 : 16,
-      patternTable: this.flagSpriteTable === 0 ? 0 : 1,
-      verticallyFlipped: (attributes & 0x80) !== 0,
-    });
-
+  private packSpritePattern(lowTileByte: number, highTileByte: number, attributes: number): number {
     let a = (attributes & 3) << 2;
-    // Sprite pixels are evaluated in a batch, but their cartridge bus addresses
-    // are emitted later at the hardware fetch dots by observeSpriteFetchAddress().
-    let lowTileByte = this.memory.read(lowPlaneAddress, false);
-    let highTileByte = this.memory.read(lowPlaneAddress + 8, false);
     let data = 0;
 
     for (let i = 0; i < 8; i++) {
@@ -800,25 +765,23 @@ class PPU {
     return data;
   }
 
-  private loadEvaluatedSprites(): void {
+  private loadEvaluatedSpriteMetadata(): void {
     this.spriteCount = this.spriteEvaluator.count;
     for (let slot = 0; slot < this.spriteCount; slot++) {
-      const y = this.spriteEvaluator.readSelectedByte(slot, 0);
-      const tile = this.spriteEvaluator.readSelectedByte(slot, 1);
       const attributes = this.spriteEvaluator.readSelectedByte(slot, 2);
       const x = this.spriteEvaluator.readSelectedByte(slot, 3);
-      this.spritePatterns[slot] = this.fetchSpritePattern(tile, attributes, this.scanLine - y);
       this.spritePositions[slot] = x;
       this.spritePriorities[slot] = (attributes >> 5) & 1;
       this.spriteIndexes[slot] = this.spriteEvaluator.originalIndex(slot);
-      this.spritePatternTables[slot] = this.flagSpriteSize === 0 ? this.flagSpriteTable : tile & 1;
     }
   }
 
-  private prepareSpriteFetchSlots(): void {
-    // All eight fetch slots run, including on the pre-render scanline. Empty
-    // 8x8 slots use PPUCTRL; empty 8x16 slots contain $FF and use table 1.
-    this.spritePatternTables.fill(this.flagSpriteSize === 0 ? this.flagSpriteTable : 1);
+  private prepareSpriteOutput(): void {
+    this.spritePatterns.fill(0);
+    this.spriteLowTileBytes.fill(0);
+    this.spritePositions.fill(0);
+    this.spritePriorities.fill(0);
+    this.spriteIndexes.fill(0xff);
   }
 
   private tick() {
@@ -857,7 +820,6 @@ class PPU {
       this.spriteZeroHitLatched = true;
     }
     this.tick();
-    this.clockBackgroundMapperObservations();
 
     const renderingEnabled = this.renderingEnabled;
     const preLine = this.scanLine === this.timing.preRenderScanline;
@@ -896,11 +858,11 @@ class PPU {
         }
       }
       if (renderLine && (this.cycle === 337 || this.cycle === 339)) {
-        this.observeBackgroundAddress(0x2000);
+        this.memory.read(0x2000);
       }
       if (renderLine && this.cycle >= 257 && this.cycle <= 320) {
         this.oamAddress = 0;
-        this.observeSpriteFetchAddress();
+        this.clockSpriteFetch();
       }
       if (preLine && this.cycle >= 280 && this.cycle <= 304) {
         this.copyY();
@@ -926,8 +888,8 @@ class PPU {
       this.flagSpriteOverflow = 1;
     }
     if (this.cycle === 257) {
-      this.prepareSpriteFetchSlots();
-      if (visibleLine && renderingEnabled) this.loadEvaluatedSprites();
+      this.prepareSpriteOutput();
+      if (visibleLine && renderingEnabled) this.loadEvaluatedSpriteMetadata();
       else this.spriteCount = 0;
     }
 
@@ -952,52 +914,48 @@ class PPU {
     }
   }
 
-  private observeSpriteFetchAddress(): void {
+  private clockSpriteFetch(): void {
     const phase = this.cycle % 8;
-    if (this.cycle === PPU.SPRITE_A12_START_DOT) {
-      this.observeCartridgeAddress(this.spritePatternTableForSlot(1) << 12);
-      return;
-    }
     if (phase === 0 || phase === 2) {
-      this.observeCartridgeAddress(0x2000);
+      this.memory.read(0x2000);
       return;
     }
-    if ((phase !== 4 && phase !== 6) || this.cycle < PPU.LATER_SPRITE_FETCH_DOT) {
-      return;
-    }
+    if (phase !== 4 && phase !== 6) return;
 
     const slot = Math.floor((this.cycle - 257) / 8);
-    this.observeCartridgeAddress(this.spritePatternTableForSlot(slot) << 12);
+    const lowPlaneAddress = this.spritePatternAddress(slot);
+    const value = this.memory.read(lowPlaneAddress + (phase === 6 ? 8 : 0));
+    if (phase === 4) {
+      this.spriteLowTileBytes[slot] = value;
+      return;
+    }
+    const attributes = this.spriteEvaluator.readFetchByte(slot, 2);
+    this.spritePatterns[slot] = this.packSpritePattern(
+      this.spriteLowTileBytes[slot] ?? 0,
+      value,
+      attributes,
+    );
   }
 
-  private spritePatternTableForSlot(slot: number): number {
-    return this.spritePatternTables[slot] ?? this.flagSpriteTable;
-  }
-
-  private observeCartridgeAddress(address: number): void {
-    const mapper = this.bus.Mapper;
-    if (mapper.observesPpuAddress) mapper.observePpuAddress(address & 0x3fff);
-  }
-
-  private readBackgroundByte(address: number): number {
-    const value = this.memory.read(address, false);
-    this.observeBackgroundAddress(address);
-    return value;
-  }
-
-  private observeBackgroundAddress(address: number): void {
-    this.pendingBackgroundMapperAddresses.push({
-      address: address & 0x3fff,
-      remainingDots: BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS,
+  private spritePatternAddress(slot: number): number {
+    const y = this.spriteEvaluator.readFetchByte(slot, 0);
+    const tile = this.spriteEvaluator.readFetchByte(slot, 1);
+    const attributes = this.spriteEvaluator.readFetchByte(slot, 2);
+    return resolveSpritePatternAddress({
+      tileIndex: tile,
+      row: this.scanLine - y,
+      height: this.flagSpriteSize === 0 ? 8 : 16,
+      patternTable: this.flagSpriteTable === 0 ? 0 : 1,
+      verticallyFlipped: (attributes & 0x80) !== 0,
     });
   }
 
-  private clockBackgroundMapperObservations(): void {
-    for (const pending of this.pendingBackgroundMapperAddresses) pending.remainingDots--;
-    while ((this.pendingBackgroundMapperAddresses[0]?.remainingDots ?? 1) <= 0) {
-      const pending = this.pendingBackgroundMapperAddresses.shift();
-      if (pending) this.observeCartridgeAddress(pending.address);
-    }
+  private observeCartridgeAddress(address: number): void {
+    this.bus.Mapper.observePpuAddress?.(address & 0x3fff);
+  }
+
+  private readBackgroundByte(address: number): number {
+    return this.memory.read(address);
   }
 
   private clearSpriteZeroHit(): void {
@@ -1071,10 +1029,10 @@ class PPU {
       [state.front, Uint32Array, 256 * 240],
       [state.back, Uint32Array, 256 * 240],
       [state.spritePatterns, Uint32Array, 8],
+      [state.spriteLowTileBytes, Uint8Array, 8],
       [state.spritePositions, Uint8Array, 8],
       [state.spritePriorities, Uint8Array, 8],
       [state.spriteIndexes, Uint8Array, 8],
-      [state.spritePatternTables, Uint8Array, 8],
     ] as const;
     for (const [value, constructor, length] of arrays) {
       if (!(value instanceof constructor) || value.length !== length) {
@@ -1086,19 +1044,6 @@ class PPU {
     }
     SpriteEvaluator.validateState(state.spriteEvaluation);
     PPU.validateSpriteZeroHitState(state.spriteZeroHit);
-    if (
-      state.pendingBackgroundMapperAddresses.some(
-        (item) =>
-          !Number.isInteger(item.address) ||
-          item.address < 0 ||
-          item.address > 0x3fff ||
-          !Number.isInteger(item.remainingDots) ||
-          item.remainingDots < 0 ||
-          item.remainingDots > BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS,
-      )
-    ) {
-      throw new RangeError("PPU save state contains an invalid mapper-address observation");
-    }
   }
 
   private static validateSpriteZeroHitState(state: SpriteZeroHitState): void {

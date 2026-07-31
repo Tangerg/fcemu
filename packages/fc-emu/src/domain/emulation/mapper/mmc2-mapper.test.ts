@@ -38,14 +38,14 @@ describe("Mmc2Mapper", () => {
     expect(mapper.read(0x0000)).toBe(0xc0 + 1); // latches default to FD
     expect(mapper.read(0x1000)).toBe(0xc0 + 3);
 
-    mapper.observePpuAddress(0x0fe8);
+    mapper.observePpuRead(0x0fe8);
     expect(mapper.read(0x0000)).toBe(0xc0 + 2);
-    mapper.observePpuAddress(0x0fd8);
+    mapper.observePpuRead(0x0fd8);
     expect(mapper.read(0x0000)).toBe(0xc0 + 1);
 
-    mapper.observePpuAddress(0x1fef);
+    mapper.observePpuRead(0x1fef);
     expect(mapper.read(0x1000)).toBe(0xc0 + 4);
-    mapper.observePpuAddress(0x1fd8);
+    mapper.observePpuRead(0x1fd8);
     expect(mapper.read(0x1000)).toBe(0xc0 + 3);
   });
 
@@ -55,8 +55,8 @@ describe("Mmc2Mapper", () => {
     mapper.write(0xb000, 0x01);
     mapper.write(0xc000, 0x02);
 
-    mapper.observePpuAddress(0x0fe8); // latch 0 -> FE
-    mapper.observePpuAddress(0x0fd9); // not a trigger on MMC2
+    mapper.observePpuRead(0x0fe8); // latch 0 -> FE
+    mapper.observePpuRead(0x0fd9); // not a trigger on MMC2
     expect(mapper.read(0x0000)).toBe(0xc0 + 2);
   });
 
@@ -76,7 +76,7 @@ describe("Mmc2Mapper", () => {
     mapper.write(0xa000, 0x07);
     mapper.write(0xb000, 0x01);
     mapper.write(0xe000, 0x04);
-    mapper.observePpuAddress(0x0fe8);
+    mapper.observePpuRead(0x0fe8);
     mapper.write(0xf000, 0x01);
 
     const state = mapper.captureState();

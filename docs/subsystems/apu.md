@@ -35,8 +35,8 @@ have no APU write case. See [APU registers](https://www.nesdev.org/wiki/APU_regi
 | `$400F`         | Noise    | `setLength`                         | loads length from `value >> 3`; restarts envelope                                                                                     |
 | `$4010`         | DMC      | `control`                           | `IL-- RRRR` — IRQ enable (7), loop (6), rate index (3–0); disabling IRQ clears the pending flag                                       |
 | `$4011`         | DMC      | `value`                             | `-DDD DDDD` direct output level (`value & 0x7f`)                                                                                      |
-| `$4012`         | DMC      | `address`                           | sample address = `0xC000                                                                                                              | (value << 6)` |
-| `$4013`         | DMC      | `length`                            | sample length = `(value << 4)                                                                                                         | 1`            |
+| `$4012`         | DMC      | `address`                           | sample address = `0xC000 + (value << 6)`                                                                                              |
+| `$4013`         | DMC      | `length`                            | sample length = `1 + (value << 4)`                                                                                                    |
 | `$4015`         | Status   | `control` (write) / `status` (read) | write enables channels and clears DMC IRQ; read returns status                                                                        |
 | `$4017`         | Frame    | `frameCounter`                      | `MI-- ----` — mode (7), IRQ inhibit (6); routed to `FrameSequencer.write`                                                             |
 
@@ -292,8 +292,9 @@ runs `validateSnapshot` first: it rejects non-integer or negative scalars, non-f
 a mismatched sample rate, a frame-sequencer `period`/`pendingPeriod` outside `{4, 5}`, a
 `frameIrqClearDelay > 2`, and any queued write outside `$4000`–`$4017` or with a value above `0xFF`.
 `sampleBuffer` and `lastClockCycle` are omitted from their snapshots when undefined. The APU state
-travels inside the console's versioned save-state envelope; capturing the output-filter history is
-the change that advanced that envelope to version 13.
+travels inside the console's current version 14 save-state envelope. Output-filter history first
+entered the schema in version 13; version 14 additionally carries the PPU's real sprite-fetch
+pipeline state.
 
 ## Audio output boundary
 
@@ -302,6 +303,19 @@ The core produces one filtered sample per output tick and pushes it to listeners
 (`application/emulator.ts` forwards each sample to `outputs.audio?.writeSample`). Device sample rate,
 `AudioSampleBatcher`, the `RebufferingAudioRing` and the AudioWorklet are replaceable UI
 infrastructure and never enter `@fcemu/core`.
+
+## Verification and known limits
+
+Focused tests cover frame-sequencer phases, envelopes, deferred length writes, DMC DMA requests,
+region timing, mixing/filter state and snapshot validation. External evidence includes the
+checksum-pinned AccuracyCoin bus/DMA matrix, both Sprite/DMC collision ROMs and the ten-fixture PAL
+APU visual matrix documented in
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md).
+
+Sunsoft 5B expansion audio is mapper hardware and is not mixed here. NTSC uses the measured
+RP2A03H/late-G implicit-stop behavior; PAL and Dendy intentionally use the conservative DMC silicon
+profile until equivalent measurements exist. These are explicit evidence limits, not automatic
+inheritance from a shared timer table.
 
 ## Source files
 

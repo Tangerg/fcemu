@@ -36,9 +36,9 @@ describe("Mmc4Mapper", () => {
     expect(mapper.read(0x0000)).toBe(0xc0 + 1);
     expect(mapper.read(0x1000)).toBe(0xc0 + 3);
 
-    mapper.observePpuAddress(0x0fe8);
+    mapper.observePpuRead(0x0fe8);
     expect(mapper.read(0x0000)).toBe(0xc0 + 2);
-    mapper.observePpuAddress(0x1fe8);
+    mapper.observePpuRead(0x1fe8);
     expect(mapper.read(0x1000)).toBe(0xc0 + 4);
   });
 
@@ -48,9 +48,9 @@ describe("Mmc4Mapper", () => {
     mapper.write(0xb000, 0x01);
     mapper.write(0xc000, 0x02);
 
-    mapper.observePpuAddress(0x0fe9); // in range on MMC4, unlike MMC2
+    mapper.observePpuRead(0x0fe9); // in range on MMC4, unlike MMC2
     expect(mapper.read(0x0000)).toBe(0xc0 + 2);
-    mapper.observePpuAddress(0x0fdf);
+    mapper.observePpuRead(0x0fdf);
     expect(mapper.read(0x0000)).toBe(0xc0 + 1);
   });
 
@@ -79,7 +79,7 @@ describe("Mmc4Mapper", () => {
     const mapper = new Mmc4Mapper(cartridge);
     mapper.write(0xa000, 0x03);
     mapper.write(0xc000, 0x02);
-    mapper.observePpuAddress(0x0fe8);
+    mapper.observePpuRead(0x0fe8);
     mapper.write(0xf000, 0x01);
 
     const state = mapper.captureState();

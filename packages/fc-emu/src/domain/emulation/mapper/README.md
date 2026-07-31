@@ -1,23 +1,26 @@
 # Mapper domain module
 
-This directory is the cartridge-hardware submodule of the Emulation bounded context.
+This directory is the private cartridge-hardware module of `@fcemu/core`. Other modules import its
+contract, factory and public errors through `index.ts`; concrete board classes are not package API.
 
-## Boundary
+## Maintainer boundary
 
-- `mapper.ts` defines the address-space contract and the narrow interrupt capability.
-- `create-mapper.ts` is the only mapper-number selection point.
-- Each board implementation owns its banking, mirroring, RAM protection and IRQ behavior.
-- Mappers select logical `CartridgeMemory` banks; volatile/battery ownership stays in the model.
-- `index.ts` exposes only the contract, factory and unsupported-mapper error to the rest of core.
-- A mapper must not depend on `Bus`, CPU, PPU, browser APIs or UI concepts.
+- `mapper.ts` defines CPU/PPU address-space, lifecycle, signal and deterministic-state capabilities.
+- `create-mapper.ts` is the only mapper/submapper/board selection point.
+- `mapper-errors.ts` owns the three public failure categories.
+- `mapper-kind.ts` and the `MapperState` union keep snapshot identity explicit.
+- `state-validation.ts` contains shared runtime guards; every board still validates its own coupled
+  invariants before mutation.
+- IRQ-capable boards depend on `MapperInterruptPort`, never the complete `Bus`.
 
-## Adding a mapper
+Board identity includes submapper, PRG/CHR geometry, reachable writable memory, mirroring ownership,
+bus conflicts and optional IRQ/latch signals. Unknown or contradictory configurations fail at the
+factory boundary.
 
-1. Add one implementation file named after the board family, not only its numeric identifier.
-2. Register its iNES mapper number in `create-mapper.ts`.
-3. Add focused unit tests for PRG, CHR, mirroring, RAM and IRQ behavior that the board supports.
-4. Add an external conformance ROM result when a suitable test exists; never commit commercial ROMs.
-5. Update `docs/mapper-compatibility.md` with evidence and remaining limitations.
+## Workflow
 
-ROM title lists help choose compatibility targets, but they are not hardware specifications. Board
-behavior must come from technical documentation and executable conformance evidence.
+The canonical implementation checklist, board table and evidence rules live in
+[`docs/mappers/README.md`](../../../../../../docs/mappers/README.md) and
+[`docs/mapper-compatibility.md`](../../../../../../docs/mapper-compatibility.md). Keep this local file
+short so maintainers entering the source directory can find the boundary without duplicating the
+board reference.

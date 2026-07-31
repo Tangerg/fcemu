@@ -1,3 +1,5 @@
+import { areBooleans } from "./state-validation.js";
+
 const CHR_BANK_SIZE = 0x1000;
 const CHR_BANK_MASK = 0x3f;
 
@@ -89,7 +91,7 @@ export class ChrLatchBanks {
         throw new RangeError("CHR latch save state contains an invalid bank register");
       }
     }
-    if (typeof state.latch0Fe !== "boolean" || typeof state.latch1Fe !== "boolean") {
+    if (!areBooleans(state.latch0Fe, state.latch1Fe)) {
       throw new TypeError("CHR latch save state contains an invalid latch");
     }
     this.chrBank0Fd = state.chrBank0Fd;

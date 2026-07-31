@@ -215,6 +215,19 @@ part of `DmaArbiterState`; they belong to the APU delta-modulation channel and a
 snapshot, keeping the DMA arbiter's state limited to the shared bus alignment and the two channels'
 transfer state.
 
+## Verification and known limits
+
+Focused tests cover 513/514-cycle OAM transfers, halt-on-read, RMW page replacement, DMC
+preparation/alignment, OAM overlap, GET priority and mid-transfer snapshots. Checksum-pinned
+AccuracyCoin, Quietust and Sprite/DMC collision fixtures exercise CPU/APU/PPU side effects through
+the integrated bus; see
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md).
+
+The NTSC controller-read glitch and implicit-stop races use explicitly selected evidence profiles.
+PAL disables the controller glitch; Dendy remains conservative where clone measurements are absent.
+Unresolved explicit-stop DMC phases are tracked in
+[Engineering roadmap](../engineering-roadmap.md), not hidden behind title-specific timing.
+
 ## Source files
 
 - `packages/fc-emu/src/domain/emulation/dma/dma-bus-phase.ts` — the shared GET/PUT phase constant.

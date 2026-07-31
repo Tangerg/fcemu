@@ -10,8 +10,6 @@ import type { Mapper, MapperState } from "./mapper.js";
  * exact board behavior requires NES 2.0 submappers, which the cartridge parser rejects explicitly.
  */
 export class UxromMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBanks: number;
   private selectedPrgBank = 0;
   private readonly fixedPrgBank: number;
@@ -73,10 +71,6 @@ export class UxromMapper implements Mapper {
       this.writePrgRam(address, value);
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private readPrgRam(address: number): number {
     const bytes = this.cartridge.prgWritableBytes;

@@ -6,9 +6,8 @@ scanline/vblank geometry and the APU silicon profile — selected once when a `B
 `MachineClock` is the only stateful time authority: it owns committed CPU time, projects the
 in-flight bus cycle, drives the APU forward one CPU cycle at a time, and advances the PPU by
 emitting the exact master-clock value of every dot, carrying PAL's fractional remainder so no dot is
-gained or lost across CPU cycles. Together they replace the earlier scheme of independent CPU/APU
-and CPU/PPU watermark objects with one source of truth, and they expose the sub-cycle phase at which
-the CPU samples reads, writes and `/NMI`. See the NESdev
+gained or lost across CPU cycles. Together they expose the sub-cycle phase at which the CPU samples
+reads, writes and `/NMI`. See the NESdev
 [cycle reference chart](https://www.nesdev.org/wiki/Clock_rate) for the hardware cadence these
 values reproduce.
 
@@ -269,12 +268,21 @@ Any violation throws `RangeError` and leaves the clock untouched, so `Bus` can r
 snapshot back. `reset` zeroes all five for power-on / soft reset.
 
 These watermarks are part of the public save-state envelope carried by `EmulatorSaveState`
-(current `SAVE_STATE_VERSION = 13`, guarded together with format, ROM identity and console region).
-The clock-relevant milestones in the envelope's history: making the CPU/PPU master-clock watermarks
-explicit advanced it to version 4, and consolidating all console watermarks into `MachineClock` —
-retiring the separate CPU/APU and CPU/PPU watermark objects `Bus` previously coordinated — advanced
-it to version 5. Later increments (through 13) are unrelated to the clock. Older in-memory snapshots
-are rejected explicitly rather than restored with ambiguous state.
+(current `SAVE_STATE_VERSION = 14`, guarded together with format, ROM identity and console region).
+Older in-memory snapshots are rejected explicitly rather than restored with ambiguous state. The
+nested APU state separately checks the output sample rate.
+
+## Verification and known limits
+
+Domain tests cover safe-integer bounds, forward-only watermarks, PAL remainder carry, exact
+current/advanced read/write targets and `/NMI` sampling. Full-frame tests verify NTSC odd-frame
+shortening and PAL/Dendy 312-scanline geometry. Timing changes also require the cross-subsystem
+matrix in [Testing](../testing.md), because a locally correct dot can still move DMA or interrupt
+behavior across a CPU sample boundary.
+
+`ConsoleTiming` selects one deterministic CPU/PPU alignment per region. It does not expose every
+possible power-on phase or clone oscillator; a new alignment belongs in the model only when hardware
+evidence produces a distinct automated result.
 
 ## Source files
 

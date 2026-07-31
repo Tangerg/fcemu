@@ -215,8 +215,8 @@ describe("Emulator save states", () => {
   it("rejects unknown state versions", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const snapshot = emulator.captureSaveState();
-    expect(snapshot.version).toBe(13);
-    const future = { ...snapshot, version: 14 } as unknown as EmulatorSaveState;
+    expect(snapshot.version).toBe(14);
+    const future = { ...snapshot, version: 15 } as unknown as EmulatorSaveState;
     expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
   });
 });

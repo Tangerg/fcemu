@@ -11,7 +11,7 @@ import type { EmulatorOutputPorts, VideoFrame } from "./ports/emulator-output.js
 import { createRomIdentity } from "../domain/model/rom-identity.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
-const SAVE_STATE_VERSION = 13;
+const SAVE_STATE_VERSION = 14;
 
 export interface CartridgeInfo {
   readonly format: CartridgeFormat;

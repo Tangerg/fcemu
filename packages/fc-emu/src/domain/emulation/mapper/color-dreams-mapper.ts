@@ -13,8 +13,6 @@ const CHR_BANK_SIZE = 0x2000;
  * conflicts; the no-conflict prototype variant is out of scope.
  */
 export class ColorDreamsMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly chrBankCount: number;
   private selectedPrgBank = 0;
@@ -63,10 +61,6 @@ export class ColorDreamsMapper implements Mapper {
     this.selectedPrgBank = (effectiveValue & 0x03) % this.prgBankCount;
     this.selectedChrBank = ((effectiveValue >> 4) & 0x0f) % this.chrBankCount;
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private chrOffset(address: number): number {
     return this.selectedChrBank * CHR_BANK_SIZE + address;

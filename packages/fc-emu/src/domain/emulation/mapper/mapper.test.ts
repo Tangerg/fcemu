@@ -4,7 +4,7 @@ import { NametableMirroring } from "../../model/cartridge.js";
 import Bus from "../bus.js";
 import { createMapper } from "./create-mapper.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
-import type { Mapper } from "./mapper.js";
+import type { Mapper, MapperState } from "./mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
 import { UnsupportedMapperError, UnsupportedMapperVariantError } from "./mapper-errors.js";
 import { UxromMapper } from "./uxrom-mapper.js";
@@ -255,6 +255,18 @@ describe("cartridge mappers", () => {
     expect(bus.CPU.hasPendingIRQ).toBe(true);
   });
 
+  it.each(["reloadPending", "irqEnable", "prgRamEnabled", "prgRamWritable", "a12High"] as const)(
+    "rejects a non-boolean MMC3 %s save-state field",
+    (field) => {
+      const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {
+        setMapperIrq() {},
+      });
+      const corrupted = { ...mapper.captureState(), [field]: 1 } as unknown as MapperState;
+
+      expect(() => mapper.restoreState(corrupted)).toThrow(/invalid timing or register state/i);
+    },
+  );
+
   it("honors MMC3 PRG-RAM enable and write-protect bits", () => {
     const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {
       setMapperIrq() {},
@@ -355,7 +367,7 @@ describe("cartridge mappers", () => {
     );
     mmc2.write(0xa000, 5);
     mmc2.write(0xb000, 1);
-    mmc2.observePpuAddress(0x0fe8);
+    mmc2.observePpuRead?.(0x0fe8);
     mmc2.write(0xf000, 1);
     const mmc4 = createMapper(
       createTestCartridge({ mapper: 10, prgBanks: 8, chrBanks: 8 }),
@@ -363,7 +375,7 @@ describe("cartridge mappers", () => {
     );
     mmc4.write(0xa000, 3);
     mmc4.write(0xc000, 2);
-    mmc4.observePpuAddress(0x0fe8);
+    mmc4.observePpuRead?.(0x0fe8);
     mmc4.write(0xf000, 1);
     const bandai70 = createMapper(
       createTestCartridge({ mapper: 70, prgBanks: 8, chrBanks: 8 }),
@@ -522,6 +534,40 @@ describe("cartridge mappers", () => {
       { nes2: true, mapper: 2, submapper: 1, prgBanks: 2, chrRamShift: 8 },
     ],
     ["AxROM with PRG RAM", { nes2: true, mapper: 7, submapper: 1, prgBanks: 2, prgRamShift: 7 }],
+    ["MMC2 with PRG RAM", { nes2: true, mapper: 9, prgBanks: 8, chrBanks: 8, prgRamShift: 7 }],
+    [
+      "Color Dreams with PRG RAM",
+      { nes2: true, mapper: 11, prgBanks: 4, chrBanks: 4, prgRamShift: 7 },
+    ],
+    [
+      "CPROM with PRG RAM",
+      {
+        nes2: true,
+        mapper: 13,
+        prgBanks: 2,
+        chrBanks: 0,
+        chrRamShift: 8,
+        prgRamShift: 7,
+      },
+    ],
+    ["GxROM with PRG RAM", { nes2: true, mapper: 66, prgBanks: 2, chrBanks: 4, prgRamShift: 7 }],
+    [
+      "Bandai 70 with PRG RAM",
+      { nes2: true, mapper: 70, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
+    ],
+    ["Codemasters with PRG RAM", { nes2: true, mapper: 71, prgBanks: 4, prgRamShift: 7 }],
+    [
+      "Jaleco 87 with PRG RAM",
+      { nes2: true, mapper: 87, prgBanks: 2, chrBanks: 4, prgRamShift: 7 },
+    ],
+    [
+      "Bandai 152 with PRG RAM",
+      { nes2: true, mapper: 152, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
+    ],
+    [
+      "Namco 118 with PRG RAM",
+      { nes2: true, mapper: 206, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
+    ],
     [
       "MMC3 with a partial direct PRG-RAM window",
       { nes2: true, mapper: 4, prgBanks: 2, chrBanks: 1, prgRamShift: 5 },
@@ -558,7 +604,7 @@ function writeMmc1Register(mapper: Mapper, address: number, value: number): void
 }
 
 function clockMmc3A12(mapper: Mapper, lowCycles: number): void {
-  mapper.observePpuAddress(0x0000);
-  for (let cycle = 0; cycle < lowCycles; cycle++) mapper.tickPpu();
-  mapper.observePpuAddress(0x1000);
+  mapper.observePpuAddress?.(0x0000);
+  for (let cycle = 0; cycle < lowCycles; cycle++) mapper.tickPpu?.();
+  mapper.observePpuAddress?.(0x1000);
 }

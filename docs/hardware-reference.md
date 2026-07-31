@@ -11,7 +11,8 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
    reproducible hardware measurements collected by the
    [NESdev reference guide](https://www.nesdev.org/wiki/NES_reference_guide).
 3. A checksum-pinned test ROM with published real-hardware output is executable evidence. The ROM,
-   protocol, console region and expected output must all be recorded.
+   protocol, console region and expected output must all be recorded in the external-fixture
+   runbook.
 4. Mesen2, Nintendulator and other accurate emulators are cross-checks only. Their implementation is
    not a specification and cannot be the sole reason for a behavior change.
 5. `fogleman/nes` remains the historical implementation reference for this port, not its accuracy
@@ -109,10 +110,13 @@ Before merging a hardware behavior change:
 
 1. Record the cited hardware rule and the current contradiction.
 2. Add a focused domain test for the state transition.
-3. Run the relevant checksum-pinned external ROM, not only a synthetic fixture.
+3. Run the relevant checksum-pinned external ROM, not only a synthetic fixture; if it is unavailable,
+   report that explicitly.
 4. Run CPU interrupt, PPU timing, mapper IRQ and DMA collision matrices when clock ordering changes.
 5. Re-run the two read-only real ROM smoke hashes.
 6. Profile before and after only when the change claims a performance improvement.
 
 If two hardware tests require incompatible results, keep the last jointly validated behavior and
 document the missing clock or revision dimension. Do not add a ROM-name special case.
+
+Commands, evidence levels and baseline-update rules live in [Testing](./testing.md).

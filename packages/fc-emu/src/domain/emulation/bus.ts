@@ -385,7 +385,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
 
   private readonly clockPpuDot = (): void => {
     this.ppu.update();
-    if (this.mapper.observesPpuAddress) this.mapper.tickPpu();
+    this.mapper.tickPpu?.();
   };
 
   private resetClockSynchronization(): void {

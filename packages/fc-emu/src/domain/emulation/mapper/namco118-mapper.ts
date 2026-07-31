@@ -1,7 +1,7 @@
 import type Cartridge from "../../model/cartridge.js";
-import { isByte } from "../numeric-range.js";
 import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
+import { isFixedByteArray } from "./state-validation.js";
 
 const PRG_BANK_SIZE = 0x2000;
 const CHR_BANK_SIZE = 0x0400;
@@ -16,8 +16,6 @@ const REGISTER_MASKS = [0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x0f, 0x0f] as const
  * register, so nametable mirroring stays hardwired from the header.
  */
 export class Namco118Mapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly chrBankCount: number;
   private register = 0;
@@ -44,8 +42,7 @@ export class Namco118Mapper implements Mapper {
       !Number.isInteger(state.register) ||
       state.register < 0 ||
       state.register > 7 ||
-      state.registers.length !== 8 ||
-      state.registers.some((value) => !isByte(value))
+      !isFixedByteArray(state.registers, 8)
     ) {
       throw new RangeError("Namco 118 save state contains invalid bank registers");
     }
@@ -68,10 +65,6 @@ export class Namco118Mapper implements Mapper {
     if (address % 2 === 0) this.register = value & 0x07;
     else this.registers[this.register] = value & REGISTER_MASKS[this.register];
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private chrOffset(address: number): number {
     const bank = this.chrBankIndex(address) % this.chrBankCount;

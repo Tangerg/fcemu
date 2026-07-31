@@ -3,6 +3,7 @@ import type Cartridge from "../../model/cartridge.js";
 import { isByte, isWord } from "../numeric-range.js";
 import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
+import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
 const PRG_BANK_SIZE = 0x2000;
 const CHR_BANK_SIZE = 0x0400;
@@ -24,8 +25,6 @@ const MIRRORING_MODES = [
  * optional 5B expansion audio at $C000-$FFFF is not emulated.
  */
 export class Fme7Mapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly chrBankCount: number;
   private command = 0;
@@ -83,12 +82,11 @@ export class Fme7Mapper implements Mapper {
       !Number.isInteger(state.command) ||
       state.command < 0 ||
       state.command > 0x0f ||
-      state.chrBanks.length !== 8 ||
-      state.chrBanks.some((value) => !isByte(value)) ||
-      state.prgBanks.length !== 3 ||
-      state.prgBanks.some((value) => !isByte(value)) ||
+      !isFixedByteArray(state.chrBanks, 8) ||
+      !isFixedByteArray(state.prgBanks, 3) ||
       !isByte(state.prgBank0) ||
-      !isWord(state.irqCounter)
+      !isWord(state.irqCounter) ||
+      !areBooleans(state.irqCounterEnabled, state.irqEnabled, state.irqPending)
     ) {
       throw new RangeError("FME-7 save state contains invalid register or counter state");
     }
@@ -140,10 +138,6 @@ export class Fme7Mapper implements Mapper {
       this.writeParameter(value);
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private writeParameter(value: number): void {
     if (this.command <= 0x07) {

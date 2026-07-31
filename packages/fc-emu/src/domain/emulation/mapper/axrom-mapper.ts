@@ -14,8 +14,6 @@ const PRG_BANK_SIZE = 0x8000;
  * submapper, which is rejected explicitly by the cartridge parser.
  */
 export class AxromMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly bankRegisterMask: number;
   private selectedPrgBank = 0;
@@ -85,8 +83,4 @@ export class AxromMapper implements Mapper {
         ? NametableMirroring.SingleScreenLower
         : NametableMirroring.SingleScreenUpper;
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 }

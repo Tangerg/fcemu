@@ -37,13 +37,6 @@ battery-backed RAM and the paused/running lifecycle. Core callers and the confor
 also supply an explicit region override for legacy test or homebrew images. VS System and
 PlayChoice-10 images remain rejected because their console behavior is not modeled.
 
-All ordinary CPU instruction families execute through a unified cycle state. Addressing, dummy
-reads, stack/control flow and RMW read/write-old/write-new operations are explicit bus cycles;
-IRQ/NMI/BRK retain a dedicated entry state. The bus maintains separate committed-read and projected
-I/O-write APU watermarks, while sprite and DMC DMA share a halt/dummy/alignment/GET/PUT arbiter.
-`cpu_interrupts_v2` passes 5/5, PAL APU passes 10/10, and the exact DMC `$2007`/`$4016` collision ROMs
-produce their allowed outputs.
-
 ## Mapper variants and board shape
 
 Mapper creation validates the ROM/RAM bank geometry required by that implementation. NES 2.0
@@ -56,3 +49,24 @@ submapper 0 chooses exactly one board from CHR geometry instead of exposing both
 
 This policy keeps parser completeness separate from emulation claims: understanding a header field
 does not imply that the corresponding hardware is silently approximated.
+
+## Failure behavior
+
+Construction fails before execution when the image is malformed, truncated or outside the supported
+hardware policy. `CartridgeFormatError` exposes a stable format-error code; mapper selection uses
+`UnsupportedMapperError`, `UnsupportedMapperVariantError` or
+`UnsupportedMapperConfigurationError`.
+
+Callers should display the source name, error message and mapper/submapper metadata when available,
+but should not retry an unsupported image under a guessed mapper or RAM size. Detailed format error
+codes and body layout are documented in [Cartridge subsystem](./subsystems/cartridge.md).
+
+## Explicitly unsupported
+
+- VS System, PlayChoice-10 and extended console types.
+- Miscellaneous ROM payloads and non-standard default expansion devices.
+- Mapper-internal EEPROM/battery memory not represented by PRG/CHR NVRAM.
+- Simultaneous CHR ROM and writable CHR memory, or simultaneous CHR RAM and CHR NVRAM.
+- Unknown submappers and geometries with unreachable declared memory.
+
+This list is a policy boundary, not a parser limitation.

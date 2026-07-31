@@ -4,8 +4,6 @@ import type { Mapper, MapperState } from "./mapper.js";
 
 /** iNES mapper 0: fixed PRG/CHR layout (NROM). */
 export class NromMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   constructor(private readonly cartridge: Cartridge) {}
 
   powerOn(): void {}
@@ -35,10 +33,6 @@ export class NromMapper implements Mapper {
       this.writePrgRam(address, value);
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private readPrgRam(address: number): number {
     const bytes = this.cartridge.prgWritableBytes;

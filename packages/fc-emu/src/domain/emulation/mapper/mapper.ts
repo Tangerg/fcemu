@@ -111,8 +111,6 @@ export type MapperState =
     };
 
 export interface Mapper {
-  readonly observesPpuAddress: boolean;
-
   /** Restores this board's deterministic fresh-instance latch state. */
   powerOn(): void;
 
@@ -127,9 +125,14 @@ export interface Mapper {
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;
 
-  observePpuAddress(address: number): void;
+  /** Optional PPU address-line observation for boards such as MMC3. */
+  observePpuAddress?(address: number): void;
 
-  tickPpu(): void;
+  /** Optional completed PPU-read observation for read-triggered boards such as MMC2/MMC4. */
+  observePpuRead?(address: number): void;
+
+  /** Optional per-dot clock paired with PPU address-line observation. */
+  tickPpu?(): void;
 }
 
 /** Narrow interrupt capability required by IRQ-generating cartridge hardware. */

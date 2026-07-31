@@ -3,6 +3,7 @@ import type Cartridge from "../../model/cartridge.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
+import { areBooleans } from "./state-validation.js";
 
 /**
  * Nintendo MMC1 plus the board wiring selected from the cartridge memory shape.
@@ -11,8 +12,6 @@ import type { Mapper, MapperState } from "./mapper.js";
  * for outer PRG-ROM and PRG-RAM banking; this entity owns that wiring policy.
  */
 export class Mmc1Mapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private shiftRegister = 0x10;
   private control = 0x0c;
   private chrBank0 = 0;
@@ -71,7 +70,7 @@ export class Mmc1Mapper implements Mapper {
     if (state.activeChrRegister !== 0 && state.activeChrRegister !== 1) {
       throw new RangeError("MMC1 save state contains an invalid active CHR register");
     }
-    if (typeof state.previousCpuCycleWasWrite !== "boolean") {
+    if (!areBooleans(state.previousCpuCycleWasWrite)) {
       throw new TypeError("MMC1 save state contains invalid CPU bus state");
     }
     this.shiftRegister = state.shiftRegister;
@@ -118,10 +117,6 @@ export class Mmc1Mapper implements Mapper {
       this.cartridge.writePrgRam(this.prgRamOffset(address), value);
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private get isPrgRamEnabled(): boolean {
     return this.board.isPrgRamEnabled(this.prgBank, this.activeChrBank);

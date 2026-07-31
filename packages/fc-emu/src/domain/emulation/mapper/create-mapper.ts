@@ -69,7 +69,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x1000, 0x1000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x40_000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new Mmc2Mapper(cartridge);
     case 10:
       requireBaseSubmapper(cartridge);
@@ -81,7 +81,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new ColorDreamsMapper(cartridge);
     case 13:
       requireBaseSubmapper(cartridge);
@@ -89,7 +89,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       if (!cartridge.hasWritableChrMemory) {
         throw configurationError(cartridge, "CPROM requires 16 KiB of writable CHR RAM");
       }
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new CpromMapper(cartridge);
     case 34: {
       const board = resolveMapper34Board(cartridge);
@@ -99,7 +99,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x8000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new GxromMapper(cartridge);
     case 69:
       requireBaseSubmapper(cartridge);
@@ -111,30 +111,30 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new Bandai74Mapper(cartridge, false);
     case 71:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x2000);
       requireWritableChrSize(cartridge, 0x2000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new JalecoMapper(cartridge);
     case 152:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new Bandai74Mapper(cartridge, true);
     case 206:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x10_000);
-      requireDirectPrgRam(cartridge);
+      requireNoPrgRam(cartridge);
       return new Namco118Mapper(cartridge);
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
@@ -176,6 +176,13 @@ function requireDirectPrgRam(cartridge: Cartridge): void {
   }
   if (cartridge.prgRamBytes > 0 && cartridge.prgNvRamBytes > 0) {
     throw configurationError(cartridge, "mixed PRG RAM/NVRAM requires mapper-controlled banking");
+  }
+}
+
+/** Rejects explicit NES 2.0 memory that the selected board cannot decode. */
+function requireNoPrgRam(cartridge: Cartridge): void {
+  if (cartridge.format === "nes2" && cartridge.prgWritableBytes > 0) {
+    throw configurationError(cartridge, "this board does not map PRG RAM");
   }
 }
 

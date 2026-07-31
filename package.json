@@ -2,7 +2,20 @@
   "name": "fcemu-workspace",
   "private": true,
   "version": "0.1.0",
+  "description": "A cycle-aware NES/Famicom emulator monorepo with a clean TypeScript core and browser UI.",
   "license": "UNLICENSED",
+  "homepage": "https://github.com/Tangerg/fcemu#readme",
+  "bugs": {
+    "url": "https://github.com/Tangerg/fcemu/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tangerg/fcemu.git"
+  },
+  "engines": {
+    "node": "22.x",
+    "yarn": "1.22.22"
+  },
   "packageManager": "yarn@1.22.22",
   "workspaces": [
     "packages/*"
@@ -30,9 +43,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip",
+    "check:docs": "node scripts/check-docs.mjs",
     "check:layers": "node scripts/check-layers.mjs",
     "check:circular": "node scripts/check-circular.mjs",
-    "quality": "yarn typecheck && yarn lint && yarn format:check && yarn test && yarn knip && yarn check:circular && yarn check:layers"
+    "quality": "yarn typecheck && yarn lint && yarn format:check && yarn check:docs && yarn test && yarn knip && yarn check:circular && yarn check:layers"
   },
   "devDependencies": {
     "knip": "^6.26.0",

@@ -16,8 +16,6 @@ const CHR_BANK_SIZE = 0x1000;
  * $1FE8-$1FEF ranges.
  */
 export class Mmc2Mapper implements Mapper {
-  readonly observesPpuAddress = true;
-
   private readonly prgBankCount: number;
   private readonly chr: ChrLatchBanks;
   private prgBank = 0;
@@ -59,19 +57,16 @@ export class Mmc2Mapper implements Mapper {
     this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
   }
 
-  observePpuAddress(address: number): void {
+  observePpuRead(address: number): void {
     if (address === 0x0fd8) this.chr.setLatch0(false);
     else if (address === 0x0fe8) this.chr.setLatch0(true);
     else if (address >= 0x1fd8 && address <= 0x1fdf) this.chr.setLatch1(false);
     else if (address >= 0x1fe8 && address <= 0x1fef) this.chr.setLatch1(true);
   }
 
-  tickPpu(): void {}
-
   read(address: number): number {
     if (address < 0x2000) return this.cartridge.readChr(this.chr.offset(address));
     if (address >= 0x8000) return this.readPrg(address);
-    if (address >= 0x6000) return this.readPrgRam(address);
     return 0;
   }
 
@@ -82,9 +77,7 @@ export class Mmc2Mapper implements Mapper {
     }
     if (address >= 0x8000) {
       this.writeRegister(address, value);
-      return;
     }
-    if (address >= 0x6000) this.writePrgRam(address, value);
   }
 
   private writeRegister(address: number, value: number): void {
@@ -116,15 +109,5 @@ export class Mmc2Mapper implements Mapper {
     const bank = slot === 0 ? this.prgBank : this.prgBankCount - (4 - slot);
     const offset = address - 0x8000 - slot * PRG_BANK_SIZE;
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + offset] ?? 0;
-  }
-
-  private readPrgRam(address: number): number {
-    const bytes = this.cartridge.prgWritableBytes;
-    return bytes === 0 ? 0 : this.cartridge.readPrgRam((address - 0x6000) % bytes);
-  }
-
-  private writePrgRam(address: number, value: number): void {
-    const bytes = this.cartridge.prgWritableBytes;
-    if (bytes > 0) this.cartridge.writePrgRam((address - 0x6000) % bytes, value);
   }
 }

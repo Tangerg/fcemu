@@ -13,8 +13,6 @@ const CHR_BANK_SIZE = 0x1000;
  * bus conflicts.
  */
 export class CpromMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly chrBankCount: number;
   private selectedChrBank = 0;
 
@@ -58,10 +56,6 @@ export class CpromMapper implements Mapper {
     const effectiveValue = value & this.readPrg(address);
     this.selectedChrBank = (effectiveValue & 0x03) % this.chrBankCount;
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private chrOffset(address: number): number {
     if (address < CHR_BANK_SIZE) return address;

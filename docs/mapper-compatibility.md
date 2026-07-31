@@ -5,26 +5,30 @@ complete. The historical [TuxNES mapper list](http://tuxnes.sourceforge.net/nesm
 for discovering compatibility targets; its own introduction warns that the catalog is incomplete
 and that mirroring values may be unreliable.
 
-| Mapper | Board family   | Status    | Current evidence                                    |
-| ------ | -------------- | --------- | --------------------------------------------------- |
-| 0      | NROM           | Supported | Unit tests; pinned `MARIO.NES` real-ROM runner      |
-| 1      | MMC1/SxROM     | Supported | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5       |
-| 2      | UxROM/UNROM    | Supported | Unit tests; pinned `CONTRA.NES` real-ROM runner     |
-| 3      | CNROM          | Supported | PRG/CHR/conflict/oversize tests; facade smoke       |
-| 4      | MMC3           | Supported | Unit tests; blargg `mmc3_test_2` tests 1-5          |
-| 7      | AxROM          | Supported | Unit tests; CC0 BNTest banks and nametables pass    |
-| 9      | MMC2/PxROM     | Supported | PRG/latch/mirroring unit tests; no conformance ROM  |
-| 10     | MMC4/FxROM     | Supported | PRG/RAM/latch/mirroring unit tests; no conf. ROM    |
-| 11     | Color Dreams   | Supported | PRG/CHR/bus-conflict unit tests; no conformance ROM |
-| 13     | CPROM          | Supported | CHR-RAM banking/conflict unit tests; no conf. ROM   |
-| 34     | BNROM/NINA-001 | Supported | Board tests; Holy Mapperel BNROM result `0000`      |
-| 66     | GxROM/MHROM    | Supported | PRG/CHR/bus-conflict unit tests; no conformance ROM |
-| 69     | Sunsoft FME-7  | Supported | Banking/mirroring/IRQ unit tests; no 5B audio       |
-| 70     | Bandai 74xx    | Supported | PRG/CHR/bus-conflict unit tests; no conformance ROM |
-| 71     | Codemasters    | Supported | PRG/mirroring unit tests; no conformance ROM        |
-| 87     | Jaleco CHR     | Supported | CHR-bit-swap unit tests; no conformance ROM         |
-| 152    | Bandai 74xx    | Supported | PRG/CHR/mirroring unit tests; no conformance ROM    |
-| 206    | Namco 118      | Supported | PRG/CHR bank unit tests; no conformance ROM         |
+`Implemented` means the board contract, geometry and focused tests exist. `Verified` additionally
+requires executable external or pinned real-ROM evidence. Both statuses are loadable; the distinction
+describes evidence maturity rather than a runtime feature flag.
+
+| Mapper | Board family   | Status      | Current evidence                                              |
+| ------ | -------------- | ----------- | ------------------------------------------------------------- |
+| 0      | NROM           | Verified    | Unit tests; pinned `MARIO.NES` real-ROM runner                |
+| 1      | MMC1/SxROM     | Verified    | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5                 |
+| 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner               |
+| 3      | CNROM          | Implemented | PRG/CHR/conflict/oversize tests; facade smoke                 |
+| 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned |
+| 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned     |
+| 9      | MMC2/PxROM     | Implemented | Unit tests; full-address sprite/read-order integration tests  |
+| 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM             |
+| 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
+| 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM       |
+| 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                |
+| 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
+| 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                 |
+| 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
+| 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                  |
+| 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                   |
+| 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM              |
+| 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                   |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
@@ -43,8 +47,12 @@ submapper 0 (fixed-mirroring BF9093) and submapper 1 (single-screen-controlled B
   behavior is selected with NES 2.0 submapper 2 without breaking compatible legacy images.
 - Mapper 7 follows the default iNES no-conflict behavior required by ANROM software. AMROM/AOROM
   conflict behavior is selected with NES 2.0 submapper 2; the common emulator 512 KiB bit-3
-  extension is supported and verified by BNTest. NES 2.0 PRG-RAM declarations are rejected because
-  AxROM has no PRG-RAM window.
+  extension is implemented and covered by focused tests. NES 2.0 PRG-RAM declarations are rejected
+  because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
+  `Verified` evidence until its fixture identity and runner are pinned.
+- NES 2.0 PRG-RAM declarations are also rejected for mappers 9/11/13/66/70/71/87/152/206 because
+  those selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
+  allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
   outputs select outer PRG ROM and 8 KiB PRG-RAM banks; mixed volatile/battery banks retain only the
   NVRAM bytes. SNROM additionally wires CHR A16 as a redundant WRAM disable, while submapper 5
@@ -62,7 +70,8 @@ submapper 0 (fixed-mirroring BF9093) and submapper 1 (single-screen-controlled B
 - Mapper 9 (MMC2) switches the `$8000-$9FFF` 8 KiB bank and fixes the final three 8 KiB banks. Its
   two CHR latches drive four 4 KiB banks; the left latch flips only on the exact `$0FD8`/`$0FE8`
   fetches while the right latch flips across `$1FD8-$1FDF` and `$1FE8-$1FEF`. `$F000` bit 0 selects
-  vertical/horizontal mirroring.
+  vertical/horizontal mirroring. PxROM has no PRG-RAM window. The PPU reports full background and
+  sprite fetch addresses, and the latch commits after the triggering byte is returned.
 - Mapper 10 (MMC4) shares the MMC2 CHR latch banks but flips both latches across the full
   `$xFD8-$xFDF`/`$xFE8-$xFEF` ranges, switches a 16 KiB `$8000-$BFFF` bank with `$C000-$FFFF` fixed,
   and adds an 8 KiB PRG-RAM window at `$6000-$7FFF`.
@@ -95,6 +104,11 @@ submapper 0 (fixed-mirroring BF9093) and submapper 1 (single-screen-controlled B
 New mapper families are intentionally outside the current scope. Coverage work is limited to the
 listed board families and does not silently approximate unsupported mapper numbers.
 
-Before changing a status to supported, verify header parsing, bank boundaries, mirroring, writable
-memory, reset behavior and IRQ semantics where applicable. Submapper and board variants must remain
-explicit rather than being silently approximated by the base mapper number.
+Before changing a status to `Verified`, verify header parsing, bank boundaries, mirroring, writable
+memory, reset behavior and IRQ semantics where applicable, then record executable external evidence.
+Submapper and board variants must remain explicit rather than being silently approximated by the
+base mapper number.
+
+Historical local runs without a recorded fixture checksum remain useful engineering notes but do not
+satisfy the current `Verified` definition. See [Testing](./testing.md) for evidence and baseline
+rules.

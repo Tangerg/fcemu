@@ -117,11 +117,13 @@ scanlines wrap at `scanlinesPerFrame`→next frame, toggling frame parity `f`.
 scanLine = 0`, incrementing `frame` and toggling `f` — dropping the idle dot 340 of the pre-render
 line on odd frames.
 
-`update()` performs one dot: it first promotes any pending sprite-zero hit to latched, calls
-`tick()`, then flushes the delayed background mapper-observation queue. The rest is gated by
-`renderingEnabled` and the current scanline/dot classes: `preLine` (`= preRenderScanline`),
-`visibleLine` (`< 240`), `renderLine` (`preLine || visibleLine`), `visibleCycle` (1-256),
-`preFetchCycle` (321-336) and `fetchCycle` (`preFetchCycle || visibleCycle`).
+`update()` performs one dot: it first promotes any pending sprite-zero hit to latched and calls
+`tick()`. The rest is gated by `renderingEnabled` and the current scanline/dot classes: `preLine`
+(`= preRenderScanline`), `visibleLine` (`< 240`), `renderLine` (`preLine || visibleLine`),
+`visibleCycle` (1-256), `preFetchCycle` (321-336) and `fetchCycle`
+(`preFetchCycle || visibleCycle`). Each background, garbage-nametable and sprite-pattern fetch goes
+through `PPUMemory` in that dot, so mapper address-line and completed-read events remain ordered with
+the byte transfer that caused them.
 
 **Vblank and NMI.** `nmiOccurred` is the PPUSTATUS bit-7 flag; `nmiOutput` is PPUCTRL bit 7.
 `nmiChange()` recomputes `asserted = nmiOutput && nmiOccurred` and drives the physical `/NMI` line
@@ -162,8 +164,8 @@ packed nibble is `attributeTableByte | p1 | p2`. `backgroundPixel` returns
 
 Scroll bookkeeping on `renderLine`: `incrementX()` every eighth fetch dot (with coarse-X/nametable
 wrap), `incrementY()` at dot 256 (fine-Y, coarse-Y, nametable toggle at row 29), `copyX()` at dot
-257, and `copyY()` on `preLine` dots 280-304. Two extra garbage nametable fetches on `renderLine`
-dots 337 and 339 observe address `$2000` on the cartridge bus.
+257, and `copyY()` on `preLine` dots 280-304. Two extra garbage nametable reads on `renderLine`
+dots 337 and 339 pass through `PPUMemory` at address `$2000`.
 
 ## Sprite pipeline
 
@@ -219,15 +221,18 @@ during hblank — this is not treated as a domain error.
 
 ### Sprite fetch and pixel selection
 
-At dot 257 the PPU forces `oamAddress = 0` (throughout dots 257-320), runs `prepareSpriteFetchSlots`
-(pre-loading `spritePatternTables` with `flagSpriteTable` for 8×8, or table 1 for empty 8×16 slots),
-and — on a rendering visible line — `loadEvaluatedSprites`. That reads each selected slot's Y / tile /
-attribute / X from secondary OAM and calls `fetchSpritePattern(tile, attributes, scanLine - y)`, which
-resolves the CHR address, reads both bit planes via `memory.read(addr, false)` (mapper observation
-deferred to the dot-aligned path), applies horizontal flip (attribute bit 6), and packs eight 4-bit
-pixels (palette `(attributes & 3) << 2`). Per slot it records `spritePositions` (X),
-`spritePriorities` (attribute bit 5), `spriteIndexes` (`originalIndex`) and `spritePatternTables`
-(`flagSpriteTable` for 8×8, else `tile & 1`). Off visible lines `spriteCount` is forced to 0.
+At dot 257 the PPU forces `oamAddress = 0`, clears the next-line sprite output registers and loads
+only the selected sprites' X/priority/original-index metadata. Pattern bytes are not batch-read.
+During dots 257-320, `clockSpriteFetch` runs all eight hardware slots: phases 0/2 perform the garbage
+nametable reads, phase 4 reads the low CHR plane and phase 6 reads the high plane. Each plane address
+is resolved from the secondary-OAM bytes and the live PPUCTRL wiring at that slot, including dummy
+tile `$FF` fetches for unused slots.
+
+Because each plane goes through `PPUMemory.read`, address-sensitive mappers see the complete address
+before the byte transfer and read-triggered mappers see it after the byte returns. Only after the high
+plane is fetched does `packSpritePattern` apply horizontal flip (attribute bit 6) and pack the eight
+4-bit pixels. This ordering allows an MMC2/MMC4 `$FD/$FE` sprite to return its own byte from the old
+bank, flip the latch, and make the following sprite use the new bank.
 
 `spritePixel` scans the loaded slots for one covering `cycle - 1`, returning the first non-transparent
 4-bit color and its slot index. `renderPixel` applies left-column masking (`x < 8` with
@@ -271,28 +276,22 @@ The PPU address bus is exactly 14 bits: every access masks `address &= 0x3FFF`. 
 | 3    | single-screen (high) | `[B, B, B, B]` |
 | 4    | four-screen          | `[A, B, C, D]` |
 
-The mode comes from `bus.Cartridge.mirroringMode`. `PPUMemory.read` takes an `observeMapper` flag;
-PPU background and sprite fetches pass `false` and route mapper observation through the dot-aligned
-paths described next, while CPU-driven `$2007` and writes observe immediately.
+The mode comes from `bus.Cartridge.mirroringMode`. Every PPU transaction goes through the same
+mapper-signal ordering; rendering fetches and CPU-driven `$2007` accesses cannot bypass it.
 
-## Cartridge address observation (mapper A12 timing)
+## Cartridge bus observation
 
-`observeCartridgeAddress(address)` calls `mapper.observePpuAddress(address & 0x3FFF)` when
-`mapper.observesPpuAddress` — the hook that drives A12-edge mapper timing (e.g. MMC3's scanline IRQ;
-see [MMC3](https://www.nesdev.org/wiki/MMC3)). Mapper timing is driven from these observations, not
-from presentation frames or scanline callbacks.
+The mapper contract separates two physical events:
 
-- **Background fetches** enqueue observations through a dot-delay queue:
-  `observeBackgroundAddress` pushes `{address, remainingDots: 4}`
-  (`BACKGROUND_MAPPER_OBSERVATION_DELAY_DOTS`), and `clockBackgroundMapperObservations` (run each
-  `update`) decrements and flushes them. This delay is what lets MMC3 accept A12 rises only after ten
-  low dots and reject the cross-line nine-dot pulse.
-- **Sprite fetches** are batch-evaluated but emit dot-aligned observations via
-  `observeSpriteFetchAddress` (dots 257-320): at dot 265 (`SPRITE_A12_START_DOT`) it observes slot 1's
-  pattern-table A12; phases 0/2 observe `$2000` (garbage nametable fetches); phases 4/6 from dot 267
-  (`LATER_SPRITE_FETCH_DOT`) observe `spritePatternTableForSlot(slot) << 12` where
-  `slot = floor((cycle - 257) / 8)`.
-- `$2006`/`$2007` and the post-increment `v` also observe the cartridge address directly.
+- `observePpuAddress(address)` is emitted before a memory transaction or when `$2006`/`$2007`
+  changes the externally visible address. MMC3 consumes this signal and combines it with `tickPpu`
+  to filter A12 edges.
+- `observePpuRead(address)` is emitted only after a read value has been selected. MMC2/MMC4 consume
+  this signal because their latch changes after the triggering pattern byte, not before it.
+
+Background reads, sprite slot reads, garbage nametable reads and `$2007` all use this ordering.
+Mapper timing is therefore driven by PPU transactions rather than presentation frames, synthetic
+scanline callbacks or a second mapper-only address approximation.
 
 ## Open-bus latch (`PpuIoBusLatch`)
 
@@ -322,8 +321,7 @@ high bits carry a future deadline.
 sprite-zero/overflow flags, then calls `reset()`. `reset()` is the front-loader reset line that
 retains VRAM, palette and OAM: it sets `cycle = 340`, `scanLine = 240`, `frame = 0`, writes PPUCTRL
 and PPUMASK to 0, clears the render-enable pipeline, `t`/`x`/`w`/`f`, `bufferedData`, the fetch
-latches, sprite slot arrays, the sprite evaluator (`powerOn`) and the background observation queue,
-and deasserts `/NMI`.
+latches, sprite slot arrays and the sprite evaluator (`powerOn`), and deasserts `/NMI`.
 
 ## Save-state snapshot
 
@@ -332,19 +330,29 @@ after `validateSnapshot()`. The snapshot captures the full pipeline: timing (`cy
 `frame`, `f`), scroll registers (`v`, `t`, `x`, `w`), memory (`paletteData`, `nameTableData`,
 `oamData`, `front`, `back`), NMI/vblank state (`nmiOccurred`, `nmiOutput`, `nmiLineAsserted`,
 `suppressVblank`), the background fetch latches and shift halves, the eight sprite slot arrays, the
-nested `SpriteEvaluationState`, the nested `PpuIoBusState`, all PPUCTRL/PPUMASK flags, the
+nested `SpriteEvaluationState`, the in-flight low sprite-plane bytes, the nested `PpuIoBusState`,
+all PPUCTRL/PPUMASK flags, the
 `effectiveRenderingMask`/`pendingRenderingMask`/`renderingMaskDelay` pipeline, the sprite-zero
-`{pending, latched}` pair, `oamAddress`, `bufferedData`, and the pending background mapper-address
-queue. `validateSnapshot` raises `RangeError` on any out-of-range dot (0-340), scanline, render-mask
-pipeline (`0x18`-masked, delay 0-2), frame, typed-array shape, non-6-bit palette byte, invalid
-sprite-evaluation counters, an impossible pending-and-latched sprite-zero pair, or an out-of-range
-mapper observation (address 0-`0x3FFF`, `remainingDots` 0-4).
+`{pending, latched}` pair, `oamAddress` and `bufferedData`. `validateSnapshot` raises `RangeError` on
+any out-of-range dot (0-340), scanline, render-mask pipeline (`0x18`-masked, delay 0-2), frame,
+typed-array shape, non-6-bit palette byte, invalid sprite-evaluation counters or an impossible
+pending-and-latched sprite-zero pair.
 
-PPU-relevant public save-state envelope versions (from `docs/architecture.md`): introducing
-`PpuIoBusLatch` advanced it to **v2**; the evaluator's byte-counted overflow continuation to **v3**;
-the render-enable pipeline (with DMA cadence, the physical NMI line and the DMC timer) to **v7**. The
-current envelope is **v13**; older in-memory snapshots are rejected rather than restored with
-ambiguous state.
+The public save-state envelope is version 14. Sprite pattern bytes are fetched at their real PPU
+dots, so no delayed mapper-observation queue exists or needs to be reconstructed after restore.
+Older snapshots are rejected instead of inferring missing bus state.
+
+## Verification and known limits
+
+Focused tests cover register/open-bus behavior, scroll and frame timing, palette/emphasis, sprite
+addressing/evaluation/fetch, MMC2 read ordering and the MMC3 dot-260 A12 edge. External evidence
+covers PPU open bus, OAM reads/stress, sprite hit/overflow, exact `read2004` output and the vblank/NMI
+matrix described in
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md).
+
+Rendering-time OAMDATA writes use the documented stable ignore behavior; revision-specific OAMADDR
+corruption is not modeled. PAL emphasis-line swapping is modeled, while clone-specific Dendy PPU
+analog behavior remains outside the selected timing profile.
 
 ## Source files
 

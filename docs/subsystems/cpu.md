@@ -247,7 +247,7 @@ I-mask snapshot, the physical `/NMI` input and separate current-edge / previous-
 | Field                              | Role                                                          |
 | ---------------------------------- | ------------------------------------------------------------- |
 | `irqLineAsserted`                  | physical `/IRQ` level after active-low conversion             |
-| `irqLineSampled`                   | sticky polling latch (`                                       |     | =` with the line at each poll) |
+| `irqLineSampled`                   | sticky polling latch (logical OR with the line at each poll)  |
 | `softwareIrqPending`               | one-shot request from `triggerIRQ`/`requestIrq`               |
 | `irqPollingDisabled`               | I-mask snapshot used at the poll (starts masked)              |
 | `nmiLineAsserted`                  | physical `/NMI` input                                         |
@@ -333,6 +333,19 @@ cleared on restore. Because every executing sub-state round-trips, a save state 
 restored mid-instruction at any bus cycle — the per-subcycle detail persisted here is what advances the
 public save-state envelope (e.g. the internal/external data-bus latches and the RDY-stretched indexed
 dummy-read flag).
+
+## Verification and known limits
+
+The repository-owned suite checks all 256 opcode definitions, official and modeled unofficial
+semantics, every cycle-family scheduler, dummy reads, RMW ordering, interrupt polling/entry and
+runtime snapshot validation. External bus, DMA and interrupt evidence is recorded in
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md); the generic Blargg
+runner supports additional instruction suites when supplied explicitly.
+
+The core models the Ricoh 2A03's binary-only ALU: the decimal flag is latched but does not enable BCD
+arithmetic. Chip-revision behavior is introduced only when an executable test distinguishes it; the
+opcode table is not a claim that every unstable unofficial instruction is portable across all NMOS
+parts.
 
 ## Source files
 

@@ -6,8 +6,6 @@ const PRG_BANK_SIZE = 0x8000;
 
 /** BNROM board: 32 KiB PRG banking, fixed CHR and mandatory AND-type bus conflicts. */
 export class BnromMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private selectedPrgBank = 0;
 
@@ -55,10 +53,6 @@ export class BnromMapper implements Mapper {
     }
     if (address >= 0x6000) this.writePrgRam(address, value);
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private readPrg(address: number): number {
     const offset = this.selectedPrgBank * PRG_BANK_SIZE + (address - 0x8000);

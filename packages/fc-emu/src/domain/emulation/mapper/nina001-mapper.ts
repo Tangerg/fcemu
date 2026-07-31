@@ -7,8 +7,6 @@ const CHR_BANK_SIZE = 0x1000;
 
 /** NINA-001/NINA-002 board with three registers overlaid on unbanked PRG RAM. */
 export class Nina001Mapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly chrBankCount: number;
   private selectedPrgBank = 0;
@@ -70,10 +68,6 @@ export class Nina001Mapper implements Mapper {
     else if (address === 0x7ffe) this.selectedChrBank0 = (value & 0x0f) % this.chrBankCount;
     else if (address === 0x7fff) this.selectedChrBank1 = (value & 0x0f) % this.chrBankCount;
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 }
 
 function requireBank(bank: number, count: number, name: string): void {

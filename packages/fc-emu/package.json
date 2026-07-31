@@ -1,8 +1,17 @@
 {
   "name": "@fcemu/core",
   "version": "0.1.0",
-  "description": "Platform-independent FC/NES emulator core",
+  "description": "Headless, cycle-aware NES/Famicom emulator core for browsers and JavaScript runtimes.",
   "license": "UNLICENSED",
+  "homepage": "https://github.com/Tangerg/fcemu/tree/master/packages/fc-emu#readme",
+  "bugs": {
+    "url": "https://github.com/Tangerg/fcemu/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tangerg/fcemu.git",
+    "directory": "packages/fc-emu"
+  },
   "type": "module",
   "sideEffects": false,
   "files": [

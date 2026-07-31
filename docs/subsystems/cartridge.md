@@ -208,6 +208,18 @@ offsets is a distinct subsystem that validates board-specific geometry after thi
 It is documented separately in the [mapper reference](../mappers/README.md); individual mappers are
 not covered here.
 
+## Verification and known limits
+
+Focused tests cover iNES/NES 2.0 field decoding, linear/exponent ROM sizes, RAM shifts, trainers,
+truncation errors, region metadata, four physical writable regions, battery snapshots, save-state
+validation and ROM identity. Mapper factory tests separately prove that parsed capacities are
+reachable by the selected board.
+
+The core CRC-32 identity is a compatibility key, not a cryptographic content address. The browser
+adapter independently uses SHA-256 for IndexedDB identity. Unsupported console/expansion types,
+ambiguous writable-memory layouts and mapper-internal EEPROM fail before execution; see
+[Cartridge formats](../cartridge-formats.md).
+
 ## Source files
 
 - `packages/fc-emu/src/domain/model/cartridge.ts` — `Cartridge` aggregate, `fromArrayBuffer`

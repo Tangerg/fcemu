@@ -37,3 +37,21 @@ Each profile verifies:
 These commands are intentionally not part of CI because the ROM files cannot be distributed with the
 repository. Updating a pinned result requires deliberate review of the affected frame or audio
 behavior; a new hash must not be accepted solely to make the runner green.
+
+## Result interpretation
+
+The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
+output includes the resolved cartridge metadata and separate baseline, interactive and replay
+results. A passing result proves only the recorded deterministic scenario on that exact image; it is
+not a general compatibility claim for all Mapper 0 or Mapper 2 software.
+
+If a profile diverges:
+
+1. Confirm the ROM SHA-256 before investigating emulation.
+2. Find the first failed checkpoint rather than comparing only the final frame.
+3. Compare frame, audio and CPU-cycle failures to identify the likely subsystem.
+4. Add a focused hardware regression before changing a profile.
+5. Re-run both profiles when clock, PPU, APU, DMA or save-state ordering changed.
+
+The runner reads the ROM and emits diagnostics only. It does not write to the image, search sibling
+directories or persist battery data.

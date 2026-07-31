@@ -12,8 +12,6 @@ const CHR_BANK_SIZE = 0x2000;
  * explicit NES 2.0 submapper behavior when that metadata is available.
  */
 export class CnromMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly chrBankCount: number;
   private readonly bankRegisterMask: number;
   private selectedChrBank = 0;
@@ -72,10 +70,6 @@ export class CnromMapper implements Mapper {
       this.writePrgRam(address, value);
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private readPrg(address: number): number {
     const offset = (address - 0x8000) % this.cartridge.prgRom.length;

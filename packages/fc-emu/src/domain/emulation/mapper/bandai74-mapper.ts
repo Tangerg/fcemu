@@ -16,8 +16,6 @@ const CHR_BANK_SIZE = 0x2000;
  * four upper bits for PRG.
  */
 export class Bandai74Mapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly chrBankCount: number;
   private readonly fixedPrgBank: number;
@@ -92,10 +90,6 @@ export class Bandai74Mapper implements Mapper {
     this.selectedPrgBank = ((effectiveValue >> 4) & this.prgBankMask) % this.prgBankCount;
     this.selectedChrBank = (effectiveValue & 0x0f) % this.chrBankCount;
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private readPrg(bank: number, offset: number): number {
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + offset] ?? 0;

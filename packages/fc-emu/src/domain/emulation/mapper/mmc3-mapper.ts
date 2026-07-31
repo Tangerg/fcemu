@@ -3,11 +3,11 @@ import type Cartridge from "../../model/cartridge.js";
 import { isBit, isByte } from "../numeric-range.js";
 import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
+import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
 /** iNES mapper 4: Nintendo MMC3 with revision-B IRQ counter behavior. */
 export class Mmc3Mapper implements Mapper {
   private static readonly A12_LOW_FILTER_PPU_CYCLES = 10;
-  readonly observesPpuAddress = true;
 
   private register = 0;
   private registers: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -80,7 +80,7 @@ export class Mmc3Mapper implements Mapper {
   restoreState(state: MapperState): void {
     if (state.kind !== MapperKind.Mmc3)
       throw new Error(`Cannot restore ${state.kind} state into MMC3`);
-    if (state.registers.length !== 8 || state.registers.some((value) => !isByte(value))) {
+    if (!isFixedByteArray(state.registers, 8)) {
       throw new RangeError("MMC3 save state contains invalid bank registers");
     }
     if (
@@ -95,7 +95,14 @@ export class Mmc3Mapper implements Mapper {
       state.ppuClock < 0 ||
       !Number.isSafeInteger(state.a12LowSince) ||
       state.a12LowSince < 0 ||
-      state.a12LowSince > state.ppuClock
+      state.a12LowSince > state.ppuClock ||
+      !areBooleans(
+        state.reloadPending,
+        state.irqEnable,
+        state.prgRamEnabled,
+        state.prgRamWritable,
+        state.a12High,
+      )
     ) {
       throw new RangeError("MMC3 save state contains invalid timing or register state");
     }

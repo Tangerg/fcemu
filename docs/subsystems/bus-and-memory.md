@@ -39,8 +39,8 @@ consumed.
 
 ### PPU synchronization points
 
-The private `clockPpuDot` callback advances the PPU by one dot (`ppu.update()`) and, when the mapper
-observes the PPU address bus, ticks its A12 timing (`mapper.tickPpu()`). `Bus` catches the PPU up to
+The private `clockPpuDot` callback advances the PPU by one dot (`ppu.update()`) and invokes the
+mapper's optional A12 timing clock (`mapper.tickPpu?.()`). `Bus` catches the PPU up to
 specific CPU bus phases through `MachineClock` helpers, each gated by `cpuUpdateActive` (read-side
 helpers additionally gated by `ppuReadSynchronizationRequired`, taken from
 `clock.readSampleRequiresPpuSynchronization`): current-read (`beginCpuRead`), advanced-read (DMA
@@ -137,8 +137,9 @@ NESdev [open bus behavior](https://www.nesdev.org/wiki/Open_bus_behavior).
 
 ## PPU memory map (`PPUMemory`)
 
-`PPUMemory` decodes the independent 14-bit PPU bus, masking every access with `& 0x3fff`, and offers
-the mapper an `observePpuAddress` hook (reads accept an `observeMapper` flag). The three regions are:
+`PPUMemory` decodes the independent 14-bit PPU bus, masking every access with `& 0x3fff`. It emits
+`observePpuAddress` before a transaction and `observePpuRead` after a read returns, preserving the
+physical distinction between address-sensitive and read-triggered boards. The three regions are:
 `$0000-$1FFF` pattern tables via `Mapper.read`/`Mapper.write` (CHR ROM/RAM); `$2000-$3EFF`
 nametables, folded through the cartridge mirroring mode (horizontal, vertical, single-screen low/high
 or four-screen) into `PPU.nameTableData`; and `$3F00-$3FFF` palette RAM via `PPU.readPalette` /
@@ -189,6 +190,18 @@ unchecked restore, and rolls back on any thrown error. The unchecked restore val
 and length, validates the IRQ-source array (only the three known sources, no duplicates), validates
 `pendingControllerWrite` as a byte, and cross-checks two invariants — the PPU `/NMI` output must equal
 the CPU `/NMI` input line, and the presence of any IRQ source must equal `cpu.isIRQLineAsserted`.
+
+## Verification and known limits
+
+Aggregate tests exercise mirrored maps, internal/external open bus, controller partial drives,
+source-aware IRQs, `/NMI` routing, controller OUT timing and transactional restore. AccuracyCoin and
+the DMA/OAM fixtures in
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md) provide executable
+evidence for interactions that isolated device tests cannot prove.
+
+The supported CPU map is the standard NES/Famicom Control Deck map. `$4018-$5FFF` expansion devices,
+VS System wiring and PlayChoice-10 behavior are not approximated. Cartridge expansion audio is not
+routed through the base mapper contract.
 
 ## Source files
 

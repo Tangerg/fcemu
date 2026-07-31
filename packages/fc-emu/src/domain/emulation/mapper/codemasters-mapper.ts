@@ -14,8 +14,6 @@ const PRG_BANK_SIZE = 0x4000;
  * $9000-$9FFF bit 4. The board has no bus conflicts.
  */
 export class CodemastersMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly prgBankCount: number;
   private readonly fixedPrgBank: number;
   private selectedPrgBank = 0;
@@ -85,10 +83,6 @@ export class CodemastersMapper implements Mapper {
       this.selectedPrgBank = (value & 0x0f) % this.prgBankCount;
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 
   private readPrg(bank: number, offset: number): number {
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + offset] ?? 0;

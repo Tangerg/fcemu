@@ -1,320 +1,242 @@
-# FC Emu architecture
+# Architecture
 
-This repository is a Yarn workspace monorepo with two independently versioned packages.
+FC Emu is a two-package TypeScript monorepo. Its architecture combines two ideas:
+
+- **hardware-aligned domain modeling** — CPU, PPU, APU, cartridge, controller, DMA and clock state
+  belong to the physical component or signal that owns them;
+- **clean dependency direction** — domain and application policy do not depend on browser frameworks
+  or infrastructure.
+
+This is not an enterprise DDD template applied to an emulator. A folder or class is introduced only
+when it protects a hardware invariant, owns a state machine or represents an external boundary.
+
+## System context
+
+```mermaid
+flowchart LR
+  User["Player"] --> Workbench["@fcemu/ui Workbench"]
+  ROM["Local ROM image"] --> Workbench
+  Workbench --> Core["@fcemu/core Emulator"]
+  Core --> Video["VideoFrameSink"]
+  Core --> Audio["AudioSampleSink"]
+  Workbench --> Storage["IndexedDB"]
+  Workbench --> Browser["Canvas / Web Audio / Input / RAF"]
+```
+
+The core never opens ROM files or talks to the network. The browser workbench reads an explicitly
+selected local file, constructs one core runtime and owns scheduling, focus, audio lifecycle and
+persistence.
+
+## Workspace map
 
 ```text
 packages/
-  fc-emu/                 @fcemu/core
-    src/domain/           FC/NES hardware and cartridge model
-      emulation/apu/      timing/modulation entities and narrow DMC port
-      emulation/clock/    one console machine clock and regional cadence
-      emulation/cpu/      instruction definitions, interrupt state and entry sequences
-      emulation/dma/      sprite/DMC transfers and shared bus arbiter
-      emulation/mapper/   mapper contract, factory and isolated board implementations
-    src/application/      emulation session use cases and output ports
-    src/index.ts          the only supported public API
-  ui/                     @fcemu/ui
-    src/domain/           workbench session state and invariants
-    src/application/      load/play/pause orchestration and ports
-    src/infrastructure/   browser and @fcemu/core adapters
-    src/presentation/     React UI
-    src/app/              composition root
+  fc-emu/                         @fcemu/core
+    src/domain/
+      emulation/
+        apu/                      channel timing and modulation state
+        clock/                    one regional machine clock
+        cpu/                      instruction and interrupt cycle state
+        dma/                      OAM/DMC transfers and arbitration
+        mapper/                   cartridge board contract and implementations
+        bus.ts                    machine composition and signal routing
+        memory.ts                 independent CPU and PPU address maps
+        ppu.ts                    rendering and PPU register behavior
+      model/                      cartridge, memory, frame and ROM identity
+    src/application/              public emulation use cases and output ports
+    src/index.ts                  supported package API
+
+  ui/                             @fcemu/ui
+    src/domain/                   Workbench session and region policy
+    src/application/              lifecycle use cases and ports
+    src/infrastructure/browser/   core, file, input, audio, video and storage adapters
+    src/presentation/             React view
+    src/app/compose.ts            browser composition root
 ```
 
 ## Dependency rule
 
-Dependencies only point inward:
+Dependencies point toward policy:
 
 ```text
-@fcemu/core: domain <- application <- public API
-@fcemu/ui:   domain <- application <- infrastructure/presentation <- app
+@fcemu/core
+  domain <- application <- public package API
+
+@fcemu/ui
+  domain <- application <- infrastructure/presentation <- app composition
 ```
 
-- The core package cannot import DOM, Canvas, WebAudio or browser `File` APIs.
-- The UI domain and application layers cannot import browser APIs.
-- UI infrastructure consumes `@fcemu/core` only through its package root.
-- Concrete browser adapters are created only in `src/app/compose.ts`.
-- `yarn check:layers` and `yarn check:circular` enforce these decisions in CI.
+Enforced constraints:
 
-## Hardware bounded contexts
+- Core domain code cannot import application, UI, DOM, Canvas, Web Audio, browser `File` or
+  IndexedDB APIs.
+- UI domain and application code cannot import browser infrastructure or React.
+- UI infrastructure imports `@fcemu/core` only through its package root.
+- Concrete adapters are constructed only in `packages/ui/src/app/compose.ts`.
+- Runtime import cycles are forbidden.
 
-Domain boundaries follow the physical NES rather than a generic DDD directory template. The
-**Machine** composes independently owned **CPU**, **PPU**, **APU**, **Cartridge** and **Controller**
-contexts over their real buses and interrupt/DMA signals. CPU, PPU and APU are each cohesive chips,
-not application services to subdivide for layering symmetry. Small internal types are justified only
-when they represent a real subunit or isolate a measured state machine; their folders are an
-implementation detail, not another bounded context.
+`yarn check:layers` and `yarn check:circular` enforce these rules in the required quality gate.
 
-The **Cartridge** context owns image format, ROM/RAM and mapper-selected board wiring. Mapper
-implementations encapsulate cartridge-specific address translation and bank state. The **Video
-Output** and **Audio Output** contexts begin at application ports; Canvas, AudioWorklet and browser
-device lifecycle remain replaceable UI infrastructure. CPU halt is explicit hardware state surfaced
-through application diagnostics.
+## Core model
 
-CPU and PPU memory maps are separate physical buses and therefore use direct mapping objects rather
-than inheriting from a generic memory base class. CPU addresses are truncated to 16 bits; PPU
-addresses are truncated to its independent 14-bit bus before CHR, nametable or palette decoding.
+### Cartridge construction
 
-Architecture follows the smallest model that preserves those physical responsibilities. A folder,
-class or port is not a bounded context by itself. Scalar state stays with the chip or bus that owns
-it; pure address calculations remain functions or tables; an internal object is extracted only when
-it represents a documented hardware subunit, a separately testable state machine, or a real external
-boundary. Rare silicon behavior is added only when a reproducible ROM or hardware trace makes its
-observable result part of the supported emulator contract.
-
-The cartridge-header parser translates iNES/NES 2.0 bytes into immutable domain metadata. The
-`Cartridge` aggregate then applies the core's supported-format policy and owns
-ROM, volatile RAM and non-volatile RAM. Parsing, policy and board construction are deliberately
-separate: malformed data raises `CartridgeFormatError`, unsupported mapper variants/layouts raise
-mapper-domain errors, and no mapper is constructed from an ambiguous or invalid memory shape.
-
-The mapper directory is a cohesive domain submodule: its index exposes a contract, selection factory
-and domain error while board implementations remain internal. IRQ-capable boards depend only on
-`MapperInterruptPort`, preventing cartridge hardware from coupling to the complete emulation bus.
-The factory resolves mapper/submapper identity, chooses documented bus-conflict behavior and checks
-the board's PRG/CHR bank invariants before any address calculation can encounter an empty or partial
-bank.
-
-The bus arbitrates level-sensitive IRQ sources so the APU and mapper can assert and acknowledge
-their own lines independently. `CpuInterruptState` owns the physical IRQ line, sampled polling value,
-software pending request, I-mask snapshot, branch deferral, the physical `/NMI` input and separate
-current-edge/previous-cycle NMI latches. The CPU
-consumes that entity instead of coordinating independent booleans. `CpuInterruptEntry` owns the
-one-bus-cycle-at-a-time IRQ/NMI/BRK micro-operation sequence behind `CpuInterruptEntryPort`, so NMI
-can hijack the vector only at the documented boundary before the status push. `MachineClock`
-advances the PPU to the CPU's input-sampling phase before `CpuInterruptState` samples `/NMI`, so a
-short PPUSTATUS race pulse can disappear without being latched while a sampled edge remains pending.
-Branches poll before their operand cycle; page-crossing taken branches poll again before PCH fixup,
-and a successful first IRQ poll remains latched if the line clears before the second. Taken
-non-crossing branches still ignore a newly detected final-cycle IRQ. Ordinary
-instructions expose whether their current cycle actually performed the interrupt poll, so Bus does
-not infer NMI recognition delay from the number of cycles returned by an update. Implied, branch,
-ordinary read/write memory, stack and control-flow instructions now share one active-instruction
-state after opcode fetch. RMW joins the same state by composing address resolution with its three
-data cycles; BRK/IRQ/NMI retain their dedicated entry state.
-`CPU.clock()` is the only execution engine. `CPU.update()` is an instruction/debug step facade that
-loops the same engine until the active instruction or interrupt entry completes; it owns no decoder,
-addressing or dummy-read fallback. Cycle-owned opcodes point at an explicit throwing semantic-table
-guard, preventing accidental reintroduction of a second execution path.
-`CpuBranchCycle` specifies relative-offset, taken-dummy and wrong-page cycles. It exposes the two
-NMOS polling boundaries directly: every branch before its operand cycle and a crossing branch again
-before PCH fixup. A taken non-crossing branch ignores an interrupt appearing during its final dummy
-cycle; production activation is grouped with the adjacent DMC-sensitive operand and stack cycles.
-`CpuStackCycle` specifies the repeated next-PC dummy reads and final push/pull shared by
-PHA/PHP/PLA/PLP.
-`CpuControlFlowCycle` owns absolute/indirect JMP target reads, the indirect page-wrap bug, JSR
-return-address pushes, internal PC dummy cycles, RTS's final increment read and RTI's ordered
-status/PC restoration. These entities depend on narrow cycle ports rather than the CPU aggregate.
-`CpuMemoryCycle` resolves immediate, zero-page, absolute, indexed and indirect operands through
-explicit program-byte, zero-page-pointer, wrong-page, dummy and final data-operation cycles. Its
-`execute(address)` port keeps ALU and store semantics inside CPU while allowing address scheduling
-to evolve independently; `dummyRead(dummyAddress, effectiveAddress)` preserves PPUDATA's distinct
-side-effect/value behavior across mirrored wrong-page reads. `CpuReadModifyWriteCycle` separately
-owns the NMOS read/write-old/write-new data sequence. Its first read occupies the address cycle's
-final execute callback, while a narrow CPU semantic adapter applies official and composite
-unofficial transforms once on the final write without rereading I/O.
-`InstructionCyclePlan` classifies all 256 opcodes into BRK, implied, branch, stack, control-flow or
-memory families and carries index-register plus read/write/RMW policy. CPU already consumes this
-plan for every ordinary instruction path, replacing local opcode-shape checks with one domain authority.
-Instruction definitions and their addressing/read-write classifications live in the isolated
-`cpu/instruction-set` domain module. CPU execution consumes immutable table data through a byte-domain
-lookup function instead of owning the 256-opcode table, so micro-operation schedulers can depend on instruction metadata
-without depending on the CPU aggregate.
-`ProcessorStatus` owns the six physical C/Z/I/D/V/N latches, cold-start state, reset-line IRQ
-masking and Z/N result projection. Its byte view canonicalizes bit 5 high and bit 4 low; PHP and BRK
-set the stack-only B bit at the push boundary, while IRQ/NMI clear it. Pull and save-state restore
-ignore both non-latched input bits, so the CPU aggregate does not preserve debugger-only B/U state.
-`CPUMemory` owns the RP2A03's two byte-wide data paths without introducing another bus object:
-ordinary CPU reads update the internal and external latches, CPU writes drive both, and DMA memory
-fetches drive only the external pins. Unmapped and write-only I/O reads retain the external byte;
-controller ports replace only bits 0–4. `$4015` is the inverse boundary: its status and floating bit
-5 use only the internal CPU bus and never refresh the external pins. This separation is required for
-DMC fetches that land between an operand read and a `$4015` access.
-
-`SpriteDma` and `DmcDma` are isolated domain entities coordinated by `DmaArbiter`. The arbiter also
-owns the independently powered APU GET/PUT alignment; a one-bit cadence is state of that physical
-bus owner rather than another domain object. OAM owns its halt/GET/PUT transfer state, while DMC
-owns its request-to-GET state and may steal a GET
-without losing an overlapping OAM byte. The bus grants DMA one CPU cycle at a time instead of
-copying data inside a register write. CPU accounting, PPU progress and interrupt recognition
-therefore continue during transfers. IRQs first sampled during DMA wait for the halted instruction;
-pre-sampled IRQs retain their original service point. PPU cartridge-address observations drive mapper timing;
-mapper IRQs do not depend on presentation frames or scanline callbacks.
-An OAM request in `halt` state does not own the bus yet: the CPU must expose a read cycle first.
-Consecutive CPU writes therefore continue normally, and a second `$4014` RMW write replaces the
-pending page before the single transfer begins. Once the halt read is observed, the existing DMA
-state machine owns halt/alignment/GET/PUT cycles as before. The stalled CPU-read loop still
-resamples DMC requests every CPU cycle, so a newly emptied sample buffer can steal a GET from an
-in-progress OAM transfer rather than waiting until all 256 bytes finish.
-Background fetch addresses pass through a dot-delay queue instead of fabricated scanline callbacks;
-MMC3 accepts A12 rises only after ten low dots, rejecting the cross-line nine-dot pulse.
-
-`ConsoleTiming` is immutable clock-domain data for NTSC, PAL and Dendy execution. It owns CPU
-frequency, rational CPU-to-PPU clock ratio, scanline/vblank geometry and the selected APU timing
-profile. The stateful `MachineClock` is the sole owner of PAL's fractional 16:5 PPU remainder,
-avoiding duplicate clock authorities. Multi-region headers resolve deterministically to NTSC
-in automatic mode. The Workbench owns an `auto` / NTSC / PAL / Dendy preference and rebuilds the
-active runtime transactionally when it changes; the core remains unaware of UI policy and receives
-only an optional explicit override. Save RAM and held controller intents cross that runtime boundary.
-
-The APU aggregate delegates deterministic timing and modulation rules to `FrameSequencer`,
-`Envelope`, `LengthCounter`, and `DeltaModulationChannel` domain objects. DMC depends only on
-`DmcChannelPort`—request/cancel DMA, assert/clear IRQ and observe CPU phase—rather than importing the
-complete bus. CPU writes enter an ordered APU register-event queue and commit after the target APU
-tick; reads catch up the current APU cycle while DMC can still schedule a halt.
-The first DMC load fetch is phase-delayed after `$4015` and requests GET; consuming the reader
-buffer requests a PUT-scheduled reload. `DmcDma` retains that requested halt phase until the arbiter
-can overlap or halt a readable CPU cycle, and retries without the phase restriction after a failed
-write-cycle halt. Its GET port carries both the sample address and the retained halted-CPU address,
-allowing the Bus to reproduce the RP2A03's split A0-A4/A5-A15 internal-register activation without
-making the DMC channel depend on controllers or APU register decoding. `DmcSiliconProfile` keeps
-revision evidence explicit: NTSC selects the common
-RP2A03H/late-G implicit-stop abort and unexpected-reload behavior, while regions without measured
-evidence use a conservative profile. Controller
-ports expose the NES shift-register high sentinel after eight bits, so a DMC halt read of `$4016`
-loses exactly one controller bit rather than hanging sentinel-based readers.
-The Bus owns the RP2A03's single pending `$4016` OUT-latch write. The latest value is committed to
-both controller ports only after a PUT bus cycle; consecutive RMW old/new writes can therefore
-collapse into one level or form a one-cycle strobe according to APU alignment. The Controller entity
-still owns only the external device's button state, strobe level and serial position.
-`ConsoleTiming.dmcDmaControllerReadGlitch` owns the regional silicon distinction: NTSC exposes the
-halt-side controller clock, while PAL and unverified Dendy configurations suppress it. The
-Controller entity remains a serial shift register and does not import console-region policy.
-`LengthCounter` owns pending halt/reload writes and commits them after the coincident frame-counter
-clock, preserving the rule that a reload is ignored when that clock already changed the counter.
-The APU aggregate separately owns the frame IRQ's external CPU line and internal `$4015` status
-flag. A status read drops the line immediately while a one-APU-cycle pending clear retains the flag
-through the required GET/PUT boundary and through save/restore.
-`MachineClock` is the console's single source of committed CPU time, projected bus time, synchronized
-APU time and PPU master-clock phase. Bus no longer coordinates separate CPU/APU and CPU/PPU
-watermark objects. `ApuTiming` owns the 2A07 channel PUT delay together with the region's frame,
-Noise and DMC periods. Power-on and soft reset
-are distinct lifecycle commands. The front-loader reset policy preserves CPU arithmetic
-registers/flags, internal RAM, PPU VRAM/OAM and mapper bank latches while consuming the CPU's three
-stack positions, masking IRQs and applying the documented PPU/APU reset state. The deterministic
-cold-start policy clears volatile console/cartridge memory, rebuilds APU channels and returns mapper
-latches to their fresh-instance state; NVRAM and currently held physical controller buttons remain
-intact. This policy deliberately gives unspecified hardware power-up bytes stable emulator values.
-Browser audio remains an output adapter whose device rate is supplied through the application port.
-
-The same `MachineClock` carries the regional PPU divider remainder, emits the exact master-clock
-value for every PPU dot and exposes the CPU `/NMI` input-sampling boundary. NTSC register reads occur
-after the first PPU dot in the selected deterministic alignment; this is verified by an exact
-`read2004` screen rather than a phase-tolerant comparison. PPUSTATUS at scanline 241 dot 0 suppresses
-the pending vblank edge, and PPUMASK's register bits feed a two-dot internal rendering-enable
-pipeline used by background, sprite, OAM and odd-frame skip logic.
-
-Browser audio separates lifecycle orchestration from data policy. `AudioSampleBatcher` bounds
-main-thread message frequency, while `RebufferingAudioRing` owns capacity, startup and underrun
-invariants inside a separately bundled AudioWorklet. The Workbench application sees only
-`AudioLifecyclePort`; worklet messages and WebAudio nodes remain infrastructure details. Measured
-frame cadence and audio queue/ring/underrun counters are read-only application diagnostics rather
-than session state, so observing runtime health cannot change emulation transitions or save states.
-
-`CartridgeMemory` owns four physically distinct regions: volatile PRG RAM, PRG NVRAM, volatile CHR
-RAM and CHR NVRAM. It presents mapper-selected logical address spaces without exposing mutable
-backing arrays; a write increments the shared save revision only when it changes an NVRAM byte.
-Battery snapshots concatenate PRG NVRAM then CHR NVRAM, so existing PRG-only saves remain byte-for-
-byte compatible. The Workbench owns restore/checkpoint policy through `SaveRamStoragePort`; SHA-256
-ROM identity and IndexedDB storage remain browser infrastructure details.
-
-Deterministic save states are a separate application capability from battery persistence. Every
-execution-owning aggregate exposes an explicit typed snapshot: active CPU/interrupt micro-cycles,
-PPU fetch and pixel pipelines, APU channels/delayed writes, DMA transfers, requested halt phase and
-implicit-stop counters, fractional clocks,
-controller shift registers, mapper latches/IRQ timing and all writable cartridge regions. `Bus`
-restores these snapshots transactionally and rolls every aggregate back if any nested invariant
-fails. The public envelope carries a schema version, console region, audio sample rate and a whole-
-image CRC-32 identity (compatibility guard, not a security primitive). The Workbench sees the core
-snapshot only through an opaque runtime port, owns its matching UI timeline, clears buffered audio
-before restore and reapplies current input intents so stale saved buttons cannot remain held.
-`QuickSaveStoragePort` persists three versioned Workbench envelopes through IndexedDB. Each key and
-record includes the content-addressed ROM identity, actual execution region and slot; incompatible
-or corrupt records are discarded without coupling the core to browser storage.
-The session snapshot stores the selected slot and the set of available slots as its only quick-save
-facts. Whether the selected slot currently has a save is a presentation projection of those values,
-not a second boolean state that can drift from them.
-
-`PpuIoBusLatch` owns the PPU's CPU-facing dynamic data bus independently from VRAM. Each bit keeps
-its own deterministic decay deadline, partial reads drive only their physical lines, and passive
-open-bus reads do not refresh retained bits. PPUSTATUS, OAMDATA, PPUDATA and OAM DMA therefore share
-one state transition model instead of duplicating a vague “last register” byte inside `PPU`.
-Introducing this additional deterministic state initially advanced the public save-state envelope
-to version 2. The evaluator's later byte-counted overflow continuation advances it to version 3,
-and the explicit CPU/PPU master-clock watermarks advance it to version 4. Consolidating all console
-watermarks into `MachineClock` advanced it to version 5. DMA cadence, physical NMI-line, the PPU
-render-enable pipeline and the full-cycle DMC timer advanced it to version 7. Persisting the RP2A03
-internal and external data-bus latches advanced the envelope to version 8. Persisting the pending
-RP2A03 controller OUT write advanced it to version 9. Version 10 also persists whether
-RDY stretched an indexed dummy read in an active CPU memory cycle, because that signal changes the
-following SHA/SHS/SHX/SHY write. Version 11 persists the delayed internal frame-IRQ clear following
-a `$4015` read. Version 12 persists MMC1's previous CPU R/W level so restoring between
-the two writes of an RMW instruction cannot admit a serial bit that hardware would ignore. Older
-in-memory snapshots are rejected explicitly instead of being restored with ambiguous state. The
-current version 13 also captures the APU output-filter history.
-
-Sprite processing is split into small timing-domain objects rather than one scanline batch inside
-`PPU`. A pure sprite-pattern address function interprets 8×8/8×16 table, tile and vertical-flip
-wiring. Its row input is a scanline delta rather than a prevalidated tile row: the physical pattern
-address register consumes only the low three or four row bits selected by the live PPUCTRL size.
-This permits the evaluator and fetcher to observe different sprite sizes when software changes
-PPUCTRL during hblank, without inventing an impossible domain error. `SpriteEvaluator` clocks
-primary-to-secondary OAM from dots 65–256, retains copied
-bytes for the fetch phase and models the overflow diagonal-index hardware bug. It also projects the
-rendering-time internal OAM data bus: secondary-OAM clear on dots 1–64, primary/secondary evaluation
-accesses on 65–256, sprite-slot loading on 257–320 and the first secondary byte afterward. `PPU`
-keeps ownership of the CPU-facing register policy, including forced OAMADDR zero during sprite
-loading, ignored rendering-time writes and ordinary eight-bit address wrapping. PPU directly owns
-the two booleans in the one-dot pipeline between an opaque overlap and PPUSTATUS bit 6. Their in-flight state is
-part of the transactional PPU snapshot, so a mid-evaluation restore continues the same byte and dot.
-The evaluator keeps the eighth-sprite fill-dot bus latch distinct from the subsequent secondary-OAM
-read mode. Once overflow is detected it consumes exactly three continuation bytes, realigns to the Y
-lane and resumes the hardware's failed-copy loop; both transient counters are snapshot state rather
-than inferred from a later dot.
-
-Mapper wiring, not header parsing, decides whether declared memory is reachable. `Mmc1Board` is an
-immutable domain value selected from ROM/RAM geometry plus explicit submapper constraints. It owns
-SUROM/SXROM outer PRG selection, SOROM/SXROM/SZROM WRAM banking, SNROM's CHR-A16 WRAM protection and
-SEROM-family fixed PRG wiring; `Mmc1Mapper` consumes those board capabilities without reinterpreting
-headers. Unsupported or contradictory combinations fail at the factory boundary. MMC3 owns its
-`$A001` RAM enable/write-protect state instead of treating the direct window as permanently writable.
-The pure `resolveMapper34Board` function similarly resolves and validates the unrelated NINA-001
-and BNROM identities before execution.
-The resulting aggregate owns only its physical register decoder: NINA's three PRG-RAM-overlay
-registers cannot leak into BNROM, and BNROM's bus-conflicted high-address latch cannot leak into NINA.
-MMC1 additionally observes the CPU bus's R/W sequence through an optional mapper capability. This
-keeps its consecutive-write filter inside the cartridge ASIC boundary while CPU memory remains
-unaware of mapper identity; D0 is suppressed on the second write cycle but D7 reset is still decoded.
-
-Keyboard and Gamepad are independent controller-input adapters. `CompositeControllerInput` merges
-their domain-level intents with source-aware pressed-state semantics; browser key codes, button
-indexes and axes never cross the UI application port or enter `@fcemu/core`. Keyboard input yields
-Enter, Space and the other game bindings when an interactive browser control owns focus. The
-focusable Canvas is the explicit gameplay target, and completed Workbench actions return focus to
-it so controller shortcuts cannot accidentally reactivate the last button.
-
-The UI package owns the **Workbench** context: ROM loading, session lifecycle, execution-region
-preference, scheduling, controller intent, three persistent quick-save slots, runtime statistics
-and user feedback.
-Canvas, WebAudio, requestAnimationFrame, keyboard input and the core emulator are replaceable
-adapters around that context.
-Its runtime port carries only cartridge metadata consumed by Workbench policy or presentation.
-PRG/CHR capacities remain core cartridge facts instead of being copied into every UI session
-snapshot without a consumer.
-`EmulatorApplication` retains the loaded `RomImage` for region reconfiguration; its content ID is
-also the sole key source for battery and quick-save persistence. The loaded image and its runtime
-live in one private `ActiveEmulation` record, so lifecycle transitions install or clear the pair
-atomically instead of synchronizing independent nullable fields. This is an application-layer
-invariant, not another domain object or public model.
-
-## Composition flow
+ROM construction is a fail-closed pipeline:
 
 ```text
-React presentation
-  -> EmulatorApplication
-    -> RomReaderPort / FrameSchedulerPort / AudioLifecyclePort / ControllerInputPort
-       / SaveRamStoragePort / QuickSaveStoragePort
-      -> browser adapters / CoreEmulatorFactory
-        -> @fcemu/core Emulator
-          -> domain hardware model
+ArrayBuffer
+  -> CartridgeHeader parser
+  -> supported-format policy
+  -> CartridgeMemory allocation
+  -> mapper/submapper + board-geometry validation
+  -> Mapper construction
+  -> Bus power-on
 ```
+
+Parsing a field does not imply support for its hardware. Malformed images raise
+`CartridgeFormatError`; unsupported mapper identities, variants and geometries raise mapper-domain
+errors before address calculations begin. The details are in
+[Cartridge subsystem](./subsystems/cartridge.md) and [Cartridge formats](./cartridge-formats.md).
+
+### Machine composition
+
+`Bus` is the core composition root. It owns one CPU, PPU, APU, cartridge/mapper, two standard
+controllers, the DMA arbiter, internal RAM and `MachineClock`. Devices communicate through explicit
+reads/writes and narrow signal ports:
+
+- IRQ producers assert named level-sensitive sources; the CPU observes their logical OR.
+- PPU drives a physical `/NMI` level; CPU edge detection samples it at the clock-defined boundary.
+- APU requests DMC DMA through a narrow port.
+- IRQ-capable mappers depend only on `MapperInterruptPort`, not the complete bus.
+- CPU and PPU memory are separate decoders because they are separate physical buses.
+
+`Bus.update()` advances one CPU cycle. `Bus.updateFrame()` repeats the same engine until the PPU
+crosses a frame boundary. There is no frame-level CPU shortcut or second instruction interpreter.
+
+### Time authority
+
+`MachineClock` is the only owner of committed CPU time, projected bus time, synchronized APU time
+and fractional CPU-to-PPU phase. `ConsoleTiming` supplies immutable NTSC/PAL/Dendy constants.
+
+This separation prevents:
+
+- per-instruction rounding drift in PAL's 16:5 CPU:PPU ratio;
+- independent APU/PPU watermarks disagreeing about a CPU access;
+- interrupt sampling being inferred from an instruction's returned cycle count;
+- mapper IRQs depending on presentation frames or synthetic scanline callbacks.
+
+See [Clock and timing](./subsystems/clock-and-timing.md).
+
+### Mapper boundary
+
+The mapper module is one cohesive cartridge-hardware submodule:
+
+- `Mapper` defines CPU/PPU read/write, lifecycle and save-state capabilities.
+- Optional observations describe real pins/events: CPU R/W cycle, PPU address line, completed PPU
+  read and per-dot timing.
+- `createMapper` is the single mapper/submapper/board-selection boundary.
+- Each implementation owns only the registers, RAM window, mirroring, bus-conflict and IRQ behavior
+  of one board family.
+
+PPU address-sensitive and read-triggered behavior are deliberately different. MMC3 observes the
+normalized address before transfer to filter A12; MMC2/MMC4 commit a CHR latch only after the
+triggering byte has been selected. Detailed contracts live in [Mapper reference](./mappers/README.md).
+
+### Internal extraction rule
+
+Keep state in its physical owner unless extraction creates a meaningful boundary. Existing examples:
+
+- `CpuMemoryCycle`, `CpuReadModifyWriteCycle`, `CpuBranchCycle`, `CpuStackCycle`,
+  `CpuControlFlowCycle` and `CpuInterruptEntry` own distinct externally visible bus sequences.
+- `SpriteEvaluator` owns primary-to-secondary OAM selection and overflow state.
+- `DmcDma` and `SpriteDma` own independent transfers coordinated by `DmaArbiter`.
+- `PpuIoBusLatch` owns the CPU-facing dynamic PPU bus, including per-bit decay.
+
+Pure address/identity calculations remain functions. Field-only wrappers, duplicated booleans and
+objects without an independent lifecycle should not be introduced for naming symmetry.
+
+## UI model
+
+The UI package owns the Workbench, not emulation hardware.
+
+### Domain
+
+`EmulationSession` is an immutable state machine for idle/loading/ready/running/paused/error,
+audio-permission state, selected region, frame/cycle counters and quick-save availability.
+`ExecutionRegion` owns the `auto`/NTSC/PAL/Dendy preference rules.
+
+### Application
+
+`EmulatorApplication` orchestrates:
+
+- latest-wins ROM loading;
+- play, pause, reset, power cycle and eject;
+- frame-debt scheduling;
+- controller intent;
+- battery checkpoints;
+- three quick-save slots;
+- runtime rebuild on region change;
+- observable diagnostics.
+
+It depends only on ports. The active ROM image and runtime form one private lifecycle record so an
+asynchronous load, persistence operation or region rebuild cannot install half of a session.
+
+### Infrastructure and presentation
+
+Browser adapters implement file reading, the core anti-corruption layer, animation-frame
+scheduling, Canvas output, AudioWorklet buffering, keyboard/gamepad input and IndexedDB storage.
+React renders application snapshots and dispatches use cases; it does not own emulator state.
+
+## State and persistence
+
+Three state categories have different owners and compatibility rules:
+
+| State               | Owner          | Compatibility                                             | Storage                             |
+| ------------------- | -------------- | --------------------------------------------------------- | ----------------------------------- |
+| Battery NVRAM       | Cartridge/core | Exact persistent-memory layout                            | UI `SaveRamStoragePort` / IndexedDB |
+| Emulator save state | Core           | Exact schema version + ROM identity + region + audio rate | Opaque to UI runtime port           |
+| Quick save          | UI application | Outer format + ROM identity + region + slot               | `QuickSaveStoragePort` / IndexedDB  |
+
+The core save-state envelope is version 14. Every executing aggregate exposes a typed snapshot with
+runtime validation. `Bus.restoreState()` is transactional: a nested failure rolls the entire machine
+back to the pre-restore snapshot.
+
+Controller buttons currently held by physical input devices are UI intent, not historical machine
+state. The Workbench reapplies them after restoring or rebuilding a runtime.
+
+## Error boundaries
+
+- ROM/header errors are deterministic domain failures shown to the user.
+- Unsupported hardware fails during cartridge/mapper construction, never as silent approximation.
+- Corrupt or obsolete persisted browser records are discarded without preventing a ROM from booting.
+- Audio autoplay denial is a recoverable UI state; emulation may continue silently.
+- Programming invariant failures remain exceptions and should fail tests rather than being converted
+  into generic user errors deep in the domain.
+
+## Verification architecture
+
+Tests mirror ownership:
+
+- pure chip/value tests beside domain code;
+- aggregate tests for bus order and cross-device signals;
+- application tests with in-memory ports;
+- browser-adapter tests with controlled platform doubles;
+- checksum-pinned external conformance runners;
+- explicit local real-ROM smoke profiles.
+
+Evidence policy and commands are documented in [Testing and conformance](./testing.md).
+
+## Change placement guide
+
+| Change                                                   | Owning location       |
+| -------------------------------------------------------- | --------------------- |
+| CPU/PPU/APU/mapper behavior                              | Core domain           |
+| Run one frame, expose diagnostics, core output ports     | Core application      |
+| Session lifecycle, region choice, quick-save policy      | UI domain/application |
+| Canvas, AudioWorklet, files, IndexedDB, keyboard/gamepad | UI infrastructure     |
+| React layout, accessible controls and status rendering   | UI presentation       |
+| Concrete browser object graph                            | UI `app/compose.ts`   |
+
+When placement is unclear, ask which physical component or policy owns the invariant and which
+dependencies it must remain independent from. Do not create a shared abstraction until two real
+consumers need the same stable contract.

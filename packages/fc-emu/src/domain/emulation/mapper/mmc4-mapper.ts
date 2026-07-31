@@ -16,8 +16,6 @@ const CHR_BANK_SIZE = 0x1000;
  * $xFE8-$xFEF ranges.
  */
 export class Mmc4Mapper implements Mapper {
-  readonly observesPpuAddress = true;
-
   private readonly prgBankCount: number;
   private readonly chr: ChrLatchBanks;
   private prgBank = 0;
@@ -59,14 +57,12 @@ export class Mmc4Mapper implements Mapper {
     this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
   }
 
-  observePpuAddress(address: number): void {
+  observePpuRead(address: number): void {
     if (address >= 0x0fd8 && address <= 0x0fdf) this.chr.setLatch0(false);
     else if (address >= 0x0fe8 && address <= 0x0fef) this.chr.setLatch0(true);
     else if (address >= 0x1fd8 && address <= 0x1fdf) this.chr.setLatch1(false);
     else if (address >= 0x1fe8 && address <= 0x1fef) this.chr.setLatch1(true);
   }
-
-  tickPpu(): void {}
 
   read(address: number): number {
     if (address < 0x2000) return this.cartridge.readChr(this.chr.offset(address));

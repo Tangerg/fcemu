@@ -39,11 +39,67 @@ describe("PPU", () => {
 
     bus.PPU.writeRegister(0x2006, 0x00);
     bus.PPU.writeRegister(0x2006, 0x00);
-    for (let cycle = 0; cycle < 10; cycle++) bus.Mapper.tickPpu();
+    for (let cycle = 0; cycle < 10; cycle++) bus.Mapper.tickPpu?.();
     bus.PPU.writeRegister(0x2006, 0x10);
     bus.PPU.writeRegister(0x2006, 0x00);
 
     expect(bus.CPU.hasPendingIRQ).toBe(true);
+  });
+
+  it("clocks MMC3 from the real sprite-pattern fetch at dot 260", () => {
+    const bus = new Bus(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }));
+    advanceBusPpuTo(bus, 0, 0);
+    bus.PPU.writeRegister(0x2000, 0x08); // background at $0000, 8x8 sprites at $1000
+    bus.PPU.writeRegister(0x2001, 0x18);
+    bus.Mapper.write(0xc000, 0);
+    bus.Mapper.write(0xc001, 0);
+    bus.Mapper.write(0xe001, 0);
+
+    advanceBusPpuTo(bus, 0, 259);
+    expect(bus.CPU.hasPendingIRQ).toBe(false);
+    clockPpu(bus);
+
+    expect(bus.PPU.cycle).toBe(260);
+    expect(bus.CPU.hasPendingIRQ).toBe(true);
+  });
+
+  it("commits an MMC2 latch only after returning the triggering PPU byte", () => {
+    const cartridge = createTestCartridge({ mapper: 9, prgBanks: 8, chrBanks: 8 });
+    cartridge.chrRom[3 * 0x1000 + 0x0fe8] = 0x31;
+    cartridge.chrRom[4 * 0x1000] = 0x42;
+    const bus = new Bus(cartridge);
+    bus.Mapper.write(0xd000, 3);
+    bus.Mapper.write(0xe000, 4);
+
+    expect(bus.PPU.read(0x1fe8)).toBe(0x31);
+    expect(bus.PPU.read(0x1000)).toBe(0x42);
+    expect(bus.Mapper.captureState()).toMatchObject({ kind: "mmc2", latch1Fe: true });
+  });
+
+  it("fetches sequential MMC2 sprites at their real PPU addresses and latch states", () => {
+    const cartridge = createTestCartridge({ mapper: 9, prgBanks: 8, chrBanks: 8 });
+    // The $FE sprite is fetched from the FD bank and flips the latch only after
+    // its high plane. The following sprite must therefore come from the FE bank.
+    cartridge.chrRom[3 * 0x1000 + 0x0fe0] = 0xff;
+    cartridge.chrRom[3 * 0x1000 + 0x0fe8] = 0x00;
+    cartridge.chrRom[4 * 0x1000 + 0x0000] = 0x00;
+    cartridge.chrRom[4 * 0x1000 + 0x0008] = 0xff;
+    const bus = new Bus(cartridge);
+    bus.Mapper.write(0xd000, 3);
+    bus.Mapper.write(0xe000, 4);
+    bus.PPU.writeRegister(0x2003, 0);
+    for (const value of [0, 0xfe, 0, 0, 0, 0x00, 0, 8]) {
+      bus.PPU.writeRegister(0x2004, value);
+    }
+    bus.PPU.writeRegister(0x2000, 0x08);
+    bus.PPU.writeRegister(0x2001, 0x10);
+
+    advanceTo(bus.PPU, 0, 321);
+
+    expect(bus.PPU.captureState().spritePatterns.slice(0, 2)).toEqual(
+      new Uint32Array([0x11111111, 0x22222222]),
+    );
+    expect(bus.Mapper.captureState()).toMatchObject({ kind: "mmc2", latch1Fe: true });
   });
 
   it.each([
@@ -282,6 +338,15 @@ function countFrameDots(ppu: PPU): number {
 
 function advanceTo(ppu: PPU, scanLine: number, cycle: number): void {
   while (ppu.scanLine !== scanLine || ppu.cycle !== cycle) ppu.update();
+}
+
+function advanceBusPpuTo(bus: Bus, scanLine: number, cycle: number): void {
+  while (bus.PPU.scanLine !== scanLine || bus.PPU.cycle !== cycle) clockPpu(bus);
+}
+
+function clockPpu(bus: Bus): void {
+  bus.PPU.update();
+  bus.Mapper.tickPpu?.();
 }
 
 /** Renders a full frame of the backdrop colour and returns one visible pixel. */

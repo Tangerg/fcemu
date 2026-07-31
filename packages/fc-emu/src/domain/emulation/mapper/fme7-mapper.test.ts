@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { NametableMirroring } from "../../model/cartridge.js";
 import { createTestCartridge } from "../../../../test-support/rom.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
-import type { MapperInterruptPort } from "./mapper.js";
+import type { MapperInterruptPort, MapperState } from "./mapper.js";
 
 const noopInterrupt: MapperInterruptPort = { setMapperIrq() {} };
 
@@ -120,4 +120,15 @@ describe("Fme7Mapper", () => {
     mapper.restoreState(state);
     expect(mapper.captureState()).toEqual(state);
   });
+
+  it.each(["irqCounterEnabled", "irqEnabled", "irqPending"] as const)(
+    "rejects a non-boolean %s save-state field",
+    (field) => {
+      const cartridge = createTestCartridge({ mapper: 69, prgBanks: 8, chrBanks: 8 });
+      const mapper = new Fme7Mapper(noopInterrupt, cartridge);
+      const corrupted = { ...mapper.captureState(), [field]: 1 } as unknown as MapperState;
+
+      expect(() => mapper.restoreState(corrupted)).toThrow(/invalid register or counter state/i);
+    },
+  );
 });

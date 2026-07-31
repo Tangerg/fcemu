@@ -1,35 +1,63 @@
 # FC Emu documentation
 
-Reference material for `@fcemu/core` (the hardware model) and `@fcemu/ui` (the browser Workbench).
-The core models the console as hardware, not as a generic business domain: every documented behavior
-names the chip, signal or bus phase it represents.
+This documentation is organized by reader intent. Start with the shortest path that answers your
+question, then follow links into the chip- or board-level references.
 
-## Orientation
+## I want to run the emulator
 
-- [architecture.md](./architecture.md) — package layout, the dependency rule, hardware bounded
-  contexts and the composition flow.
-- [hardware-reference.md](./hardware-reference.md) — the evidence hierarchy, the hardware-to-code map
-  and the non-negotiable timing rules a behavior change must respect.
-- [engineering-roadmap.md](./engineering-roadmap.md) — completed work, near-term direction and
-  measurement baselines.
+1. [Getting started](./getting-started.md) — prerequisites, local development, controls, persistence
+   and troubleshooting.
+2. [Mapper compatibility](./mapper-compatibility.md) — whether a cartridge board is implemented and
+   what evidence supports that status.
+3. [Cartridge formats](./cartridge-formats.md) — the accepted iNES/NES 2.0 subset and rejection
+   policy.
 
-## Subsystem references
+## I want to integrate the core
 
-Focused per-context references drawn from the source in `packages/fc-emu/src/domain/`.
+1. [Core API](./core-api.md) — construct an emulator, supply video/audio sinks, run frames, control
+   players and persist state.
+2. [Browser workbench](./workbench.md) — session lifecycle, frame/audio/input policy and browser
+   adapters.
+3. [Architecture](./architecture.md) — package boundaries, dependency direction, composition and
+   state ownership.
+4. [Clock and timing](./subsystems/clock-and-timing.md) — region selection and the single time
+   authority.
 
-- [subsystems/cpu.md](./subsystems/cpu.md) — RP2A03 NMOS 6502 core, cycle model and interrupts.
-- [subsystems/ppu.md](./subsystems/ppu.md) — RP2C02 rendering, registers, sprite pipeline and memory.
-- [subsystems/apu.md](./subsystems/apu.md) — channels, frame sequencer, DMC and mixing.
-- [subsystems/cartridge.md](./subsystems/cartridge.md) — header parsing, memory regions and saves.
-- [subsystems/dma.md](./subsystems/dma.md) — OAM and DMC DMA and the shared bus arbiter.
-- [subsystems/clock-and-timing.md](./subsystems/clock-and-timing.md) — `ConsoleTiming` regions and the
-  single `MachineClock` time authority.
-- [subsystems/bus-and-memory.md](./subsystems/bus-and-memory.md) — machine composition, the CPU/PPU
-  memory maps, open bus and controllers.
+## I want to change hardware behavior
 
-## Cartridge and mappers
+1. [Hardware evidence policy](./hardware-reference.md) — source hierarchy, non-negotiable timing
+   rules and change acceptance.
+2. [Testing and conformance](./testing.md) — test layers, external fixtures, checksum policy and
+   required validation.
+3. The relevant subsystem reference:
 
-- [cartridge-formats.md](./cartridge-formats.md) — accepted iNES/NES 2.0 header and board shapes.
-- [mapper-compatibility.md](./mapper-compatibility.md) — support status and evidence per mapper.
-- [mappers/README.md](./mappers/README.md) — the mapper contract, selection factory, save-state and a
-  per-board reference for every supported board.
+   - [CPU](./subsystems/cpu.md)
+   - [PPU](./subsystems/ppu.md)
+   - [APU](./subsystems/apu.md)
+   - [DMA](./subsystems/dma.md)
+   - [System bus, memory and controllers](./subsystems/bus-and-memory.md)
+   - [Cartridge](./subsystems/cartridge.md)
+   - [Clock and timing](./subsystems/clock-and-timing.md)
+
+4. For cartridge hardware, continue with [Mapper reference](./mappers/README.md).
+
+## I want to contribute
+
+- [Contributing guide](../CONTRIBUTING.md) — workflow, architecture rules and pull-request evidence.
+- [Code of Conduct](../CODE_OF_CONDUCT.md) — expected project behavior.
+- [Security policy](../SECURITY.md) — private vulnerability reporting and supported versions.
+- [Engineering roadmap](./engineering-roadmap.md) — current priorities, non-goals and definitions of
+  done.
+
+## Documentation conventions
+
+- “CPU cycle” means one RP2A03 CPU clock; “PPU dot” means one PPU clock.
+- Hexadecimal addresses use `$` in prose (`$4014`) and `0x` in TypeScript (`0x4014`).
+- `Implemented` is a code-and-focused-test claim; `Verified` additionally requires executable
+  external or pinned real-ROM evidence.
+- Paths are repository-relative. Public API names refer only to exports from `@fcemu/core`.
+- Historical implementation detail belongs in Git history. These documents describe the current
+  contract, evidence and planned work.
+
+If documentation contradicts executable behavior, treat that as a defect: identify the hardware
+source, then update code, tests and documentation in the same change.

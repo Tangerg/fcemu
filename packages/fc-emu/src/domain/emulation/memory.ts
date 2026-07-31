@@ -201,27 +201,28 @@ export class PPUMemory {
    * @param address 14-bit address (0x0000-0x3FFF)
    * @returns 8-bit data (0-255)
    */
-  public read(address: number, observeMapper = true): number {
+  public read(address: number): number {
     // Constrain the address to the PPU address space (0x0000-0x3FFF).
     address &= 0x3fff;
-    if (observeMapper && this.bus.Mapper.observesPpuAddress) {
-      this.bus.Mapper.observePpuAddress(address);
-    }
+    const mapper = this.bus.Mapper;
+    mapper.observePpuAddress?.(address);
 
+    let value: number;
     // 0x0000-0x1FFF: pattern tables (CHR ROM/RAM).
     if (address < 0x2000) {
-      return this.bus.Mapper.read(address);
-    }
-
-    // 0x2000-0x3EFF: nametables (VRAM).
-    if (address < 0x3f00) {
+      value = mapper.read(address);
+    } else if (address < 0x3f00) {
+      // 0x2000-0x3EFF: nametables (VRAM).
       const mode = this.bus.Cartridge.mirroringMode;
       const mirroredAddr = PPUMemory.mirrorAddress(mode, address) - 0x2000;
-      return this.bus.PPU.nameTableData[mirroredAddr];
+      value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
+    } else {
+      // 0x3F00-0x3FFF: palette RAM.
+      value = this.bus.PPU.readPalette(address % 32);
     }
 
-    // 0x3F00-0x3FFF: palette RAM.
-    return this.bus.PPU.readPalette(address % 32);
+    mapper.observePpuRead?.(address);
+    return value;
   }
 
   /**
@@ -233,7 +234,7 @@ export class PPUMemory {
     // Constrain the address to the PPU address space and the value to 8 bits.
     address &= 0x3fff;
     value = value & 0xff;
-    if (this.bus.Mapper.observesPpuAddress) this.bus.Mapper.observePpuAddress(address);
+    this.bus.Mapper.observePpuAddress?.(address);
 
     // 0x0000-0x1FFF: pattern tables (CHR ROM/RAM).
     if (address < 0x2000) {

@@ -79,6 +79,12 @@ export class SpriteEvaluator {
     return this.secondaryOam[slot * 4 + byte] ?? 0xff;
   }
 
+  /** Reads the secondary-OAM byte driven during one of the eight hardware fetch slots. */
+  readFetchByte(slot: number, byte: number): number {
+    if (slot < 0 || slot >= 8 || byte < 0 || byte > 3) return 0xff;
+    return this.secondaryOam[slot * 4 + byte] ?? 0xff;
+  }
+
   /** Projects the PPU's internal OAM data bus during rendering. */
   readDataBus(dot: number): number {
     if (dot >= 1 && dot <= 64) return 0xff;

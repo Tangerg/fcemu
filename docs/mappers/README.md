@@ -1,7 +1,8 @@
 # Mapper reference
 
 The mapper module (`packages/fc-emu/src/domain/emulation/mapper/`) is the cartridge-hardware submodule
-of the Emulation bounded context. It translates CPU `$4020-$FFFF` and PPU `$0000-$1FFF` accesses into
+of the Emulation bounded context. In the supported Control Deck map it translates CPU
+`$6000-$FFFF` and PPU `$0000-$1FFF` accesses into
 ROM/RAM offsets, owns bank latches, nametable mirroring and any board IRQ, and hides every
 board-specific register behind one contract. CPU and PPU devices never see mapper registers; they see
 only the `Mapper` interface.
@@ -16,17 +17,22 @@ board. Support status and evidence are tracked separately in
 `mapper.ts` defines the address-space contract. Every board implements it and nothing else is exposed
 to the rest of core.
 
-| Member                       | Role                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------ |
-| `read(address)`              | Reads a CPU (`$4020-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout.   |
-| `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                    |
-| `observesPpuAddress`         | When true, the bus forwards `observePpuAddress`/`tickPpu` so the board can watch A12/dots. |
-| `observePpuAddress(address)` | PPU bus snoop for scanline/latch boards (MMC2/MMC4 CHR latch, MMC3 A12 IRQ).               |
-| `tickPpu()`                  | One PPU dot; used by A12-timing boards to filter rising edges.                             |
-| `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (MMC1 serial filter, FME-7 IRQ counter).               |
-| `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                             |
-| `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                                |
-| `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.     |
+| Member                       | Role                                                                                     |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| `read(address)`              | Reads a CPU (`$6000-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout. |
+| `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
+| `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
+| `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
+| `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
+| `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (MMC1 serial filter, FME-7 IRQ counter).             |
+| `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                           |
+| `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                              |
+| `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.   |
+
+PPU capabilities are structural: boards implement only the optional signal hooks they physically
+consume. Address-line changes and completed reads are deliberately separate because MMC3 reacts to
+A12 before data transfer, while MMC2/MMC4 change their CHR latch only after the triggering byte has
+been read.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -50,18 +56,20 @@ sees an accurate total.
 
 Unknown mapper numbers raise `UnsupportedMapperError`. The shared validators
 (`requireBankedLayout`, `requireRomLayout`, `requireMaximumRomSize`, `requireWritableChrSize`,
-`requireDirectPrgRam`, `resolveBusConflicts`, `requireBaseSubmapper`) keep the accept/reject policy in
-one place. Declared capacity is accepted only when the selected board can address every byte.
+`requireDirectPrgRam`, `requireNoPrgRam`, `resolveBusConflicts`, `requireBaseSubmapper`) keep the
+accept/reject policy in one place. Declared capacity is accepted only when the selected board can
+address every byte.
 
 ## Save state
 
 `MapperState` (in `mapper.ts`) is a discriminated union keyed by `MapperKind` (`mapper-kind.ts`). Each
 board's `captureState`/`restoreState` refer to the same named kind. `restoreState` re-validates every
 untrusted field (bank indexes against the live bank count, mirroring against `NametableMirroring`,
-counters against their bit width) and throws `RangeError`/`TypeError` rather than trust a snapshot.
-IRQ-capable boards re-assert their line from the restored state.
+counters against their bit width and all booleans by runtime type) and throws
+`RangeError`/`TypeError` rather than trust a snapshot. Common array/boolean guards live in
+`state-validation.ts`; IRQ-capable boards re-assert their line from the restored state.
 
-## Supported boards
+## Implemented boards
 
 | #   | Family         | Kind               | Implementation               | Bus conflicts | IRQ  |
 | --- | -------------- | ------------------ | ---------------------------- | ------------- | ---- |
@@ -127,8 +135,8 @@ declared 2 KiB PRG RAM is mirrored through the 8 KiB `$6000-$7FFF` window.
 it. CHR is two 2 KiB plus four 1 KiB banks; PRG is two switchable 8 KiB banks with two fixed banks,
 swappable between `$8000` and `$C000` by the PRG mode. `$A000`/`$A001` set mirroring and PRG-RAM
 enable/write-protect. The revision-B IRQ counter clocks on filtered PPU A12 rising edges (`tickPpu`
-counts low dots; a rise after ≥10 low dots clocks the counter), so `observesPpuAddress` is true. See
-the [NESdev MMC3 page](https://www.nesdev.org/wiki/MMC3).
+counts low dots; `observePpuAddress` clocks a rise after ≥10 low dots). See the
+[NESdev MMC3 page](https://www.nesdev.org/wiki/MMC3).
 
 ## AxROM (7)
 
@@ -142,9 +150,10 @@ are rejected because AxROM has no PRG-RAM window.
 `$A000` selects the 8 KiB PRG bank at `$8000-$9FFF`; `$A000-$FFFF` is three fixed 8 KiB banks.
 `$B000`/`$C000`/`$D000`/`$E000` set four 4 KiB CHR banks chosen by two PPU latches. The left latch
 flips on the exact PPU fetches `$0FD8` (→ FD) and `$0FE8` (→ FE); the right latch flips across
-`$1FD8-$1FDF` and `$1FE8-$1FEF`. `$F000` bit 0 selects vertical/horizontal mirroring. `observesPpuAddress`
-is true. See the [NESdev MMC2 page](https://www.nesdev.org/wiki/MMC2). Representative title:
-Punch-Out!!.
+`$1FD8-$1FDF` and `$1FE8-$1FEF`. Rendering fetches preserve the full sprite/background address and
+call `observePpuRead` after returning the triggering byte, so a trigger changes only subsequent
+fetches. `$F000` bit 0 selects vertical/horizontal mirroring. PxROM has no PRG-RAM window. See the
+[NESdev MMC2 page](https://www.nesdev.org/wiki/MMC2). Representative title: Punch-Out!!.
 
 ## MMC4 / FxROM (10)
 
@@ -227,11 +236,17 @@ to `$A000-$FFFF` are ignored.
 
 1. Add one implementation file named after the board family.
 2. Add its `MapperKind` discriminant and `MapperState` shape.
-3. Register its iNES number in `create-mapper.ts` with the geometry/submapper validation it needs.
-4. Add focused unit tests for PRG, CHR, mirroring, RAM and IRQ behavior the board supports, plus a
-   save-state round-trip, and extend the factory integration tests in `mapper.test.ts`.
-5. Add an external conformance ROM result when a suitable one exists; never commit commercial ROMs.
-6. Update [../mapper-compatibility.md](../mapper-compatibility.md) and this reference.
+3. Register its identity in `create-mapper.ts`, including submapper policy, complete bank geometry,
+   maximum reachable ROM and explicit PRG/CHR RAM capabilities.
+4. Implement only the optional CPU/PPU signal hooks the physical board consumes.
+5. Define deterministic power-on state and validate every runtime save-state field before mutation.
+6. Add focused tests for PRG, CHR, mirroring, RAM, conflicts, reset and IRQ/latch behavior, plus a
+   save-state round-trip and factory rejection tests.
+7. Add a PPU/CPU/bus integration regression when behavior depends on transaction ordering.
+8. Add an external conformance result when a redistributable fixture exists; never commit commercial
+   ROMs.
+9. Update [../mapper-compatibility.md](../mapper-compatibility.md) and this reference.
 
 Board behavior must come from technical documentation and executable conformance evidence, not from
-ROM title lists.
+ROM title lists. New focused tests earn `Implemented`; promotion to `Verified` follows the evidence
+rules in [Testing](../testing.md).

@@ -13,8 +13,6 @@ const CHR_BANK_SIZE = 0x2000;
  * because the latch sits in the otherwise-unmapped $6000-$7FFF space.
  */
 export class JalecoMapper implements Mapper {
-  readonly observesPpuAddress = false;
-
   private readonly chrBankCount: number;
   private selectedChrBank = 0;
 
@@ -63,8 +61,4 @@ export class JalecoMapper implements Mapper {
       this.selectedChrBank = bank % this.chrBankCount;
     }
   }
-
-  observePpuAddress(_: number): void {}
-
-  tickPpu(): void {}
 }

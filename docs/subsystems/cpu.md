@@ -76,11 +76,12 @@ results unconditionally; the 2A03 has no BCD adder, so decimal mode has no arith
 behaviour](https://www.nesdev.org/wiki/Open_bus_behavior). An ordinary CPU read
 (`readFullyDriven`) drives both latches; a CPU write drives both; a DMA fetch (`readForDma`) drives
 only the external pins and leaves the internal latch intact. Unmapped and write-only I/O reads
-(`$4000-$4014`, `$4018-$5FFF`) return the retained external byte (`readOpenBus`); the controller
-ports `$4016`/`$4017` replace only bits 0–4 (`readPartiallyDriven`, mask `0x1F`) and keep external
-bits 5–7. `$4015` is the inverse boundary — its status byte takes floating bit 5 from the internal
-bus, updates only the internal latch and never refreshes the external pins — which is what lets a DMC
-fetch land between an operand read and a `$4015` access without corrupting either
+(`$4000-$4014`, plus an undecoded `$4018-$5FFF`) return the retained external byte (`readOpenBus`);
+an optional mapper expansion result may instead drive selected lines in the latter range. The
+controller ports `$4016`/`$4017` replace only bits 0–4 (`readPartiallyDriven`, mask `0x1F`) and keep
+external bits 5–7. `$4015` is the inverse boundary — its status byte takes floating bit 5 from the
+internal bus, updates only the internal latch and never refreshes the external pins — which is what
+lets a DMC fetch land between an operand read and a `$4015` access without corrupting either
 ([APU status](<https://www.nesdev.org/wiki/APU#Status_($4015)>)).
 
 `CPU.readByte` layers one extra concern on top of `memory.read`: an _indexed-read latch_

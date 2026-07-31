@@ -81,7 +81,10 @@ export class CPUMemory {
 
     // 0x4018-0x5FFF: expansion ROM region (typically unused).
     if (address < 0x6000) {
-      return this.readOpenBus(cpuOwnsRead);
+      const result = this.bus.Mapper.readCpuExpansion?.(address);
+      return result === undefined
+        ? this.readOpenBus(cpuOwnsRead)
+        : this.readPartiallyDriven(result.value, result.drivenMask, cpuOwnsRead);
     }
 
     // 0x6000-0xFFFF: cartridge space (PRG RAM, PRG ROM).
@@ -135,7 +138,7 @@ export class CPUMemory {
 
     // 0x4018-0x5FFF: expansion ROM region (typically unused).
     if (address < 0x6000) {
-      // Most games do not use this region; writes usually have no effect.
+      this.bus.Mapper.writeCpuExpansion?.(address, value);
       return;
     }
 
@@ -219,10 +222,15 @@ export class PPUMemory {
       value = (mapper.read(address) & drivenMask & 0xff) | (address & 0xff & (~drivenMask & 0xff));
     } else if (address < 0x3f00) {
       // 0x2000-0x3EFF: nametables (VRAM).
-      const mode = this.bus.Cartridge.mirroringMode;
-      const mirroredAddr =
-        mapper.mapNametableAddress?.(address) ?? PPUMemory.mirrorAddress(mode, address) - 0x2000;
-      value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
+      const cartridgeValue = mapper.readNametable?.(address);
+      if (cartridgeValue !== undefined) {
+        value = cartridgeValue;
+      } else {
+        const mode = this.bus.Cartridge.mirroringMode;
+        const mirroredAddr =
+          mapper.mapNametableAddress?.(address) ?? PPUMemory.mirrorAddress(mode, address) - 0x2000;
+        value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
+      }
     } else {
       // 0x3F00-0x3FFF: palette RAM.
       value = this.bus.PPU.readPalette(address % 32);
@@ -251,6 +259,7 @@ export class PPUMemory {
 
     // 0x2000-0x3EFF: nametables (VRAM).
     if (address < 0x3f00) {
+      if (this.bus.Mapper.writeNametable?.(address, value)) return;
       const mode = this.bus.Cartridge.mirroringMode;
       const mirroredAddr =
         this.bus.Mapper.mapNametableAddress?.(address) ??

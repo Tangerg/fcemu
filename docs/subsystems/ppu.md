@@ -284,8 +284,9 @@ CPU-facing decaying `PpuIoBusLatch` documented below.
 
 The mode comes from `bus.Cartridge.mirroringMode`. A mapper may instead return a direct
 nametable-memory index from `mapNametableAddress`, which models CHR-output-to-CIRAM wiring such as
-Namco 3425 and TxSROM on each access. Every PPU transaction goes through the same mapper-signal
-ordering; rendering fetches and CPU-driven `$2007` accesses cannot bypass it.
+Namco 3425 and TxSROM on each access. It may alternatively drive a nametable read and consume its
+write, as Sunsoft-4 does when CHR ROM replaces CIRAM. Every PPU transaction goes through the same
+mapper-signal ordering; rendering fetches and CPU-driven `$2007` accesses cannot bypass it.
 
 ## Cartridge bus observation
 

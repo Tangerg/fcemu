@@ -11,6 +11,8 @@ import { CpromMapper } from "./cprom-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
+import { IremG101Mapper, type IremG101Board } from "./irem-g101-mapper.js";
+import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
@@ -27,6 +29,7 @@ import {
   Namco118Mapper,
 } from "./namco118-mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
+import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
 import {
   UnsupportedMapperConfigurationError,
@@ -37,6 +40,7 @@ import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
+import { Sunsoft4Mapper } from "./sunsoft4-mapper.js";
 import {
   createInvertedUxromBoard,
   GENERIC_UXROM_BOARD,
@@ -113,6 +117,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       requireNoPrgRam(cartridge);
       return new CpromMapper(cartridge);
+    case 32:
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "Irem G-101");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Irem G-101");
+      return new IremG101Mapper(cartridge, resolveIremG101Board(cartridge));
     case 33:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -130,6 +141,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x8000);
       requireNoPrgRam(cartridge);
       return new GxromMapper(cartridge);
+    case 68:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x0800, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "Sunsoft-4");
+      requireDirectPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Sunsoft-4");
+      return new Sunsoft4Mapper(cartridge);
     case 69:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -168,6 +187,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "mapper 78");
       requireNoPrgRam(cartridge);
       return new Irem78Mapper(cartridge, resolveIrem78Mirroring(cartridge));
+    case 79:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x10_000, 0x10_000);
+      requireChrRom(cartridge, "NINA-03/NINA-06");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "NINA-03/NINA-06");
+      return new Nina0306Mapper(cartridge);
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);
@@ -207,6 +234,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Namco 3425");
       return new Namco118Mapper(cartridge, MAPPER_95_BOARD);
+    case 97:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x40_000], 0x2000);
+      requireChrRam(cartridge, "Irem TAM-S1");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Irem TAM-S1");
+      return new IremTamS1Mapper(cartridge);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -382,6 +416,17 @@ function resolveIrem78Mirroring(cartridge: Cartridge): Irem78Mirroring {
       return "single-screen";
     case 3:
       return "horizontal-vertical";
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+}
+
+function resolveIremG101Board(cartridge: Cartridge): IremG101Board {
+  switch (cartridge.submapperNumber) {
+    case 0:
+      return "standard";
+    case 1:
+      return "major-league";
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }

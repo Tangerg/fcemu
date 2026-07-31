@@ -2,10 +2,10 @@
 
 The mapper module (`packages/fc-emu/src/domain/emulation/mapper/`) is the cartridge-hardware submodule
 of the Emulation bounded context. In the supported Control Deck map it translates CPU
-`$6000-$FFFF` and PPU `$0000-$1FFF` accesses into
-ROM/RAM offsets, owns bank latches, nametable mirroring and any board IRQ, and hides every
-board-specific register behind one contract. CPU and PPU devices never see mapper registers; they see
-only the `Mapper` interface.
+`$6000-$FFFF`, optional cartridge-decoded `$4018-$5FFF`, and PPU `$0000-$1FFF` accesses into ROM/RAM
+offsets, owns bank latches, nametable routing and any board IRQ, and hides every board-specific
+register behind one contract. CPU and PPU devices never see mapper registers; they see only the
+`Mapper` interface.
 
 This document describes the contract, the selection factory, save-state handling and every supported
 board. Support status and evidence are tracked separately in
@@ -22,8 +22,12 @@ to the rest of core.
 | `read(address)`              | Reads a CPU (`$6000-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout. |
 | `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
 | `cpuReadDriveMask(address)`  | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
+| `readCpuExpansion(address)`  | Optional value/drive mask for a cartridge device in CPU `$4018-$5FFF`.                   |
+| `writeCpuExpansion(addr, v)` | Optional cartridge register write in CPU `$4018-$5FFF`.                                  |
 | `ppuReadDriveMask(address)`  | Optional PPU pattern-data mask; omitted means fully driven, `0` means CHR is tri-stated. |
 | `mapNametableAddress(addr)`  | Optional direct CIRAM/nametable-memory routing for cartridge-controlled wiring.          |
+| `readNametable(address)`     | Optional cartridge-driven nametable byte, such as Sunsoft-4 CHR ROM.                     |
+| `writeNametable(addr, v)`    | Optionally consumes a cartridge-owned nametable write.                                   |
 | `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
 | `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
@@ -43,7 +47,9 @@ drives no data lines; `CPUMemory` then combines the driven bits with the retaine
 Pattern-table reads follow the same separation through `ppuReadDriveMask`; `PPUMemory` supplies the
 current address low byte on undriven multiplexed PPU pins instead of asking a mapper to invent open
 bus. `mapNametableAddress` similarly keeps per-access CIRAM wiring distinct from the cartridge's
-fixed header mirroring.
+fixed header mirroring. `readNametable`/`writeNametable` separately model memory that replaces CIRAM
+entirely, so ROM ownership is not hidden in a magic address value. Expansion-range reads return their
+value and drive mask together; an absent result remains normal CPU open bus.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -94,21 +100,25 @@ counters against their bit width and all booleans by runtime type) and throws
 | 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
 | 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
 | 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
+| 32  | Irem G-101     | `irem-g101`        | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
 | 66  | GxROM / MHROM  | `gxrom`            | `gxrom-mapper.ts`            | AND           | no   |
+| 68  | Sunsoft-4      | `sunsoft-4`        | `sunsoft4-mapper.ts`         | no            | no   |
 | 69  | Sunsoft FME-7  | `fme7`             | `fme7-mapper.ts`             | no            | cyc. |
 | 70  | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 71  | Codemasters    | `codemasters`      | `codemasters-mapper.ts`      | no            | no   |
 | 75  | Konami VRC1    | `vrc1`             | `vrc1-mapper.ts`             | no            | no   |
 | 76  | Namco 3446     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
+| 79  | NINA-03/06     | `nina-03-06`       | `nina0306-mapper.ts`         | no            | no   |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
 | 88  | Namco 3433     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
 | 93  | Sunsoft-3R     | `sunsoft-3r`       | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
 | 95  | Namco 3425     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
+| 97  | Irem TAM-S1    | `irem-tam-s1`      | `irem-tam-s1-mapper.ts`      | no            | no   |
 | 118 | TxSROM         | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
 | 140 | Jaleco JF      | `jaleco-jf`        | `jaleco-jf-mapper.ts`        | no            | no   |
@@ -201,6 +211,15 @@ Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and 
 selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
 cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
 
+## Irem G-101 (32)
+
+Two registers select 8 KiB PRG banks at `$8000`/`$A000`; the final two banks normally remain fixed
+at `$C000`/`$E000`. `$9000` bit 1 exchanges the `$8000` switchable and `$C000` fixed windows, while
+bit 0 selects vertical/horizontal mirroring. `$B000-$B007` select eight 1 KiB CHR-ROM windows.
+NES 2.0 submapper 1 identifies Major League's hardwired upper one-screen board, which fixes PRG mode
+0 and does not decode `$9000`; ambiguous legacy images remain on the standard board rather than use
+a title hash. See [NESdev mapper 32](https://www.nesdev.org/wiki/INES_Mapper_032).
+
 ## Taito TC0190 (33)
 
 Two 8 KiB PRG registers at `$8000`/`$8001` map CPU `$8000-$BFFF`; the final two banks stay fixed at
@@ -223,6 +242,18 @@ the board explicitly.
 
 One `$8000-$FFFF` latch: bits 5-4 select a 32 KiB PRG bank, bits 1-0 an 8 KiB CHR bank, with AND-type
 bus conflicts. MHROM images simply never use the high PRG bit.
+
+## Sunsoft-4 (68)
+
+Registers `$8000-$B000` select four 2 KiB CHR-ROM windows. `$F000` selects the switchable 16 KiB PRG
+bank at `$8000`, leaves the last bank fixed at `$C000`, and gates the direct 8 KiB PRG-RAM window.
+`$E000` selects vertical, horizontal or either one-screen layout.
+
+When `$E000` bit 4 is set, the selected nametable pages no longer reach CIRAM: `$C000`/`$D000`
+choose 1 KiB banks from the final 128 KiB of CHR ROM and nametable writes are discarded. This uses
+the mapper's explicit nametable read/write capabilities rather than a CIRAM-index sentinel.
+Submapper 1's dual-cartridge licensing timer and external option ROM are rejected. See
+[NESdev mapper 68](https://www.nesdev.org/wiki/INES_Mapper_068).
 
 ## Sunsoft FME-7 (69)
 
@@ -283,6 +314,14 @@ those boards; submapper 0 is rejected. For legacy iNES, the historical alternati
 selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. See
 [NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_078).
 
+## AVE NINA-03/NINA-06 (79)
+
+The single bank latch is decoded in CPU expansion space only when
+`(address & $E100) == $4100`. D3 selects one of two 32 KiB PRG banks and D2-D0 select one of eight
+8 KiB CHR-ROM banks. Reads from the expansion range stay open bus, mirroring remains solder-pad
+controlled, and the board has no PRG RAM, IRQ or bus conflicts. See
+[NESdev mapper 79](https://www.nesdev.org/wiki/INES_Mapper_079).
+
 ## Jaleco CHR (87)
 
 A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →
@@ -333,6 +372,14 @@ used by `$2000-$27FF`; R1 selects `$2800-$2FFF`, producing horizontal or either 
 from the same bits that select the two 2 KiB CHR banks. Fixed mirroring and MMC3-style approximations
 would lose that coupling, so the mapper routes each nametable access directly. See
 [NESdev mapper 95](https://www.nesdev.org/wiki/INES_Mapper_095).
+
+## Irem TAM-S1 (97)
+
+The final 16 KiB PRG bank is fixed at `$8000-$BFFF`; D3-D0 select the 16 KiB bank at
+`$C000-$FFFF`. D7-D6 select lower one-screen, horizontal, vertical or upper one-screen mirroring.
+The known board carries 256 KiB PRG ROM and fixed 8 KiB CHR RAM, with no PRG RAM, IRQ or bus
+conflict. See the
+[TAM-S1 hardware analysis](https://forums.nesdev.org/viewtopic.php?t=19769).
 
 ## TxSROM and TQROM (118, 119)
 

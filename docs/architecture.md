@@ -131,8 +131,8 @@ See [Clock and timing](./subsystems/clock-and-timing.md).
 
 The mapper module is one cohesive cartridge-hardware submodule:
 
-- `Mapper` defines CPU/PPU read/write, CPU and PPU data-line drive masks, optional cartridge CIRAM
-  routing, lifecycle and save-state capabilities.
+- `Mapper` defines CPU/PPU read/write, CPU and PPU data-line drive masks, optional CPU expansion
+  decode, CIRAM routing or cartridge-driven nametables, lifecycle and save-state capabilities.
 - Optional observations describe real pins/events: CPU R/W cycle, PPU address line, completed PPU
   read and per-dot timing.
 - `createMapper` is the single mapper/submapper/board-selection boundary.
@@ -142,8 +142,8 @@ The mapper module is one cohesive cartridge-hardware submodule:
 PPU address-sensitive and read-triggered behavior are deliberately different. MMC3 observes the
 normalized address before transfer to filter A12; MMC2/MMC4 commit a CHR latch only after the
 triggering byte has been selected. Mapper 95 and TxSROM route CIRAM A10 from a CHR output through the
-same boundary instead of mutating a global mirroring mode. Detailed contracts live in
-[Mapper reference](./mappers/README.md).
+same boundary instead of mutating a global mirroring mode; Sunsoft-4 can replace CIRAM reads with CHR
+ROM entirely. Detailed contracts live in [Mapper reference](./mappers/README.md).
 
 ### Internal extraction rule
 

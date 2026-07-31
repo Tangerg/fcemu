@@ -21,21 +21,25 @@ describes evidence maturity rather than a runtime feature flag.
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM             |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM       |
+| 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM    |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM     |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                |
 | 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
+| 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM           |
 | 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                 |
 | 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                  |
 | 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM       |
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM      |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM     |
+| 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM   |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                   |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM             |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM          |
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM    |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM   |
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM         |
+| 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM      |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM          |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM      |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM  |
@@ -48,17 +52,18 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/33/66/69/70/75/76/87/88/89/93/94/95/118/119/140/152/184/206 currently accept only
-submapper 0. Mapper 1
+0/4/9/10/11/13/33/66/68/69/70/75/76/79/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
+accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
 accept submapper 0 plus the NES 2.0 bus-conflict variants below. Mapper 34 accepts submapper 0
 through a single-board CHR-geometry decision, submapper 1 as NINA-001 and submapper 2 as BNROM.
 Mapper 71 accepts submapper 0 (fixed-mirroring BF9093) and submapper 1 (single-screen-controlled
 BF9097). Mapper 78 accepts its historical iNES alternative-nametable convention or NES 2.0
-submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fails closed. Mapper
-185 accepts only explicit NES 2.0 submappers 4-7; legacy/submapper 0 has unknown chip-select wiring
-and fails closed.
+submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fails closed. Mapper 32
+accepts submapper 0 (normal G-101) and submapper 1 (Major League fixed-upper one-screen wiring).
+Mapper 185 accepts only explicit NES 2.0 submappers 4-7; legacy/submapper 0 has unknown chip-select
+wiring and fails closed.
 
 ## Legacy-header assumptions
 
@@ -72,9 +77,9 @@ and fails closed.
   because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/33/66/70/71/75/76/78/87/88/89/93/94/95/119/140/152/180/184/185/206 because those selected
-  boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB allocation
-  remains a parser-compatibility detail but is not exposed by these mappers.
+  9/11/13/32/33/66/70/71/75/76/78/79/87/88/89/93/94/95/97/119/140/152/180/184/185/206 because those
+  selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
+  allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
   outputs select outer PRG ROM and 8 KiB PRG-RAM banks; mixed volatile/battery banks retain only the
   NVRAM bytes. SNROM additionally wires CHR A16 as a redundant WRAM disable, while submapper 5
@@ -105,6 +110,11 @@ and fails closed.
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.
+- Mapper 32 (Irem G-101) exposes two switchable 8 KiB PRG banks, two fixed tail banks and eight
+  1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
+  windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major
+  League's fixed-upper one-screen board and disabled `$9000` register; legacy iNES cannot
+  distinguish that wiring without a title database.
 - Mapper 33 (Taito TC0190) has two switchable 8 KiB PRG banks followed by the final two fixed banks,
   two 2 KiB and four 1 KiB CHR-ROM windows, and bit-6 horizontal/vertical mirroring. Its 2 KiB CHR
   register values are offsets in 2 KiB units rather than MMC3-style even 1 KiB indexes. Mapper 48
@@ -123,6 +133,14 @@ and fails closed.
   conflicts. Register bit 3 selects lower/upper one-screen mirroring on Cosmo Carrier hardware but
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical
   alternative-nametable flag to distinguish those wirings; NES 2.0 uses submapper 1 or 3.
+- Mapper 68 (Sunsoft-4) exposes four 2 KiB CHR banks, one switchable and one fixed 16 KiB PRG bank,
+  four-way mirroring and an enabled 8 KiB PRG-RAM window. It can replace either mirrored nametable
+  page with one of the final 128 1 KiB CHR-ROM banks; writes to ROM-backed nametables are ignored.
+  The dual-cartridge/licensing-timer submapper remains rejected because its external option ROM
+  cannot be represented by the accepted cartridge format.
+- Mapper 79 (AVE NINA-03/NINA-06) decodes its latch only at `$4100-$5FFF` addresses matching
+  `(address & $E100) == $4100`. D3 selects one of two 32 KiB PRG banks and D2-D0 select one of eight
+  8 KiB CHR-ROM banks; mirroring is hardwired and there are no conflicts, IRQs or PRG RAM.
 - Mapper 69 (Sunsoft FME-7) commits a `$8000-$9FFF` command register with a following `$A000-$BFFF`
   parameter write: eight 1 KiB CHR banks, a `$6000-$7FFF` window that selects PRG ROM or enabled PRG
   RAM through bits 6-7, three 8 KiB PRG banks with `$E000` fixed, four-way mirroring, and a 16-bit IRQ
@@ -148,6 +166,9 @@ and fails closed.
 - Mapper 95 connects Namco 108 CHR A15 to CIRAM A10. R0 controls the two nametable slots at
   `$2000-$27FF` and R1 controls `$2800-$2FFF`; the selected nametable is coupled to each 2 KiB CHR
   bank rather than represented by one global mirroring mode.
+- Mapper 97 (Irem TAM-S1) fixes the final 16 KiB PRG bank at `$8000-$BFFF`, selects one of sixteen
+  banks at `$C000-$FFFF` through D3-D0, and uses D7-D6 for lower one-screen, horizontal, vertical or
+  upper one-screen mirroring. Its only known board carries 256 KiB PRG ROM and 8 KiB CHR RAM.
 - Mapper 118 (TxSROM) keeps full MMC3 banking and filtered-A12 IRQs but connects CHR A17 to CIRAM
   A10. R0/R1 or R2-R5 control nametable slots according to CHR mode, and `$A000` mirroring writes are
   physically disconnected.
@@ -172,8 +193,9 @@ and fails closed.
   with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring
   stays hardwired from the header. MMC3-family supersets that add those features remain separate.
 
-New mapper families are intentionally outside the current scope. Coverage work is limited to the
-listed board families and does not silently approximate unsupported mapper numbers.
+The finite mapper-completion track and its still-planned families are recorded in
+[Engineering roadmap](./engineering-roadmap.md). Numbers outside that boundary remain unsupported
+unless the roadmap is changed explicitly; no unknown mapper is silently approximated.
 
 Before changing a status to `Verified`, verify header parsing, bank boundaries, mirroring, writable
 memory, reset behavior and IRQ semantics where applicable, then record executable external evidence.

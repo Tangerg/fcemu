@@ -104,7 +104,7 @@ See NESdev [CPU memory map](https://www.nesdev.org/wiki/CPU_memory_map).
 | `$4015`       | 1 B    | APU status                 | APU status OR internal-bus bit 5; internal only     | scheduled APU register write            |
 | `$4016`       | 1 B    | Controller 1 / OUT latch   | Controller 1 serial bit on D0-D4, external D5-D7    | scheduled `$4016` OUT-latch write       |
 | `$4017`       | 1 B    | Controller 2 / frame ctr   | Controller 2 serial bit on D0-D4, external D5-D7    | scheduled APU frame-counter write       |
-| `$4018-$5FFF` | ~7 KiB | Expansion (unused)         | open bus (external latch)                           | ignored (no effect)                     |
+| `$4018-$5FFF` | ~7 KiB | Cartridge expansion        | optional mapper value/mask; otherwise open bus      | optional mapper expansion write         |
 | `$6000-$FFFF` | 40 KiB | Cartridge (PRG RAM/ROM)    | `Mapper.read` + optional data-line drive mask       | `Mapper.write`                          |
 
 ### Internal vs external data-bus latches and open bus
@@ -116,8 +116,9 @@ CPU reads (`read` -> `readMapped(…, true)`) from DMA bus-master reads (`readFo
 
 - `readFullyDriven` (RAM and PPU registers) drives the external latch to the returned byte, and the
   internal latch too only when the CPU owns the read.
-- `readOpenBus` (write-only `$4000-$4014`, `$4018-$5FFF`) returns the retained external latch; the
-  internal latch copies it only on a CPU-owned read. Nothing on the Control Deck drives these pins.
+- `readOpenBus` (write-only `$4000-$4014`, and unmapped `$4018-$5FFF`) returns the retained external
+  latch; the internal latch copies it only on a CPU-owned read. An optional cartridge expansion
+  result can drive selected external lines in the latter range.
 - `readPartiallyDriven` (controller ports and cartridge reads) drives only the bits in the mask and
   retains the rest of the external latch, mirroring the internal latch on a CPU-owned read. A mapper
   omitting `cpuReadDriveMask` drives all eight bits; write-only or disabled cartridge windows return
@@ -151,7 +152,9 @@ or four-screen) into `PPU.nameTableData`; and `$3F00-$3FFF` palette RAM via `PPU
 Before applying fixed header mirroring, nametable reads and writes ask the mapper's optional
 `mapNametableAddress` capability for a direct nametable-memory index. This models boards that wire a
 CHR bank output to CIRAM A10: routing is selected per nametable slot and can change with CHR banking,
-so reducing it to one mutable horizontal/vertical enum would lose hardware state.
+so reducing it to one mutable horizontal/vertical enum would lose hardware state. Separate optional
+`readNametable`/`writeNametable` capabilities let Sunsoft-4 replace CIRAM with read-only CHR ROM
+without encoding memory ownership in an address sentinel.
 
 Pattern-table reads also apply the mapper's optional `ppuReadDriveMask`. The cartridge normally
 drives all eight bits. When CHR is disabled and the cartridge tri-states those pins, undriven bits
@@ -212,9 +215,10 @@ the DMA/OAM fixtures in
 [External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md) provide executable
 evidence for interactions that isolated device tests cannot prove.
 
-The supported CPU map is the standard NES/Famicom Control Deck map. `$4018-$5FFF` expansion devices,
-VS System wiring and PlayChoice-10 behavior are not approximated. Cartridge expansion audio is not
-routed through the base mapper contract.
+The supported CPU map is the standard NES/Famicom Control Deck map plus explicitly decoded cartridge
+devices; Mapper 79 currently uses a write-only expansion latch. VS System wiring and PlayChoice-10
+behavior are not approximated. Cartridge expansion audio is not yet routed through the base mapper
+contract.
 
 ## Source files
 

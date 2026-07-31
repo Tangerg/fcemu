@@ -80,9 +80,10 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   once or twice according to GET/PUT phase; the pending clear is deterministic save-state data.
 - The RP2A03 internal data bus and its external pins are distinct state. CPU reads and writes update
   the internal bus; external device reads and CPU writes update the external bus; DMC DMA fetches do
-  not overwrite the internal latch. `$4000-$4014` and `$4018-$5FFF` are open external bus in the
-  supported Control Deck map. Controller reads drive bits 0–4 and retain external bits 5–7, while
-  `$4015` takes bit 5 from the internal bus and leaves the external latch unchanged.
+  not overwrite the internal latch. `$4000-$4014` and an undecoded `$4018-$5FFF` are open external
+  bus; a cartridge may explicitly decode the latter range. Controller reads drive bits 0–4 and
+  retain external bits 5–7, while `$4015` takes bit 5 from the internal bus and leaves the external
+  latch unchanged.
 - MMC1 observes the CPU R/W pin, not an instruction-level write callback. Of consecutive CPU write
   cycles it accepts only the first D0 serial write, which makes an RMW instruction's write-new cycle
   invisible to the shift register. D7 reset remains effective even on that second cycle. The prior
@@ -101,7 +102,8 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   address low byte; this is separate from the CPU-facing PPU register open-bus latch.
 - Cartridge wiring may drive CIRAM A10 from a CHR bank output instead of a global mirroring latch.
   Namco 3425 and TxSROM therefore select nametable memory per PPU address slot through current bank
-  registers. TQROM separately uses CHR bank bit 6 as ROM/RAM chip select.
+  registers. Sunsoft-4 can instead disable CIRAM and drive nametable reads from CHR ROM. TQROM
+  separately uses CHR bank bit 6 as ROM/RAM chip select.
 - The PPU drives a physical `/NMI` level; the CPU edge detector samples it during its input phase and
   transfers the detected edge through a second polling latch. Vector selection is fixed before the
   interrupt status push, not immediately before the vector read.

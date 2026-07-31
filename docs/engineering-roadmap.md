@@ -13,7 +13,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 33 implemented mapper IDs; four board families currently have reproducible external or pinned
+- 37 implemented mapper IDs; four board families currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-14 save states and independent battery-backed NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
@@ -22,11 +22,32 @@ capabilities and evidence belong in the subsystem references and compatibility m
 See [Mapper compatibility](./mapper-compatibility.md) and [Testing](./testing.md) for the precise
 evidence behind these statements.
 
+## Bounded mapper-completion track
+
+The historical [TuxNES mapper list](http://tuxnes.sourceforge.net/nesmapper.txt) is the finite
+discovery boundary for the current expansion goal, not the hardware specification. It names 50
+mapper IDs; the project covered 19 at the start of this track and must add the remaining 31 using
+current NESdev board documentation. Mirroring and other electrical behavior are never copied from
+the historical title table, whose own introduction warns that those fields are incomplete.
+
+| Phase                    | Mapper IDs                     | Architectural dependency                      | Status      |
+| ------------------------ | ------------------------------ | --------------------------------------------- | ----------- |
+| Foundation boards        | 32, 68, 79, 97                 | Expansion-area writes; ROM nametables         | Implemented |
+| IRQ and ASIC boards      | 16, 18, 48, 64, 65, 80, 82, 91 | CPU-cycle IRQ variants; board RAM             | Planned     |
+| Konami VRC2/VRC4         | 21, 22, 23, 25                 | Shared pin-routing and VRC IRQ core           | Planned     |
+| FFE and simple multicart | 6, 8, 15, 17, 225, 227, 228    | Outer/inner banks and expansion registers     | Planned     |
+| Complex clone ASICs      | 83, 90                         | ROM nametables, multiplier and IRQ variants   | Planned     |
+| Expansion-audio boards   | 19, 24, 26, 85                 | Cartridge audio clocking, mixing and state    | Planned     |
+| Advanced console boards  | 5, 99                          | MMC5 features; VS System console/header model | Planned     |
+
+Completion means all 31 IDs meet the mapper definition of done below. It does not expand scope to
+every assigned iNES/NES 2.0 number or permit title hashes and guessed board variants.
+
 ## Priority 1: verify the implemented mapper set
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 9, 10, 11, 13,
-33, 66, 69, 70, 71, 75, 76, 78, 87, 88, 89, 93, 94, 95, 118, 119, 140, 152, 180, 184, 185 and 206
-are implemented but do not yet all have executable external verification.
+32, 33, 66, 68, 69, 70, 71, 75, 76, 78, 79, 87, 88, 89, 93, 94, 95, 97, 118, 119, 140, 152, 180,
+184, 185 and 206 are implemented but do not yet all have executable external verification.
 
 For each board family:
 
@@ -80,7 +101,8 @@ Do not add speculative silicon-profile flags to preserve two incompatible approx
 ## Non-goals
 
 - JIT-compiling the 8-bit CPU without measurement showing the interpreter is the bottleneck.
-- Maximizing mapper count while existing boards lack verification.
+- Unbounded mapper-count work outside the finite completion track while existing boards lack
+  verification.
 - ROM databases, title-specific hacks or automated commercial-ROM acquisition.
 - Server-side ROM storage, accounts, cloud saves or telemetry.
 - Netplay, rewind or shader systems before core state/version contracts are release-ready.

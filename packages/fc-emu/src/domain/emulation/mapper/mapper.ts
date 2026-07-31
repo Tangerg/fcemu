@@ -69,6 +69,32 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "irem-g101";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly prgMode: number;
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "sunsoft-4";
+      readonly chrBanks: readonly number[];
+      readonly nametableBanks: readonly number[];
+      readonly useChrNametables: boolean;
+      readonly prgBank: number;
+      readonly prgRamEnabled: boolean;
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "nina-03-06";
+      readonly prgBank: number;
+      readonly chrBank: number;
+    }
+  | {
+      readonly kind: "irem-tam-s1";
+      readonly prgBank: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-78";
       readonly selectedPrgBank: number;
       readonly selectedChrBank: number;
@@ -163,6 +189,20 @@ export interface Mapper {
   cpuReadDriveMask?(address: number): number;
 
   /**
+   * Optional cartridge device read in CPU $4018-$5FFF.
+   *
+   * Returning undefined leaves the expansion range open bus. The result keeps
+   * the byte and physical data-line mask together so the CPU bus remains the
+   * sole owner of open-bus composition.
+   */
+  readCpuExpansion?(
+    address: number,
+  ): { readonly value: number; readonly drivenMask: number } | undefined;
+
+  /** Optional cartridge register write in CPU $4018-$5FFF. */
+  writeCpuExpansion?(address: number, value: number): void;
+
+  /**
    * Bits driven by the cartridge during a PPU pattern-table read.
    *
    * Omitting this capability means all eight data lines are driven. A board
@@ -178,6 +218,24 @@ export interface Mapper {
    * directly. Returning undefined leaves routing to fixed header mirroring.
    */
   mapNametableAddress?(address: number): number | undefined;
+
+  /**
+   * Optional cartridge-driven nametable byte.
+   *
+   * Returning undefined falls through to CIRAM routing. This models boards
+   * that replace CIRAM with CHR ROM without encoding memory ownership in an
+   * address sentinel.
+   */
+  readNametable?(address: number): number | undefined;
+
+  /**
+   * Optional cartridge-owned nametable write.
+   *
+   * Returning true consumes the write; false falls through to CIRAM. ROM-backed
+   * nametables use this to discard writes while keeping the PPU bus behavior
+   * explicit.
+   */
+  writeNametable?(address: number, value: number): boolean;
 
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;

@@ -53,6 +53,13 @@ export type MapperState =
       readonly selectedChrBank0: number;
       readonly selectedChrBank1: number;
     }
+  | { readonly kind: "sunsoft-2"; readonly register: number }
+  | {
+      readonly kind: "vrc1";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly mirroring: number;
+    }
   | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];

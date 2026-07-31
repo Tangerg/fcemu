@@ -29,12 +29,14 @@ import {
 } from "./mapper-errors.js";
 import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
+import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import {
   createInvertedUxromBoard,
   GENERIC_UXROM_BOARD,
   UN1ROM_BOARD,
   UxromMapper,
 } from "./uxrom-mapper.js";
+import { Vrc1Mapper } from "./vrc1-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -139,6 +141,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWritableChrSize(cartridge, 0x2000);
       requireNoPrgRam(cartridge);
       return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
+    case 75:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x1000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "VRC1");
+      requireNoPrgRam(cartridge);
+      return new Vrc1Mapper(cartridge);
     case 78:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
@@ -150,6 +159,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireJalecoLayout(cartridge);
       requireNoPrgRam(cartridge);
       return new JalecoMapper(cartridge);
+    case 89:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "Sunsoft-2");
+      requireNoPrgRam(cartridge);
+      return new Sunsoft2Mapper(cartridge);
     case 94:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x20_000], 0x2000);

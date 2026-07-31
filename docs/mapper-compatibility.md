@@ -27,8 +27,10 @@ describes evidence maturity rather than a runtime feature flag.
 | 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                 |
 | 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM           |
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                  |
+| 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM       |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM     |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                   |
+| 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM          |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM   |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM  |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM              |
@@ -39,8 +41,8 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/33/66/69/70/87/94/140/152/184/206 currently accept only submapper 0. Mapper 1 accepts
-submapper 0, deprecated geometry-qualified
+0/4/9/10/11/13/33/66/69/70/75/87/89/94/140/152/184/206 currently accept only submapper 0. Mapper 1
+accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
 accept submapper 0 plus the NES 2.0 bus-conflict variants below. Mapper 34 accepts submapper 0
 through a single-board CHR-geometry decision, submapper 1 as NINA-001 and submapper 2 as BNROM.
@@ -60,9 +62,9 @@ submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fa
   because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/33/66/70/71/78/87/94/140/152/180/184/206 because those selected boards do not decode a writable
-  `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB allocation remains a parser-compatibility
-  detail but is not exposed by these mappers.
+  9/11/13/33/66/70/71/75/78/87/89/94/140/152/180/184/206 because those selected boards do not
+  decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB allocation remains a
+  parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
   outputs select outer PRG ROM and 8 KiB PRG-RAM banks; mixed volatile/battery banks retain only the
   NVRAM bytes. SNROM additionally wires CHR A16 as a redundant WRAM disable, while submapper 5
@@ -99,6 +101,10 @@ submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fa
 - Mapper 71 (Codemasters/Camerica) switches a 16 KiB `$8000-$BFFF` bank from `$C000-$FFFF` with the
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
   single-screen mirroring; submapper 0 keeps the header's fixed mirroring.
+- Mapper 75 (Konami VRC1) exposes three switchable 8 KiB PRG banks followed by the fixed final bank,
+  plus two 4 KiB CHR banks whose fifth select bits share the horizontal/vertical mirroring register.
+  Four-screen cartridges ignore that mirroring output; the ASIC has no IRQ, PRG RAM or bus
+  conflicts.
 - Mapper 78 combines UNROM-style 16 KiB PRG and CNROM-style 8 KiB CHR switching with AND bus
   conflicts. Register bit 3 selects lower/upper one-screen mirroring on Cosmo Carrier hardware but
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical
@@ -114,6 +120,9 @@ submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fa
 - Mapper 87 (Jaleco/Konami) latches an 8 KiB CHR bank at `$6000-$7FFF` with its two select lines
   reversed (value bit 1 drives CHR line 0, value bit 0 drives CHR line 1); PRG ROM stays NROM-fixed
   and there are no bus conflicts.
+- Mapper 89 (Sunsoft-2 on Sunsoft-3) uses one AND-conflicted `$8000-$FFFF` latch for a switchable
+  16 KiB PRG bank, split-field 8 KiB CHR bank and lower/upper one-screen mirroring. The final 16 KiB
+  PRG bank is fixed and no PRG RAM is decoded.
 - Mapper 94 (HVC-UN1ROM) is UxROM with a conflict-prone bank field shifted to bits 4-2. It requires
   128 KiB PRG ROM and fixed 8 KiB CHR RAM.
 - Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB

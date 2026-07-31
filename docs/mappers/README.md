@@ -94,8 +94,10 @@ counters against their bit width and all booleans by runtime type) and throws
 | 69  | Sunsoft FME-7  | `fme7`             | `fme7-mapper.ts`             | no            | cyc. |
 | 70  | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 71  | Codemasters    | `codemasters`      | `codemasters-mapper.ts`      | no            | no   |
+| 75  | Konami VRC1    | `vrc1`             | `vrc1-mapper.ts`             | no            | no   |
 | 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
+| 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
 | 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
 | 140 | Jaleco JF      | `jaleco-jf`        | `jaleco-jf-mapper.ts`        | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
@@ -239,6 +241,15 @@ A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `
 to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire Hawk) adds single-screen
 mirroring from `$9000-$9FFF` bit 4; submapper 0 (BF9093) keeps the header's fixed mirroring.
 
+## Konami VRC1 (75)
+
+Three registers select 8 KiB PRG-ROM banks at `$8000`, `$A000` and `$C000`; `$E000-$FFFF` stays
+fixed to the final bank. Two 4 KiB CHR-ROM windows take their low four bank bits from `$E000` and
+`$F000`, while `$9000` bits 1-2 provide each window's fifth bit. `$9000` bit 0 selects
+vertical/horizontal mirroring, except on cartridges with four-screen VRAM where the line is ignored.
+The VRC1 has no PRG RAM, IRQ or bus conflicts. See the
+[NESdev VRC1 reference](https://www.nesdev.org/wiki/VRC1).
+
 ## Irem 74HC161/32 (78)
 
 One conflict-prone `$8000-$FFFF` latch combines a 16 KiB `$8000-$BFFF` PRG bank (last bank fixed at
@@ -254,6 +265,15 @@ selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. See
 A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →
 CHR line 0, value bit 0 → CHR line 1). PRG ROM stays NROM-fixed; no bus conflicts because the latch
 occupies the otherwise-unmapped `$6000-$7FFF` space.
+
+## Sunsoft-2 / Sunsoft-3 (89)
+
+One conflict-prone register across `$8000-$FFFF` selects the 16 KiB PRG bank at `$8000-$BFFF` from
+bits 6-4 while fixing the final bank at `$C000-$FFFF`. Bits 2-0 select the low CHR bank bits and bit
+7 supplies the high bit for one 8 KiB CHR-ROM window; bit 3 selects lower/upper one-screen
+mirroring. The board maps no PRG RAM. See
+[NESdev mapper 89](https://www.nesdev.org/wiki/INES_Mapper_089) and the
+[Sunsoft-2 pinout](https://www.nesdev.org/wiki/Sunsoft_2_pinout).
 
 ## UxROM variants (94, 180)
 

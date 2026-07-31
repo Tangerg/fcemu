@@ -157,6 +157,48 @@ export type MapperState =
       } | null;
     }
   | {
+      readonly kind: "vrc6";
+      readonly board: "vrc6a" | "vrc6b";
+      readonly prgBank16: number;
+      readonly prgBank8: number;
+      readonly chrBanks: readonly number[];
+      readonly ppuMode: number;
+      readonly audio: {
+        readonly frequencyControl: number;
+        readonly pulse1: {
+          readonly control: number;
+          readonly period: number;
+          readonly divider: number;
+          readonly dutyStep: number;
+          readonly enabled: boolean;
+        };
+        readonly pulse2: {
+          readonly control: number;
+          readonly period: number;
+          readonly divider: number;
+          readonly dutyStep: number;
+          readonly enabled: boolean;
+        };
+        readonly saw: {
+          readonly rate: number;
+          readonly period: number;
+          readonly divider: number;
+          readonly step: number;
+          readonly accumulator: number;
+          readonly enabled: boolean;
+        };
+      };
+      readonly irq: {
+        readonly latch: number;
+        readonly counter: number;
+        readonly prescaler: number;
+        readonly enabled: boolean;
+        readonly enabledAfterAcknowledge: boolean;
+        readonly cycleMode: boolean;
+        readonly pending: boolean;
+      };
+    }
+  | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];
@@ -494,6 +536,9 @@ export interface Mapper {
 
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;
+
+  /** Optional cartridge-audio voltage contribution sampled by the console mixer. */
+  expansionAudioSample?(): number;
 
   /** Optional PPU address-line observation for boards such as MMC3. */
   observePpuAddress?(address: number): void;

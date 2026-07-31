@@ -30,7 +30,9 @@ describes evidence maturity rather than a runtime feature flag.
 | 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture         |
 | 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture       |
 | 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture      |
+| 24     | Konami VRC6a   | Implemented | Full PPU modes/IRQ/pulse/saw/mixer/state tests; no fixture       |
 | 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture        |
+| 26     | Konami VRC6b   | Implemented | Swapped A0/A1/banking/IRQ/audio/state tests; no fixture          |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM       |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM        |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                   |
@@ -73,7 +75,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/18/33/64/65/66/68/69/70/75/76/79/80/82/87/88/89/90/93/94/95/97/118/119/140/152/184/206 currently
+0/4/9/10/11/13/18/24/26/33/64/65/66/68/69/70/75/76/79/80/82/87/88/89/90/93/94/95/97/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -116,6 +118,10 @@ non-overlapping CPU-address pin routes. Their exact NES 2.0 variants are mapper 
 (VRC4a/c), mapper 23 submappers 1/2/3 (VRC4f/e and VRC2b), and mapper 25 submappers 1/2/3
 (VRC4b/d and VRC2c). Mapper 22 submapper 0 is the single VRC2a wiring. Unallocated VRC2
 submappers remain rejected rather than infer nonexistent boards.
+
+Mappers 24/26 are the exact VRC6a/VRC6b PCBs and accept only submapper 0. Both require the physical
+8 KiB PRG RAM/NVRAM window; mapper 26 swaps the ASIC's A0/A1 register inputs rather than carrying a
+second register model.
 
 ## Legacy-header assumptions
 
@@ -204,6 +210,12 @@ submappers remain rejected rather than infer nonexistent boards.
   registers, gated 2 KiB-mirrored or 8 KiB PRG RAM, and its shared CPU/cycle-or-scanline IRQ core
   with the 341-dot prescaler. PRG is capped at 256 KiB; reachable CHR capacity is capped per ASIC
   and VRC2a wiring rather than silently modulo an unreachable declaration.
+- Mappers 24/26 share one VRC6 ASIC model. Mapper 26 swaps only A0/A1 before canonical register
+  decode. The core implements the 16+8+fixed PRG layout, gated 8 KiB WRAM, all `$B003` pattern and
+  CIRAM/ROM-nametable arrangements, byte-wide shared VRC IRQ, two descending 16-step pulse channels,
+  the fourteen-step saw accumulator and `$9003` halt/16×/256× scaling. The linear six-bit DAC is
+  sampled through the mapper audio capability and added before the console RC filters; oscillator,
+  divider, accumulator, IRQ and bank phase all participate in save state.
 - Mapper 32 (Irem G-101) exposes two switchable 8 KiB PRG banks, two fixed tail banks and eight
   1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
   windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major

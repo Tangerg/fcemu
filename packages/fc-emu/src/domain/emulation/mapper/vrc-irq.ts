@@ -95,6 +95,10 @@ export class VrcIrq {
       : (this.latch & 0xf0) | (value & 0x0f);
   }
 
+  writeLatch(value: number): void {
+    this.latch = value & 0xff;
+  }
+
   writeControl(value: number): void {
     this.acknowledgeLine();
     this.enabledAfterAcknowledge = (value & 0x01) !== 0;

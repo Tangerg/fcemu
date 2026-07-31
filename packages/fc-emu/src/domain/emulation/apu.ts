@@ -1,4 +1,3 @@
-import type Bus from "./bus.js";
 import type { ConsoleTiming } from "./console-timing.js";
 import { DmaBusPhase } from "./dma/dma-bus-phase.js";
 import { IRQSource } from "./irq-source.js";
@@ -11,6 +10,14 @@ import {
   RP2A03H_DMC_PROFILE,
   type DeltaModulationChannelState,
 } from "./apu/delta-modulation-channel.js";
+
+interface ApuBusPort {
+  cancelDmcDma(): void;
+  requestDmcDma(address: number, haltPhase: DmaBusPhase): void;
+  setIRQSource(source: IRQSource, asserted: boolean): void;
+  currentDmaPhase(): DmaBusPhase;
+  cartridgeAudioSample(): number;
+}
 
 interface PulseChannelState {
   readonly lengthCounter: LengthCounterState;
@@ -683,6 +690,7 @@ class AudioMixer {
   private readonly noiseChannel: NoiseChannel;
   private readonly deltaModulationChannel: DeltaModulationChannel;
   private readonly filters: NesAudioFilterChain;
+  private readonly expansionAudioSample: () => number;
 
   /**
    * Lookup table for pulse channel mixing
@@ -723,6 +731,7 @@ class AudioMixer {
       deltaModulationChannel: DeltaModulationChannel;
     },
     sampleRate: number,
+    expansionAudioSample: () => number,
   ) {
     this.pulseChannel1 = channels.pulseChannel1;
     this.pulseChannel2 = channels.pulseChannel2;
@@ -730,6 +739,7 @@ class AudioMixer {
     this.noiseChannel = channels.noiseChannel;
     this.deltaModulationChannel = channels.deltaModulationChannel;
     this.filters = new NesAudioFilterChain(sampleRate);
+    this.expansionAudioSample = expansionAudioSample;
   }
 
   /**
@@ -747,7 +757,11 @@ class AudioMixer {
     // Mix using non-linear tables
     // Pulse channels are summed directly (0-30)
     // TND channels are weighted: Triangle * 3 + Noise * 2 + DMC * 1 (0-202)
-    return AudioMixer.PULSE_MIX_TABLE[p1 + p2] + AudioMixer.TND_MIX_TABLE[3 * t + 2 * n + d];
+    return (
+      AudioMixer.PULSE_MIX_TABLE[p1 + p2] +
+      AudioMixer.TND_MIX_TABLE[3 * t + 2 * n + d] +
+      this.expansionAudioSample()
+    );
   }
 
   /**
@@ -790,7 +804,7 @@ class APU {
   private audioMixer!: AudioMixer;
   private readonly frameSequencer: FrameSequencer;
   // System components
-  private readonly bus: Bus;
+  private readonly bus: ApuBusPort;
   private readonly cyclesPerSample: number;
   private readonly sampleRate: number;
   private readonly timing: ConsoleTiming;
@@ -810,7 +824,7 @@ class APU {
    * Creates a new APU instance
    * @param bus - Reference to the Bus
    */
-  constructor(bus: Bus, timing: ConsoleTiming, sampleRate = 44_100) {
+  constructor(bus: ApuBusPort, timing: ConsoleTiming, sampleRate = 44_100) {
     if (!Number.isFinite(sampleRate) || sampleRate <= 0) {
       throw new RangeError("Audio sample rate must be a positive finite number");
     }
@@ -905,6 +919,7 @@ class APU {
         deltaModulationChannel: this.deltaModulationChannel,
       },
       this.sampleRate,
+      () => this.bus.cartridgeAudioSample(),
     );
   }
 

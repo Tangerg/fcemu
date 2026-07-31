@@ -98,6 +98,10 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     return this.mapper;
   }
 
+  cartridgeAudioSample(): number {
+    return this.mapper.expansionAudioSample?.() ?? 0;
+  }
+
   captureState(): BusSnapshot {
     const pendingControllerWrite = this.pendingControllerWrite;
     return {

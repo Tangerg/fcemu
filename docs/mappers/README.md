@@ -118,7 +118,9 @@ counters against their bit width and all booleans by runtime type) and throws
 | 21  | Konami VRC4a/c | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | cyc. |
 | 22  | Konami VRC2a   | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | no   |
 | 23  | VRC2b/VRC4e/f  | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | opt. |
+| 24  | Konami VRC6a   | `vrc6`                    | `vrc6-mapper.ts`             | no            | cyc. |
 | 25  | VRC2c/VRC4b/d  | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | opt. |
+| 26  | Konami VRC6b   | `vrc6`                    | `vrc6-mapper.ts`             | no            | cyc. |
 | 32  | Irem G-101     | `irem-g101`               | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`            | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001`        | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
@@ -136,9 +138,11 @@ counters against their bit width and all booleans by runtime type) and throws
 | 79  | NINA-03/06     | `nina-03-06`              | `nina0306-mapper.ts`         | no            | no   |
 | 80  | Taito X1-005   | `taito-x1-005`            | `taito-x1-005-mapper.ts`     | no            | no   |
 | 82  | Taito X1-017   | `taito-x1-017`            | `taito-x1-017-mapper.ts`     | no            | cyc. |
+| 83  | Cony/Yoko ASIC | `cony-yoko`               | `cony-yoko-mapper.ts`        | no            | both |
 | 87  | Jaleco CHR     | `jaleco-87`               | `jaleco-mapper.ts`           | no            | no   |
 | 88  | Namco 3433     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`               | `sunsoft2-mapper.ts`         | AND           | no   |
+| 90  | J.Y. Company   | `jy-company`              | `jy-company-mapper.ts`       | no            | both |
 | 91  | JY/EJ bootleg  | board-specific            | two boards + shared banking  | no            | both |
 | 93  | Sunsoft-3R     | `sunsoft-3r`              | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`                   | `uxrom-mapper.ts`            | AND           | no   |
@@ -386,6 +390,29 @@ domain component so later VRC6/VRC7 boards can reuse this actual circuit without
 banking. See [NESdev VRC2/VRC4](https://www.nesdev.org/wiki/VRC4),
 [NES 2.0 submappers](https://www.nesdev.org/wiki/NES_2.0_submappers) and
 [VRC IRQ](https://www.nesdev.org/wiki/VRC_IRQ).
+
+## Konami VRC6 (24, 26)
+
+`Vrc6Mapper` represents the VRC6a and VRC6b as one ASIC with immutable CPU-pin routing. Mapper 24
+uses A0/A1 directly; mapper 26 swaps them before the common `$F003` decode. One 16 KiB PRG register
+maps `$8000-$BFFF`, one 8 KiB register maps `$C000-$DFFF`, the final bank stays fixed, and `$B003`
+bit 7 gates the physical 8 KiB WRAM/NVRAM window.
+
+Eight byte-wide CHR registers support the documented 8×1, 4×2 and mixed 4×1+2×2 KiB layouts.
+`$B003` bit 5 controls whether the ASIC overrides CHR/CIRAM A10, while its low mode/mirroring bits
+select every conventional, direct four-table and paired nametable arrangement. Bit 4 replaces
+CIRAM reads with the corresponding CHR-ROM pages and consumes writes. These routes are calculated
+from the physical bank outputs instead of collapsing the chip to the eight values used by its
+three commercial games.
+
+The audio device owns two descending 16-step pulse generators and one fourteen-step saw sequence.
+`$9003` can halt all phases or right-shift periods by 4/8 bits; the linear six-bit sum is inverted
+and scaled so a maximum pulse matches the measured approximate amplitude of one maximum RP2A03
+pulse, then enters the console's shared RC filter chain. The byte-latch VRC IRQ reuses `VrcIrq`.
+Every divider, duty step, saw accumulator, bank and pending IRQ is serialized. See
+[NESdev VRC6](https://www.nesdev.org/wiki/VRC6),
+[VRC6 audio](https://www.nesdev.org/wiki/VRC6_audio) and
+[VRC6 pinout](https://www.nesdev.org/wiki/VRC6_pinout).
 
 ## Irem G-101 (32)
 

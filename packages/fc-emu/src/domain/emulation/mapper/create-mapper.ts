@@ -69,6 +69,7 @@ import {
 import { Vrc1Mapper } from "./vrc1-mapper.js";
 import { findVrc24Board, type Vrc24Board } from "./vrc2-vrc4-board.js";
 import { Vrc2Vrc4Mapper } from "./vrc2-vrc4-mapper.js";
+import { Vrc6Mapper } from "./vrc6-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -176,6 +177,19 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireVrc24Memory(cartridge, board);
       return new Vrc2Vrc4Mapper(interruptPort, cartridge, board);
     }
+    case 24:
+    case 26:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "Konami VRC6");
+      requireTwoScreenNametables(cartridge, "Konami VRC6");
+      requireVrc6Memory(cartridge);
+      return new Vrc6Mapper(
+        interruptPort,
+        cartridge,
+        cartridge.mapperNumber === 24 ? "vrc6a" : "vrc6b",
+      );
     case 32:
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
@@ -654,6 +668,13 @@ function requireVrc24Memory(cartridge: Cartridge, board: Vrc24Board): void {
         ? "VRC2 supports either its one-bit latch or exactly 8 KiB of PRG RAM"
         : "VRC4 PRG RAM must be absent, 2 KiB or 8 KiB",
     );
+  }
+}
+
+function requireVrc6Memory(cartridge: Cartridge): void {
+  requireDirectPrgRam(cartridge);
+  if (cartridge.prgWritableBytes !== 0x2000) {
+    throw configurationError(cartridge, "VRC6 requires exactly 8 KiB of PRG RAM or NVRAM");
   }
 }
 

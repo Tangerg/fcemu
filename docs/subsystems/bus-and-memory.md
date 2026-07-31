@@ -218,8 +218,9 @@ evidence for interactions that isolated device tests cannot prove.
 
 The supported CPU map is the standard NES/Famicom Control Deck map plus explicitly decoded cartridge
 devices; Mapper 79 currently uses a write-only expansion latch. VS System wiring and PlayChoice-10
-behavior are not approximated. Cartridge expansion audio is not yet routed through the base mapper
-contract.
+behavior are not approximated. A mapper may expose a current cartridge-audio voltage through
+`expansionAudioSample`; the bus presents that narrow capability to the APU mixer without teaching
+the APU any mapper register protocol.
 
 ## Source files
 

@@ -5,7 +5,9 @@ import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
 import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
-/** iNES mapper 4: Nintendo MMC3 with revision-B IRQ counter behavior. */
+export type Mmc3Board = "standard" | "txsrom" | "tqrom";
+
+/** Nintendo MMC3 register core with revision-B IRQ behavior and explicit board wiring. */
 export class Mmc3Mapper implements Mapper {
   private static readonly A12_LOW_FILTER_PPU_CYCLES = 10;
 
@@ -29,6 +31,7 @@ export class Mmc3Mapper implements Mapper {
   constructor(
     private readonly interruptPort: MapperInterruptPort,
     private readonly cartridge: Cartridge,
+    private readonly board: Mmc3Board = "standard",
   ) {
     this.powerOnMirroring = cartridge.mirroringMode;
     this.powerOn();
@@ -156,6 +159,7 @@ export class Mmc3Mapper implements Mapper {
 
   read(address: number): number {
     if (address < 0x2000) {
+      if (this.board === "tqrom") return this.readTqromChr(address);
       const bank = Math.floor(address / 0x0400);
       const offset = address % 0x0400;
       return this.cartridge.readChr(this.chrOffsets[bank] + offset);
@@ -165,7 +169,9 @@ export class Mmc3Mapper implements Mapper {
       const offset = address % 0x2000;
       return this.cartridge.prgRom[this.prgOffsets[bank] + offset];
     } else if (address >= 0x6000) {
-      return this.prgRamEnabled ? this.cartridge.readPrgRam(address - 0x6000) : 0;
+      return this.mapsPrgRam && this.prgRamEnabled
+        ? this.cartridge.readPrgRam(address - 0x6000)
+        : 0;
     } else {
       return 0;
     }
@@ -173,19 +179,33 @@ export class Mmc3Mapper implements Mapper {
 
   cpuReadDriveMask(address: number): number {
     return address >= 0x8000 ||
-      (address >= 0x6000 && this.prgRamEnabled && this.cartridge.prgWritableBytes > 0)
+      (address >= 0x6000 &&
+        this.mapsPrgRam &&
+        this.prgRamEnabled &&
+        this.cartridge.prgWritableBytes > 0)
       ? 0xff
       : 0;
   }
 
+  mapNametableAddress(address: number): number | undefined {
+    if (this.board !== "txsrom") return undefined;
+    const nametableOffset = (address - 0x2000) & 0x0fff;
+    const chrBank = this.chrBankValue(nametableOffset);
+    return ((chrBank >>> 7) & 1) * 0x0400 + (nametableOffset & 0x03ff);
+  }
+
   write(address: number, value: number): void {
     if (address < 0x2000) {
+      if (this.board === "tqrom") {
+        this.writeTqromChr(address, value);
+        return;
+      }
       const bank = Math.floor(address / 0x0400);
       const offset = address % 0x0400;
       this.cartridge.writeChr(this.chrOffsets[bank] + offset, value);
     } else if (address >= 0x8000) {
       this.writeRegister(address, value);
-    } else if (address >= 0x6000 && this.prgRamEnabled && this.prgRamWritable) {
+    } else if (address >= 0x6000 && this.mapsPrgRam && this.prgRamEnabled && this.prgRamWritable) {
       this.cartridge.writePrgRam(address - 0x6000, value);
     }
   }
@@ -223,6 +243,7 @@ export class Mmc3Mapper implements Mapper {
   }
 
   private writeMirror(value: number): void {
+    if (this.board === "txsrom") return;
     if (this.cartridge.mirroringMode === NametableMirroring.FourScreen) return;
     switch (value & 1) {
       case 0:
@@ -280,6 +301,41 @@ export class Mmc3Mapper implements Mapper {
     return offset;
   }
 
+  private chrBankValue(address: number): number {
+    const slot = (address >> 10) & 0x07;
+    if (this.chrMode === 0) {
+      if (slot === 0) return this.registers[0] & 0xfe;
+      if (slot === 1) return this.registers[0] | 0x01;
+      if (slot === 2) return this.registers[1] & 0xfe;
+      if (slot === 3) return this.registers[1] | 0x01;
+      return this.registers[slot - 2];
+    }
+    if (slot < 4) return this.registers[slot + 2];
+    if (slot === 4) return this.registers[0] & 0xfe;
+    if (slot === 5) return this.registers[0] | 0x01;
+    if (slot === 6) return this.registers[1] & 0xfe;
+    return this.registers[1] | 0x01;
+  }
+
+  private readTqromChr(address: number): number {
+    const bank = this.chrBankValue(address);
+    const ramSelected = (bank & 0x40) !== 0;
+    const selectedBank = bank & (ramSelected ? 0x07 : 0x3f);
+    const offset = selectedBank * 0x0400 + (address & 0x03ff);
+    return ramSelected ? this.cartridge.readWritableChr(offset) : this.cartridge.readChr(offset);
+  }
+
+  private writeTqromChr(address: number, value: number): void {
+    const bank = this.chrBankValue(address);
+    if ((bank & 0x40) === 0) return;
+    const offset = (bank & 0x07) * 0x0400 + (address & 0x03ff);
+    this.cartridge.writeWritableChr(offset, value);
+  }
+
+  private get mapsPrgRam(): boolean {
+    return this.board !== "tqrom";
+  }
+
   private updateOffsets(): void {
     switch (this.prgMode) {
       case 0:
@@ -296,27 +352,8 @@ export class Mmc3Mapper implements Mapper {
         break;
     }
 
-    switch (this.chrMode) {
-      case 0:
-        this.chrOffsets[0] = this.chrBankOffset(this.registers[0] & 0xfe);
-        this.chrOffsets[1] = this.chrBankOffset(this.registers[0] | 0x01);
-        this.chrOffsets[2] = this.chrBankOffset(this.registers[1] & 0xfe);
-        this.chrOffsets[3] = this.chrBankOffset(this.registers[1] | 0x01);
-        this.chrOffsets[4] = this.chrBankOffset(this.registers[2]);
-        this.chrOffsets[5] = this.chrBankOffset(this.registers[3]);
-        this.chrOffsets[6] = this.chrBankOffset(this.registers[4]);
-        this.chrOffsets[7] = this.chrBankOffset(this.registers[5]);
-        break;
-      case 1:
-        this.chrOffsets[0] = this.chrBankOffset(this.registers[2]);
-        this.chrOffsets[1] = this.chrBankOffset(this.registers[3]);
-        this.chrOffsets[2] = this.chrBankOffset(this.registers[4]);
-        this.chrOffsets[3] = this.chrBankOffset(this.registers[5]);
-        this.chrOffsets[4] = this.chrBankOffset(this.registers[0] & 0xfe);
-        this.chrOffsets[5] = this.chrBankOffset(this.registers[0] | 0x01);
-        this.chrOffsets[6] = this.chrBankOffset(this.registers[1] & 0xfe);
-        this.chrOffsets[7] = this.chrBankOffset(this.registers[1] | 0x01);
-        break;
+    for (let slot = 0; slot < this.chrOffsets.length; slot++) {
+      this.chrOffsets[slot] = this.chrBankOffset(this.chrBankValue(slot * 0x0400));
     }
   }
 }

@@ -148,6 +148,11 @@ or four-screen) into `PPU.nameTableData`; and `$3F00-$3FFF` palette RAM via `PPU
 `PPU.writePalette` with `address % 32`. Nametable/palette internals and mirroring are detailed in
 [`ppu.md`](./ppu.md).
 
+Before applying fixed header mirroring, nametable reads and writes ask the mapper's optional
+`mapNametableAddress` capability for a direct nametable-memory index. This models boards that wire a
+CHR bank output to CIRAM A10: routing is selected per nametable slot and can change with CHR banking,
+so reducing it to one mutable horizontal/vertical enum would lose hardware state.
+
 Pattern-table reads also apply the mapper's optional `ppuReadDriveMask`. The cartridge normally
 drives all eight bits. When CHR is disabled and the cartridge tri-states those pins, undriven bits
 come from the current address low byte because the RP2C02 multiplexes its video-memory address and

@@ -23,6 +23,7 @@ to the rest of core.
 | `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
 | `cpuReadDriveMask(address)`  | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
 | `ppuReadDriveMask(address)`  | Optional PPU pattern-data mask; omitted means fully driven, `0` means CHR is tri-stated. |
+| `mapNametableAddress(addr)`  | Optional direct CIRAM/nametable-memory routing for cartridge-controlled wiring.          |
 | `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
 | `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
@@ -41,7 +42,8 @@ byte from `read` while `cpuReadDriveMask` reports that a write-only register or 
 drives no data lines; `CPUMemory` then combines the driven bits with the retained external bus.
 Pattern-table reads follow the same separation through `ppuReadDriveMask`; `PPUMemory` supplies the
 current address low byte on undriven multiplexed PPU pins instead of asking a mapper to invent open
-bus.
+bus. `mapNametableAddress` similarly keeps per-access CIRAM wiring distinct from the cartridge's
+fixed header mirroring.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -99,11 +101,16 @@ counters against their bit width and all booleans by runtime type) and throws
 | 70  | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 71  | Codemasters    | `codemasters`      | `codemasters-mapper.ts`      | no            | no   |
 | 75  | Konami VRC1    | `vrc1`             | `vrc1-mapper.ts`             | no            | no   |
+| 76  | Namco 3446     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
+| 88  | Namco 3433     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
 | 93  | Sunsoft-3R     | `sunsoft-3r`       | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
+| 95  | Namco 3425     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
+| 118 | TxSROM         | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
+| 119 | TQROM          | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
 | 140 | Jaleco JF      | `jaleco-jf`        | `jaleco-jf-mapper.ts`        | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
@@ -112,7 +119,9 @@ counters against their bit width and all booleans by runtime type) and throws
 | 206 | Namco 118      | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
-lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`.
+lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`. Namco
+76/88/95/206 select immutable pin-wiring values around one register core, while MMC3/TxSROM/TQROM
+select only the board behavior that differs around the shared MMC3 state machine.
 
 ---
 
@@ -256,6 +265,14 @@ vertical/horizontal mirroring, except on cartridges with four-screen VRAM where 
 The VRC1 has no PRG RAM, IRQ or bus conflicts. See the
 [NESdev VRC1 reference](https://www.nesdev.org/wiki/VRC1).
 
+## Namco 3446 (76)
+
+Mapper 76 keeps the Namco 108 family's two switchable and two fixed 8 KiB PRG windows, but rewires
+CHR as four 2 KiB windows selected by R2-R5. R0/R1 are physically inaccessible for CHR selection.
+The board reaches 128 KiB CHR ROM with no IRQ, PRG RAM, mirroring register or bus conflicts. See the
+[Namco 108 family reference](https://www.nesdev.org/wiki/INES_Mapper_206) and
+[pinout](https://www.nesdev.org/wiki/Namcot_108_family_pinout).
+
 ## Irem 74HC161/32 (78)
 
 One conflict-prone `$8000-$FFFF` latch combines a 16 KiB `$8000-$BFFF` PRG bank (last bank fixed at
@@ -271,6 +288,14 @@ selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. See
 A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →
 CHR line 0, value bit 0 → CHR line 1). PRG ROM stays NROM-fixed; no bus conflicts because the latch
 occupies the otherwise-unmapped `$6000-$7FFF` space.
+
+## Namco 3433/3443 (88)
+
+Mapper 88 retains the standard two 2 KiB plus four 1 KiB Namco CHR windows, while PPU A12 directly
+drives CHR A16. The `$0000` and `$1000` pattern tables therefore select separate 64 KiB halves of a
+128 KiB CHR ROM. Undersized CHR naturally mirrors into the lower capacity. PRG layout and missing
+IRQ/RAM/mirroring registers match mapper 206. See
+[NESdev mapper 206 variants](https://www.nesdev.org/wiki/INES_Mapper_206).
 
 ## Sunsoft-2 / Sunsoft-3 (89)
 
@@ -300,6 +325,29 @@ bank 0 at `$8000-$BFFF` and switches `$C000-$FFFF` from bits 2-0. Its legacy def
 conflicts, while NES 2.0 submapper 1/2 selects no-conflict/conflict behavior explicitly. See
 [NESdev mapper 94](https://www.nesdev.org/wiki/INES_Mapper_094) and
 [NESdev mapper 180](https://www.nesdev.org/wiki/INES_Mapper_180).
+
+## Namco 3425 (95)
+
+Mapper 95 is the Namco 108 layout with CHR A15 also connected to CIRAM A10. R0 selects the nametable
+used by `$2000-$27FF`; R1 selects `$2800-$2FFF`, producing horizontal or either one-screen layout
+from the same bits that select the two 2 KiB CHR banks. Fixed mirroring and MMC3-style approximations
+would lose that coupling, so the mapper routes each nametable access directly. See
+[NESdev mapper 95](https://www.nesdev.org/wiki/INES_Mapper_095).
+
+## TxSROM and TQROM (118, 119)
+
+Both boards reuse the complete revision-B MMC3 banking and filtered-A12 IRQ state machine.
+
+TxSROM connects CHR A17 to CIRAM A10 instead of using MMC3's mirroring output. Depending on CHR mode,
+R0/R1 select nametables in two 2 KiB pairs or R2-R5 select all four 1 KiB slots independently;
+`$A000` mirroring writes have no effect. See
+[NESdev mapper 118](https://www.nesdev.org/wiki/INES_Mapper_118).
+
+TQROM keeps standard MMC3 mirroring but connects CHR A16 to chip enable: bank values with bit 6 clear
+select 16–64 KiB CHR ROM, while set values select one of eight 1 KiB CHR-RAM banks. Official boards
+use 128 KiB PRG ROM, 8 KiB volatile CHR RAM and no PRG RAM. Legacy iNES cannot declare the mixed CHR
+layout, so mapper 119 implies the RAM; NES 2.0 must declare it explicitly. See
+[NESdev mapper 119](https://www.nesdev.org/wiki/TQROM).
 
 ## Jaleco JF-11/JF-14 (140)
 
@@ -333,7 +381,8 @@ The discrete predecessor to MMC3. `$8000` (even) selects one of eight bank regis
 writes it: R0/R1 are 2 KiB CHR banks at PPU `$0000`/`$0800`, R2-R5 are 1 KiB CHR banks at
 `$1000-$1FFF`, and R6/R7 are 8 KiB PRG banks at `$8000`/`$A000` with the final two banks fixed. There
 is no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the header. Writes
-to `$A000-$FFFF` are ignored.
+to `$A000-$FFFF` are ignored. See
+[NESdev mapper 206](https://www.nesdev.org/wiki/INES_Mapper_206).
 
 ## Adding a mapper
 

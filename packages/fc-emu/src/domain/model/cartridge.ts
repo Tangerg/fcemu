@@ -108,6 +108,10 @@ class Cartridge {
     return this.chrRom.byteLength || this.memory.chrAddressSpaceBytes;
   }
 
+  get chrWritableBytes(): number {
+    return this.memory.chrAddressSpaceBytes;
+  }
+
   readPrgRam(index: number): number {
     return this.memory.readPrg(index);
   }
@@ -122,6 +126,14 @@ class Cartridge {
 
   writeChr(index: number, value: number): void {
     if (this.chrRom.byteLength === 0) this.memory.writeChr(index, value);
+  }
+
+  readWritableChr(index: number): number {
+    return this.memory.readChr(index);
+  }
+
+  writeWritableChr(index: number, value: number): void {
+    this.memory.writeChr(index, value);
   }
 
   powerOn(): void {
@@ -197,7 +209,10 @@ class Cartridge {
       if (header.chrRamSize > 0 && header.chrNvRamSize > 0) {
         throw Cartridge.unsupportedRamLayout(sourceName, "simultaneous CHR RAM and CHR NVRAM");
       }
-    } else if (header.chrRamSize + header.chrNvRamSize > 0) {
+    } else if (
+      header.chrRamSize + header.chrNvRamSize > 0 &&
+      !(header.mapperNumber === 119 && header.chrRamSize > 0 && header.chrNvRamSize === 0)
+    ) {
       throw Cartridge.unsupportedRamLayout(
         sourceName,
         "simultaneous CHR ROM and writable CHR memory",

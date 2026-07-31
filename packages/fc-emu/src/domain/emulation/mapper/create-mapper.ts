@@ -20,7 +20,12 @@ import { Mmc2Mapper } from "./mmc2-mapper.js";
 import { Mmc3Mapper } from "./mmc3-mapper.js";
 import { Mmc4Mapper } from "./mmc4-mapper.js";
 import type { Mapper, MapperInterruptPort } from "./mapper.js";
-import { Namco118Mapper } from "./namco118-mapper.js";
+import {
+  MAPPER_76_BOARD,
+  MAPPER_88_BOARD,
+  MAPPER_95_BOARD,
+  Namco118Mapper,
+} from "./namco118-mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
 import {
@@ -150,6 +155,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "VRC1");
       requireNoPrgRam(cartridge);
       return new Vrc1Mapper(cartridge);
+    case 76:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0800, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "Namco 3446");
+      requireNoPrgRam(cartridge);
+      return new Namco118Mapper(cartridge, MAPPER_76_BOARD);
     case 78:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
@@ -161,6 +173,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireJalecoLayout(cartridge);
       requireNoPrgRam(cartridge);
       return new JalecoMapper(cartridge);
+    case 88:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "Namco 3433/3443");
+      requireNoPrgRam(cartridge);
+      return new Namco118Mapper(cartridge, MAPPER_88_BOARD);
     case 89:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
@@ -180,6 +199,28 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRam(cartridge, "UN1ROM");
       requireNoPrgRam(cartridge);
       return new UxromMapper(cartridge, UN1ROM_BOARD);
+    case 95:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x10_000);
+      requireChrRom(cartridge, "Namco 3425");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Namco 3425");
+      return new Namco118Mapper(cartridge, MAPPER_95_BOARD);
+    case 118:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireChrRom(cartridge, "TxSROM");
+      requireMmc3PrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "TxSROM");
+      return new Mmc3Mapper(interruptPort, cartridge, "txsrom");
+    case 119:
+      requireBaseSubmapper(cartridge);
+      requireTqromLayout(cartridge);
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "TQROM");
+      return new Mmc3Mapper(interruptPort, cartridge, "tqrom");
     case 140:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
@@ -262,6 +303,24 @@ function requireMmc3PrgRam(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
   if (cartridge.prgWritableBytes !== 0 && cartridge.prgWritableBytes !== 0x2000) {
     throw configurationError(cartridge, "MMC3 PRG RAM must be 8 KiB when present");
+  }
+}
+
+function requireTwoScreenNametables(cartridge: Cartridge, board: string): void {
+  if (cartridge.mirroringMode === NametableMirroring.FourScreen) {
+    throw configurationError(cartridge, `${board} does not provide four-screen nametable memory`);
+  }
+}
+
+function requireTqromLayout(cartridge: Cartridge): void {
+  if (cartridge.prgRom.byteLength !== 0x20_000) {
+    throw configurationError(cartridge, "TQROM PRG ROM must be 128 KiB");
+  }
+  if (![0x4000, 0x8000, 0x10_000].includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, "TQROM CHR ROM must be 16 KiB, 32 KiB or 64 KiB");
+  }
+  if (cartridge.chrWritableBytes !== 0x2000 || cartridge.chrNvRamBytes !== 0) {
+    throw configurationError(cartridge, "TQROM requires 8 KiB of volatile CHR RAM");
   }
 }
 

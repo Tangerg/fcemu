@@ -171,6 +171,14 @@ export interface Mapper {
    */
   ppuReadDriveMask?(address: number): number;
 
+  /**
+   * Optional cartridge-controlled CIRAM routing for one nametable access.
+   *
+   * The returned index addresses the console/cartridge nametable memory
+   * directly. Returning undefined leaves routing to fixed header mirroring.
+   */
+  mapNametableAddress?(address: number): number | undefined;
+
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;
 

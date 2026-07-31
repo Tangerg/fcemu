@@ -220,7 +220,8 @@ export class PPUMemory {
     } else if (address < 0x3f00) {
       // 0x2000-0x3EFF: nametables (VRAM).
       const mode = this.bus.Cartridge.mirroringMode;
-      const mirroredAddr = PPUMemory.mirrorAddress(mode, address) - 0x2000;
+      const mirroredAddr =
+        mapper.mapNametableAddress?.(address) ?? PPUMemory.mirrorAddress(mode, address) - 0x2000;
       value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
     } else {
       // 0x3F00-0x3FFF: palette RAM.
@@ -251,7 +252,9 @@ export class PPUMemory {
     // 0x2000-0x3EFF: nametables (VRAM).
     if (address < 0x3f00) {
       const mode = this.bus.Cartridge.mirroringMode;
-      const mirroredAddr = PPUMemory.mirrorAddress(mode, address) - 0x2000;
+      const mirroredAddr =
+        this.bus.Mapper.mapNametableAddress?.(address) ??
+        PPUMemory.mirrorAddress(mode, address) - 0x2000;
       this.bus.PPU.nameTableData[mirroredAddr] = value;
       return;
     }

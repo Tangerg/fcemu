@@ -96,7 +96,9 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
     chrRomSize,
     prgRamSize: hasBatteryFlag ? 0 : legacyRamSize,
     prgNvRamSize: hasBatteryFlag ? legacyRamSize : 0,
-    chrRamSize: chrRomSize === 0 ? CHR_ROM_UNIT : 0,
+    // Legacy iNES cannot declare TQROM's simultaneous CHR ROM and 8 KiB RAM.
+    // Mapper 119 therefore carries the board-implied RAM size as format policy.
+    chrRamSize: chrRomSize === 0 || common.mapperNumber === 119 ? CHR_ROM_UNIT : 0,
     chrNvRamSize: 0,
     timingMode: (bytes[9] ?? 0) & 1,
     miscellaneousRomCount: 0,

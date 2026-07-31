@@ -7,23 +7,55 @@ const PRG_BANK_SIZE = 0x2000;
 const CHR_BANK_SIZE = 0x0400;
 const REGISTER_MASKS = [0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x0f, 0x0f] as const;
 
+export interface Namco108Board {
+  readonly chrLayout: "standard" | "four-2k";
+  readonly chrA16FromPpuA12: boolean;
+  readonly chrA15ControlsCiram: boolean;
+}
+
+const STANDARD_NAMCO_108_BOARD: Namco108Board = Object.freeze({
+  chrLayout: "standard",
+  chrA16FromPpuA12: false,
+  chrA15ControlsCiram: false,
+});
+
+export const MAPPER_76_BOARD: Namco108Board = Object.freeze({
+  chrLayout: "four-2k",
+  chrA16FromPpuA12: false,
+  chrA15ControlsCiram: false,
+});
+
+export const MAPPER_88_BOARD: Namco108Board = Object.freeze({
+  chrLayout: "standard",
+  chrA16FromPpuA12: true,
+  chrA15ControlsCiram: false,
+});
+
+export const MAPPER_95_BOARD: Namco108Board = Object.freeze({
+  chrLayout: "standard",
+  chrA16FromPpuA12: false,
+  chrA15ControlsCiram: true,
+});
+
 /**
- * iNES mapper 206: Namco 118 / Nintendo DxROM, the discrete predecessor to MMC3.
+ * Namco 108-family register core used by iNES mappers 76, 88, 95 and 206.
  *
  * It shares MMC3's $8000/$8001 bank-select and bank-data ports but hardwires the
  * layout: two 2 KiB and four 1 KiB CHR windows, two switchable 8 KiB PRG banks
  * with the final two banks fixed. There is no IRQ, no PRG-RAM and no mirroring
- * register, so nametable mirroring stays hardwired from the header.
+ * register on the base board. Immutable board wiring reassigns CHR outputs for
+ * the three mapper-number variants without duplicating register state.
  */
 export class Namco118Mapper implements Mapper {
   private readonly prgBankCount: number;
-  private readonly chrBankCount: number;
   private register = 0;
   private registers = [0, 0, 0, 0, 0, 0, 0, 0];
 
-  constructor(private readonly cartridge: Cartridge) {
+  constructor(
+    private readonly cartridge: Cartridge,
+    private readonly board: Namco108Board = STANDARD_NAMCO_108_BOARD,
+  ) {
     this.prgBankCount = cartridge.prgRom.byteLength / PRG_BANK_SIZE;
-    this.chrBankCount = Math.max(1, cartridge.chrMemoryBytes / CHR_BANK_SIZE);
   }
 
   powerOn(): void {
@@ -42,7 +74,8 @@ export class Namco118Mapper implements Mapper {
       !Number.isInteger(state.register) ||
       state.register < 0 ||
       state.register > 7 ||
-      !isFixedByteArray(state.registers, 8)
+      !isFixedByteArray(state.registers, 8) ||
+      !state.registers.every((value, index) => (value & ~REGISTER_MASKS[index]) === 0)
     ) {
       throw new RangeError("Namco 118 save state contains invalid bank registers");
     }
@@ -60,6 +93,13 @@ export class Namco118Mapper implements Mapper {
     return address >= 0x8000 ? 0xff : 0;
   }
 
+  mapNametableAddress(address: number): number | undefined {
+    if (!this.board.chrA15ControlsCiram) return undefined;
+    const nametableOffset = (address - 0x2000) & 0x0fff;
+    const register = nametableOffset < 0x0800 ? this.registers[0] : this.registers[1];
+    return ((register >>> 5) & 1) * 0x0400 + (nametableOffset & 0x03ff);
+  }
+
   write(address: number, value: number): void {
     if (address < 0x2000) {
       this.cartridge.writeChr(this.chrOffset(address), value);
@@ -71,7 +111,16 @@ export class Namco118Mapper implements Mapper {
   }
 
   private chrOffset(address: number): number {
-    const bank = this.chrBankIndex(address) % this.chrBankCount;
+    if (this.board.chrLayout === "four-2k") {
+      const bankCount = this.cartridge.chrMemoryBytes / 0x0800;
+      const bank = this.registers[(address >> 11) + 2] % bankCount;
+      return bank * 0x0800 + (address & 0x07ff);
+    }
+
+    const bankCount = this.cartridge.chrMemoryBytes / CHR_BANK_SIZE;
+    let bank = this.chrBankIndex(address);
+    if (this.board.chrA16FromPpuA12 && (address & 0x1000) !== 0) bank |= 0x40;
+    bank %= bankCount;
     return bank * CHR_BANK_SIZE + (address & 0x03ff);
   }
 

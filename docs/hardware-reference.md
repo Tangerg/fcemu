@@ -99,6 +99,9 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
 - The RP2C02 multiplexes the video-memory low address byte and data on the same external pins. If a
   cartridge tri-states CHR during a pattern-table read, the undriven result follows the current
   address low byte; this is separate from the CPU-facing PPU register open-bus latch.
+- Cartridge wiring may drive CIRAM A10 from a CHR bank output instead of a global mirroring latch.
+  Namco 3425 and TxSROM therefore select nametable memory per PPU address slot through current bank
+  registers. TQROM separately uses CHR bank bit 6 as ROM/RAM chip select.
 - The PPU drives a physical `/NMI` level; the CPU edge detector samples it during its input phase and
   transfers the detected edge through a second polling latch. Vector selection is fixed before the
   interrupt status push, not immediately before the vector read.

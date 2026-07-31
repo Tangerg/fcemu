@@ -7,24 +7,26 @@ execution.
 
 ## Accepted formats
 
-| Capability          | iNES                                  | NES 2.0                                   |
-| ------------------- | ------------------------------------- | ----------------------------------------- |
-| Mapper identity     | 8-bit legacy mapper                   | 12-bit mapper plus 4-bit submapper        |
-| PRG/CHR ROM size    | Linear bank counts                    | Linear and exponent-multiplier encodings  |
-| Timing              | NTSC or PAL                           | NTSC, PAL, multi-region or Dendy          |
-| Console             | Standard NES/Famicom                  | Standard NES/Famicom                      |
-| PRG writable memory | Legacy direct window                  | Direct memory, or mapper-aware MMC1 banks |
-| CHR writable memory | Implicit 8 KiB when CHR ROM is absent | Explicit 8 KiB CHR RAM or CHR NVRAM       |
-| Trainer             | Loaded at CPU `$7000-$71FF`           | Loaded at CPU `$7000-$71FF`               |
-| Miscellaneous ROMs  | Not encoded                           | None                                      |
-| Default expansion   | Legacy/default                        | Unspecified or standard controllers       |
+| Capability          | iNES                                              | NES 2.0                                   |
+| ------------------- | ------------------------------------------------- | ----------------------------------------- |
+| Mapper identity     | 8-bit legacy mapper                               | 12-bit mapper plus 4-bit submapper        |
+| PRG/CHR ROM size    | Linear bank counts                                | Linear and exponent-multiplier encodings  |
+| Timing              | NTSC or PAL                                       | NTSC, PAL, multi-region or Dendy          |
+| Console             | Standard NES/Famicom                              | Standard NES/Famicom                      |
+| PRG writable memory | Legacy direct window                              | Direct memory, or mapper-aware MMC1 banks |
+| CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied | Explicit CHR RAM or CHR NVRAM             |
+| Trainer             | Loaded at CPU `$7000-$71FF`                       | Loaded at CPU `$7000-$71FF`               |
+| Miscellaneous ROMs  | Not encoded                                       | None                                      |
+| Default expansion   | Legacy/default                                    | Unspecified or standard controllers       |
 
 The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes never enter a save
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
 MMC1 SOROM/SZROM may combine one 8 KiB volatile PRG region with one 8 KiB battery region; SUROM,
 SOROM, SXROM and SZROM bank selection follows the board wiring rather than concatenating capacities
-into the direct `$6000-$7FFF` window. Simultaneous CHR RAM/NVRAM, CHR ROM plus writable CHR memory,
-and mapper-internal battery memory remain rejected because their selection rules are different.
+into the direct `$6000-$7FFF` window. TQROM is the one supported mixed-CHR exception: mapper 119
+selects 16–64 KiB CHR ROM or 8 KiB volatile CHR RAM per 1 KiB bank; legacy iNES implies that RAM and
+NES 2.0 declares it. Other simultaneous CHR RAM/NVRAM, CHR ROM plus writable CHR memory, and
+mapper-internal battery memory remain rejected because their selection rules are different.
 
 These rules follow the NES 2.0 distinction between volatile/non-volatile PRG and CHR fields and the
 documented [MMC1 board wiring](https://www.nesdev.org/wiki/MMC1). Declared capacity is accepted only
@@ -66,7 +68,8 @@ codes and body layout are documented in [Cartridge subsystem](./subsystems/cartr
 - VS System, PlayChoice-10 and extended console types.
 - Miscellaneous ROM payloads and non-standard default expansion devices.
 - Mapper-internal EEPROM/battery memory not represented by PRG/CHR NVRAM.
-- Simultaneous CHR ROM and writable CHR memory, or simultaneous CHR RAM and CHR NVRAM.
+- Simultaneous CHR ROM and writable CHR memory outside TQROM, or simultaneous CHR RAM and CHR
+  NVRAM.
 - Unknown submappers and geometries with unreachable declared memory.
 
 This list is a policy boundary, not a parser limitation.

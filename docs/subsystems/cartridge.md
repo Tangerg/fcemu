@@ -68,7 +68,7 @@ and 7; the remaining fields diverge by format.
 | `chrRomSize` (bytes)     | `byte5 * 8192`                                                                     | `decodeRomSize(byte5, byte9 >> 4, 8192)`      |
 | `prgRamSize` (bytes)     | `hasBatteryFlag ? 0 : legacy`                                                      | `decodeRamSize(byte10 & 0x0F)`                |
 | `prgNvRamSize` (bytes)   | `hasBatteryFlag ? legacy : 0`                                                      | `decodeRamSize(byte10 >> 4)`                  |
-| `chrRamSize` (bytes)     | `chrRomSize === 0 ? 8192 : 0`                                                      | `decodeRamSize(byte11 & 0x0F)`                |
+| `chrRamSize` (bytes)     | 8 KiB without CHR ROM or when mapper 119 implies TQROM RAM                         | `decodeRamSize(byte11 & 0x0F)`                |
 | `chrNvRamSize` (bytes)   | `0`                                                                                | `decodeRamSize(byte11 >> 4)`                  |
 | `timingMode`             | `byte9 & 1` (NTSC/PAL)                                                             | `byte12 & 0x03` (NTSC/PAL/multi-region/Dendy) |
 | `miscellaneousRomCount`  | `0`                                                                                | `byte14 & 0x03`                               |
@@ -154,8 +154,11 @@ address a single flat index per space; the memory object decides which physical 
 - `readChr(index)` returns the CHR ROM byte when CHR ROM is present (read-only, `chrRom[index] ?? 0`);
   otherwise it reads the combined CHR RAM + CHR NVRAM space. `writeChr(index, value)` is a no-op when
   CHR ROM is present and otherwise writes the CHR memory space, so CHR ROM is never mutated.
+- `readWritableChr(index)` / `writeWritableChr(index, value)` explicitly address writable CHR when
+  a board such as TQROM owns CHR ROM and RAM simultaneously.
 - `prgWritableBytes` reports `prgAddressSpaceBytes` (PRG RAM + PRG NVRAM).
 - `chrMemoryBytes` reports the CHR ROM length, or `chrAddressSpaceBytes` when there is no CHR ROM.
+- `chrWritableBytes` reports CHR RAM + CHR NVRAM independently of CHR ROM presence.
 
 Reads clamp out of range: a negative index reads `0`, and an index past the non-volatile region reads
 `0`. Writes drop negative and past-end indices; values are masked to a byte (`value & 0xFF`). The

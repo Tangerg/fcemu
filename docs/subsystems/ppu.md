@@ -282,8 +282,10 @@ CPU-facing decaying `PpuIoBusLatch` documented below.
 | 3    | single-screen (high) | `[B, B, B, B]` |
 | 4    | four-screen          | `[A, B, C, D]` |
 
-The mode comes from `bus.Cartridge.mirroringMode`. Every PPU transaction goes through the same
-mapper-signal ordering; rendering fetches and CPU-driven `$2007` accesses cannot bypass it.
+The mode comes from `bus.Cartridge.mirroringMode`. A mapper may instead return a direct
+nametable-memory index from `mapNametableAddress`, which models CHR-output-to-CIRAM wiring such as
+Namco 3425 and TxSROM on each access. Every PPU transaction goes through the same mapper-signal
+ordering; rendering fetches and CPU-driven `$2007` accesses cannot bypass it.
 
 ## Cartridge bus observation
 

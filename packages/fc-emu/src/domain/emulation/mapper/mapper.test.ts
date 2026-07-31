@@ -301,7 +301,7 @@ describe("cartridge mappers", () => {
     expect(bus.CPU.isIRQLineAsserted).toBe(false);
   });
 
-  it("round-trips every supported mapper's complete latch and timing state", () => {
+  it("round-trips representative mapper latch and timing states", () => {
     const interruptPort = { setMapperIrq() {} };
     const nrom = createMapper(createTestCartridge(), interruptPort);
     const uxrom = createMapper(createTestCartridge({ mapper: 2, prgBanks: 2 }), interruptPort);

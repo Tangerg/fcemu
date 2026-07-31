@@ -162,6 +162,42 @@ describe("Cartridge", () => {
     expect(cartridge.captureBatterySave()?.data[0x10]).toBe(0x42);
   });
 
+  it.each([
+    { name: "legacy iNES", options: { mapper: 119, prgBanks: 8, chrBanks: 2 } },
+    {
+      name: "NES 2.0",
+      options: {
+        mapper: 119,
+        nes2: true,
+        prgBanks: 8,
+        chrBanks: 2,
+        chrRamShift: 7,
+      },
+    },
+  ])("represents TQROM's simultaneous CHR ROM and RAM from $name metadata", ({ options }) => {
+    const cartridge = Cartridge.fromArrayBuffer(createTestRom(options));
+    cartridge.chrRom[0x10] = 0x31;
+    cartridge.writeWritableChr(0x10, 0x42);
+
+    expect(cartridge).toMatchObject({
+      chrRom: expect.objectContaining({ length: 16_384 }),
+      chrRamBytes: 8192,
+      chrWritableBytes: 8192,
+      hasWritableChrMemory: true,
+    });
+    expect(cartridge.readChr(0x10)).toBe(0x31);
+    expect(cartridge.readWritableChr(0x10)).toBe(0x42);
+  });
+
+  it("keeps mixed CHR ROM/RAM fail-closed outside TQROM", () => {
+    expect(() =>
+      Cartridge.fromArrayBuffer(
+        createTestRom({ mapper: 4, nes2: true, chrBanks: 1, chrRamShift: 7 }),
+        "mixed-chr.nes",
+      ),
+    ).toThrow(/simultaneous CHR ROM and writable CHR memory/);
+  });
+
   it("separates volatile PRG RAM from persistable PRG NVRAM", () => {
     const volatile = Cartridge.fromArrayBuffer(createTestRom({ nes2: true, prgRamShift: 7 }));
     volatile.writePrgRam(0, 0x11);

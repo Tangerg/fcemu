@@ -2,11 +2,7 @@ import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
 import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperState } from "./mapper.js";
-import { isFixedByteArray } from "./state-validation.js";
-
-const PRG_BANK_SIZE = 0x2000;
-const CHR_SMALL_BANK_SIZE = 0x0400;
-const CHR_LARGE_BANK_SIZE = 0x0800;
+import { TaitoTc0x90Banking } from "./taito-tc0x90-banking.js";
 
 /**
  * iNES mapper 33: Taito TC0190/IRQ-unused TC0350 board.
@@ -15,34 +11,22 @@ const CHR_LARGE_BANK_SIZE = 0x0800;
  * 1 KiB windows; unlike MMC3, the 2 KiB register value is already expressed in 2 KiB units.
  */
 export class TaitoTc0190Mapper implements Mapper {
-  private readonly prgBankCount: number;
-  private readonly chrSmallBankCount: number;
-  private readonly chrLargeBankCount: number;
-  private readonly prgBanks = [0, 1];
-  private readonly chrBanks = [0, 1, 4, 5, 6, 7];
+  private readonly banking: TaitoTc0x90Banking;
 
   constructor(private readonly cartridge: Cartridge) {
-    this.prgBankCount = cartridge.prgRom.byteLength / PRG_BANK_SIZE;
-    this.chrSmallBankCount = cartridge.chrMemoryBytes / CHR_SMALL_BANK_SIZE;
-    this.chrLargeBankCount = cartridge.chrMemoryBytes / CHR_LARGE_BANK_SIZE;
+    this.banking = new TaitoTc0x90Banking(cartridge);
   }
 
   powerOn(): void {
-    this.prgBanks[0] = 0;
-    this.prgBanks[1] = 1 % this.prgBankCount;
-    this.chrBanks[0] = 0;
-    this.chrBanks[1] = 1 % this.chrLargeBankCount;
-    for (let slot = 2; slot < this.chrBanks.length; slot++) {
-      this.chrBanks[slot] = (slot + 2) % Math.min(this.chrSmallBankCount, 0x100);
-    }
+    this.banking.powerOn();
     this.cartridge.mirroringMode = NametableMirroring.Vertical;
   }
 
   captureState(): MapperState {
+    const banks = this.banking.captureState();
     return {
       kind: MapperKind.TaitoTc0190,
-      prgBanks: [...this.prgBanks],
-      chrBanks: [...this.chrBanks],
+      ...banks,
       mirroring: this.cartridge.mirroringMode,
     };
   }
@@ -51,37 +35,19 @@ export class TaitoTc0190Mapper implements Mapper {
     if (state.kind !== MapperKind.TaitoTc0190) {
       throw new Error(`Cannot restore ${state.kind} state into Taito TC0190`);
     }
-    if (
-      !isFixedByteArray(state.prgBanks, 2) ||
-      state.prgBanks.some((bank) => bank >= this.prgBankCount)
-    ) {
-      throw new RangeError("Taito TC0190 save state contains an invalid PRG bank");
-    }
-    if (
-      !isFixedByteArray(state.chrBanks, 6) ||
-      state.chrBanks[0] >= this.chrLargeBankCount ||
-      state.chrBanks[1] >= this.chrLargeBankCount ||
-      state.chrBanks.slice(2).some((bank) => bank >= Math.min(this.chrSmallBankCount, 0x100))
-    ) {
-      throw new RangeError("Taito TC0190 save state contains an invalid CHR bank");
-    }
+    this.banking.validateState(state, "Taito TC0190");
     if (
       state.mirroring !== NametableMirroring.Horizontal &&
       state.mirroring !== NametableMirroring.Vertical
     ) {
       throw new RangeError("Taito TC0190 save state contains invalid mirroring");
     }
-    this.prgBanks.splice(0, this.prgBanks.length, ...state.prgBanks);
-    this.chrBanks.splice(0, this.chrBanks.length, ...state.chrBanks);
+    this.banking.restoreState(state, "Taito TC0190");
     this.cartridge.mirroringMode = state.mirroring;
   }
 
   read(address: number): number {
-    if (address < 0x2000) return this.cartridge.readChr(this.chrOffset(address));
-    if (address < 0x8000) return 0;
-    const slot = (address - 0x8000) >>> 13;
-    const bank = slot < 2 ? (this.prgBanks[slot] ?? 0) : this.prgBankCount - (slot === 2 ? 2 : 1);
-    return this.cartridge.prgRom[bank * PRG_BANK_SIZE + (address & 0x1fff)] ?? 0;
+    return this.banking.read(address);
   }
 
   cpuReadDriveMask(address: number): number {
@@ -92,32 +58,23 @@ export class TaitoTc0190Mapper implements Mapper {
     if (address < 0x8000 || address > 0xbfff) return;
     switch (address & 0xa003) {
       case 0x8000:
-        this.prgBanks[0] = (value & 0x3f) % this.prgBankCount;
+        this.banking.selectPrg(0, value);
         this.cartridge.mirroringMode =
           (value & 0x40) === 0 ? NametableMirroring.Vertical : NametableMirroring.Horizontal;
         break;
       case 0x8001:
-        this.prgBanks[1] = (value & 0x3f) % this.prgBankCount;
+        this.banking.selectPrg(1, value);
         break;
       case 0x8002:
       case 0x8003:
-        this.chrBanks[address & 1] = value % this.chrLargeBankCount;
+        this.banking.selectLargeChr((address & 1) as 0 | 1, value);
         break;
       case 0xa000:
       case 0xa001:
       case 0xa002:
       case 0xa003:
-        this.chrBanks[2 + (address & 3)] = value % Math.min(this.chrSmallBankCount, 0x100);
+        this.banking.selectSmallChr((address & 3) as 0 | 1 | 2 | 3, value);
         break;
     }
-  }
-
-  private chrOffset(address: number): number {
-    if (address < 0x1000) {
-      const slot = address >>> 11;
-      return (this.chrBanks[slot] ?? 0) * CHR_LARGE_BANK_SIZE + (address & 0x07ff);
-    }
-    const slot = 2 + ((address - 0x1000) >>> 10);
-    return (this.chrBanks[slot] ?? 0) * CHR_SMALL_BANK_SIZE + (address & 0x03ff);
   }
 }

@@ -69,10 +69,36 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "taito-tc0690";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly reload: number;
+      readonly counter: number;
+      readonly reloadPending: boolean;
+      readonly irqEnabled: boolean;
+      readonly irqDelay: number;
+      readonly irqPending: boolean;
+      readonly ppuClock: number;
+      readonly a12High: boolean;
+      readonly a12LowSince: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-g101";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];
       readonly prgMode: number;
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "irem-h3001";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly prgMode: number;
+      readonly irqReload: number;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
       readonly mirroring: number;
     }
   | {

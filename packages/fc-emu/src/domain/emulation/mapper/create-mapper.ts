@@ -12,6 +12,7 @@ import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
 import { IremG101Mapper, type IremG101Board } from "./irem-g101-mapper.js";
+import { IremH3001Mapper } from "./irem-h3001-mapper.js";
 import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
@@ -37,6 +38,7 @@ import {
   UnsupportedMapperVariantError,
 } from "./mapper-errors.js";
 import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
+import { TaitoTc0690Mapper, type TaitoTc0690IrqRevision } from "./taito-tc0690-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
@@ -135,6 +137,21 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       const board = resolveMapper34Board(cartridge);
       return board === "nina-001" ? new Nina001Mapper(cartridge) : new BnromMapper(cartridge);
     }
+    case 48:
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
+      requireChrRom(cartridge, "Taito TC0690");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Taito TC0690");
+      return new TaitoTc0690Mapper(interruptPort, cartridge, resolveTaitoTc0690Revision(cartridge));
+    case 65:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireChrRom(cartridge, "Irem H3001");
+      requireDirectPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Irem H3001");
+      return new IremH3001Mapper(interruptPort, cartridge);
     case 66:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
@@ -427,6 +444,17 @@ function resolveIremG101Board(cartridge: Cartridge): IremG101Board {
       return "standard";
     case 1:
       return "major-league";
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+}
+
+function resolveTaitoTc0690Revision(cartridge: Cartridge): TaitoTc0690IrqRevision {
+  switch (cartridge.submapperNumber) {
+    case 0:
+      return "original";
+    case 1:
+      return "late";
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }

@@ -150,6 +150,69 @@ describe("basic ASIC mappers", () => {
     expect(mapper.captureState()).toEqual(state);
   });
 
+  it("creates both known Mapper 48 IRQ revisions and rejects unknown submappers", () => {
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 48, prgBanks: 8, chrBanks: 8 }), interruptPort),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 48,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 8,
+          chrBanks: 8,
+        }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 48,
+          nes2: true,
+          submapper: 2,
+          prgBanks: 8,
+          chrBanks: 8,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperVariantError);
+  });
+
+  it("fails closed on Mapper 48/65 memory the physical boards cannot reach", () => {
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 48,
+          nes2: true,
+          prgBanks: 8,
+          chrBanks: 8,
+          prgRamShift: 7,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 65, prgBanks: 8, chrBanks: 4, fourScreen: true }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 65,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 8,
+          chrBanks: 4,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperVariantError);
+  });
+
   it("rejects invalid state that cannot exist on the selected boards", () => {
     const mapper = createMapper(
       createTestCartridge({ mapper: 68, prgBanks: 8, chrBanks: 32 }),

@@ -31,7 +31,7 @@ to the rest of core.
 | `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
 | `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
-| `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (MMC1 serial filter, FME-7 IRQ counter).             |
+| `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (serial filters, IRQ counters/delays).               |
 | `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                           |
 | `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                              |
 | `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.   |
@@ -103,6 +103,8 @@ counters against their bit width and all booleans by runtime type) and throws
 | 32  | Irem G-101     | `irem-g101`        | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
+| 48  | Taito TC0690   | `taito-tc0690`     | `taito-tc0690-mapper.ts`     | no            | A12  |
+| 65  | Irem H3001     | `irem-h3001`       | `irem-h3001-mapper.ts`       | no            | cyc. |
 | 66  | GxROM / MHROM  | `gxrom`            | `gxrom-mapper.ts`            | AND           | no   |
 | 68  | Sunsoft-4      | `sunsoft-4`        | `sunsoft4-mapper.ts`         | no            | no   |
 | 69  | Sunsoft FME-7  | `fme7`             | `fme7-mapper.ts`             | no            | cyc. |
@@ -132,6 +134,8 @@ The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; t
 lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`. Namco
 76/88/95/206 select immutable pin-wiring values around one register core, while MMC3/TxSROM/TQROM
 select only the board behavior that differs around the shared MMC3 state machine.
+Taito TC0190/TC0690 similarly share `TaitoTc0x90Banking`; their mirroring and IRQ pins remain in
+their board-specific owners.
 
 ---
 
@@ -237,6 +241,34 @@ register sets. BNROM switches a 32 KiB PRG bank with original-board AND conflict
 registers (`$7FFD` PRG, `$7FFE`/`$7FFF` two 4 KiB CHR banks) over an 8 KiB PRG-RAM window. Legacy CHR
 ROM above 8 KiB selects NINA-001; CHR RAM or ≤8 KiB CHR ROM selects BNROM; NES 2.0 submapper 1/2 name
 the board explicitly.
+
+## Taito TC0690 (48)
+
+TC0690 reuses TC0190's two switchable/final-two-fixed 8 KiB PRG layout and its two 2 KiB plus four
+1 KiB CHR windows. Unlike mapper 33, `$8000` no longer controls mirroring: `$E000` bit 6 selects
+vertical/horizontal layout. `$C000-$C003` provide an MMC3-shaped filtered-PPU-A12 IRQ unit whose
+reload value is inverted.
+
+The counter event reaches the CPU IRQ pin after an empirically measured propagation delay.
+Submapper 0 uses the 22-cycle behavior required by early boards; submapper 1 uses the six-cycle
+variant and adjusted reload bias associated with later titles. Both variants preserve the pending
+delay in save state and keep the mapper IRQ line level-sensitive. See
+[NESdev mapper 48](https://www.nesdev.org/wiki/INES_Mapper_048) and the
+[TC0690 timing research](https://forums.nesdev.org/viewtopic.php?t=18277).
+
+## Irem H3001 (65)
+
+`$8000-$8007` and `$A000-$A007` mirror two 8 KiB PRG registers. `$9000` bit 7 swaps the first
+register between `$8000` and `$C000`; the other position holds the fixed second-to-last bank and
+`$E000` always holds the final bank. There is deliberately no `$C000` PRG register: later physical
+pinout testing disproved that older emulator behavior. `$B000-$B007` select eight 1 KiB CHR banks.
+
+`$9001` bits 7-6 select vertical, horizontal or lower-one-screen mirroring. `$9005/$9006` write the
+high/low 16-bit IRQ reload, `$9004` copies it into the live counter, and `$9003` acknowledges and
+enables/disables counting. The counter decrements once per CPU cycle, asserts at zero and disables
+itself. A directly declared PRG-RAM/NVRAM window is mapped at `$6000-$7FFF`. See
+[NESdev mapper 65](https://www.nesdev.org/wiki/INES_Mapper_065) and the
+[H3001 pinout findings](https://forums.nesdev.org/viewtopic.php?t=19778).
 
 ## GxROM / MHROM (66)
 

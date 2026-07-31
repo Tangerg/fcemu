@@ -13,7 +13,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 37 implemented mapper IDs; four board families currently have reproducible external or pinned
+- 39 implemented mapper IDs; four board families currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-14 save states and independent battery-backed NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
@@ -33,7 +33,7 @@ the historical title table, whose own introduction warns that those fields are i
 | Phase                    | Mapper IDs                     | Architectural dependency                      | Status      |
 | ------------------------ | ------------------------------ | --------------------------------------------- | ----------- |
 | Foundation boards        | 32, 68, 79, 97                 | Expansion-area writes; ROM nametables         | Implemented |
-| IRQ and ASIC boards      | 16, 18, 48, 64, 65, 80, 82, 91 | CPU-cycle IRQ variants; board RAM             | Planned     |
+| IRQ and ASIC boards      | 16, 18, 48, 64, 65, 80, 82, 91 | CPU-cycle IRQ variants; board RAM             | 48, 65 done |
 | Konami VRC2/VRC4         | 21, 22, 23, 25                 | Shared pin-routing and VRC IRQ core           | Planned     |
 | FFE and simple multicart | 6, 8, 15, 17, 225, 227, 228    | Outer/inner banks and expansion registers     | Planned     |
 | Complex clone ASICs      | 83, 90                         | ROM nametables, multiplier and IRQ variants   | Planned     |

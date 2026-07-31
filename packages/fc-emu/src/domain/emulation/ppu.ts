@@ -6,6 +6,7 @@ import { PpuIoBusLatch, type PpuIoBusState } from "./ppu/ppu-io-bus-latch.js";
 import { SpriteEvaluator, type SpriteEvaluationState } from "./ppu/sprite-evaluator.js";
 import { resolveSpritePatternAddress } from "./ppu/sprite-pattern-address.js";
 import type { PpuFetchContext } from "./mapper/mapper.js";
+import type { PpuVariant } from "./ppu/ppu-variant.js";
 
 interface SpriteZeroHitState {
   readonly pending: boolean;
@@ -72,6 +73,8 @@ class PPU {
   private readonly memory: PPUMemory;
   private readonly bus: Bus;
   private readonly timing: ConsoleTiming;
+  private readonly variant: PpuVariant;
+  private readonly emphasisPalette: readonly (readonly number[])[];
   private readonly ioBus: PpuIoBusLatch;
 
   public cycle = 0;
@@ -162,12 +165,14 @@ class PPU {
 
   // Eight precomputed palettes indexed by the PPUMASK emphasis bits
   // (bit 0 red, bit 1 green, bit 2 blue). Index 0 is the unmodified palette.
-  private static readonly EMPHASIS_PALETTE: readonly (readonly number[])[] =
-    PPU.buildEmphasisPalettes();
-
-  constructor(bus: Bus, timing: ConsoleTiming) {
+  constructor(bus: Bus, timing: ConsoleTiming, variant: PpuVariant) {
     this.bus = bus;
     this.timing = timing;
+    this.variant = variant;
+    this.emphasisPalette = PPU.buildEmphasisPalettes(
+      variant.masterPaletteRgba,
+      variant.emphasisModel,
+    );
     this.memory = new PPUMemory(bus);
     this.ioBus = new PpuIoBusLatch(Math.ceil(timing.ppuFrequencyHz * PPU.IO_BUS_DECAY_SECONDS));
   }
@@ -364,6 +369,7 @@ class PPU {
   }
 
   public readRegister(address: number): number {
+    address = this.mapControlAndMaskRegister(address);
     switch (address) {
       case 0x2002:
         return this.readStatus();
@@ -377,6 +383,7 @@ class PPU {
 
   public writeRegister(address: number, value: number) {
     if (address !== 0x4014) this.ioBus.drive(value);
+    address = this.mapControlAndMaskRegister(address);
     switch (address) {
       case 0x2000:
         this.writeControl(value);
@@ -455,7 +462,10 @@ class PPU {
     if (this.nmiOccurred) {
       status |= 1 << 7;
     }
-    const result = this.ioBus.drive(status, 0xe0);
+    const signature = this.variant.statusSignature;
+    const drivenMask = 0xe0 | signature.drivenMask;
+    status = (status & ~signature.drivenMask) | (signature.value & signature.drivenMask);
+    const result = this.ioBus.drive(status, drivenMask);
     if (this.scanLine === this.timing.vblankStartScanline && this.cycle === 0) {
       this.suppressVblank = true;
     }
@@ -725,7 +735,7 @@ class PPU {
         color = background;
       }
     }
-    const c = PPU.EMPHASIS_PALETTE[this.emphasisIndex()][this.readPalette(color) % 64];
+    const c = this.emphasisPalette[this.emphasisIndex()][this.readPalette(color) % 64];
     this.back.setRGBA(x, y, c);
   }
 
@@ -736,8 +746,10 @@ class PPU {
   private emphasisIndex(): number {
     const red = this.flagRedTint;
     const green = this.flagGreenTint;
-    const lowRed = this.timing.region === "pal" ? green : red;
-    const lowGreen = this.timing.region === "pal" ? red : green;
+    const swapsRedAndGreen =
+      this.variant.emphasisModel === "composite-attenuation" && this.timing.region === "pal";
+    const lowRed = swapsRedAndGreen ? green : red;
+    const lowGreen = swapsRedAndGreen ? red : green;
     return lowRed | (lowGreen << 1) | (this.flagBlueTint << 2);
   }
 
@@ -789,7 +801,7 @@ class PPU {
     this.ioBus.advanceDots(1);
     if (this.renderingEnabled) {
       if (
-        this.timing.skipsOddFrameDot &&
+        this.variant.skipsOddFrameDot &&
         this.f === 1 &&
         this.scanLine === this.timing.preRenderScanline &&
         this.cycle === 339
@@ -992,7 +1004,10 @@ class PPU {
    * two colour channels it does not select, so red emphasis dims green and blue,
    * green emphasis dims red and blue, and blue emphasis dims red and green.
    */
-  private static buildEmphasisPalettes(): number[][] {
+  private static buildEmphasisPalettes(
+    masterPaletteRgba: readonly number[],
+    model: PpuVariant["emphasisModel"],
+  ): number[][] {
     const palettes: number[][] = [];
     for (let emphasis = 0; emphasis < 8; emphasis++) {
       const redEmphasis = (emphasis & 1) !== 0;
@@ -1001,10 +1016,28 @@ class PPU {
       const attenuateRed = greenEmphasis || blueEmphasis;
       const attenuateGreen = redEmphasis || blueEmphasis;
       const attenuateBlue = redEmphasis || greenEmphasis;
-      palettes[emphasis] = PPU.PALETTE_RGBA_HEX.map((hex) => {
-        const r = PPU.attenuateChannel((hex >>> 24) & 0xff, attenuateRed);
-        const g = PPU.attenuateChannel((hex >>> 16) & 0xff, attenuateGreen);
-        const b = PPU.attenuateChannel((hex >>> 8) & 0xff, attenuateBlue);
+      palettes[emphasis] = masterPaletteRgba.map((hex) => {
+        const r =
+          model === "rgb-force-high" && redEmphasis
+            ? 0xff
+            : PPU.attenuateChannel(
+                (hex >>> 24) & 0xff,
+                model === "composite-attenuation" && attenuateRed,
+              );
+        const g =
+          model === "rgb-force-high" && greenEmphasis
+            ? 0xff
+            : PPU.attenuateChannel(
+                (hex >>> 16) & 0xff,
+                model === "composite-attenuation" && attenuateGreen,
+              );
+        const b =
+          model === "rgb-force-high" && blueEmphasis
+            ? 0xff
+            : PPU.attenuateChannel(
+                (hex >>> 8) & 0xff,
+                model === "composite-attenuation" && attenuateBlue,
+              );
         const a = hex & 0xff;
         return FrameBuffer.fromRgbaHex(((r << 24) | (g << 16) | (b << 8) | a) >>> 0);
       });
@@ -1014,6 +1047,13 @@ class PPU {
 
   private static attenuateChannel(value: number, attenuate: boolean): number {
     return attenuate ? Math.round(value * PPU.EMPHASIS_ATTENUATION) : value;
+  }
+
+  private mapControlAndMaskRegister(address: number): number {
+    if (!this.variant.swapsControlAndMask) return address;
+    if (address === 0x2000) return 0x2001;
+    if (address === 0x2001) return 0x2000;
+    return address;
   }
 
   private validateSnapshot(state: PpuSnapshot): void {

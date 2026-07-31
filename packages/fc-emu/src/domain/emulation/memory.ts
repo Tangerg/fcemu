@@ -1,4 +1,5 @@
 import type Bus from "./bus.js";
+import { ControllerButton } from "./controller.js";
 import type { PpuFetchContext } from "./mapper/mapper.js";
 
 /**
@@ -76,15 +77,27 @@ export class CPUMemory {
         return this.finishRead(address, value);
       }
       if (address === 0x4016) {
+        const serialButton = this.bus.Controller1.readCurrentButton(
+          this.bus.forceVsStartButton ? ControllerButton.Start : undefined,
+        );
+        const vsValue = this.bus.readVsController(1, serialButton);
         return this.finishRead(
           address,
-          this.readPartiallyDriven(this.bus.Controller1.currentButton, 0x1f, cpuOwnsRead),
+          vsValue === undefined
+            ? this.readPartiallyDriven(serialButton, 0x1f, cpuOwnsRead)
+            : this.readFullyDriven(vsValue, cpuOwnsRead),
         );
       }
       if (address === 0x4017) {
+        const serialButton = this.bus.Controller2.readCurrentButton(
+          this.bus.forceVsStartButton ? ControllerButton.Start : undefined,
+        );
+        const vsValue = this.bus.readVsController(2, serialButton);
         return this.finishRead(
           address,
-          this.readPartiallyDriven(this.bus.Controller2.currentButton, 0x1f, cpuOwnsRead),
+          vsValue === undefined
+            ? this.readPartiallyDriven(serialButton, 0x1f, cpuOwnsRead)
+            : this.readFullyDriven(vsValue, cpuOwnsRead),
         );
       }
       // $4000-$4014 are write-only. With CPU test mode disabled, no
@@ -101,12 +114,17 @@ export class CPUMemory {
 
     // 0x4018-0x5FFF: expansion ROM region (typically unused).
     if (address < 0x6000) {
+      const vsResult = this.bus.readVsExpansion(address, this.externalDataBus);
       const result = this.bus.Mapper.readCpuExpansion?.(address);
       return this.finishRead(
         address,
-        result === undefined
+        vsResult === undefined && result === undefined
           ? this.readOpenBus(cpuOwnsRead)
-          : this.readPartiallyDriven(result.value, result.drivenMask, cpuOwnsRead),
+          : this.readPartiallyDriven(
+              vsResult?.value ?? result?.value ?? 0,
+              vsResult?.drivenMask ?? result?.drivenMask ?? 0,
+              cpuOwnsRead,
+            ),
       );
     }
 
@@ -165,6 +183,7 @@ export class CPUMemory {
 
     // 0x4018-0x5FFF: expansion ROM region (typically unused).
     if (address < 0x6000) {
+      this.bus.writeVsExpansion(address, value);
       this.bus.Mapper.writeCpuExpansion?.(address, value);
       return;
     }

@@ -13,9 +13,9 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 63 implemented mapper IDs; four board families currently have reproducible external or pinned
+- 64 implemented mapper IDs; four board families currently have reproducible external or pinned
   real-ROM verification.
-- Transactional version-15 save states and independent PRG, CHR and mapper-owned NVRAM.
+- Transactional version-16 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
 - Checksum-pinned external conformance runners and Mario/Contra local smoke profiles.
 
@@ -26,7 +26,7 @@ evidence behind these statements.
 
 The historical [TuxNES mapper list](http://tuxnes.sourceforge.net/nesmapper.txt) is the finite
 discovery boundary for the current expansion goal, not the hardware specification. It names 50
-mapper IDs; the project covered 19 at the start of this track and must add the remaining 31 using
+mapper IDs; the project covered 19 at the start of this track and added the remaining 31 using
 current NESdev board documentation. Mirroring and other electrical behavior are never copied from
 the historical title table, whose own introduction warns that those fields are incomplete.
 
@@ -40,16 +40,17 @@ the historical title table, whose own introduction warns that those fields are i
 | JY clone ASIC            | 90                             | Multiplier, outer banks and IRQ variants    | Implemented |
 | Expansion-audio boards   | 19, 24, 26, 85                 | N163/VRC6/VRC7 CPU-clocked audio devices    | Implemented |
 | MMC5 advanced board      | 5                              | Fetch ownership; ExRAM; expansion audio     | Implemented |
-| VS System console board  | 99                             | VS System console/header model              | Planned     |
+| VS System console board  | 99                             | VS System console/header model              | Implemented |
 
-Completion means all 31 IDs meet the mapper definition of done below. It does not expand scope to
-every assigned iNES/NES 2.0 number or permit title hashes and guessed board variants.
+All 31 added IDs now meet the mapper implementation definition of done below. This completed track
+does not expand scope to every assigned iNES/NES 2.0 number or permit title hashes and guessed board
+variants; external `Verified` evidence remains a separate follow-up.
 
 ## Priority 1: verify the implemented mapper set
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 6, 8, 9, 10, 11,
 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 32, 33, 48, 64, 65, 66, 68, 69, 70, 71, 75, 76, 78,
-79, 80, 82, 83, 85, 87, 88, 89, 90, 91, 93, 94, 95, 97, 118, 119, 140, 152, 180, 184, 185, 206, 225,
+79, 80, 82, 83, 85, 87, 88, 89, 90, 91, 93, 94, 95, 97, 99, 118, 119, 140, 152, 180, 184, 185, 206, 225,
 227 and 228 are implemented but do not yet all have executable external verification.
 
 For each board family:

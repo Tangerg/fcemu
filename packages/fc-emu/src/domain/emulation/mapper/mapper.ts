@@ -21,6 +21,7 @@ export type MapperState =
     }
   | { readonly kind: "uxrom"; readonly selectedPrgBank: number }
   | { readonly kind: "cnrom"; readonly selectedChrBank: number }
+  | { readonly kind: "vs-system"; readonly selectedBank: number }
   | { readonly kind: "bnrom"; readonly selectedPrgBank: number }
   | {
       readonly kind: "nina-001";
@@ -682,6 +683,9 @@ export interface Mapper {
 
   /** Optional CPU-write observation for boards that snoop console registers. */
   observeCpuWrite?(address: number, value: number): void;
+
+  /** Optional cartridge input driven by the RP2A03 OUT latch committed through $4016. */
+  writeControllerLatch?(value: number): void;
 
   /** Optional cartridge-audio voltage contribution sampled by the console mixer. */
   expansionAudioSample?(): number;

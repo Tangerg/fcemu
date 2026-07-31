@@ -213,6 +213,11 @@ export function App({ createApplication }: AppProps) {
                   className="region-option"
                   type="button"
                   value={preference}
+                  disabled={
+                    snapshot.rom?.consoleType === 1 &&
+                    preference !== "auto" &&
+                    preference !== "ntsc"
+                  }
                   aria-pressed={snapshot.regionPreference === preference}
                   onClick={(event) =>
                     runApplicationAction((application) =>
@@ -289,6 +294,17 @@ export function App({ createApplication }: AppProps) {
               {transportLabel}
             </button>
             <div className="machine-actions" aria-label="主机控制">
+              {snapshot.rom?.consoleType === 1 && (
+                <button
+                  className="state-button machine-button vs-coin-button"
+                  type="button"
+                  aria-label="向 VS UniSystem 投入一枚硬币"
+                  onClick={() => runApplicationAction((application) => application.insertCoin())}
+                >
+                  <span aria-hidden="true">●</span>
+                  投币
+                </button>
+              )}
               <button
                 className="state-button machine-button"
                 type="button"
@@ -390,6 +406,7 @@ export function App({ createApplication }: AppProps) {
               </button>
             </div>
             <p id="controller-help" className="controls-hint">
+              {snapshot.rom?.consoleType === 1 && "VS：使用“投币”添加游戏点数 · "}
               P1：WASD 移动 · J / K 操作 · Enter 开始 · Space 选择 · P2：方向键移动 · 0 / 1 操作
             </p>
           </div>

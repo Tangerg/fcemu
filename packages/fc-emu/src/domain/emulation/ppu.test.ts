@@ -236,6 +236,42 @@ describe("PPU", () => {
     expect(dimmed.b).toBeLessThan(0xff);
   });
 
+  it("applies Vs. RGB palettes, force-high emphasis and 2C05 register protection", () => {
+    const rgbCartridge = createVsCartridge(2);
+    const plain = renderBackdropPixelWithCartridge(rgbCartridge, 0x00, 0x08);
+    expect(plain).toEqual({ r: 0xff, g: 0xb6, b: 0xb6, a: 0xff });
+    const greenEmphasis = renderBackdropPixelWithCartridge(createVsCartridge(2), 0x00, 0x08 | 0x40);
+    expect(greenEmphasis).toEqual({ r: 0xff, g: 0xff, b: 0xb6, a: 0xff });
+
+    const ppu = new Bus(createVsCartridge(9)).PPU;
+    ppu.writeRegister(0x2000, 0x80);
+    expect(ppu.flagBlueTint).toBe(1);
+    ppu.writeRegister(0x2001, 0x80);
+    expect(ppu.captureState().nmiOutput).toBe(true);
+    expect(ppu.readRegister(0x2002) & 0x3f).toBe(0x3d);
+  });
+
+  it("does not perform the composite PPU's missing odd-frame dot on Vs. RGB PPUs", () => {
+    const standard = new Bus(createTestCartridge()).PPU;
+    const vs = new Bus(createVsCartridge(0)).PPU;
+    prepareOddFrameSkip(standard);
+    prepareOddFrameSkip(vs);
+
+    standard.update();
+    vs.update();
+
+    expect({ cycle: standard.cycle, scanLine: standard.scanLine, frame: standard.frame }).toEqual({
+      cycle: 0,
+      scanLine: 0,
+      frame: 1,
+    });
+    expect({ cycle: vs.cycle, scanLine: vs.scanLine, frame: vs.frame }).toEqual({
+      cycle: 340,
+      scanLine: 261,
+      frame: 0,
+    });
+  });
+
   it("treats OAMDMA as CPU-owned while its destination writes still drive the PPU latch", () => {
     const ppu = new Bus(createTestCartridge()).PPU;
     ppu.writeRegister(0x2002, 0x55);
@@ -360,4 +396,44 @@ function renderBackdropPixel(
   advanceToFrameStart(ppu); // finish the partial power-on frame
   advanceToFrameStart(ppu); // render one full frame with the mask applied
   return FrameBuffer.extractRGBA(ppu.front.getRGBA(10, 10));
+}
+
+function renderBackdropPixelWithCartridge(
+  cartridge: ReturnType<typeof createTestCartridge>,
+  paletteIndex: number,
+  mask: number,
+): { r: number; g: number; b: number; a: number } {
+  const ppu = new Bus(cartridge).PPU;
+  ppu.write(0x3f00, paletteIndex);
+  ppu.writeRegister(0x2001, mask);
+  advanceToFrameStart(ppu);
+  advanceToFrameStart(ppu);
+  return FrameBuffer.extractRGBA(ppu.front.getRGBA(10, 10));
+}
+
+function createVsCartridge(vsPpuType: number) {
+  return createTestCartridge({
+    mapper: 99,
+    nes2: true,
+    consoleType: 1,
+    vsPpuType,
+    prgRomBytes: 0x8000,
+    chrRomBytes: 0x2000,
+    prgRamShift: 5,
+    chrRamShift: 0,
+  });
+}
+
+function prepareOddFrameSkip(ppu: Bus["PPU"]): void {
+  const state = ppu.captureState();
+  ppu.restoreState({
+    ...state,
+    cycle: 339,
+    scanLine: 261,
+    frame: 0,
+    f: 1,
+    effectiveRenderingMask: 0x08,
+    pendingRenderingMask: 0x08,
+    renderingMaskDelay: 0,
+  });
 }

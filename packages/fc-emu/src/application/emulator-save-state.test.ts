@@ -4,6 +4,35 @@ import { NametableMirroring } from "../domain/model/cartridge.js";
 import { Emulator, type EmulatorSaveState } from "./emulator.js";
 
 describe("Emulator save states", () => {
+  it("preserves Vs. cabinet inputs and security-device progress", () => {
+    const emulator = Emulator.fromRom(
+      createTestRom({
+        mapper: 99,
+        nes2: true,
+        consoleType: 1,
+        vsPpuType: 5,
+        vsHardwareType: 2,
+        prgRomBytes: 0x8000,
+        chrRomBytes: 0x2000,
+        prgRamShift: 5,
+        chrRamShift: 0,
+      }),
+    );
+    emulator.setDipSwitch(3, true);
+    emulator.setServiceButton(true);
+    emulator.insertCoin(2);
+    const snapshot = emulator.captureSaveState();
+
+    expect(snapshot.state.vsSystem).toMatchObject({
+      dipSwitches: 0x04,
+      serviceButton: true,
+      coin2CyclesRemaining: expect.any(Number),
+    });
+    emulator.runFrame();
+    emulator.restoreSaveState(snapshot);
+    expect(emulator.captureSaveState()).toEqual(snapshot);
+  });
+
   it("replays video, audio, cycles and diagnostics exactly from an active execution snapshot", () => {
     const samples: number[] = [];
     const rom = createTestRom({
@@ -258,8 +287,8 @@ describe("Emulator save states", () => {
   it("rejects unknown state versions", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const snapshot = emulator.captureSaveState();
-    expect(snapshot.version).toBe(15);
-    const future = { ...snapshot, version: 16 } as unknown as EmulatorSaveState;
+    expect(snapshot.version).toBe(16);
+    const future = { ...snapshot, version: 17 } as unknown as EmulatorSaveState;
     expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
   });
 });

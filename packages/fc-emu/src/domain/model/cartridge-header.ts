@@ -9,6 +9,13 @@ export enum CartridgeTimingMode {
   Dendy = 3,
 }
 
+export enum CartridgeConsoleType {
+  Standard = 0,
+  VsSystem = 1,
+  PlayChoice10 = 2,
+  Extended = 3,
+}
+
 export enum NametableMirroring {
   Horizontal = 0,
   Vertical = 1,
@@ -42,7 +49,9 @@ export interface CartridgeHeader {
   readonly mirroringMode: NametableMirroring;
   readonly hasTrainer: boolean;
   readonly hasBatteryFlag: boolean;
-  readonly consoleType: number;
+  readonly consoleType: CartridgeConsoleType;
+  readonly vsPpuType: number;
+  readonly vsHardwareType: number;
   readonly timingMode: CartridgeTimingMode;
   readonly miscellaneousRomCount: number;
   readonly defaultExpansionDevice: number;
@@ -59,19 +68,20 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
   const flags7 = bytes[7] ?? 0;
   const isNes2 = (flags7 & 0x0c) === 0x08;
   const hasBatteryFlag = (flags6 & 0x02) !== 0;
+  const consoleType = (flags7 & 0x03) as CartridgeConsoleType;
   const common = {
     format: isNes2 ? ("nes2" as const) : ("ines" as const),
     mapperNumber: (flags6 >>> 4) | (flags7 & 0xf0) | (isNes2 ? ((bytes[8] ?? 0) & 0x0f) << 8 : 0),
     submapperNumber: isNes2 ? (bytes[8] ?? 0) >>> 4 : 0,
     mirroringMode:
-      (flags6 & 0x08) !== 0
+      consoleType === CartridgeConsoleType.VsSystem || (flags6 & 0x08) !== 0
         ? NametableMirroring.FourScreen
         : (flags6 & 0x01) === 0
           ? NametableMirroring.Horizontal
           : NametableMirroring.Vertical,
     hasTrainer: (flags6 & 0x04) !== 0,
     hasBatteryFlag,
-    consoleType: flags7 & 0x03,
+    consoleType,
   };
 
   if (isNes2) {
@@ -89,6 +99,8 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
       timingMode: (bytes[12] ?? 0) & 0x03,
       miscellaneousRomCount: (bytes[14] ?? 0) & 0x03,
       defaultExpansionDevice: (bytes[15] ?? 0) & 0x3f,
+      vsPpuType: consoleType === CartridgeConsoleType.VsSystem ? (bytes[13] ?? 0) & 0x0f : 0,
+      vsHardwareType: consoleType === CartridgeConsoleType.VsSystem ? (bytes[13] ?? 0) >>> 4 : 0,
     });
   }
 
@@ -107,6 +119,8 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
     timingMode: (bytes[9] ?? 0) & 1,
     miscellaneousRomCount: 0,
     defaultExpansionDevice: 0,
+    vsPpuType: 0,
+    vsHardwareType: 0,
   });
 }
 
@@ -116,6 +130,13 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
  * comes from the selected physical chip.
  */
 function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
+  if (header.mapperNumber === 99 && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      prgRamSize: header.hasBatteryFlag ? 0 : 0x0800,
+      prgNvRamSize: header.hasBatteryFlag ? 0x0800 : 0,
+    });
+  }
   if (header.mapperNumber === 16 && header.format === "ines" && header.hasBatteryFlag) {
     return Object.freeze({
       ...header,

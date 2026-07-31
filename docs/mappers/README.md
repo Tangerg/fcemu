@@ -155,6 +155,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 94  | UN1ROM         | `uxrom`                   | `uxrom-mapper.ts`            | AND           | no   |
 | 95  | Namco 3425     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 97  | Irem TAM-S1    | `irem-tam-s1`             | `irem-tam-s1-mapper.ts`      | no            | no   |
+| 99  | VS mainboard   | `vs-system`               | `vs-system-mapper.ts`        | no            | no   |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
@@ -823,6 +824,26 @@ The final 16 KiB PRG bank is fixed at `$8000-$BFFF`; D3-D0 select the 16 KiB ban
 The known board carries 256 KiB PRG ROM and fixed 8 KiB CHR RAM, with no PRG RAM, IRQ or bus
 conflict. See the
 [TAM-S1 hardware analysis](https://forums.nesdev.org/viewtopic.php?t=19769).
+
+## VS System mainboard (99)
+
+Mapper 99 models the populated sockets on the VS mainboard, not a modulo-wrapped CNROM cartridge.
+CPU `$8000-$9FFF` selects socket 0 or the fifth Gumshoe socket; `$A000-$FFFF` maps sockets 1–3.
+PPU `$0000-$1FFF` selects either 8 KiB CHR socket. CPU OUT2 (`$4016` bit 2) changes both selections
+when the controller latch commits. Missing fixed PRG sockets, the alternate PRG socket or the second
+CHR socket are electrically undriven. The 2 KiB `$6000-$7FFF` shared RAM repeats every `$800`
+bytes, and nametables are four-screen on VS hardware.
+
+The surrounding `VsSystem` console device owns coin/service/DIP inputs, the mirrored `$4020` coin
+counter output and NES 2.0 UniSystem protection types 1–4. `PpuVariant` owns the 2C03 palette, four
+2C04 permutations, 2C05 register swap/status signatures, RGB emphasis and the absence of the
+RP2C02 odd-frame missing dot. Hardware types 5–6 are DualSystem and are rejected rather than
+approximated with one CPU. See [NESdev mapper 99](https://www.nesdev.org/wiki/INES_Mapper_099),
+[Vs. System](https://www.nesdev.org/wiki/Vs._System) and
+[PPU palettes](https://www.nesdev.org/wiki/PPU_palettes). The resettable RBI/TKO byte streams and
+decoded Super Xevious phases follow the maintained
+[MAME VS driver](https://github.com/mamedev/mame/blob/master/src/mame/nintendo/vsnes.cpp); the
+device remains console-owned because those boards use mapper 206, not mapper 99.
 
 ## TxSROM and TQROM (118, 119)
 

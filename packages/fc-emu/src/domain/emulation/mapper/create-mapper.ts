@@ -73,6 +73,7 @@ import { findVrc24Board, type Vrc24Board } from "./vrc2-vrc4-board.js";
 import { Vrc2Vrc4Mapper } from "./vrc2-vrc4-mapper.js";
 import { Vrc6Mapper } from "./vrc6-mapper.js";
 import { Vrc7Mapper, type Vrc7Board } from "./vrc7-mapper.js";
+import { VsSystemMapper } from "./vs-system-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -405,6 +406,10 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Irem TAM-S1");
       return new IremTamS1Mapper(cartridge);
+    case 99:
+      requireBaseSubmapper(cartridge);
+      requireVsSystemMapperLayout(cartridge);
+      return new VsSystemMapper(cartridge);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -1024,6 +1029,25 @@ function requireCnromLayout(cartridge: Cartridge): void {
     cartridge.chrMemoryBytes % 0x2000 !== 0
   ) {
     throw configurationError(cartridge, "CHR memory must contain one to sixteen 8 KiB banks");
+  }
+}
+
+function requireVsSystemMapperLayout(cartridge: Cartridge): void {
+  const prgBytes = cartridge.prgRom.byteLength;
+  if (prgBytes < 0x2000 || prgBytes > 0xa000 || prgBytes % 0x2000 !== 0) {
+    throw configurationError(
+      cartridge,
+      "Vs. System PRG ROM must contain one to five 8 KiB sockets",
+    );
+  }
+  if (cartridge.chrRom.byteLength !== 0x2000 && cartridge.chrRom.byteLength !== 0x4000) {
+    throw configurationError(cartridge, "Vs. System CHR ROM must contain one or two 8 KiB sockets");
+  }
+  if (
+    cartridge.prgWritableBytes !== 0x0800 ||
+    (cartridge.prgRamBytes > 0 && cartridge.prgNvRamBytes > 0)
+  ) {
+    throw configurationError(cartridge, "Vs. System mapper requires exactly 2 KiB of shared RAM");
   }
 }
 

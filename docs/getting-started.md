@@ -40,6 +40,9 @@ The top-row and numeric-keypad `0`/`1` keys are both accepted for P2. Standard g
 directional axes/D-pad and are assigned by stable connection slot. Keyboard and gamepad inputs are
 composed, so releasing one device does not cancel a button still held on another.
 
+VS UniSystem images show a `投币` control that produces one physical-duration coin-contact pulse.
+Player identity follows NES 2.0's `$4016`/`$4017` VS controller routing when that metadata exists.
+
 After a ROM loads, the canvas receives gameplay focus. `Tab` moves focus to workbench controls;
 activating a control with `Enter` or `Space` returns focus to the canvas when appropriate.
 
@@ -52,6 +55,8 @@ activating a control with `Enter` or `Space` returns focus to the canvas when ap
   persisted quick-save slots.
 - **Execution region** selects `AUTO`, `NTSC`, `PAL` or `DENDY`. Changing it rebuilds the runtime,
   preserves battery data and held controller intent, and keeps a paused session paused.
+- **VS coin** appears only for VS UniSystem images. VS hardware is NTSC-only, so PAL/Dendy choices
+  are disabled for those sessions.
 - **Quick saves** provide three slots isolated by ROM identity and actual execution region.
 - **Eject** stops the runtime and returns focus to the ROM selector.
 

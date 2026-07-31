@@ -472,10 +472,10 @@ describe("cartridge mappers", () => {
   });
 
   it("rejects unknown iNES mapper numbers at the mapper factory boundary", () => {
-    const cartridge = createTestCartridge({ mapper: 99 });
+    const cartridge = createTestCartridge({ mapper: 100 });
 
     expect(() => createMapper(cartridge, { setMapperIrq() {} })).toThrowError(
-      new UnsupportedMapperError(99),
+      new UnsupportedMapperError(100),
     );
   });
 

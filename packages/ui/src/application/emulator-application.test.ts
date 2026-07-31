@@ -158,6 +158,7 @@ describe("EmulatorApplication", () => {
             format: "ines",
             mapperNumber: 4,
             submapperNumber: 0,
+            consoleType: 0,
             consoleRegion: "ntsc",
             hasBatteryBackup: false,
           },
@@ -170,6 +171,7 @@ describe("EmulatorApplication", () => {
           captureBatterySave: () => undefined,
           restoreBatterySave: () => undefined,
           setControllerButton,
+          insertCoin: () => undefined,
         }),
       },
       scheduler,
@@ -465,6 +467,7 @@ describe("EmulatorApplication", () => {
         format: "ines" as const,
         mapperNumber: 1,
         submapperNumber: 0,
+        consoleType: 0 as const,
         consoleRegion: "ntsc" as const,
         hasBatteryBackup: true,
       },
@@ -477,6 +480,7 @@ describe("EmulatorApplication", () => {
       captureBatterySave: () => ({ revision, data: Uint8Array.of(revision) }),
       restoreBatterySave,
       setControllerButton: () => undefined,
+      insertCoin: () => undefined,
     };
     const application = new EmulatorApplication({
       romReader: {
@@ -1071,6 +1075,34 @@ describe("EmulatorApplication", () => {
       quickSaveSlots: [],
     });
   });
+
+  it("routes coin insertion only to an active Vs. System runtime", async () => {
+    const insertCoin = vi.fn<(slot?: 1 | 2) => void>();
+    const baseRuntime = createRuntime({ consoleRegion: "ntsc" });
+    const vsRuntime = {
+      ...baseRuntime,
+      cartridge: { ...baseRuntime.cartridge, consoleType: 1 as const },
+      insertCoin,
+    };
+    const application = createApplication(
+      {
+        read: async (file) => ({
+          id: file.name,
+          name: file.name,
+          bytes: new ArrayBuffer(1),
+        }),
+      },
+      () => vsRuntime,
+    );
+
+    await application.loadRom(testFile("vs.nes"));
+    application.insertCoin();
+    application.insertCoin(2);
+
+    expect(application.getSnapshot().rom?.consoleType).toBe(1);
+    expect(insertCoin).toHaveBeenNthCalledWith(1, 1);
+    expect(insertCoin).toHaveBeenNthCalledWith(2, 2);
+  });
 });
 
 function createApplication(
@@ -1084,6 +1116,7 @@ function createApplication(
         format: "ines" | "nes2";
         mapperNumber: number;
         submapperNumber: number;
+        consoleType: 0 | 1;
         consoleRegion: "ntsc" | "pal" | "dendy";
         hasBatteryBackup: boolean;
       };
@@ -1096,12 +1129,14 @@ function createApplication(
       captureBatterySave: () => undefined;
       restoreBatterySave: () => void;
       setControllerButton: () => void;
+      insertCoin: () => void;
     }
   >((rom) => ({
     cartridge: {
       format: "ines",
       mapperNumber: rom.name === "first.nes" ? 1 : 2,
       submapperNumber: 0,
+      consoleType: 0,
       consoleRegion: "ntsc",
       hasBatteryBackup: false,
     },
@@ -1114,6 +1149,7 @@ function createApplication(
     captureBatterySave: () => undefined,
     restoreBatterySave: () => undefined,
     setControllerButton: () => undefined,
+    insertCoin: () => undefined,
   })),
 ): EmulatorApplication {
   return new EmulatorApplication({
@@ -1153,6 +1189,7 @@ function createRuntime({
       format: "ines" as const,
       mapperNumber: 0,
       submapperNumber: 0,
+      consoleType: 0 as const,
       consoleRegion,
       hasBatteryBackup: batterySave !== undefined,
     },
@@ -1165,6 +1202,7 @@ function createRuntime({
     captureBatterySave: () => batterySave,
     restoreBatterySave,
     setControllerButton,
+    insertCoin: () => undefined,
   };
 }
 

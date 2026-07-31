@@ -6,6 +6,7 @@ import {
   type CartridgeHeader,
   type CartridgeFormat,
   type CartridgeTimingMode,
+  type CartridgeConsoleType,
   type NametableMirroring,
 } from "./cartridge-header.js";
 import {
@@ -17,6 +18,7 @@ import {
 export { CartridgeFormatError } from "./cartridge-format-error.js";
 export type { CartridgeFormatErrorCode } from "./cartridge-format-error.js";
 export { CartridgeTimingMode, NametableMirroring } from "./cartridge-header.js";
+export { CartridgeConsoleType } from "./cartridge-header.js";
 export type { CartridgeFormat } from "./cartridge-header.js";
 
 const MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000;
@@ -35,6 +37,10 @@ class Cartridge {
   readonly mapperNumber: number;
   readonly submapperNumber: number;
   readonly timingMode: CartridgeTimingMode;
+  readonly consoleType: CartridgeConsoleType;
+  readonly vsPpuType: number;
+  readonly vsHardwareType: number;
+  readonly defaultExpansionDevice: number;
   mirroringMode: NametableMirroring;
   readonly hasBatteryBackup: boolean;
   readonly hasWritableChrMemory: boolean;
@@ -114,6 +120,10 @@ class Cartridge {
     this.mapperNumber = header.mapperNumber;
     this.submapperNumber = header.submapperNumber;
     this.timingMode = header.timingMode;
+    this.consoleType = header.consoleType;
+    this.vsPpuType = header.vsPpuType;
+    this.vsHardwareType = header.vsHardwareType;
+    this.defaultExpansionDevice = header.defaultExpansionDevice;
     this.mirroringMode = header.mirroringMode;
     this.hasBatteryBackup = this.memory.hasBatteryBackup;
     this.hasWritableChrMemory = this.memory.chrAddressSpaceBytes > 0;
@@ -195,12 +205,35 @@ class Cartridge {
     if (header.prgRomSize === 0) {
       throw new CartridgeFormatError("MISSING_PRG_ROM", sourceName, "PRG ROM is missing");
     }
-    if (header.consoleType !== 0) {
+    if (header.consoleType !== 0 && header.consoleType !== 1) {
       throw new CartridgeFormatError(
         "UNSUPPORTED_CONSOLE_TYPE",
         sourceName,
         `console type ${header.consoleType} is not supported`,
       );
+    }
+    if (header.consoleType === 1) {
+      if (header.timingMode !== 0) {
+        throw new CartridgeFormatError(
+          "UNSUPPORTED_TIMING_MODE",
+          sourceName,
+          "Vs. System hardware requires NTSC CPU/PPU timing",
+        );
+      }
+      if (![0, 2, 3, 4, 5, 8, 9, 10, 11].includes(header.vsPpuType)) {
+        throw new CartridgeFormatError(
+          "UNSUPPORTED_CONSOLE_TYPE",
+          sourceName,
+          `Vs. PPU type ${header.vsPpuType} is reserved or unsupported`,
+        );
+      }
+      if (header.vsHardwareType > 4) {
+        throw new CartridgeFormatError(
+          "UNSUPPORTED_CONSOLE_TYPE",
+          sourceName,
+          `Vs. hardware type ${header.vsHardwareType} requires an unsupported DualSystem`,
+        );
+      }
     }
     if (header.miscellaneousRomCount !== 0) {
       throw new CartridgeFormatError(
@@ -209,7 +242,8 @@ class Cartridge {
         "miscellaneous ROM data is not supported",
       );
     }
-    if (header.defaultExpansionDevice > 1) {
+    const supportedExpansionDevices = header.consoleType === 1 ? [0, 4, 5] : [0, 1];
+    if (!supportedExpansionDevices.includes(header.defaultExpansionDevice)) {
       throw new CartridgeFormatError(
         "UNSUPPORTED_EXPANSION_DEVICE",
         sourceName,

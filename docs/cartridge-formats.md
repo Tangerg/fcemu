@@ -7,17 +7,17 @@ execution.
 
 ## Accepted formats
 
-| Capability          | iNES                                              | NES 2.0                                  |
-| ------------------- | ------------------------------------------------- | ---------------------------------------- |
-| Mapper identity     | 8-bit legacy mapper                               | 12-bit mapper plus 4-bit submapper       |
-| PRG/CHR ROM size    | Linear bank counts                                | Linear and exponent-multiplier encodings |
-| Timing              | NTSC or PAL                                       | NTSC, PAL, multi-region or Dendy         |
-| Console             | Standard NES/Famicom                              | Standard NES/Famicom                     |
-| PRG writable memory | Direct or board-implied internal memory           | Direct, MMC1-banked or board-implied     |
-| CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied | Explicit CHR RAM or CHR NVRAM            |
-| Trainer             | Default `$7000`; mapper-owned loader exceptions   | Default plus mapper/submapper exceptions |
-| Miscellaneous ROMs  | Not encoded                                       | None                                     |
-| Default expansion   | Legacy/default                                    | Unspecified or standard controllers      |
+| Capability          | iNES                                               | NES 2.0                                  |
+| ------------------- | -------------------------------------------------- | ---------------------------------------- |
+| Mapper identity     | 8-bit legacy mapper                                | 12-bit mapper plus 4-bit submapper       |
+| PRG/CHR ROM size    | Linear bank counts                                 | Linear and exponent-multiplier encodings |
+| Timing              | NTSC or PAL                                        | NTSC, PAL, multi-region or Dendy         |
+| Console             | Standard NES/Famicom; legacy mapper-99 VS identity | Standard NES/Famicom or VS UniSystem     |
+| PRG writable memory | Direct or board-implied internal memory            | Direct, MMC1-banked or board-implied     |
+| CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied  | Explicit CHR RAM or CHR NVRAM            |
+| Trainer             | Default `$7000`; mapper-owned loader exceptions    | Default plus mapper/submapper exceptions |
+| Miscellaneous ROMs  | Not encoded                                        | None                                     |
+| Default expansion   | Legacy/default                                     | Standard or VS controller port identity  |
 
 The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes never enter a save
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
@@ -57,6 +57,12 @@ geometry. Writable PRG memory may be absent, one 8 KiB chip, one 32 KiB chip, or
 NES 2.0 submapper 0 is accepted; unallocated variants and four-screen headers fail closed because
 MMC5 owns all four nametable routes itself.
 
+Mapper 99 normalizes legacy iNES RAM to the VS mainboard's exact 2 KiB capacity; the battery flag
+still chooses volatile RAM or NVRAM. NES 2.0 must declare exactly 2 KiB in one of those classes.
+PRG ROM may contain one to five 8 KiB sockets and CHR ROM one or two 8 KiB sockets, including
+exponent-multiplier sizes that linear iNES cannot encode. The fifth PRG payload is Gumshoe's
+alternate `$8000-$9FFF` socket. Unpopulated sockets remain open bus instead of mirroring.
+
 The address-latch multicarts use board-exact geometry rather than arbitrary modulo banking. Mapper
 15 is 1 MiB PRG plus 8 KiB volatile CHR RAM. Mapper 225 accepts matched 1 MiB/512 KiB or 2 MiB/1 MiB
 PRG/CHR ROM pairs. Mapper 227 is 1 MiB PRG plus 8 KiB volatile CHR RAM; only submapper 0 may also
@@ -71,8 +77,16 @@ NTSC, PAL and Dendy select distinct CPU/PPU/APU clock domains. A multi-region im
 NTSC as a deterministic default in Workbench `auto` mode. The Workbench can explicitly select NTSC,
 PAL or Dendy without mutating cartridge metadata; changing it rebuilds the runtime while preserving
 battery-backed RAM and the paused/running lifecycle. Core callers and the conformance runner can
-also supply an explicit region override for legacy test or homebrew images. VS System and
-PlayChoice-10 images remain rejected because their console behavior is not modeled.
+also supply an explicit region override for legacy test or homebrew images. VS System images are
+fixed to NTSC and cannot be rebuilt under PAL or Dendy timing. PlayChoice-10 and extended console
+types remain rejected.
+
+NES 2.0 VS images decode header byte 13 into the PPU type and hardware type. PPU types 0, 2–5 and
+8–11 select the documented 2C03, 2C04 and 2C05 behavior; reserved values fail closed. UniSystem
+hardware types 0–4 are supported, including the three Namco security devices and Ice Climber input
+protection. DualSystem types 5–6 require two synchronized CPUs/PPUs, watchdog and shared-memory
+arbitration and therefore fail closed. Default expansion values 0, 4 and 5 are accepted; 4/5 state
+whether player one is reported through `$4016` or `$4017`.
 
 ## Mapper variants and board shape
 
@@ -105,8 +119,8 @@ codes and body layout are documented in [Cartridge subsystem](./subsystems/cartr
 
 ## Explicitly unsupported
 
-- VS System, PlayChoice-10 and extended console types.
-- Miscellaneous ROM payloads and non-standard default expansion devices.
+- VS DualSystem, PlayChoice-10 and extended console types.
+- VS Zapper, miscellaneous ROM payloads and other non-standard default expansion devices.
 - Mapper-internal EEPROM/battery memory outside the explicit Bandai FCG, Taito X1-005/X1-017 and
   Namco 163 policies.
 - Simultaneous CHR ROM and writable CHR memory outside Namco 163/TQROM, or simultaneous CHR RAM and

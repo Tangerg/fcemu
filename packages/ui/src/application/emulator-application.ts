@@ -245,6 +245,12 @@ export class EmulatorApplication {
     await this.restartRuntime((runtime) => runtime.powerCycle());
   }
 
+  insertCoin(slot: 1 | 2 = 1): void {
+    const runtime = this.activeEmulation?.runtime;
+    if (!runtime || runtime.cartridge.consoleType !== 1) return;
+    runtime.insertCoin(slot);
+  }
+
   quickSaveCurrentState(): void {
     const activeEmulation = this.activeEmulation;
     const snapshot = this.session.snapshot;
@@ -655,6 +661,7 @@ function toRomDetails(rom: RomImage, runtime: EmulatorRuntimePort): RomDetails {
     format: runtime.cartridge.format,
     mapperNumber: runtime.cartridge.mapperNumber,
     submapperNumber: runtime.cartridge.submapperNumber,
+    consoleType: runtime.cartridge.consoleType,
     consoleRegion: runtime.cartridge.consoleRegion,
   };
 }

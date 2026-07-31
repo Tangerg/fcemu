@@ -292,9 +292,9 @@ runs `validateSnapshot` first: it rejects non-integer or negative scalars, non-f
 a mismatched sample rate, a frame-sequencer `period`/`pendingPeriod` outside `{4, 5}`, a
 `frameIrqClearDelay > 2`, and any queued write outside `$4000`–`$4017` or with a value above `0xFF`.
 `sampleBuffer` and `lastClockCycle` are omitted from their snapshots when undefined. The APU state
-travels inside the console's current version 15 save-state envelope. Output-filter history first
+travels inside the console's current version 16 save-state envelope. Output-filter history first
 entered the schema in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and
-version 15 adds mapper-owned RAM/NVRAM for Namco 163.
+version 15 added mapper-owned RAM/NVRAM for Namco 163; version 16 adds VS cabinet state.
 
 ## Audio output boundary
 

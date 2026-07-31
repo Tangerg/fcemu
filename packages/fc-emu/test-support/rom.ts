@@ -4,6 +4,8 @@ export interface TestRomOptions {
   readonly mapper?: number;
   readonly prgBanks?: number;
   readonly chrBanks?: number;
+  readonly prgRomBytes?: number;
+  readonly chrRomBytes?: number;
   readonly fourScreen?: boolean;
   readonly battery?: boolean;
   readonly nes2?: boolean;
@@ -16,6 +18,8 @@ export interface TestRomOptions {
   readonly chrNvRamShift?: number;
   readonly miscellaneousRomCount?: number;
   readonly defaultExpansionDevice?: number;
+  readonly vsPpuType?: number;
+  readonly vsHardwareType?: number;
   readonly trainer?: readonly number[] | boolean;
   readonly program?: readonly number[];
   readonly resetVector?: number;
@@ -27,9 +31,13 @@ export function createTestRom(options: TestRomOptions = {}): ArrayBuffer {
   const mapper = options.mapper ?? 0;
   const prgBanks = options.prgBanks ?? 1;
   const chrBanks = options.chrBanks ?? 0;
+  const prgRomBytes = options.prgRomBytes ?? prgBanks * 16_384;
+  const chrRomBytes = options.chrRomBytes ?? chrBanks * 8192;
   const trainerSize = options.trainer ? 512 : 0;
-  const bytes = new Uint8Array(16 + trainerSize + prgBanks * 16_384 + chrBanks * 8192);
-  bytes.set([0x4e, 0x45, 0x53, 0x1a, prgBanks & 0xff, chrBanks & 0xff]);
+  const bytes = new Uint8Array(16 + trainerSize + prgRomBytes + chrRomBytes);
+  const encodedPrg = encodeRomSize(prgRomBytes, 16_384, Boolean(options.nes2));
+  const encodedChr = encodeRomSize(chrRomBytes, 8192, Boolean(options.nes2));
+  bytes.set([0x4e, 0x45, 0x53, 0x1a, encodedPrg.lsb, encodedChr.lsb]);
   bytes[6] =
     ((mapper & 0x0f) << 4) |
     (options.fourScreen ? 0x08 : 0) |
@@ -38,13 +46,14 @@ export function createTestRom(options: TestRomOptions = {}): ArrayBuffer {
   bytes[7] = (mapper & 0xf0) | (options.nes2 ? 0x08 : 0) | ((options.consoleType ?? 0) & 0x03);
   if (options.nes2) {
     bytes[8] = ((options.submapper ?? 0) << 4) | ((mapper >>> 8) & 0x0f);
-    bytes[9] = (((chrBanks >>> 8) & 0x0f) << 4) | ((prgBanks >>> 8) & 0x0f);
+    bytes[9] = (encodedChr.msb << 4) | encodedPrg.msb;
     const prgRamShift = options.prgRamShift ?? 0;
     const prgNvRamShift = options.prgNvRamShift ?? (options.battery ? 7 : 0);
-    const chrRamShift = options.chrRamShift ?? (chrBanks === 0 ? 7 : 0);
+    const chrRamShift = options.chrRamShift ?? (chrRomBytes === 0 ? 7 : 0);
     bytes[10] = (prgNvRamShift << 4) | prgRamShift;
     bytes[11] = ((options.chrNvRamShift ?? 0) << 4) | chrRamShift;
     bytes[12] = options.timingMode ?? 0;
+    bytes[13] = ((options.vsHardwareType ?? 0) << 4) | (options.vsPpuType ?? 0);
     bytes[14] = options.miscellaneousRomCount ?? 0;
     bytes[15] = options.defaultExpansionDevice ?? 0;
   }
@@ -55,14 +64,34 @@ export function createTestRom(options: TestRomOptions = {}): ArrayBuffer {
   }
 
   const prgOffset = 16 + trainerSize;
-  if (prgBanks > 0) {
+  if (prgRomBytes > 0) {
     bytes.set(options.program ?? [0xea], prgOffset);
-    const vectors = prgOffset + prgBanks * 16_384 - 6;
+    const vectors = prgOffset + prgRomBytes - 6;
     writeWord(bytes, vectors, options.nmiVector ?? options.resetVector ?? 0x8000);
     writeWord(bytes, vectors + 2, options.resetVector ?? 0x8000);
     writeWord(bytes, vectors + 4, options.irqVector ?? options.resetVector ?? 0x8000);
   }
   return bytes.buffer;
+}
+
+function encodeRomSize(
+  bytes: number,
+  linearUnit: number,
+  nes2: boolean,
+): { readonly lsb: number; readonly msb: number } {
+  if (bytes % linearUnit === 0 && bytes / linearUnit <= (nes2 ? 0x0eff : 0xff)) {
+    const units = bytes / linearUnit;
+    return { lsb: units & 0xff, msb: nes2 ? units >>> 8 : 0 };
+  }
+  if (!nes2) throw new RangeError("Legacy iNES ROM size must use whole linear header units");
+  for (let exponent = 0; exponent <= 63; exponent++) {
+    for (let multiplierCode = 0; multiplierCode < 4; multiplierCode++) {
+      if (2 ** exponent * (multiplierCode * 2 + 1) === bytes) {
+        return { lsb: (exponent << 2) | multiplierCode, msb: 0x0f };
+      }
+    }
+  }
+  throw new RangeError("ROM size cannot be represented by NES 2.0");
 }
 
 export function createTestCartridge(options: TestRomOptions = {}): Cartridge {

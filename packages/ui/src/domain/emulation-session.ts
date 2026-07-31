@@ -11,6 +11,7 @@ export interface RomDetails {
   readonly format: "ines" | "nes2";
   readonly mapperNumber: number;
   readonly submapperNumber: number;
+  readonly consoleType: 0 | 1;
   readonly consoleRegion: ExecutionRegion;
 }
 

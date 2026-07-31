@@ -80,6 +80,18 @@ Players are `1 | 2`. `setControllerButton` is the preferred incremental API.
 `setControllerState(player, buttons)` replaces the full eight-button state and is useful for
 adapters that already own a complete input snapshot.
 
+For a loaded VS UniSystem image, cabinet inputs are explicit:
+
+```ts
+emulator.insertCoin(); // slot 1, held for a hardware-sized 50 ms contact pulse
+emulator.setServiceButton(true);
+emulator.setDipSwitch(3, true);
+```
+
+`insertCoin(1 | 2)`, `setServiceButton` and `setDipSwitch(1..8, enabled)` reject standard-console
+images. `emulator.cartridge.consoleType`, `vsPpuType` and `vsHardwareType` let a host present
+appropriate controls without inspecting ROM bytes.
+
 ## Region selection
 
 ```ts
@@ -90,7 +102,8 @@ const pal = Emulator.fromRom(rom, "homebrew.nes", outputs, {
 
 The override accepts `"ntsc"`, `"pal"` or `"dendy"`. Without an override, the header chooses the
 region; multi-region images resolve deterministically to NTSC. Region is part of save-state
-compatibility and cannot be changed on an existing instance—construct a new runtime instead.
+compatibility and cannot be changed on an existing instance—construct a new runtime instead. VS
+hardware is NTSC-only and rejects PAL/Dendy overrides.
 
 ## Reset and power cycle
 
@@ -137,7 +150,7 @@ plain `JSON.stringify`/`JSON.parse` is not a supported serializer. The core vali
 - every nested CPU, PPU, APU, DMA, mapper, clock, controller and cartridge invariant.
 
 Restore is transactional: if any nested validation fails, the live runtime is rolled back. Schema
-version 15 is intentionally exact rather than forward/backward compatible.
+version 16 is intentionally exact rather than forward/backward compatible.
 
 ## Diagnostics
 

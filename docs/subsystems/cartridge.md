@@ -59,24 +59,26 @@ valid `NES\x1A` signature in bytes 0–3 (`INVALID_SIGNATURE`). Format is NES 2.
 `(flags7 & 0x0C) === 0x08`, otherwise iNES. Fields common to both formats derive from flags bytes 6
 and 7; the remaining fields diverge by format.
 
-| Field                    | iNES derivation                                                                    | NES 2.0 derivation                            |
-| ------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------- |
-| `format`                 | `"ines"`                                                                           | `"nes2"`                                      |
-| `mapperNumber`           | `(flags6>>4) \| (flags7 & 0xF0)` (8-bit)                                           | above `\| ((byte8 & 0x0F) << 8)` (12-bit)     |
-| `submapperNumber`        | `0`                                                                                | `byte8 >> 4`                                  |
-| `mirroringMode`          | four-screen bit (`flags6 & 0x08`) wins; else `flags6 & 0x01` → Horizontal/Vertical | same                                          |
-| `hasTrainer`             | `flags6 & 0x04`                                                                    | same                                          |
-| `hasBatteryFlag`         | `flags6 & 0x02`                                                                    | same                                          |
-| `consoleType`            | `flags7 & 0x03`                                                                    | same                                          |
-| `prgRomSize` (bytes)     | `byte4 * 16384`                                                                    | `decodeRomSize(byte4, byte9 & 0x0F, 16384)`   |
-| `chrRomSize` (bytes)     | `byte5 * 8192`                                                                     | `decodeRomSize(byte5, byte9 >> 4, 8192)`      |
-| `prgRamSize` (bytes)     | `hasBatteryFlag ? 0 : legacy`                                                      | `decodeRamSize(byte10 & 0x0F)`                |
-| `prgNvRamSize` (bytes)   | `hasBatteryFlag ? legacy : 0`                                                      | `decodeRamSize(byte10 >> 4)`                  |
-| `chrRamSize` (bytes)     | 8 KiB without CHR ROM or when mapper 119 implies TQROM RAM                         | `decodeRamSize(byte11 & 0x0F)`                |
-| `chrNvRamSize` (bytes)   | `0`                                                                                | `decodeRamSize(byte11 >> 4)`                  |
-| `timingMode`             | `byte9 & 1` (NTSC/PAL)                                                             | `byte12 & 0x03` (NTSC/PAL/multi-region/Dendy) |
-| `miscellaneousRomCount`  | `0`                                                                                | `byte14 & 0x03`                               |
-| `defaultExpansionDevice` | `0`                                                                                | `byte15 & 0x3F`                               |
+| Field                    | iNES derivation                                                         | NES 2.0 derivation                            |
+| ------------------------ | ----------------------------------------------------------------------- | --------------------------------------------- |
+| `format`                 | `"ines"`                                                                | `"nes2"`                                      |
+| `mapperNumber`           | `(flags6>>4) \| (flags7 & 0xF0)` (8-bit)                                | above `\| ((byte8 & 0x0F) << 8)` (12-bit)     |
+| `submapperNumber`        | `0`                                                                     | `byte8 >> 4`                                  |
+| `mirroringMode`          | VS or four-screen flag wins; else `flags6 & 0x01` → Horizontal/Vertical | same                                          |
+| `hasTrainer`             | `flags6 & 0x04`                                                         | same                                          |
+| `hasBatteryFlag`         | `flags6 & 0x02`                                                         | same                                          |
+| `consoleType`            | `flags7 & 0x03`                                                         | same                                          |
+| `vsPpuType`              | `0`                                                                     | VS only: `byte13 & 0x0F`                      |
+| `vsHardwareType`         | `0`                                                                     | VS only: `byte13 >> 4`                        |
+| `prgRomSize` (bytes)     | `byte4 * 16384`                                                         | `decodeRomSize(byte4, byte9 & 0x0F, 16384)`   |
+| `chrRomSize` (bytes)     | `byte5 * 8192`                                                          | `decodeRomSize(byte5, byte9 >> 4, 8192)`      |
+| `prgRamSize` (bytes)     | `hasBatteryFlag ? 0 : legacy`                                           | `decodeRamSize(byte10 & 0x0F)`                |
+| `prgNvRamSize` (bytes)   | `hasBatteryFlag ? legacy : 0`                                           | `decodeRamSize(byte10 >> 4)`                  |
+| `chrRamSize` (bytes)     | 8 KiB without CHR ROM or when mapper 119 implies TQROM RAM              | `decodeRamSize(byte11 & 0x0F)`                |
+| `chrNvRamSize` (bytes)   | `0`                                                                     | `decodeRamSize(byte11 >> 4)`                  |
+| `timingMode`             | `byte9 & 1` (NTSC/PAL)                                                  | `byte12 & 0x03` (NTSC/PAL/multi-region/Dendy) |
+| `miscellaneousRomCount`  | `0`                                                                     | `byte14 & 0x03`                               |
+| `defaultExpansionDevice` | `0`                                                                     | `byte15 & 0x3F`                               |
 
 `legacy` for iNES is `(byte8 || 1) * 8192`, so a zero PRG-RAM byte still yields one 8 KiB unit, and
 the battery flag routes that entire legacy window to NVRAM rather than volatile RAM. iNES with no CHR
@@ -118,9 +120,11 @@ parser; the rationale and the exact accepted matrix live in
 | Decoded ROM size not a safe integer                                       | `ROM_SIZE_OUT_OF_RANGE`        | parser (`decodeRomSize`)  |
 | Truncated trainer / PRG ROM / CHR ROM body                                | `INCOMPLETE_*`                 | `fromArrayBuffer`         |
 | `prgRomSize === 0`                                                        | `MISSING_PRG_ROM`              | `validateSupportedHeader` |
-| `consoleType !== 0` (VS System, PlayChoice-10, extended)                  | `UNSUPPORTED_CONSOLE_TYPE`     | `validateSupportedHeader` |
+| Console type other than standard NES or VS System                         | `UNSUPPORTED_CONSOLE_TYPE`     | `validateSupportedHeader` |
+| Reserved VS PPU type or DualSystem hardware type                          | `UNSUPPORTED_CONSOLE_TYPE`     | `validateSupportedHeader` |
+| VS timing other than NTSC                                                 | `UNSUPPORTED_TIMING_MODE`      | `validateSupportedHeader` |
 | `miscellaneousRomCount !== 0`                                             | `UNSUPPORTED_MISC_ROM`         | `validateSupportedHeader` |
-| `defaultExpansionDevice > 1`                                              | `UNSUPPORTED_EXPANSION_DEVICE` | `validateSupportedHeader` |
+| Expansion device outside standard `0/1` or VS `0/4/5` policy              | `UNSUPPORTED_EXPANSION_DEVICE` | `validateSupportedHeader` |
 | Combined PRG RAM + NVRAM > 32 KiB (`MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000`) | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | NVRAM declared without the battery flag                                   | `INVALID_NES2_RAM_FLAGS`       | `validateSupportedHeader` |
 | Battery flag with no supported PRG/CHR or mapper-owned NVRAM              | `UNSUPPORTED_BATTERY_MEMORY`   | `validateSupportedHeader` |
@@ -129,9 +133,11 @@ parser; the rationale and the exact accepted matrix live in
 | CHR ROM together with writable CHR outside mapper 19/119 policy           | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | Trainer present with < 8 KiB combined PRG RAM window                      | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 
-The console/expansion checks accept only standard NES/Famicom images (`consoleType === 0`) with an
-unspecified or standard-controller default expansion device (`0` or `1`). The RAM checks keep the
-battery flag and the NES 2.0 NVRAM nibbles mutually consistent. Mixed CHR is accepted only where
+The console/expansion checks accept standard NES/Famicom images (`consoleType === 0`) with
+unspecified or standard controllers (`0/1`) and VS UniSystem images (`consoleType === 1`) with
+unspecified or VS controller routing (`0/4/5`). NES 2.0 byte 13 supplies `vsPpuType` and
+`vsHardwareType`; legacy VS images default both to zero because iNES has no such fields. The RAM
+checks keep the battery flag and NVRAM nibbles mutually consistent. Mixed CHR is accepted only where
 mapper 19 or 119 supplies an explicit ROM/RAM chip-select circuit.
 
 ## Writable memory regions
@@ -142,7 +148,7 @@ access goes through index-based accessors, and the frozen `layout` records all s
 
 `applyBoardMemoryPolicy` replaces header-generic capacities with physical board sizes when the
 format cannot express them faithfully: 32 KiB volatile work RAM for FFE mappers 6/8/17, 128 bytes
-for mapper 80's X1-005, and 5 KiB for mapper 82's X1-017. They then use the same `CartridgeMemory`
+for mapper 80's X1-005, 5 KiB for mapper 82's X1-017 and 2 KiB for legacy mapper 99. They then use the same `CartridgeMemory`
 ownership, power-loss and battery snapshot paths as ordinary PRG memory; the mapper alone owns
 address decoding and protection keys.
 

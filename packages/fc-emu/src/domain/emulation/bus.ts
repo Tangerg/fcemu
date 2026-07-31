@@ -12,6 +12,8 @@ import { DmaBusPhase } from "./dma/dma-bus-phase.js";
 import { IRQSource } from "./irq-source.js";
 import { isByte } from "./numeric-range.js";
 import { MachineClock, type MachineClockState } from "./clock/machine-clock.js";
+import { resolvePpuVariant } from "./ppu/ppu-variant.js";
+import { VsSystem, type VsExpansionRead, type VsSystemState } from "./vs-system.js";
 
 export interface BusSnapshot {
   readonly ram: Uint8Array;
@@ -27,6 +29,7 @@ export interface BusSnapshot {
   readonly irqSources: readonly IRQSource[];
   readonly performingDmaMemoryAccess: boolean;
   readonly pendingControllerWrite?: number;
+  readonly vsSystem?: VsSystemState;
 }
 
 class Bus implements MapperInterruptPort, DmaArbiterPort {
@@ -42,6 +45,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
   private readonly dma = new DmaArbiter();
   private readonly clock: MachineClock;
   private readonly ppuReadSynchronizationRequired: boolean;
+  private readonly vsSystem: VsSystem | undefined;
   private readonly irqSources = new Set<IRQSource>();
   private performingDmaMemoryAccess = false;
   private cpuUpdateActive = false;
@@ -49,16 +53,27 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
 
   constructor(cartridge: Cartridge, audioSampleRate = 44_100, consoleRegion?: ConsoleRegion) {
     this.cartridge = cartridge;
+    if (cartridge.consoleType === 1 && consoleRegion !== undefined && consoleRegion !== "ntsc") {
+      throw new RangeError("Vs. System hardware only supports the NTSC execution region");
+    }
     this.timing = resolveConsoleTiming(cartridge.timingMode, consoleRegion);
     this.clock = new MachineClock(this.timing.cpuPpu);
     this.ppuReadSynchronizationRequired = this.clock.readSampleRequiresPpuSynchronization;
     this.ram = new Uint8Array(2048);
     this.cpu = new CPU(this);
     this.apu = new APU(this, this.timing, audioSampleRate);
-    this.ppu = new PPU(this, this.timing);
+    this.ppu = new PPU(
+      this,
+      this.timing,
+      resolvePpuVariant(cartridge.consoleType, cartridge.vsPpuType),
+    );
     this.controller1 = new Controller();
     this.controller2 = new Controller();
     this.mapper = createMapper(this.cartridge, this);
+    this.vsSystem =
+      cartridge.consoleType === 1
+        ? new VsSystem(cartridge.vsHardwareType, this.timing.cpuFrequencyHz)
+        : undefined;
     this.powerOn();
   }
 
@@ -118,6 +133,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
       irqSources: [...this.irqSources],
       performingDmaMemoryAccess: this.performingDmaMemoryAccess,
       ...(pendingControllerWrite === undefined ? {} : { pendingControllerWrite }),
+      ...(this.vsSystem ? { vsSystem: this.vsSystem.captureState() } : {}),
     };
   }
 
@@ -142,11 +158,15 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (state.ppu.nmiLineAsserted !== state.cpu.interrupts.nmiLineAsserted) {
       throw new Error("Bus save-state PPU /NMI output disagrees with the CPU input line");
     }
+    if (Boolean(state.vsSystem) !== Boolean(this.vsSystem)) {
+      throw new Error("Bus save state targets another console type");
+    }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);
     this.mapper.restoreState(state.mapper);
     this.controller1.restoreState(state.controller1);
     this.controller2.restoreState(state.controller2);
+    if (state.vsSystem) this.vsSystem?.restoreState(state.vsSystem);
     this.ppu.restoreState(state.ppu);
     this.apu.restoreState(state.apu);
     this.cpu.restoreState(state.cpu);
@@ -166,6 +186,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.dma.reset();
     this.resetClockSynchronization();
     this.mapper.reset?.();
+    this.vsSystem?.reset();
     this.ppu.reset();
     this.apu.reset();
     this.cpu.reset();
@@ -178,6 +199,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.ram.fill(0);
     this.cartridge.powerOn();
     this.mapper.powerOn();
+    this.vsSystem?.powerOn();
     this.controller1.powerOn();
     this.controller2.powerOn();
     this.ppu.powerOn();
@@ -287,6 +309,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     }
     this.commitControllerWrite();
     this.clock.commitCpuCycles(cpuCycle);
+    this.vsSystem?.tickCpuCycles(cpuCycle);
     this.clock.synchronizePpuCommittedInterruptSample(this.clockPpuDot);
     this.cpu.sampleNmiLine();
     this.clock.synchronizePpuCommitted(this.clockPpuDot);
@@ -357,6 +380,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.pendingControllerWrite = undefined;
     this.controller1.strobe = value;
     this.controller2.strobe = value;
+    this.mapper.writeControllerLatch?.(value);
   }
 
   private synchronizeApuWithCompletedCpuCycles(): void {
@@ -414,6 +438,37 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     while (cycles > 0) {
       cycles -= this.update();
     }
+  }
+
+  readVsController(port: 1 | 2, serialButton: number): number | undefined {
+    return this.vsSystem?.readController(port, serialButton);
+  }
+
+  get forceVsStartButton(): boolean {
+    return this.vsSystem?.forcesStartButton ?? false;
+  }
+
+  readVsExpansion(address: number, openBus: number): VsExpansionRead | undefined {
+    return this.vsSystem?.readExpansion(address, openBus);
+  }
+
+  writeVsExpansion(address: number, value: number): void {
+    this.vsSystem?.writeExpansion(address, value);
+  }
+
+  insertVsCoin(slot: 1 | 2): void {
+    if (!this.vsSystem) throw new Error("Coin insertion is only available on Vs. System hardware");
+    this.vsSystem.insertCoin(slot);
+  }
+
+  setVsServiceButton(pressed: boolean): void {
+    if (!this.vsSystem) throw new Error("Service input is only available on Vs. System hardware");
+    this.vsSystem.setServiceButton(pressed);
+  }
+
+  setVsDipSwitch(index: number, enabled: boolean): void {
+    if (!this.vsSystem) throw new Error("DIP switches are only available on Vs. System hardware");
+    this.vsSystem.setDipSwitch(index, enabled);
   }
 
   private static validateIRQSources(sources: readonly IRQSource[]): readonly IRQSource[] {

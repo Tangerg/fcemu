@@ -202,8 +202,9 @@ Three state categories have different owners and compatibility rules:
 | Emulator save state | Core           | Exact schema version + ROM identity + region + audio rate | Opaque to UI runtime port           |
 | Quick save          | UI application | Outer format + ROM identity + region + slot               | `QuickSaveStoragePort` / IndexedDB  |
 
-The core save-state envelope is version 15. This revision adds mapper-owned volatile/NVRAM regions
-needed by Namco 163's shared 128-byte chip RAM. Every executing aggregate exposes a typed snapshot
+The core save-state envelope is version 16. This revision adds the optional VS UniSystem cabinet,
+timed coin contacts, counter output and protection-device position to the bus snapshot. Every
+executing aggregate exposes a typed snapshot
 with runtime validation. `Bus.restoreState()` is transactional: a nested failure rolls the entire
 machine back to the pre-restore snapshot.
 

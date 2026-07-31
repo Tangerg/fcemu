@@ -139,6 +139,17 @@ NESdev [open bus behavior](https://www.nesdev.org/wiki/Open_bus_behavior).
   external latch.
 - `$4017` returns `Controller2.currentButton` on D0-D4 (mask `0x1f`); D5-D7 keep the external latch.
 
+On VS UniSystem, `$4016/$4017` instead drive all eight bits. D0 is the corresponding controller
+serial line; `$4016` adds service, DIP 1–2 and two coin contacts, while `$4017` adds DIP 3–8.
+NES 2.0 default expansion value 4/5 decides whether application player one is wired to the right
+`$4016` or left `$4017` stick. Ice Climber protection forces the Start serial bit on both physical
+ports. A committed `$4016` write also presents OUT2 to mapper 99.
+
+`VsSystem` observes the mirrored `$4020-$5FFF` coin-counter address decode before mapper expansion
+ports. Reads write the current external open-bus D0 into that output, matching the cabinet circuit.
+The same console device supplies the header-selected RBI, TKO and Super Xevious protection reads;
+all cabinet/protection state participates in transactional save states.
+
 ## PPU memory map (`PPUMemory`)
 
 `PPUMemory` decodes the independent 14-bit PPU bus, masking every access with `& 0x3fff`. It emits

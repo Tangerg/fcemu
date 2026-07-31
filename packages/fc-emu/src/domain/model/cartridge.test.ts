@@ -105,13 +105,70 @@ describe("Cartridge", () => {
   });
 
   it.each([
-    ["console", { consoleType: 1 }, "UNSUPPORTED_CONSOLE_TYPE"],
+    ["console", { consoleType: 2 }, "UNSUPPORTED_CONSOLE_TYPE"],
     ["miscellaneous ROM", { miscellaneousRomCount: 1 }, "UNSUPPORTED_MISC_ROM"],
     ["expansion device", { defaultExpansionDevice: 2 }, "UNSUPPORTED_EXPANSION_DEVICE"],
   ] as const)("rejects unsupported NES 2.0 %s metadata", (_name, options, code) => {
     expect(() => Cartridge.fromArrayBuffer(createTestRom({ nes2: true, ...options }))).toThrow(
       expect.objectContaining({ code }),
     );
+  });
+
+  it("projects Vs. System PPU/hardware identity and forces four-screen nametable RAM", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({
+        mapper: 99,
+        nes2: true,
+        consoleType: 1,
+        vsPpuType: 5,
+        vsHardwareType: 4,
+        defaultExpansionDevice: 5,
+        prgRomBytes: 0x8000,
+        chrRomBytes: 0x2000,
+        prgRamShift: 5,
+        chrRamShift: 0,
+      }),
+    );
+
+    expect(cartridge).toMatchObject({
+      consoleType: 1,
+      vsPpuType: 5,
+      vsHardwareType: 4,
+      defaultExpansionDevice: 5,
+      mirroringMode: NametableMirroring.FourScreen,
+      prgRamBytes: 0x0800,
+    });
+  });
+
+  it.each([
+    ["reserved PPU", { vsPpuType: 1 }, "Vs. PPU type"],
+    ["DualSystem", { vsHardwareType: 5 }, "DualSystem"],
+    ["PAL timing", { timingMode: 1 }, "NTSC"],
+    ["non-Vs input", { defaultExpansionDevice: 1 }, "expansion device"],
+  ] as const)("rejects unsupported Vs. System %s metadata", (_name, options, message) => {
+    expect(() =>
+      Cartridge.fromArrayBuffer(
+        createTestRom({
+          mapper: 99,
+          nes2: true,
+          consoleType: 1,
+          prgRomBytes: 0x8000,
+          chrRomBytes: 0x2000,
+          prgRamShift: 5,
+          chrRamShift: 0,
+          ...options,
+        }),
+      ),
+    ).toThrow(message);
+  });
+
+  it("normalizes legacy mapper 99 shared RAM to its physical 2 KiB capacity", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 99, chrBanks: 1, fourScreen: true }),
+    );
+
+    expect(cartridge.prgRamBytes).toBe(0x0800);
+    expect(cartridge.prgNvRamBytes).toBe(0);
   });
 
   it("represents mixed PRG RAM/NVRAM for mapper-owned bank selection", () => {

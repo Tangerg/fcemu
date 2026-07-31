@@ -318,6 +318,11 @@
     0 5px 14px rgb(226 56 43 / 18%);
 }
 
+.region-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.28;
+}
+
 .region-option:active {
   scale: 0.96;
 }
@@ -463,6 +468,12 @@
 
 .machine-button-eject {
   grid-column: 1 / -1;
+}
+
+.vs-coin-button {
+  border-color: rgb(241 74 60 / 24%);
+  color: #e8bbb5;
+  background: rgb(226 56 43 / 8%);
 }
 
 .quick-save-slots {

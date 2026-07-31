@@ -11,6 +11,7 @@ describe("EmulationSession", () => {
         format: "nes2",
         mapperNumber: 4,
         submapperNumber: 1,
+        consoleType: 0,
         consoleRegion: "pal",
       })
       .play()
@@ -39,6 +40,7 @@ describe("EmulationSession", () => {
         format: "ines",
         mapperNumber: 0,
         submapperNumber: 0,
+        consoleType: 0,
         consoleRegion: "ntsc",
       }),
     ).toThrow(/Cannot reconfigure/);
@@ -53,6 +55,7 @@ describe("EmulationSession", () => {
         format: "ines",
         mapperNumber: 0,
         submapperNumber: 0,
+        consoleType: 0,
         consoleRegion: "pal",
       })
       .play()
@@ -63,6 +66,7 @@ describe("EmulationSession", () => {
         format: "ines",
         mapperNumber: 0,
         submapperNumber: 0,
+        consoleType: 0,
         consoleRegion: "pal",
       });
 
@@ -85,6 +89,7 @@ describe("EmulationSession", () => {
         format: "ines",
         mapperNumber: 0,
         submapperNumber: 0,
+        consoleType: 0,
         consoleRegion: "ntsc",
       })
       .play();
@@ -101,6 +106,7 @@ describe("EmulationSession", () => {
         format: "ines",
         mapperNumber: 0,
         submapperNumber: 0,
+        consoleType: 0,
         consoleRegion: "ntsc",
       })
       .play()

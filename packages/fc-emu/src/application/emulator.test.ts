@@ -1,10 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { createTestRom } from "../../test-support/rom.js";
 import { CartridgeTimingMode, NametableMirroring } from "../domain/model/cartridge.js";
+import { ControllerButton } from "../domain/emulation/controller.js";
 import { Emulator } from "./emulator.js";
 import type { UnsupportedMapperError } from "../domain/emulation/mapper/index.js";
 
 describe("Emulator", () => {
+  it("uses NES 2.0 VS controller routing when player one is wired to $4017", () => {
+    const emulator = Emulator.fromRom(
+      createTestRom({
+        mapper: 99,
+        nes2: true,
+        consoleType: 1,
+        defaultExpansionDevice: 5,
+        prgRomBytes: 0x8000,
+        chrRomBytes: 0x2000,
+        prgRamShift: 5,
+        chrRamShift: 0,
+      }),
+    );
+
+    emulator.setControllerButton(1, ControllerButton.A, true);
+    const state = emulator.captureSaveState().state;
+    expect(state.controller1.buttons[ControllerButton.A]).toBe(false);
+    expect(state.controller2.buttons[ControllerButton.A]).toBe(true);
+  });
+
   it("boots from the cartridge reset vector before the first frame", () => {
     const emulator = Emulator.fromRom(
       createTestRom({ program: [0x4c, 0x00, 0x80], resetVector: 0x8000 }),

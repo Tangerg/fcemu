@@ -13,7 +13,11 @@ export type {
   VideoFrame,
   VideoFrameSink,
 } from "./application/ports/emulator-output.js";
-export { CartridgeFormatError, CartridgeTimingMode } from "./domain/model/cartridge.js";
+export {
+  CartridgeConsoleType,
+  CartridgeFormatError,
+  CartridgeTimingMode,
+} from "./domain/model/cartridge.js";
 export type { CartridgeFormat, CartridgeFormatErrorCode } from "./domain/model/cartridge.js";
 export { NametableMirroring } from "./domain/model/cartridge.js";
 export { UnsupportedMapperError } from "./domain/emulation/mapper/index.js";

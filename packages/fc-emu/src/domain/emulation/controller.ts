@@ -98,9 +98,20 @@ class Controller {
    * @returns Current button state (0 or 1)
    */
   get currentButton(): number {
+    return this.readCurrentButton();
+  }
+
+  /** Reads one serial bit while allowing console protection wiring to force a button closed. */
+  readCurrentButton(forcedPressedButton?: ControllerButton): number {
     // The NES controller's serial output stays high after all eight buttons
     // have shifted out; software commonly uses this trailing 1 as a sentinel.
-    const button = this.currentButtonIndex < 8 ? Number(this.buttons[this.currentButtonIndex]) : 1;
+    const button =
+      this.currentButtonIndex < 8
+        ? Number(
+            this.buttons[this.currentButtonIndex] ||
+              this.currentButtonIndex === forcedPressedButton,
+          )
+        : 1;
     if (!this.strobeSignal) this.currentButtonIndex = Math.min(8, this.currentButtonIndex + 1);
     return button;
   }

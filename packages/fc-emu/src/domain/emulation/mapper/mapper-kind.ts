@@ -8,6 +8,7 @@ export const MapperKind = {
   AddressLatchMulticart: "address-latch-multicart",
   Uxrom: "uxrom",
   Cnrom: "cnrom",
+  VsSystem: "vs-system",
   Bnrom: "bnrom",
   Nina001: "nina-001",
   Axrom: "axrom",

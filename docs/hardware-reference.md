@@ -110,6 +110,10 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   attaches a narrow fetch context to memory reads; it does not call mapper-specific scanline hooks.
   MMC5 uses that bus fact for its A/B CHR sets, extended attributes and vertical split, while its
   scanline detector still observes completed rendering reads.
+- VS UniSystem is a console profile, not only mapper 99. Header byte 13 selects RGB PPU and
+  protection wiring; cabinet input drives the upper `$4016/$4017` bits, mapper 99 consumes OUT2, and
+  four-screen nametable RAM belongs to the console. DualSystem metadata is rejected because one bus
+  cannot model its second synchronized CPU/PPU and shared-memory arbitration.
 - The PPU drives a physical `/NMI` level; the CPU edge detector samples it during its input phase and
   transfers the detected edge through a second polling latch. Vector selection is fixed before the
   interrupt status push, not immediately before the vector read.

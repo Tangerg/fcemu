@@ -51,6 +51,10 @@ class CoreEmulatorRuntime implements EmulatorRuntimePort {
   setControllerButton(player: 1 | 2, button: GameButton, pressed: boolean): void {
     this.emulator.setControllerButton(player, BUTTON_MAP[button], pressed);
   }
+
+  insertCoin(slot: 1 | 2 = 1): void {
+    this.emulator.insertCoin(slot);
+  }
 }
 
 const BUTTON_MAP: Readonly<Record<GameButton, ControllerButton>> = {

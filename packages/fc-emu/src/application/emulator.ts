@@ -2,6 +2,7 @@ import Bus, { type BusSnapshot } from "../domain/emulation/bus.js";
 import type { ControllerButton } from "../domain/emulation/controller.js";
 import Cartridge from "../domain/model/cartridge.js";
 import type {
+  CartridgeConsoleType,
   CartridgeFormat,
   CartridgeTimingMode,
   NametableMirroring,
@@ -11,13 +12,16 @@ import type { EmulatorOutputPorts, VideoFrame } from "./ports/emulator-output.js
 import { createRomIdentity } from "../domain/model/rom-identity.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
-const SAVE_STATE_VERSION = 15;
+const SAVE_STATE_VERSION = 16;
 
 export interface CartridgeInfo {
   readonly format: CartridgeFormat;
   readonly mapperNumber: number;
   readonly submapperNumber: number;
   readonly timingMode: CartridgeTimingMode;
+  readonly consoleType: CartridgeConsoleType.Standard | CartridgeConsoleType.VsSystem;
+  readonly vsPpuType: number;
+  readonly vsHardwareType: number;
   readonly consoleRegion: ConsoleRegion;
   readonly mirroringMode: NametableMirroring;
   readonly hasBatteryBackup: boolean;
@@ -83,6 +87,10 @@ export class Emulator {
       mapperNumber: cartridge.mapperNumber,
       submapperNumber: cartridge.submapperNumber,
       timingMode: cartridge.timingMode,
+      consoleType: cartridge.consoleType as
+        CartridgeConsoleType.Standard | CartridgeConsoleType.VsSystem,
+      vsPpuType: cartridge.vsPpuType,
+      vsHardwareType: cartridge.vsHardwareType,
       consoleRegion: this.bus.Timing.region,
       get mirroringMode() {
         return cartridge.mirroringMode;
@@ -180,12 +188,31 @@ export class Emulator {
   }
 
   setControllerState(player: 1 | 2, buttons: readonly boolean[]): void {
-    const controller = player === 1 ? this.bus.Controller1 : this.bus.Controller2;
+    const controller = this.controllerForPlayer(player);
     controller.buttonsState = [...buttons];
   }
 
   setControllerButton(player: 1 | 2, button: ControllerButton, pressed: boolean): void {
-    const controller = player === 1 ? this.bus.Controller1 : this.bus.Controller2;
+    const controller = this.controllerForPlayer(player);
     controller.setButton(button, pressed);
+  }
+
+  insertCoin(slot: 1 | 2 = 1): void {
+    this.bus.insertVsCoin(slot);
+  }
+
+  setServiceButton(pressed: boolean): void {
+    this.bus.setVsServiceButton(pressed);
+  }
+
+  setDipSwitch(index: number, enabled: boolean): void {
+    this.bus.setVsDipSwitch(index, enabled);
+  }
+
+  private controllerForPlayer(player: 1 | 2) {
+    const firstPlayerUsesPort2 =
+      this.bus.Cartridge.consoleType === 1 && this.bus.Cartridge.defaultExpansionDevice === 5;
+    const usesPort1 = firstPlayerUsesPort2 ? player === 2 : player === 1;
+    return usesPort1 ? this.bus.Controller1 : this.bus.Controller2;
   }
 }

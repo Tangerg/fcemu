@@ -20,6 +20,7 @@ interface EmulatorCartridgeInfo {
   readonly format: "ines" | "nes2";
   readonly mapperNumber: number;
   readonly submapperNumber: number;
+  readonly consoleType: 0 | 1;
   readonly consoleRegion: ExecutionRegion;
   readonly hasBatteryBackup: boolean;
 }
@@ -44,6 +45,7 @@ export interface EmulatorRuntimePort {
   captureBatterySave(): BatterySaveSnapshot | undefined;
   restoreBatterySave(data: Uint8Array): void;
   setControllerButton(player: 1 | 2, button: GameButton, pressed: boolean): void;
+  insertCoin(slot?: 1 | 2): void;
 }
 
 interface BatterySaveSnapshot {

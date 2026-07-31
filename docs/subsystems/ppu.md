@@ -239,16 +239,25 @@ bank, flip the latch, and make the following sprite use the new bank.
 `flagShowLeftBackground`/`flagShowLeftSprites`), then the background/sprite priority mux. Sprite-zero
 hit: when slot index 0 is opaque over an opaque background at `x < 255`, `spriteZeroHitPending` is
 set (unless already latched); `update` promotes pending→latched on the next dot. The chosen 6-bit
-palette entry indexes `EMPHASIS_PALETTE[emphasisIndex()]` and is written to the back buffer.
+palette entry indexes the active PPU variant's precomputed emphasis palette and is written to the
+back buffer.
 
 ## Palette, emphasis and output
 
 `paletteData` is 32 bytes. `readPalette`/`writePalette` mirror `$10/$14/$18/$1C` down to
 `$00/$04/$08/$0C` (`address >= 16 && address % 4 === 0 → address -= 16`); reads mask with `0x30` when
-`flagGrayscale` is set (else `0x3F`), writes mask with `0x3F`. `emphasisIndex()` packs the three
-PPUMASK emphasis bits, swapping the red and green lines on PAL (`region === "pal"`). `PPU` precomputes
-eight emphasis-adjusted palettes: each active emphasis bit attenuates (`× 0.746`) the two channels it
-does not select. Output goes to a `FrameBuffer`
+`flagGrayscale` is set (else `0x3F`), writes mask with `0x3F`.
+
+`PpuVariant` selects display-silicon behavior independently from regional clock timing. Standard
+NES/Famicom uses the RP2C02 composite palette; PAL swaps red/green emphasis lines and each active
+line attenuates (`× 0.746`) the other two channels. VS type 0 and 2C05 use the documented 2C03 RGB
+DAC palette, while types 2–5 use the four exact 2C04 permutations. RGB emphasis forces the selected
+channel(s) to full scale. RGB PPUs never perform the RP2C02 odd-frame missing dot.
+
+2C05 variants map CPU `$2000` to PPUMASK and `$2001` to PPUCTRL. Types 9–11 also drive their
+documented signature onto the low `$2002` bits; type 8 leaves those unknown bits on the existing PPU
+I/O latch because the hardware signature remains undocumented and its sole known game does not test
+it. Output goes to a `FrameBuffer`
 (`packages/fc-emu/src/domain/model/frame-buffer.ts`), a packed `Uint32Array` of 256×240 RGBA pixels;
 `front`/`back` are double-buffered and swapped at vblank. `FrameBuffer.toCanvasImageData` returns an
 endianness-correct RGBA byte view for presentation.
@@ -347,7 +356,7 @@ any out-of-range dot (0-340), scanline, render-mask pipeline (`0x18`-masked, del
 typed-array shape, non-6-bit palette byte, invalid sprite-evaluation counters or an impossible
 pending-and-latched sprite-zero pair.
 
-The public save-state envelope is version 15. Sprite pattern bytes are fetched at their real PPU
+The public save-state envelope is version 16. Sprite pattern bytes are fetched at their real PPU
 dots, so no delayed mapper-observation queue exists or needs to be reconstructed after restore.
 Older snapshots are rejected instead of inferring missing bus state.
 

@@ -15,6 +15,7 @@ mapper compatibility.
 
 - Cycle-stepped RP2A03 CPU, interrupt entry and OAM/DMC DMA arbitration.
 - Dot-stepped RP2C02 rendering, sprite evaluation, open bus and mapper-visible PPU transactions.
+- NES/VS RGB PPU variants, cabinet inputs and mapper-99 mainboard banking.
 - Region-specific NTSC, PAL and Dendy CPU/PPU/APU timing.
 - iNES and a deliberately constrained NES 2.0 subset with explicit board validation.
 - Battery-backed PRG/CHR/mapper persistence and versioned, transactional save states.
@@ -23,7 +24,7 @@ mapper compatibility.
 
 Implemented mapper IDs: **0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24,
 25, 26, 32, 33, 34, 48, 64, 65, 66, 68, 69, 70, 71, 75, 76, 78, 79, 80, 82, 83, 85, 87, 88, 89,
-90, 91, 93, 94, 95, 97, 118, 119, 140, 152, 180, 184, 185, 206, 225, 227 and 228**. “Implemented” and
+90, 91, 93, 94, 95, 97, 99, 118, 119, 140, 152, 180, 184, 185, 206, 225, 227 and 228**. “Implemented” and
 “verified” have different evidence requirements; see
 [Mapper compatibility](./docs/mapper-compatibility.md) before filing a game-compatibility report.
 
@@ -52,7 +53,7 @@ loaded locally in the browser and are never part of this repository.
 
 Standard gamepads are assigned to stable player-one/player-two slots. When a game is loaded, the
 canvas owns gameplay keys; tabbing to a workbench control returns those keys to the browser until
-the action completes.
+the action completes. A loaded VS UniSystem image adds a dedicated coin button to the workbench.
 
 For installation details, browser-storage behavior and troubleshooting, read
 [Getting started](./docs/getting-started.md).

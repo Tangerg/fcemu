@@ -619,6 +619,34 @@ mirroring. The board maps no PRG RAM. See
 [NESdev mapper 89](https://www.nesdev.org/wiki/INES_Mapper_089) and the
 [Sunsoft-2 pinout](https://www.nesdev.org/wiki/Sunsoft_2_pinout).
 
+## J.Y. Company EL861226C (90)
+
+Mapper 90 is one physical configuration of J.Y. Company's shared ASIC, not an alias for mapper
+35/209/211. Four 7-bit PRG registers feed 32, 16 or 8 KiB modes inside one of four 512 KiB outer
+regions; the fourth register can replace the normally fixed final window, and mode 3 reverses all
+seven register bits before the 512 KiB inner mask. `$6000-$7FFF` maps an optional direct 8 KiB
+WRAM/NVRAM window or a mode-derived PRG-ROM bank.
+
+Eight 16-bit CHR registers feed 8, 4, 2 or 1 KiB windows. `$D003` chooses a 256 or 512 KiB inner
+region and enough outer lines to reach 2 MiB, while its high bit enables MMC4-like post-read
+latches in 4 KiB mode. CHR RAM follows the same addressing and remains write-protected until
+`$D002` bit 6 is set. The mapper-90 PCB jumper suppresses both ROM nametables and Extended
+Mirroring; the corresponding ASIC registers are retained but only `$D001` bits 1-0 can route
+CIRAM as vertical, horizontal or either one-screen arrangement.
+
+Expansion space provides three exact jumper reads and four arithmetic registers. Writing the
+second multiplier operand starts an eight-M2-cycle unsigned multiplication; early reads expose
+the deterministic staged shift/add result, and the completed 16-bit product remains until another
+multiply starts. `$5802` is a wrapping accumulator, while `$5803` clears it and stores a readable
+test byte.
+
+The IRQ clocks from CPU M2, unfiltered PPU-A12 rises, completed PPU reads or CPU writes. It can
+increment or decrement through an 8- or 256-count prescaler; prescaler and counter loads are XORed
+with `$C006`, and a wrap asserts a level-sensitive IRQ until either disable port acknowledges it.
+`$C001` bit 3 and `$C007` are preserved without invented semantics because their hardware function
+is still unknown and no known software uses it. See the
+[J.Y. Company ASIC reference](https://www.nesdev.org/wiki/INES_Mapper_090).
+
 ## JY830623C / EJ-006-1 (91)
 
 Both mapper-91 boards use two switchable 8 KiB PRG windows followed by a fixed 16 KiB tail and four

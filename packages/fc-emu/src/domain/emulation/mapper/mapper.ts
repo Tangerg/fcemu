@@ -225,6 +225,35 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "jy-company";
+      readonly board: "mapper-90";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly nametableBanks: readonly number[];
+      readonly mode: number;
+      readonly mirroringRegister: number;
+      readonly ppuConfig: number;
+      readonly outerBank: number;
+      readonly chrLatchLow: boolean;
+      readonly chrLatchHigh: boolean;
+      readonly irqMode: number;
+      readonly irqPrescaler: number;
+      readonly irqCounter: number;
+      readonly irqXor: number;
+      readonly irqUnknownMode: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly a12High: boolean;
+      readonly multiplyOperand1: number;
+      readonly multiplyOperand2: number;
+      readonly multiplyLatchedOperand1: number;
+      readonly multiplyLatchedOperand2: number;
+      readonly multiplyStep: number;
+      readonly accumulator: number;
+      readonly testRegister: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "jy-830623c";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];

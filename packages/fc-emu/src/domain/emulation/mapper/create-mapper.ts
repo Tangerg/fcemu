@@ -28,6 +28,7 @@ import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
 import { JalecoSs8806Mapper } from "./jaleco-ss8806-mapper.js";
+import { JyCompanyMapper } from "./jy-company-mapper.js";
 import { Jy830623cMapper } from "./jy-830623c-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
@@ -316,6 +317,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Sunsoft-2");
       requireNoPrgRam(cartridge);
       return new Sunsoft2Mapper(cartridge);
+    case 90:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x200_000, 0x200_000);
+      requireOptional8KiBPrgRam(cartridge, "J.Y. Company mapper 90");
+      requireTwoScreenNametables(cartridge, "J.Y. Company mapper 90");
+      return new JyCompanyMapper(interruptPort, cartridge);
     case 91:
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0800, 0x2000);
       requireChrRom(cartridge, "mapper 91");

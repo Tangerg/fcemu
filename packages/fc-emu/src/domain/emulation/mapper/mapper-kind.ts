@@ -31,6 +31,7 @@ export const MapperKind = {
   TaitoX1017: "taito-x1-017",
   IremG101: "irem-g101",
   IremH3001: "irem-h3001",
+  Rambo1: "rambo-1",
   Sunsoft4: "sunsoft-4",
   Nina0306: "nina-03-06",
   IremTamS1: "irem-tam-s1",

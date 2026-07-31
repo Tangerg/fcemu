@@ -107,6 +107,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
 | 48  | Taito TC0690   | `taito-tc0690`     | `taito-tc0690-mapper.ts`     | no            | A12  |
+| 64  | Tengen RAMBO-1 | `rambo-1`          | `rambo1-mapper.ts`           | no            | both |
 | 65  | Irem H3001     | `irem-h3001`       | `irem-h3001-mapper.ts`       | no            | cyc. |
 | 66  | GxROM / MHROM  | `gxrom`            | `gxrom-mapper.ts`            | AND           | no   |
 | 68  | Sunsoft-4      | `sunsoft-4`        | `sunsoft4-mapper.ts`         | no            | no   |
@@ -146,6 +147,8 @@ X1-005/X1-017 share only `TaitoX1Banking`, the three-PRG/eight-CHR data path act
 ASICs. Register layout, internal RAM, pull-down and IRQ behavior stay separate.
 Mapper-91's JY830623C and EJ-006-1 boards likewise share only `Mapper91Banking`; their outer-bank,
 mirroring and IRQ circuits remain separate concrete mappers and save-state kinds.
+RAMBO-1 stays independent from MMC3: similar register addresses do not justify sharing their
+different bank set, PRG mode, IRQ prescaler or output timing.
 
 ---
 
@@ -288,6 +291,23 @@ variant and adjusted reload bias associated with later titles. Both variants pre
 delay in save state and keep the mapper IRQ line level-sensitive. See
 [NESdev mapper 48](https://www.nesdev.org/wiki/INES_Mapper_048) and the
 [TC0690 timing research](https://forums.nesdev.org/viewtopic.php?t=18277).
+
+## Tengen RAMBO-1 (64)
+
+Tengen's 800032 board maps three switchable 8 KiB PRG windows and fixes `$E000-$FFFF` to the final
+bank. R6, R7 and RF normally drive `$8000`, `$A000` and `$C000`; the P bit exchanges the R6 and RF
+windows without moving R7. R0/R1 provide two even-aligned 2 KiB CHR banks while R2-R5 provide four
+1 KiB banks. The K bit instead exposes R8/R9 and turns the first half into four independent 1 KiB
+banks; the C bit exchanges the two pattern-table halves. Bank-data writes use the complete low
+four-bit selector, so RF is not collapsed into MMC3's eight-register model.
+
+The IRQ reload register and counter can be clocked from filtered PPU-A12 rises or every fourth CPU
+M2 cycle. `$C001` requests a reload with the documented non-zero odd bias and selects the source;
+switching out of cycle mode lets the already-running four-cycle prescaler finish. Reaching zero
+schedules the IRQ output four CPU cycles later. `$E000` disables, acknowledges and cancels a
+not-yet-visible output, while `$E001` enables without acknowledging an asserted line. `$A000`
+switches vertical/horizontal mirroring; `$A001` has no known function and the board decodes no PRG
+RAM. See [NESdev RAMBO-1](https://www.nesdev.org/wiki/RAMBO-1).
 
 ## Irem H3001 (65)
 

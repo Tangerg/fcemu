@@ -35,6 +35,7 @@ import {
 import { NromMapper } from "./nrom-mapper.js";
 import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
+import { Rambo1Mapper } from "./rambo1-mapper.js";
 import {
   UnsupportedMapperConfigurationError,
   UnsupportedMapperError,
@@ -157,6 +158,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Taito TC0690");
       return new TaitoTc0690Mapper(interruptPort, cartridge, resolveTaitoTc0690Revision(cartridge));
+    case 64:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "Tengen 800032");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Tengen 800032");
+      return new Rambo1Mapper(interruptPort, cartridge);
     case 65:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

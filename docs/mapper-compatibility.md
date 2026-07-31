@@ -26,6 +26,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM      |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                 |
 | 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM       |
+| 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM   |
 | 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM |
 | 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
 | 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM            |
@@ -58,7 +59,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/18/33/65/66/68/69/70/75/76/79/80/82/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
+0/4/9/10/11/13/18/33/64/65/66/68/69/70/75/76/79/80/82/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -88,7 +89,7 @@ and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counte
   because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/119/140/152/180/184/185/206 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/119/140/152/180/184/185/206 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -146,6 +147,13 @@ and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counte
   delayed after the counter event: submapper 0 uses the empirically compatible 22 CPU cycles, while
   submapper 1 uses the later six-cycle timing and one-count reload bias. The two ASICs share one
   banking component rather than duplicate their bank geometry.
+- Mapper 64 (Tengen 800032/RAMBO-1) owns three switchable 8 KiB PRG windows plus a fixed final bank
+  and three CHR layouts: two 2 KiB plus four 1 KiB banks, eight independent 1 KiB banks, and either
+  layout with the pattern-table halves exchanged. R6/R7/RF and R0-R9 follow the full four-bit bank
+  selector; the K, P and C control bits are preserved independently. Its IRQ counter selects either
+  filtered PPU-A12 rises or one clock per four CPU M2 cycles, keeps the documented reload bias and
+  delayed output, and completes an in-flight CPU prescaler period when changing modes. The board
+  switches horizontal/vertical mirroring and exposes no PRG RAM.
 - Mapper 65 (Irem H3001) exposes only two writable PRG registers; `$9000` swaps the first register
   between `$8000` and `$C000`, opposite a fixed second-to-last bank. `$B000-$B007` select eight
   1 KiB CHR banks, `$9001` selects vertical/horizontal/lower-one-screen nametables, and an optional

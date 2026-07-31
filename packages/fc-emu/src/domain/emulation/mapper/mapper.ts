@@ -155,6 +155,24 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "rambo-1";
+      readonly registers: readonly number[];
+      readonly bankSelect: number;
+      readonly irqReload: number;
+      readonly irqCounter: number;
+      readonly irqReloadPending: boolean;
+      readonly irqCycleMode: boolean;
+      readonly irqEnabled: boolean;
+      readonly irqDivider: number;
+      readonly forceCycleClock: boolean;
+      readonly irqDelay: number;
+      readonly irqPending: boolean;
+      readonly ppuClock: number;
+      readonly a12High: boolean;
+      readonly a12LowSince: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "sunsoft-4";
       readonly chrBanks: readonly number[];
       readonly nametableBanks: readonly number[];

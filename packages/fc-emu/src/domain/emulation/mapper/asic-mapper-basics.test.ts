@@ -180,6 +180,51 @@ describe("basic ASIC mappers", () => {
     ).toThrowError(UnsupportedMapperVariantError);
   });
 
+  it("accepts only the physical Tengen 800032 ROM and wiring envelope", () => {
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 64, prgBanks: 16, chrBanks: 32 }), interruptPort),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 64,
+          nes2: true,
+          submapper: 1,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperVariantError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 64,
+          nes2: true,
+          prgBanks: 16,
+          chrBanks: 32,
+          prgRamShift: 7,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 64, prgBanks: 16, chrBanks: 32, fourScreen: true }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 64, prgBanks: 16 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 64, prgBanks: 17, chrBanks: 32 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 64, prgBanks: 16, chrBanks: 33 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+  });
+
   it("accepts only reachable Jaleco SS8806 ROM/RAM geometry and base wiring", () => {
     expect(() =>
       createMapper(createTestCartridge({ mapper: 18, prgBanks: 32, chrBanks: 32 }), interruptPort),

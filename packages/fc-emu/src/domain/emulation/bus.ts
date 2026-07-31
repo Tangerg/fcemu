@@ -161,6 +161,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.irqSources.clear();
     this.dma.reset();
     this.resetClockSynchronization();
+    this.mapper.reset?.();
     this.ppu.reset();
     this.apu.reset();
     this.cpu.reset();

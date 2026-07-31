@@ -81,10 +81,11 @@ forwards to `setIRQSource(IRQSource.Mapper, …)`. The PPU's `/NMI` output is ro
 `powerOn()` is a full cold start: it clears IRQ sources, resets the DMA arbiter and clock
 synchronization, zeroes internal RAM, then powers on the cartridge, mapper, both controllers, PPU,
 APU and CPU. `reset()` is a soft reset: it clears IRQ sources, resets the DMA arbiter and clock
-synchronization, then resets the PPU, APU and CPU only — internal RAM, cartridge memory, mapper
-latches and controller button state are left intact. `resetClockSynchronization()` (shared by both)
-resets the clock and clears `performingDmaMemoryAccess`, `cpuUpdateActive` and any pending controller
-write.
+synchronization, delivers the optional mapper reset signal, then resets the PPU, APU and CPU.
+Internal RAM, cartridge memory, controller button state and mapper state not wired to reset remain
+intact; resettable address-latch multicarts return only their bank latch to the menu mapping.
+`resetClockSynchronization()` (shared by both) resets the clock and clears
+`performingDmaMemoryAccess`, `cpuUpdateActive` and any pending controller write.
 
 ## CPU memory map (`CPUMemory`)
 

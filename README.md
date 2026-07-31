@@ -21,11 +21,11 @@ mapper compatibility.
 - Keyboard and two-player gamepad input, AudioWorklet output and three persistent quick-save slots.
 - Independent `@fcemu/core` and `@fcemu/ui` packages with enforced clean-architecture boundaries.
 
-Implemented mapper IDs: **0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13, 16, 17, 18, 21, 22, 23, 25, 32,
-33, 34, 48, 64, 65, 66, 68, 69, 70, 71, 75, 76, 78, 79, 80, 82, 87, 88, 89, 91, 93, 94, 95,
-97, 118, 119, 140, 152, 180, 184, 185 and 206**. “Implemented” and “verified” have different
-evidence requirements; see [Mapper compatibility](./docs/mapper-compatibility.md) before filing a
-game-compatibility report.
+Implemented mapper IDs: **0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17, 18, 21, 22, 23, 25,
+32, 33, 34, 48, 64, 65, 66, 68, 69, 70, 71, 75, 76, 78, 79, 80, 82, 87, 88, 89, 91, 93, 94,
+95, 97, 118, 119, 140, 152, 180, 184, 185, 206, 225, 227 and 228**. “Implemented” and “verified”
+have different evidence requirements; see [Mapper compatibility](./docs/mapper-compatibility.md)
+before filing a game-compatibility report.
 
 ## Quick start
 

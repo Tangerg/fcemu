@@ -9,60 +9,64 @@ and that mirroring values may be unreliable.
 requires executable external or pinned real-ROM evidence. Both statuses are loadable; the distinction
 describes evidence maturity rather than a runtime feature flag.
 
-| Mapper | Board family   | Status      | Current evidence                                               |
-| ------ | -------------- | ----------- | -------------------------------------------------------------- |
-| 0      | NROM           | Verified    | Unit tests; pinned `MARIO.NES` real-ROM runner                 |
-| 1      | MMC1/SxROM     | Verified    | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5                  |
-| 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                |
-| 3      | CNROM          | Implemented | PRG/CHR/conflict/oversize tests; facade smoke                  |
-| 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned  |
-| 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture          |
-| 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned      |
-| 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture    |
-| 9      | MMC2/PxROM     | Implemented | Unit tests; full-address sprite/read-order integration tests   |
-| 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM              |
-| 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
-| 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM        |
-| 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture      |
-| 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture          |
-| 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture       |
-| 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture       |
-| 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture     |
-| 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture    |
-| 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture      |
-| 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM     |
-| 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM      |
-| 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                 |
-| 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM       |
-| 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM   |
-| 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM |
-| 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
-| 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM            |
-| 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                  |
-| 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
-| 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                   |
-| 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM        |
-| 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM       |
-| 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM      |
-| 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM    |
-| 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture       |
-| 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM      |
-| 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                    |
-| 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM              |
-| 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM           |
-| 91     | JY/EJ bootleg  | Implemented | Outer-bank/A12/M2/submapper/state tests; no conformance ROM    |
-| 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM     |
-| 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM    |
-| 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM          |
-| 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM       |
-| 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM           |
-| 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM       |
-| 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM   |
-| 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM               |
-| 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM         |
-| 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM         |
-| 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM   |
-| 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                    |
+| Mapper | Board family   | Status      | Current evidence                                                |
+| ------ | -------------- | ----------- | --------------------------------------------------------------- |
+| 0      | NROM           | Verified    | Unit tests; pinned `MARIO.NES` real-ROM runner                  |
+| 1      | MMC1/SxROM     | Verified    | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5                   |
+| 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                 |
+| 3      | CNROM          | Implemented | PRG/CHR/conflict/oversize tests; facade smoke                   |
+| 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned   |
+| 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture           |
+| 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned       |
+| 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture     |
+| 9      | MMC2/PxROM     | Implemented | Unit tests; full-address sprite/read-order integration tests    |
+| 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM               |
+| 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM             |
+| 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM         |
+| 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture     |
+| 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture       |
+| 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture           |
+| 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture        |
+| 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture        |
+| 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture      |
+| 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture     |
+| 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture       |
+| 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM      |
+| 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM       |
+| 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                  |
+| 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM        |
+| 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM    |
+| 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM  |
+| 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM             |
+| 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM             |
+| 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                   |
+| 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM             |
+| 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                    |
+| 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM         |
+| 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM        |
+| 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM       |
+| 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM     |
+| 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture        |
+| 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM       |
+| 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                     |
+| 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM               |
+| 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM            |
+| 91     | JY/EJ bootleg  | Implemented | Outer-bank/A12/M2/submapper/state tests; no conformance ROM     |
+| 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM      |
+| 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM     |
+| 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM           |
+| 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM        |
+| 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM            |
+| 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM        |
+| 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM    |
+| 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                |
+| 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM          |
+| 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM          |
+| 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM    |
+| 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                     |
+| 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture        |
+| 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture |
+| 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture         |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
@@ -93,6 +97,11 @@ Mapper 6 accepts NES 2.0 submappers 0-7 as the exact initial Magic Card latch mo
 mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper 0. Mapper 17 accepts
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
+
+Mappers 15/225/228 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
+and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
+rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
 
 Mappers 21/23/25 accept submapper 0 as the historical VRC4 compatibility superset with both
 non-overlapping CPU-address pin routes. Their exact NES 2.0 variants are mapper 21 submappers 1/2
@@ -155,6 +164,11 @@ submappers remain rejected rather than infer nonexistent boards.
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.
+- Mapper 15 models the actual K-1029/K-1030P board, not mapper-hacked images from 164/227. CPU write
+  address bits 1-0 select NROM-256, UNROM, mirrored 8 KiB NROM-64 or mirrored 16 KiB NROM-128 PRG
+  wiring; data bits select the 1 MiB PRG region and horizontal/vertical mirroring. Its 8 KiB CHR RAM
+  is write-protected in modes 0/3 and writable in modes 1/2. The hardware has no `$6000` RAM, so the
+  permissive PRG-RAM/CHR-write behavior required by old mapper hacks is deliberately absent.
 - Mapper 16 represents the Bandai FCG family without merging its ASIC revisions. Submapper 4
   (FCG-1/2) decodes only `$6000-$7FFF` and writes its live 16-bit IRQ counter directly; submapper 5
   (LZ93D50) decodes only `$8000-$FFFF`, writes a reload latch and copies it on IRQ control. Legacy
@@ -300,6 +314,24 @@ submappers remain rejected rather than infer nonexistent boards.
   bank-select and bank-data ports for two 2 KiB plus four 1 KiB CHR windows and two 8 KiB PRG banks
   with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring
   stays hardwired from the header. MMC3-family supersets that add those features remain separate.
+- Mapper 225 models the address-latched ET-4310/K-1010 pairs as either 1 MiB PRG/512 KiB CHR or
+  2 MiB PRG/1 MiB CHR. A14 is the shared high bank line; A12 selects mirrored 16 KiB versus paired
+  32 KiB PRG and A13 controls mirroring. Because the mapper number cannot distinguish populated
+  from unpopulated 74x670 boards, the compatibility convention exposes the documented four mirrored
+  low-nibble registers at `$5800-$5FFF`; they survive warm reset but not power loss.
+- Mapper 227 separates three published variants. Submapper 0 leaves its 8 KiB CHR RAM writable and
+  maps an explicitly battery-backed 8 KiB RPG WRAM window; its missing UNROM circuit hardwires the
+  PRG path to the NROM-128/NROM-256 modes. Submapper 1 protects CHR RAM in NROM modes and substitutes
+  the unbridged solder-pad value `0` for PRG A3-A0 when requested; other menu positions need a future
+  external-board-input port, not a ROM hash. Submapper 2 applies the same CHR protection and forces
+  outer A18-A17 low whenever the selected inner bank is zero. The multicart variants retain the
+  address-derived UNROM/NROM-128/NROM-256 wiring and switchable mirroring.
+- Mapper 228 maps the Active Enterprises board's 512 KiB Cheetahmen II layout and Action 52's
+  non-power-of-two three-chip 1.5 MiB layout. PRG chip selectors 0/1/3 map file chunks 0/1/2; chip
+  selector 2 is electrically absent and produces CPU open bus rather than modulo aliasing. Address
+  lines select paired or mirrored 16 KiB PRG, the high four CHR bits and mirroring; write data D1-D0
+  supplies the low CHR bits. The rumored `$4020-$5FFF` nibble RAM is intentionally absent because
+  hardware inspection says neither cartridge contains it.
 
 The finite mapper-completion track and its still-planned families are recorded in
 [Engineering roadmap](./engineering-roadmap.md). Numbers outside that boundary remain unsupported

@@ -312,6 +312,10 @@ loads `PC` from `[$FFFC]` in one step (it does not run a cycle-accurate 7-cycle 
 opcode sets `halted`; a halted CPU repeats its read each cycle, still captures IRQ line state, and
 only a reset clears the jam.
 
+The bus applies an optional mapper `reset()` hook before resetting PPU/APU/CPU state. This is
+separate from `powerOn()`: address-latch multicarts return to their menu bank while retaining any
+small volatile register file whose purpose is to survive the reset button.
+
 ## DMA interaction surface
 
 The CPU exposes a narrow surface for the DMA arbiter so transfers can steal bus cycles without

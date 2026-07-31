@@ -5,6 +5,7 @@
  */
 export const MapperKind = {
   Nrom: "nrom",
+  AddressLatchMulticart: "address-latch-multicart",
   Uxrom: "uxrom",
   Cnrom: "cnrom",
   Bnrom: "bnrom",

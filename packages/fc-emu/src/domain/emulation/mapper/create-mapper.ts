@@ -1,5 +1,10 @@
 import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
+import {
+  findAddressLatchMulticartBoard,
+  type AddressLatchMulticartBoard,
+} from "./address-latch-multicart-board.js";
+import { AddressLatchMulticartMapper } from "./address-latch-multicart-mapper.js";
 import { AxromMapper } from "./axrom-mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
@@ -137,6 +142,8 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       requireNoPrgRam(cartridge);
       return new CpromMapper(cartridge);
+    case 15:
+      return createAddressLatchMulticartMapper(cartridge);
     case 16: {
       const board = resolveBandaiFcgBoard(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x0400, 0x2000);
@@ -400,8 +407,70 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x10_000);
       requireNoPrgRam(cartridge);
       return new Namco118Mapper(cartridge);
+    case 225:
+    case 227:
+    case 228:
+      return createAddressLatchMulticartMapper(cartridge);
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
+  }
+}
+
+function createAddressLatchMulticartMapper(cartridge: Cartridge): AddressLatchMulticartMapper {
+  const board = findAddressLatchMulticartBoard(cartridge.mapperNumber, cartridge.submapperNumber);
+  if (!board) {
+    throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+  requireAddressLatchMulticartLayout(cartridge, board);
+  return new AddressLatchMulticartMapper(cartridge, board);
+}
+
+function requireAddressLatchMulticartLayout(
+  cartridge: Cartridge,
+  board: AddressLatchMulticartBoard,
+): void {
+  requireTwoScreenNametables(cartridge, board.id);
+  switch (board.mapperNumber) {
+    case 15:
+      requireRomLayout(cartridge, [0x100_000], 0x2000);
+      requireVolatileChrRam(cartridge, board.id);
+      requireNoBatteryPrgRam(cartridge, board.id);
+      return;
+    case 225:
+      if (!(
+        (cartridge.prgRom.byteLength === 0x100_000 && cartridge.chrRom.byteLength === 0x80_000) ||
+        (cartridge.prgRom.byteLength === 0x200_000 && cartridge.chrRom.byteLength === 0x100_000)
+      )) {
+        throw configurationError(
+          cartridge,
+          "ET-4310/K-1010 requires a 1 MiB/512 KiB or 2 MiB/1 MiB PRG/CHR pair",
+        );
+      }
+      requireChrRom(cartridge, board.id);
+      requireNoBatteryPrgRam(cartridge, board.id);
+      return;
+    case 227:
+      requireRomLayout(cartridge, [0x100_000], 0x2000);
+      requireVolatileChrRam(cartridge, board.id);
+      if (board.exposesBatteryWram) {
+        if (
+          cartridge.format === "nes2" &&
+          (cartridge.prgRamBytes !== 0 ||
+            (cartridge.prgNvRamBytes !== 0 && cartridge.prgNvRamBytes !== 0x2000))
+        ) {
+          throw configurationError(
+            cartridge,
+            "mapper 227 submapper 0 accepts only optional 8 KiB PRG NVRAM",
+          );
+        }
+      } else {
+        requireNoBatteryPrgRam(cartridge, board.id);
+      }
+      return;
+    case 228:
+      requireRomLayout(cartridge, [0x80_000, 0x180_000], 0x80_000);
+      requireChrRom(cartridge, board.id);
+      requireNoBatteryPrgRam(cartridge, board.id);
   }
 }
 
@@ -436,6 +505,23 @@ function requireChrRom(cartridge: Cartridge, board: string): void {
 function requireChrRam(cartridge: Cartridge, board: string): void {
   if (!cartridge.hasWritableChrMemory) {
     throw configurationError(cartridge, `${board} requires writable CHR RAM`);
+  }
+}
+
+function requireVolatileChrRam(cartridge: Cartridge, board: string): void {
+  if (
+    cartridge.chrRom.byteLength !== 0 ||
+    cartridge.chrRamBytes !== 0x2000 ||
+    cartridge.chrNvRamBytes !== 0
+  ) {
+    throw configurationError(cartridge, `${board} requires exactly 8 KiB of volatile CHR RAM`);
+  }
+}
+
+function requireNoBatteryPrgRam(cartridge: Cartridge, board: string): void {
+  requireNoPrgRam(cartridge);
+  if (cartridge.hasBatteryBackup) {
+    throw configurationError(cartridge, `${board} has no battery-backed writable memory`);
   }
 }
 

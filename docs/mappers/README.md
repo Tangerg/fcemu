@@ -34,6 +34,7 @@ to the rest of core.
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
 | `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (serial filters, IRQ counters/delays).               |
 | `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                           |
+| `reset()`                    | Optional warm-reset signal for boards whose latch is physically resettable.              |
 | `powerOnCpuEntry()`          | Optional cold-boot entry/call target supplied by a RAM-card loader.                      |
 | `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                              |
 | `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.   |
@@ -96,60 +97,64 @@ counters against their bit width and all booleans by runtime type) and throws
 
 ## Implemented boards
 
-| #   | Family         | Kind               | Implementation               | Bus conflicts | IRQ  |
-| --- | -------------- | ------------------ | ---------------------------- | ------------- | ---- |
-| 0   | NROM           | `nrom`             | `nrom-mapper.ts`             | n/a           | no   |
-| 1   | MMC1 / SxROM   | `mmc1`             | `mmc1-mapper.ts` + board     | no            | no   |
-| 2   | UxROM          | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
-| 3   | CNROM          | `cnrom`            | `cnrom-mapper.ts`            | default AND   | no   |
-| 4   | MMC3           | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
-| 6   | Magic Card     | `ffe-magic-card`   | `ffe-magic-card-mapper.ts`   | no            | cyc. |
-| 7   | AxROM          | `axrom`            | `axrom-mapper.ts`            | submapper     | no   |
-| 8   | Magic Card m4  | `ffe-magic-card`   | `ffe-magic-card-mapper.ts`   | no            | cyc. |
-| 9   | MMC2 / PxROM   | `mmc2`             | `mmc2-mapper.ts`             | no            | no   |
-| 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
-| 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
-| 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
-| 16  | Bandai FCG     | `bandai-fcg`       | `bandai-fcg-mapper.ts`       | no            | cyc. |
-| 17  | Super Magic    | `ffe-magic-card`   | `ffe-magic-card-mapper.ts`   | no            | both |
-| 18  | Jaleco SS8806  | `jaleco-ss8806`    | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
-| 21  | Konami VRC4a/c | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | cyc. |
-| 22  | Konami VRC2a   | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | no   |
-| 23  | VRC2b/VRC4e/f  | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | opt. |
-| 25  | VRC2c/VRC4b/d  | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | opt. |
-| 32  | Irem G-101     | `irem-g101`        | `irem-g101-mapper.ts`        | no            | no   |
-| 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
-| 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
-| 48  | Taito TC0690   | `taito-tc0690`     | `taito-tc0690-mapper.ts`     | no            | A12  |
-| 64  | Tengen RAMBO-1 | `rambo-1`          | `rambo1-mapper.ts`           | no            | both |
-| 65  | Irem H3001     | `irem-h3001`       | `irem-h3001-mapper.ts`       | no            | cyc. |
-| 66  | GxROM / MHROM  | `gxrom`            | `gxrom-mapper.ts`            | AND           | no   |
-| 68  | Sunsoft-4      | `sunsoft-4`        | `sunsoft4-mapper.ts`         | no            | no   |
-| 69  | Sunsoft FME-7  | `fme7`             | `fme7-mapper.ts`             | no            | cyc. |
-| 70  | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
-| 71  | Codemasters    | `codemasters`      | `codemasters-mapper.ts`      | no            | no   |
-| 75  | Konami VRC1    | `vrc1`             | `vrc1-mapper.ts`             | no            | no   |
-| 76  | Namco 3446     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
-| 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
-| 79  | NINA-03/06     | `nina-03-06`       | `nina0306-mapper.ts`         | no            | no   |
-| 80  | Taito X1-005   | `taito-x1-005`     | `taito-x1-005-mapper.ts`     | no            | no   |
-| 82  | Taito X1-017   | `taito-x1-017`     | `taito-x1-017-mapper.ts`     | no            | cyc. |
-| 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
-| 88  | Namco 3433     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
-| 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
-| 91  | JY/EJ bootleg  | board-specific     | two boards + shared banking  | no            | both |
-| 93  | Sunsoft-3R     | `sunsoft-3r`       | `sunsoft3r-mapper.ts`        | AND           | no   |
-| 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
-| 95  | Namco 3425     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
-| 97  | Irem TAM-S1    | `irem-tam-s1`      | `irem-tam-s1-mapper.ts`      | no            | no   |
-| 118 | TxSROM         | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
-| 119 | TQROM          | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
-| 140 | Jaleco JF      | `jaleco-jf`        | `jaleco-jf-mapper.ts`        | no            | no   |
-| 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
-| 180 | Inverted UxROM | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
-| 184 | Sunsoft-1      | `sunsoft-1`        | `sunsoft1-mapper.ts`         | no            | no   |
-| 185 | CNROM protect  | `cnrom-protection` | `cnrom-protection-mapper.ts` | AND           | no   |
-| 206 | Namco 118      | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
+| #   | Family         | Kind                      | Implementation               | Bus conflicts | IRQ  |
+| --- | -------------- | ------------------------- | ---------------------------- | ------------- | ---- |
+| 0   | NROM           | `nrom`                    | `nrom-mapper.ts`             | n/a           | no   |
+| 1   | MMC1 / SxROM   | `mmc1`                    | `mmc1-mapper.ts` + board     | no            | no   |
+| 2   | UxROM          | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
+| 3   | CNROM          | `cnrom`                   | `cnrom-mapper.ts`            | default AND   | no   |
+| 4   | MMC3           | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
+| 6   | Magic Card     | `ffe-magic-card`          | `ffe-magic-card-mapper.ts`   | no            | cyc. |
+| 7   | AxROM          | `axrom`                   | `axrom-mapper.ts`            | submapper     | no   |
+| 8   | Magic Card m4  | `ffe-magic-card`          | `ffe-magic-card-mapper.ts`   | no            | cyc. |
+| 9   | MMC2 / PxROM   | `mmc2`                    | `mmc2-mapper.ts`             | no            | no   |
+| 10  | MMC4 / FxROM   | `mmc4`                    | `mmc4-mapper.ts`             | no            | no   |
+| 11  | Color Dreams   | `color-dreams`            | `color-dreams-mapper.ts`     | AND           | no   |
+| 13  | CPROM          | `cprom`                   | `cprom-mapper.ts`            | AND           | no   |
+| 15  | K-1029/K-1030P | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 16  | Bandai FCG     | `bandai-fcg`              | `bandai-fcg-mapper.ts`       | no            | cyc. |
+| 17  | Super Magic    | `ffe-magic-card`          | `ffe-magic-card-mapper.ts`   | no            | both |
+| 18  | Jaleco SS8806  | `jaleco-ss8806`           | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
+| 21  | Konami VRC4a/c | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | cyc. |
+| 22  | Konami VRC2a   | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | no   |
+| 23  | VRC2b/VRC4e/f  | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | opt. |
+| 25  | VRC2c/VRC4b/d  | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | opt. |
+| 32  | Irem G-101     | `irem-g101`               | `irem-g101-mapper.ts`        | no            | no   |
+| 33  | Taito TC0190   | `taito-tc0190`            | `taito-tc0190-mapper.ts`     | no            | no   |
+| 34  | BNROM/NINA-001 | `bnrom`/`nina-001`        | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
+| 48  | Taito TC0690   | `taito-tc0690`            | `taito-tc0690-mapper.ts`     | no            | A12  |
+| 64  | Tengen RAMBO-1 | `rambo-1`                 | `rambo1-mapper.ts`           | no            | both |
+| 65  | Irem H3001     | `irem-h3001`              | `irem-h3001-mapper.ts`       | no            | cyc. |
+| 66  | GxROM / MHROM  | `gxrom`                   | `gxrom-mapper.ts`            | AND           | no   |
+| 68  | Sunsoft-4      | `sunsoft-4`               | `sunsoft4-mapper.ts`         | no            | no   |
+| 69  | Sunsoft FME-7  | `fme7`                    | `fme7-mapper.ts`             | no            | cyc. |
+| 70  | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
+| 71  | Codemasters    | `codemasters`             | `codemasters-mapper.ts`      | no            | no   |
+| 75  | Konami VRC1    | `vrc1`                    | `vrc1-mapper.ts`             | no            | no   |
+| 76  | Namco 3446     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
+| 78  | Irem 74HC161   | `irem-78`                 | `irem78-mapper.ts`           | AND           | no   |
+| 79  | NINA-03/06     | `nina-03-06`              | `nina0306-mapper.ts`         | no            | no   |
+| 80  | Taito X1-005   | `taito-x1-005`            | `taito-x1-005-mapper.ts`     | no            | no   |
+| 82  | Taito X1-017   | `taito-x1-017`            | `taito-x1-017-mapper.ts`     | no            | cyc. |
+| 87  | Jaleco CHR     | `jaleco-87`               | `jaleco-mapper.ts`           | no            | no   |
+| 88  | Namco 3433     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
+| 89  | Sunsoft-2      | `sunsoft-2`               | `sunsoft2-mapper.ts`         | AND           | no   |
+| 91  | JY/EJ bootleg  | board-specific            | two boards + shared banking  | no            | both |
+| 93  | Sunsoft-3R     | `sunsoft-3r`              | `sunsoft3r-mapper.ts`        | AND           | no   |
+| 94  | UN1ROM         | `uxrom`                   | `uxrom-mapper.ts`            | AND           | no   |
+| 95  | Namco 3425     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
+| 97  | Irem TAM-S1    | `irem-tam-s1`             | `irem-tam-s1-mapper.ts`      | no            | no   |
+| 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
+| 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
+| 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
+| 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
+| 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
+| 184 | Sunsoft-1      | `sunsoft-1`               | `sunsoft1-mapper.ts`         | no            | no   |
+| 185 | CNROM protect  | `cnrom-protection`        | `cnrom-protection-mapper.ts` | AND           | no   |
+| 206 | Namco 118      | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
+| 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
 lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`. Namco
@@ -270,6 +275,42 @@ AND-type bus conflicts. The no-conflict prototype board variant is out of scope.
 Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and a `$1000-$1FFF` bank
 selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
 cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
+
+## Address-latch multicarts (15, 225, 227, 228)
+
+`AddressLatchMulticartMapper` shares only the physical behavior common to these discrete boards: a
+write-address latch, the data bits used by 15/228, mirroring, optional four-nibble register RAM and
+the PRG/CHR address equations. `AddressLatchMulticartBoard` fixes the materially different wiring;
+the class does not emulate a fictional common ASIC.
+
+Mapper 15's K-1029/K-1030P board uses write-address A1-A0 to select NROM-256, UNROM, NROM-64 or
+NROM-128 behavior. Written D5-D0 drive PRG A19-A14, D7 supplies PRG A13 only in NROM-64 mode, and D6
+selects mirroring. Modes 0/3 write-protect the unbanked 8 KiB CHR RAM; modes 1/2 enable writes.
+Mapper-hacked ROMs that depend on nonexistent PRG RAM or disabled protection are outside the board
+contract. See [NESdev mapper 15](https://www.nesdev.org/wiki/INES_Mapper_015).
+
+Mapper 225's ET-4310/K-1010 latches A14 as the shared high PRG/CHR bank line, A13 as mirroring, A12 as
+paired-32 KiB versus mirrored-16 KiB PRG mode, A11-A6 as the inner PRG bank and A5-A0 as the CHR
+bank. Accepted boards are the documented 1 MiB/512 KiB and 2 MiB/1 MiB PRG/CHR pairs. Mapper 225
+cannot encode whether its 74x670 is populated, so the legacy compatibility board exposes four
+low-nibble registers mirrored through `$5800-$5FFF`; their high bits remain CPU open bus. See
+[NESdev mapper 225](https://www.nesdev.org/wiki/INES_Mapper_225).
+
+Mapper 227 latches non-contiguous address pins into three outer and three inner PRG lines, selects
+UNROM-like or NROM-128/NROM-256 wiring, and controls mirroring. Submapper 0 is the RPG variant:
+CHR RAM stays writable, an explicit battery header exposes 8 KiB NVRAM, and the absent UNROM circuit
+hardwires NROM-128/NROM-256 behavior. Submapper 1 is the multicart variant with UNROM support,
+NROM-mode CHR protection and a solder-pad read mode; the currently modeled physical setting is all
+pads unbridged (`0`). Submapper 2 instead adds the rule that inner bank zero forces outer A18-A17 to
+zero while leaving A19 unchanged. See
+[NESdev mapper 227](https://www.nesdev.org/wiki/INES_Mapper_227).
+
+Mapper 228 follows the Active Enterprises PAL: A12-A11 select a 512 KiB PRG chip, A10-A6 select its
+16 KiB page, A5 selects paired versus mirrored PRG, A3-A0 plus written D1-D0 select an 8 KiB CHR
+bank, and A13 controls mirroring. A 512 KiB image occupies chip 0. Action 52's 1.5 MiB payload stores
+physical chips 0, 1 and 3 consecutively; selecting absent chip 2 leaves all CPU data lines open.
+The rumored four-nibble expansion RAM is not present on either real board and is not modeled. See
+[NESdev mapper 228](https://www.nesdev.org/wiki/INES_Mapper_228).
 
 ## Bandai FCG / LZ93D50 (16)
 

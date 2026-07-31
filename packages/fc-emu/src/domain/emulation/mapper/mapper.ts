@@ -6,6 +6,19 @@
  */
 export type MapperState =
   | { readonly kind: "nrom" }
+  | {
+      readonly kind: "address-latch-multicart";
+      readonly board:
+        | "k-1029"
+        | "et-4310"
+        | "mapper-227-rpg"
+        | "mapper-227-multicart"
+        | "mapper-227-outer-reset"
+        | "active-enterprises";
+      readonly addressLatch: number;
+      readonly dataLatch: number;
+      readonly nibbleRam: Uint8Array;
+    }
   | { readonly kind: "uxrom"; readonly selectedPrgBank: number }
   | { readonly kind: "cnrom"; readonly selectedChrBank: number }
   | { readonly kind: "bnrom"; readonly selectedPrgBank: number }
@@ -348,6 +361,9 @@ export type MapperState =
 export interface Mapper {
   /** Restores this board's deterministic fresh-instance latch state. */
   powerOn(): void;
+
+  /** Applies board logic connected to the console's warm reset signal. */
+  reset?(): void;
 
   captureState(): MapperState;
 

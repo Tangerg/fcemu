@@ -15,6 +15,7 @@ coverage
 *.tsbuildinfo
 *.local
 *.nes
+/packages/fc-emu/test-roms/
 
 # Editor directories and files
 .vscode/*

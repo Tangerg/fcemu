@@ -201,6 +201,13 @@ the shifter, restarts and requests a PUT reload; with `implicitStopAbort`, a com
 earlier (`bitsRemaining === 1`, `tickValue < 2`) reloads the shifter, restarts and sets
 `disableDelay = 3` so the reload the following output clock schedules is aborted just after its halt.
 
+**Known conformance gap.** The pinned Blargg `apu_test` currently fails DMC basics test 19: “There
+should be a one-byte buffer that's filled immediately if empty.” The newer Sprite/DMC collision and
+AccuracyCoin cases still pass, so the project tracks this as an unresolved buffer-readiness boundary
+rather than changing the DMA schedule to satisfy one fixture in isolation. See
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md) for the exact fixture
+identity and invocation.
+
 ## Status register and frame IRQ
 
 The APU keeps the frame IRQ's external CPU line separate from its internal `$4015` status flag.

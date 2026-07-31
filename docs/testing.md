@@ -62,21 +62,30 @@ Mapper status uses two explicit evidence levels:
 
 ## External conformance runners
 
-External fixtures stay outside the worktree. The repository records upstream revision, license,
-checksum, invocation and expected protocol in
+External fixtures stay outside the tracked worktree. The repository records upstream revision,
+license status, checksum, invocation and expected protocol in
 [`packages/fc-emu/test-support/external-roms.md`](../packages/fc-emu/test-support/external-roms.md).
+
+Fetch the pinned local CPU/PPU/APU/DMA set into the ignored `packages/fc-emu/test-roms/` directory:
+
+```bash
+yarn fetch:test-roms
+```
 
 | Command                                                    | Evidence                                                 |
 | ---------------------------------------------------------- | -------------------------------------------------------- |
 | `yarn conformance:rom -- ROM [frames] [region] [protocol]` | Generic Blargg or zero-page result protocol.             |
+| `yarn conformance:nestest`                                 | 8,991 CPU register and cycle trace records.              |
+| `yarn conformance:cpu-timing`                              | Official/unofficial instruction timing result screen.    |
 | `yarn conformance:accuracy-coin -- ROM`                    | RP2A03 data-bus, DMA, controller and interrupt behavior. |
 | `yarn conformance:mmc1 -- DIR`                             | Holy Mapperel SxROM board matrix.                        |
 | `yarn conformance:mapper34 -- DIR`                         | Holy Mapperel BNROM fixture and visual hash.             |
 | `yarn conformance:oam-bus -- ROM [frames]`                 | Exact Quietust `read2004` byte screen.                   |
 | `yarn conformance:pal-apu -- DIR`                          | Ten PAL APU visual hashes.                               |
 
-Do not copy an upstream fixture into the repository merely to make CI convenient. If a fixture is
-redistributable but too large or awkward for Git, document a checksum-pinned acquisition process.
+Do not copy an upstream fixture into the tracked repository merely to make CI convenient. If a
+fixture is redistributable but too large or awkward for Git—or its collection-level license is
+unclear—document a checksum-pinned acquisition process.
 
 ## Real-ROM smoke tests
 

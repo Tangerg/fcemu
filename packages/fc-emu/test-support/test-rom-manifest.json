@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "destination": "test-roms/external",
+  "upstream": {
+    "repository": "https://github.com/christopherpow/nes-test-roms",
+    "revision": "95d8f621ae55cee0d09b91519a8989ae0e64753b",
+    "licenseStatus": "The collection has no repository-level license. Fetch for local conformance use only; do not redistribute it from this repository."
+  },
+  "files": [
+    {
+      "id": "nestest-rom",
+      "path": "nes-test-roms/other/nestest.nes",
+      "upstreamPath": "other/nestest.nes",
+      "byteLength": 24592,
+      "sha256": "f67d55fd6b3cf0bad1cc85f1df0d739c65b53e79cecb7fea8f77ec0eadab0004"
+    },
+    {
+      "id": "nestest-log",
+      "path": "nes-test-roms/other/nestest.log",
+      "upstreamPath": "other/nestest.log",
+      "byteLength": 859167,
+      "sha256": "442c4dd5539c7e88b3fd73c7b732a7eadbd22b47c2cd9e58397ef147f64f6f8f"
+    },
+    {
+      "id": "instr-test-v5-all",
+      "path": "nes-test-roms/instr_test-v5/all_instrs.nes",
+      "upstreamPath": "instr_test-v5/all_instrs.nes",
+      "byteLength": 262160,
+      "sha256": "353870c157242e3d428ef7387109deaee0d2e158bdb432ab9aae4e657072c785"
+    },
+    {
+      "id": "instr-test-v5-official",
+      "path": "nes-test-roms/instr_test-v5/official_only.nes",
+      "upstreamPath": "instr_test-v5/official_only.nes",
+      "byteLength": 262160,
+      "sha256": "589b8835deb5cbc69618dac193a3dbd675540f7f2794e2d2a92e97beb8abc3cb"
+    },
+    {
+      "id": "cpu-timing-test6",
+      "path": "nes-test-roms/cpu_timing_test6/cpu_timing_test.nes",
+      "upstreamPath": "cpu_timing_test6/cpu_timing_test.nes",
+      "byteLength": 16400,
+      "sha256": "6ab4fe8af23b12ca0dfccfc030de3d4069bf2498e3ef20ddcf1ca75555065b85"
+    },
+    {
+      "id": "ppu-vbl-nmi",
+      "path": "nes-test-roms/ppu_vbl_nmi/ppu_vbl_nmi.nes",
+      "upstreamPath": "ppu_vbl_nmi/ppu_vbl_nmi.nes",
+      "byteLength": 262160,
+      "sha256": "8dbab1be785585c399cf055ef02147b788ab75fd80e81cf9568a2feafc03fb7d"
+    },
+    {
+      "id": "apu-test",
+      "path": "nes-test-roms/apu_test/apu_test.nes",
+      "upstreamPath": "apu_test/apu_test.nes",
+      "byteLength": 131088,
+      "sha256": "00d4722bae1c82a14528dd3220462d3fb9ce4b14b8cec996619dea23e07fef0a"
+    },
+    {
+      "id": "sprite-dmc-dma",
+      "path": "nes-test-roms/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes",
+      "upstreamPath": "sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes",
+      "byteLength": 40976,
+      "sha256": "db3199bc1b0bdc07a316b3ab999d8fd8bb361456d2154e364c132cb06a26a10f"
+    },
+    {
+      "id": "sprite-dmc-dma-512",
+      "path": "nes-test-roms/sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes",
+      "upstreamPath": "sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes",
+      "byteLength": 40976,
+      "sha256": "3789f5134b0561b4344e3f4ce08b4d2a416f67435e083917a80d87fdb9d3583c"
+    }
+  ]
+}

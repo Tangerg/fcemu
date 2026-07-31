@@ -72,6 +72,8 @@ Sunsoft 5B expansion audio explicitly separate from mapper-69 base behavior.
 
 Known research areas:
 
+- Reconcile Blargg `apu_test` DMC basics failure 19 (empty sample-buffer fill timing) with the newer
+  DMC/OAM collision and AccuracyCoin traces that currently pass.
 - DMC explicit-stop/implicit-stop abort phases across RP2A03 revisions.
 - Combined DMC/internal-register activation details beyond the currently verified NTSC cases.
 - Revision-specific OAMADDR corruption when rendering is toggled at unusual dots.

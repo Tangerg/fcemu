@@ -80,11 +80,12 @@ yarn quality          # complete required local/CI quality gate
 yarn test             # core and UI unit/integration tests
 yarn check:docs       # Markdown structure and local-link validation
 yarn benchmark:core   # frame-buffer, full-frame and save-state benchmarks
+yarn fetch:test-roms  # fetch and verify the ignored local conformance set
 ```
 
-Redistributable conformance ROMs and local commercial-ROM smoke profiles are intentionally outside
-the normal test command. Their provenance, pinned checksums and exact runners are documented in
-[Testing](./docs/testing.md).
+External conformance ROMs and local commercial-ROM smoke profiles are intentionally outside the
+normal test command and tracked worktree. Their provenance, license status, pinned checksums and
+exact runners are documented in [Testing](./docs/testing.md).
 
 ## Documentation
 

@@ -1,7 +1,9 @@
 # External conformance ROMs
 
-Commercial ROMs never belong in this repository. External mapper conformance uses redistributable
-upstream fixtures kept outside the worktree.
+Commercial ROMs never belong in this repository. External conformance fixtures are checksum-pinned
+and remain outside the tracked worktree. A curated local-only set can live under the ignored
+`packages/fc-emu/test-roms/` directory; a fixture is committed only after its redistribution terms
+have been audited explicitly.
 
 ## Runner guarantees
 
@@ -13,6 +15,54 @@ They fail closed when identity or expected output changes.
 identify its input image. A result from that runner is reproducible evidence only when the caller
 records the ROM filename, upstream revision, SHA-256, region, frame limit, protocol and output.
 Unrecorded historical runs do not promote a mapper to `Verified`.
+
+## Curated CPU, PPU, APU and DMA set
+
+The project pins nine files from
+[`christopherpow/nes-test-roms`](https://github.com/christopherpow/nes-test-roms) revision
+`95d8f621ae55cee0d09b91519a8989ae0e64753b`. The collection has no repository-level license, so its
+binaries are downloaded for local conformance only and remain ignored by Git. Exact upstream paths,
+byte lengths and SHA-256 values live in
+[`test-rom-manifest.json`](./test-rom-manifest.json).
+
+Fetch or verify the complete local set with:
+
+```bash
+yarn fetch:test-roms
+```
+
+The command refuses redirects, unexpected hosts, changed lengths and checksum mismatches. It never
+overwrites a mismatched existing fixture.
+
+`nestest` is not a self-reporting ROM. Its dedicated runner initializes the published `$C000` state
+and compares all 8,991 pre-instruction register states and CPU-cycle positions with the pinned log:
+
+```bash
+yarn conformance:nestest
+```
+
+`cpu_timing_test6` is also not a Blargg `$6000` protocol ROM. Its dedicated runner holds player-one
+B during mode selection to include all supported unofficial instructions, runs 1,500 frames and
+compares the final `PASSED` screen with a visually reviewed RGBA hash:
+
+```bash
+yarn conformance:cpu-timing
+```
+
+The remaining fixtures use the generic runner:
+
+```bash
+yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/instr_test-v5/official_only.nes 3600 ntsc blargg
+yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/instr_test-v5/all_instrs.nes 3600 ntsc blargg
+yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/ppu_vbl_nmi/ppu_vbl_nmi.nes 3600 ntsc blargg
+yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/apu_test/apu_test.nes 3600 ntsc blargg
+```
+
+Current recorded results are `nestest` 8,991/8,991, instruction behavior 16/16 in both official and
+all-instruction modes, PPU VBL/NMI 10/10, both Sprite/DMC DMA collision fixtures `Passed`, and the
+CPU timing final screen `PASSED`. The combined APU suite currently fails DMC basics test 19 because
+an empty sample buffer is not filled at the expected time. That failure is an open hardware defect,
+not an accepted baseline.
 
 ## AccuracyCoin CPU data buses
 

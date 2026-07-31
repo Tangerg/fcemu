@@ -24,6 +24,7 @@ to the rest of core.
 | `cpuReadDriveMask(address)`  | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
 | `readCpuExpansion(address)`  | Optional value/drive mask for a cartridge device in CPU `$4018-$5FFF`.                   |
 | `writeCpuExpansion(addr, v)` | Optional cartridge register write in CPU `$4018-$5FFF`.                                  |
+| `readCpuRegisterOpenBus(a)`  | Optional cartridge drive on otherwise floating write-only 2A03 reads.                    |
 | `ppuReadDriveMask(address)`  | Optional PPU pattern-data mask; omitted means fully driven, `0` means CHR is tri-stated. |
 | `mapNametableAddress(addr)`  | Optional direct CIRAM/nametable-memory routing for cartridge-controlled wiring.          |
 | `readNametable(address)`     | Optional cartridge-driven nametable byte, such as Sunsoft-4 CHR ROM.                     |
@@ -114,6 +115,8 @@ counters against their bit width and all booleans by runtime type) and throws
 | 76  | Namco 3446     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
 | 79  | NINA-03/06     | `nina-03-06`       | `nina0306-mapper.ts`         | no            | no   |
+| 80  | Taito X1-005   | `taito-x1-005`     | `taito-x1-005-mapper.ts`     | no            | no   |
+| 82  | Taito X1-017   | `taito-x1-017`     | `taito-x1-017-mapper.ts`     | no            | cyc. |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
 | 88  | Namco 3433     | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
@@ -136,6 +139,8 @@ lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.
 select only the board behavior that differs around the shared MMC3 state machine.
 Taito TC0190/TC0690 similarly share `TaitoTc0x90Banking`; their mirroring and IRQ pins remain in
 their board-specific owners.
+X1-005/X1-017 share only `TaitoX1Banking`, the three-PRG/eight-CHR data path actually common to both
+ASICs. Register layout, internal RAM, pull-down and IRQ behavior stay separate.
 
 ---
 
@@ -353,6 +358,35 @@ The single bank latch is decoded in CPU expansion space only when
 8 KiB CHR-ROM banks. Reads from the expansion range stay open bus, mirroring remains solder-pad
 controlled, and the board has no PRG RAM, IRQ or bus conflicts. See
 [NESdev mapper 79](https://www.nesdev.org/wiki/INES_Mapper_079).
+
+## Taito X1-005 (80)
+
+The X1-005 exposes three switchable 8 KiB PRG windows followed by the fixed final bank, and two
+2 KiB plus four 1 KiB CHR windows. `$7EF6/$7EF7` select horizontal/vertical mirroring.
+`$7EFA/$7EFB`, `$7EFC/$7EFD` and `$7EFE/$7EFF` are paired mirrors of the three PRG registers.
+CPU A7 is ignored, so all control registers also decode at `$7E70-$7E7F`.
+
+Its 128 internal RAM bytes appear twice across `$7F00-$7FFF` only while the permission latch written
+through `$7EF8/$7EF9` equals `$A3`; disabled reads remain open bus. Cartridge format policy
+normalizes legacy iNES's generic RAM size to 128 bytes, with the battery flag selecting persistent
+or volatile ownership. See [NESdev mapper 80](https://www.nesdev.org/wiki/INES_Mapper_080).
+
+## Taito X1-017 (82)
+
+X1-017 keeps the mixed CHR windows but can exchange which pattern-table half holds the two 2 KiB
+windows through `$7EF6` bit 1. Mapper 82 preserves the historical shifted PRG-ROM image order:
+`$7EFA-$7EFC` values select each 8 KiB bank after shifting right two bits; the final bank remains
+fixed. The corrected physical ROM-line order and 512 KiB capacity are NES 2.0 mapper 552.
+
+The ASIC owns 5 KiB of battery RAM at `$6000-$73FF`, split into 2/2/1 KiB regions independently
+enabled by `$CA`, `$69` and `$84` at `$7EF7-$7EF9`. Strong internal pull-downs make disabled RAM,
+write-only registers and other otherwise floating CPU reads return zero.
+
+The reverse-engineered IRQ uses an 8-bit latch at `$7EFD`, control at `$7EFE`, and acknowledge at
+`$7EFF`. Disabling count loads `(latch+2)*16` (17 for zero); acknowledgement loads
+`(latch+1)*16` (1 for zero). Counting decrements each CPU cycle, while the independent output bit
+asynchronously gates a pending IRQ. See [NESdev X1-017](https://www.nesdev.org/wiki/INES_Mapper_082)
+and the [hardware test record](https://forums.nesdev.org/viewtopic.php?t=19724).
 
 ## Jaleco CHR (87)
 

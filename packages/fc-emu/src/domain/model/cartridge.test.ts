@@ -189,6 +189,26 @@ describe("Cartridge", () => {
     expect(cartridge.readWritableChr(0x10)).toBe(0x42);
   });
 
+  it.each([
+    { mapper: 80, battery: false, prgRamBytes: 0x80, prgNvRamBytes: 0 },
+    { mapper: 80, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x80 },
+    { mapper: 82, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x1400 },
+  ])(
+    "normalizes Mapper $mapper ASIC-internal RAM independently of iNES 8 KiB units",
+    ({ mapper, battery, prgRamBytes, prgNvRamBytes }) => {
+      const cartridge = Cartridge.fromArrayBuffer(
+        createTestRom({ mapper, battery, prgBanks: 8, chrBanks: 4 }),
+      );
+
+      expect(cartridge).toMatchObject({
+        prgRamBytes,
+        prgNvRamBytes,
+        prgWritableBytes: prgRamBytes + prgNvRamBytes,
+        hasBatteryBackup: battery,
+      });
+    },
+  );
+
   it("keeps mixed CHR ROM/RAM fail-closed outside TQROM", () => {
     expect(() =>
       Cartridge.fromArrayBuffer(

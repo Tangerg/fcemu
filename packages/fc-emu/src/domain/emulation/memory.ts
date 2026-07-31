@@ -76,6 +76,14 @@ export class CPUMemory {
       }
       // $4000-$4014 are write-only. With CPU test mode disabled, no
       // Control Deck device drives a read from these addresses.
+      const cartridgeDrive = this.bus.Mapper.readCpuRegisterOpenBus?.(address);
+      if (cartridgeDrive !== undefined) {
+        return this.readPartiallyDriven(
+          cartridgeDrive.value,
+          cartridgeDrive.drivenMask,
+          cpuOwnsRead,
+        );
+      }
       return this.readOpenBus(cpuOwnsRead);
     }
 

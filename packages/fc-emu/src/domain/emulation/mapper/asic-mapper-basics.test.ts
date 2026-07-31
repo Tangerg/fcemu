@@ -213,6 +213,33 @@ describe("basic ASIC mappers", () => {
     ).toThrowError(UnsupportedMapperVariantError);
   });
 
+  it("creates Taito X1 boards only with their physical internal-memory layouts", () => {
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 80, prgBanks: 8, chrBanks: 4 }), interruptPort),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 82, battery: true, prgBanks: 8, chrBanks: 4 }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 82, prgBanks: 8, chrBanks: 4 }), interruptPort),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 80,
+          nes2: true,
+          prgBanks: 8,
+          chrBanks: 4,
+          prgRamShift: 7,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+  });
+
   it("rejects invalid state that cannot exist on the selected boards", () => {
     const mapper = createMapper(
       createTestCartridge({ mapper: 68, prgBanks: 8, chrBanks: 32 }),

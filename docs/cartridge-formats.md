@@ -7,17 +7,17 @@ execution.
 
 ## Accepted formats
 
-| Capability          | iNES                                              | NES 2.0                                   |
-| ------------------- | ------------------------------------------------- | ----------------------------------------- |
-| Mapper identity     | 8-bit legacy mapper                               | 12-bit mapper plus 4-bit submapper        |
-| PRG/CHR ROM size    | Linear bank counts                                | Linear and exponent-multiplier encodings  |
-| Timing              | NTSC or PAL                                       | NTSC, PAL, multi-region or Dendy          |
-| Console             | Standard NES/Famicom                              | Standard NES/Famicom                      |
-| PRG writable memory | Legacy direct window                              | Direct memory, or mapper-aware MMC1 banks |
-| CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied | Explicit CHR RAM or CHR NVRAM             |
-| Trainer             | Loaded at CPU `$7000-$71FF`                       | Loaded at CPU `$7000-$71FF`               |
-| Miscellaneous ROMs  | Not encoded                                       | None                                      |
-| Default expansion   | Legacy/default                                    | Unspecified or standard controllers       |
+| Capability          | iNES                                              | NES 2.0                                  |
+| ------------------- | ------------------------------------------------- | ---------------------------------------- |
+| Mapper identity     | 8-bit legacy mapper                               | 12-bit mapper plus 4-bit submapper       |
+| PRG/CHR ROM size    | Linear bank counts                                | Linear and exponent-multiplier encodings |
+| Timing              | NTSC or PAL                                       | NTSC, PAL, multi-region or Dendy         |
+| Console             | Standard NES/Famicom                              | Standard NES/Famicom                     |
+| PRG writable memory | Direct or board-implied internal memory           | Direct, MMC1-banked or board-implied     |
+| CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied | Explicit CHR RAM or CHR NVRAM            |
+| Trainer             | Loaded at CPU `$7000-$71FF`                       | Loaded at CPU `$7000-$71FF`              |
+| Miscellaneous ROMs  | Not encoded                                       | None                                     |
+| Default expansion   | Legacy/default                                    | Unspecified or standard controllers      |
 
 The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes never enter a save
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
@@ -26,7 +26,15 @@ SOROM, SXROM and SZROM bank selection follows the board wiring rather than conca
 into the direct `$6000-$7FFF` window. TQROM is the one supported mixed-CHR exception: mapper 119
 selects 16–64 KiB CHR ROM or 8 KiB volatile CHR RAM per 1 KiB bank; legacy iNES implies that RAM and
 NES 2.0 declares it. Other simultaneous CHR RAM/NVRAM, CHR ROM plus writable CHR memory, and
-mapper-internal battery memory remain rejected because their selection rules are different.
+mapper-internal battery memory remain rejected unless an implemented ASIC defines the exact
+capacity and protection rules.
+
+Taito X1 memory is a deliberate board-derived exception to the header's power-of-two units.
+Mapper 80 normalizes legacy iNES's generic 8 KiB RAM implication to the X1-005's 128 internal bytes;
+the battery flag decides whether those bytes are volatile or persistent. NES 2.0 mapper 80 must
+declare the exact 128 bytes. Mapper 82 always normalizes to the X1-017's physical 5 KiB NVRAM,
+because neither header format can encode that capacity exactly; mapper creation additionally
+requires the battery flag.
 
 These rules follow the NES 2.0 distinction between volatile/non-volatile PRG and CHR fields and the
 documented [MMC1 board wiring](https://www.nesdev.org/wiki/MMC1). Declared capacity is accepted only
@@ -67,7 +75,7 @@ codes and body layout are documented in [Cartridge subsystem](./subsystems/cartr
 
 - VS System, PlayChoice-10 and extended console types.
 - Miscellaneous ROM payloads and non-standard default expansion devices.
-- Mapper-internal EEPROM/battery memory not represented by PRG/CHR NVRAM.
+- Mapper-internal EEPROM/battery memory outside the explicit Taito X1-005/X1-017 policies.
 - Simultaneous CHR ROM and writable CHR memory outside TQROM, or simultaneous CHR RAM and CHR
   NVRAM.
 - Unknown submappers and geometries with unreachable declared memory.

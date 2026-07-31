@@ -22,6 +22,8 @@ export const CARTRIDGE_TRAINER_SIZE = 512;
 const PRG_ROM_UNIT = 16_384;
 const CHR_ROM_UNIT = 8192;
 const LEGACY_RAM_UNIT = 8192;
+const TAITO_X1_005_RAM_SIZE = 0x80;
+const TAITO_X1_017_RAM_SIZE = 0x1400;
 const SIGNATURE = [0x4e, 0x45, 0x53, 0x1a] as const;
 
 /** Immutable interpretation of an iNES or NES 2.0 header. */
@@ -74,7 +76,7 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
     const sizeMsb = bytes[9] ?? 0;
     const prgRam = bytes[10] ?? 0;
     const chrRam = bytes[11] ?? 0;
-    return Object.freeze({
+    return applyBoardMemoryPolicy({
       ...common,
       prgRomSize: decodeRomSize(bytes[4] ?? 0, sizeMsb & 0x0f, PRG_ROM_UNIT, sourceName),
       chrRomSize: decodeRomSize(bytes[5] ?? 0, sizeMsb >>> 4, CHR_ROM_UNIT, sourceName),
@@ -90,7 +92,7 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
 
   const chrRomSize = (bytes[5] ?? 0) * CHR_ROM_UNIT;
   const legacyRamSize = ((bytes[8] ?? 0) || 1) * LEGACY_RAM_UNIT;
-  return Object.freeze({
+  return applyBoardMemoryPolicy({
     ...common,
     prgRomSize: (bytes[4] ?? 0) * PRG_ROM_UNIT,
     chrRomSize,
@@ -103,6 +105,25 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
     timingMode: (bytes[9] ?? 0) & 1,
     miscellaneousRomCount: 0,
     defaultExpansionDevice: 0,
+  });
+}
+
+/**
+ * Normalizes ASIC-internal memory that the iNES/NES 2.0 RAM fields cannot
+ * describe faithfully. The battery flag still owns volatility; only capacity
+ * comes from the selected physical chip.
+ */
+function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
+  let internalPrgBytes = 0;
+  if (header.mapperNumber === 80 && header.format === "ines") {
+    internalPrgBytes = TAITO_X1_005_RAM_SIZE;
+  } else if (header.mapperNumber === 82) internalPrgBytes = TAITO_X1_017_RAM_SIZE;
+  if (internalPrgBytes === 0) return Object.freeze(header);
+
+  return Object.freeze({
+    ...header,
+    prgRamSize: header.hasBatteryFlag ? 0 : internalPrgBytes,
+    prgNvRamSize: header.hasBatteryFlag ? internalPrgBytes : 0,
   });
 }
 

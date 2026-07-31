@@ -84,6 +84,26 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "taito-x1-005";
+      readonly prgBanks: readonly number[];
+      readonly chrRegisters: readonly number[];
+      readonly ramPermission: number;
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "taito-x1-017";
+      readonly prgBanks: readonly number[];
+      readonly chrRegisters: readonly number[];
+      readonly chrMode: number;
+      readonly ramPermissions: readonly number[];
+      readonly irqLatch: number;
+      readonly irqCounter: number;
+      readonly irqCounting: boolean;
+      readonly irqOutputEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-g101";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];
@@ -227,6 +247,14 @@ export interface Mapper {
 
   /** Optional cartridge register write in CPU $4018-$5FFF. */
   writeCpuExpansion?(address: number, value: number): void;
+
+  /**
+   * Optional cartridge drive applied when a write-only 2A03 address leaves the
+   * external CPU data bus otherwise floating.
+   */
+  readCpuRegisterOpenBus?(
+    address: number,
+  ): { readonly value: number; readonly drivenMask: number } | undefined;
 
   /**
    * Bits driven by the cartridge during a PPU pattern-table read.

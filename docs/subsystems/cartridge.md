@@ -119,7 +119,7 @@ parser; the rationale and the exact accepted matrix live in
 | `defaultExpansionDevice > 1`                                              | `UNSUPPORTED_EXPANSION_DEVICE` | `validateSupportedHeader` |
 | Combined PRG RAM + NVRAM > 32 KiB (`MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000`) | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | NVRAM declared without the battery flag                                   | `INVALID_NES2_RAM_FLAGS`       | `validateSupportedHeader` |
-| Battery flag set but no PRG/CHR NVRAM (mapper-internal battery memory)    | `UNSUPPORTED_BATTERY_MEMORY`   | `validateSupportedHeader` |
+| Battery flag with no supported PRG/CHR or normalized X1 NVRAM             | `UNSUPPORTED_BATTERY_MEMORY`   | `validateSupportedHeader` |
 | No CHR ROM and no CHR RAM/NVRAM                                           | `MISSING_CHR_MEMORY`           | `validateSupportedHeader` |
 | Simultaneous CHR RAM and CHR NVRAM                                        | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | CHR ROM together with any writable CHR memory                             | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
@@ -135,6 +135,11 @@ one of ROM, volatile RAM, or NVRAM.
 `CartridgeMemory` (`packages/fc-emu/src/domain/model/cartridge-memory.ts`) owns four independent
 `Uint8Array` regions sized from the header. It never returns a reference to a backing array; all
 access goes through index-based accessors, and the frozen `layout` records the four sizes.
+
+`applyBoardMemoryPolicy` first replaces unrepresentable Taito ASIC capacities with physical sizes:
+128 bytes for mapper 80's X1-005 and 5 KiB for mapper 82's X1-017. They then use the same
+`CartridgeMemory` ownership, power-loss and battery snapshot paths as ordinary PRG memory; the
+mapper alone owns address decoding and protection keys.
 
 | Region           | Backing field | Volatile | In battery save | Cleared by `powerOn` | Logical space (order) |
 | ---------------- | ------------- | -------- | --------------- | -------------------- | --------------------- |

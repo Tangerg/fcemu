@@ -39,6 +39,8 @@ import {
 } from "./mapper-errors.js";
 import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
 import { TaitoTc0690Mapper, type TaitoTc0690IrqRevision } from "./taito-tc0690-mapper.js";
+import { TaitoX1005Mapper } from "./taito-x1-005-mapper.js";
+import { TaitoX1017Mapper } from "./taito-x1-017-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
@@ -212,6 +214,22 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "NINA-03/NINA-06");
       return new Nina0306Mapper(cartridge);
+    case 80:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "Taito X1-005");
+      requireTaitoX1005Ram(cartridge);
+      requireTwoScreenNametables(cartridge, "Taito X1-005");
+      return new TaitoX1005Mapper(cartridge);
+    case 82:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x40_000);
+      requireChrRom(cartridge, "Taito X1-017");
+      requireTaitoX1017Ram(cartridge);
+      requireTwoScreenNametables(cartridge, "Taito X1-017");
+      return new TaitoX1017Mapper(interruptPort, cartridge);
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);
@@ -354,6 +372,28 @@ function requireMmc3PrgRam(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
   if (cartridge.prgWritableBytes !== 0 && cartridge.prgWritableBytes !== 0x2000) {
     throw configurationError(cartridge, "MMC3 PRG RAM must be 8 KiB when present");
+  }
+}
+
+function requireTaitoX1005Ram(cartridge: Cartridge): void {
+  if (
+    cartridge.prgWritableBytes !== 0x80 ||
+    (cartridge.prgRamBytes > 0 && cartridge.prgNvRamBytes > 0)
+  ) {
+    throw configurationError(
+      cartridge,
+      "Taito X1-005 requires exactly 128 bytes of internal RAM or NVRAM",
+    );
+  }
+}
+
+function requireTaitoX1017Ram(cartridge: Cartridge): void {
+  if (
+    !cartridge.hasBatteryBackup ||
+    cartridge.prgRamBytes !== 0 ||
+    cartridge.prgNvRamBytes !== 0x1400
+  ) {
+    throw configurationError(cartridge, "Taito X1-017 requires 5 KiB of internal PRG NVRAM");
   }
 }
 

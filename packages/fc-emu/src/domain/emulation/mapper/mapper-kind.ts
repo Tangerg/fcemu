@@ -24,6 +24,8 @@ export const MapperKind = {
   CnromProtection: "cnrom-protection",
   TaitoTc0190: "taito-tc0190",
   TaitoTc0690: "taito-tc0690",
+  TaitoX1005: "taito-x1-005",
+  TaitoX1017: "taito-x1-017",
   IremG101: "irem-g101",
   IremH3001: "irem-h3001",
   Sunsoft4: "sunsoft-4",

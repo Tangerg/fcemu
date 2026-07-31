@@ -35,6 +35,8 @@ describes evidence maturity rather than a runtime feature flag.
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM       |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM      |
 | 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM    |
+| 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture       |
+| 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM      |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                    |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM              |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM           |
@@ -54,7 +56,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/33/65/66/68/69/70/75/76/79/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
+0/4/9/10/11/13/33/65/66/68/69/70/75/76/79/80/82/87/88/89/93/94/95/97/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -156,6 +158,16 @@ counter bias.
 - Mapper 79 (AVE NINA-03/NINA-06) decodes its latch only at `$4100-$5FFF` addresses matching
   `(address & $E100) == $4100`. D3 selects one of two 32 KiB PRG banks and D2-D0 select one of eight
   8 KiB CHR-ROM banks; mirroring is hardwired and there are no conflicts, IRQs or PRG RAM.
+- Mapper 80 (Taito X1-005) maps three switchable 8 KiB PRG windows, two 2 KiB plus four 1 KiB CHR
+  windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
+  `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so
+  the `$7E7x` register mirrors are decoded. Legacy iNES RAM is normalized to the physical 128-byte
+  capacity and the battery flag selects volatile or persistent ownership.
+- Mapper 82 (Taito X1-017) is not approximated as X1-005. It uses three consecutive PRG registers
+  with historical iNES bit ordering, switchable 2/1 KiB CHR halves, three independently keyed
+  regions of 5 KiB NVRAM and strong pull-downs on otherwise floating CPU reads. The reverse-
+  engineered IRQ counter implements the distinct control/acknowledge reload formulas and
+  asynchronous output gate. The corrected 512 KiB PRG wiring belongs to NES 2.0 mapper 552, not 82.
 - Mapper 69 (Sunsoft FME-7) commits a `$8000-$9FFF` command register with a following `$A000-$BFFF`
   parameter write: eight 1 KiB CHR banks, a `$6000-$7FFF` window that selects PRG ROM or enabled PRG
   RAM through bits 6-7, three 8 KiB PRG banks with `$E000` fixed, four-way mirroring, and a 16-bit IRQ

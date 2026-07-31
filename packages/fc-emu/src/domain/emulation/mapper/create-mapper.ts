@@ -98,7 +98,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireCnromLayout(cartridge);
       requireWritableChrSize(cartridge, 0x2000);
       requireDirectPrgRam(cartridge);
-      return new CnromMapper(cartridge, resolveBusConflicts(cartridge, true));
+      return new CnromMapper(cartridge, resolveBusConflicts(cartridge, false));
     case 4:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

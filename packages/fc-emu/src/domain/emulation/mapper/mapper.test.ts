@@ -479,7 +479,12 @@ describe("cartridge mappers", () => {
     );
   });
 
-  it("uses NES 2.0 CNROM submappers to select bus-conflict behavior", () => {
+  it("uses the legacy CNROM compatibility policy and NES 2.0 conflict variants", () => {
+    const legacy = createTestCartridge({
+      mapper: 3,
+      prgBanks: 2,
+      chrBanks: 4,
+    });
     const withoutConflicts = createTestCartridge({
       nes2: true,
       mapper: 3,
@@ -494,18 +499,21 @@ describe("cartridge mappers", () => {
       prgBanks: 2,
       chrBanks: 4,
     });
-    for (const cartridge of [withoutConflicts, withConflicts]) {
+    for (const cartridge of [legacy, withoutConflicts, withConflicts]) {
       cartridge.prgRom[0] = 0x02;
       for (let bank = 0; bank < 4; bank++) {
         cartridge.chrRom.fill(0x20 + bank, bank * 0x2000, (bank + 1) * 0x2000);
       }
     }
 
+    const legacyMapper = createMapper(legacy, { setMapperIrq() {} });
+    legacyMapper.write(0x8000, 3);
     const noConflictMapper = createMapper(withoutConflicts, { setMapperIrq() {} });
     noConflictMapper.write(0x8000, 3);
     const conflictMapper = createMapper(withConflicts, { setMapperIrq() {} });
     conflictMapper.write(0x8000, 3);
 
+    expect(legacyMapper.read(0)).toBe(0x23);
     expect(noConflictMapper.read(0)).toBe(0x23);
     expect(conflictMapper.read(0)).toBe(0x22);
   });

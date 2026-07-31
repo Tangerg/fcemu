@@ -106,7 +106,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 0   | NROM           | `nrom`                    | `nrom-mapper.ts`             | n/a           | no   |
 | 1   | MMC1 / SxROM   | `mmc1`                    | `mmc1-mapper.ts` + board     | no            | no   |
 | 2   | UxROM          | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
-| 3   | CNROM          | `cnrom`                   | `cnrom-mapper.ts`            | default AND   | no   |
+| 3   | CNROM          | `cnrom`                   | `cnrom-mapper.ts`            | NES 2.0 3.2   | no   |
 | 4   | MMC3           | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 5   | MMC5 / ExROM   | `mmc5`                    | `mmc5-mapper.ts` + audio     | no            | both |
 | 6   | Magic Card     | `ffe-magic-card`          | `ffe-magic-card-mapper.ts`   | no            | cyc. |
@@ -212,8 +212,10 @@ conflicts.
 ## CNROM (3)
 
 Fixed PRG; a `$8000-$FFFF` register selects an 8 KiB CHR bank. The legacy default applies original
-CNROM AND bus conflicts; NES 2.0 submapper 1 disables them and submapper 2 makes them explicit. A
-declared 2 KiB PRG RAM is mirrored through the 8 KiB `$6000-$7FFF` window.
+CNROM-compatible banking without bus conflicts because iNES mapper 3 also covers historical mapper
+hacks and compatible boards that require writable, non-conflicting registers. NES 2.0 submapper 1
+makes that behavior explicit; submapper 2 selects original CNROM AND conflicts. A declared 2 KiB PRG
+RAM is mirrored through the 8 KiB `$6000-$7FFF` window.
 
 ## MMC3 (4)
 

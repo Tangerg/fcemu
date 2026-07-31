@@ -140,8 +140,10 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 
 ## Legacy-header assumptions
 
-- Mapper 3 follows original CNROM AND-type bus conflicts. NES 2.0 submapper 1 (no conflicts) and
-  submapper 2 (explicit AND conflicts) override that legacy default when encoded explicitly.
+- Mapper 3 uses no conflicts for ambiguous legacy/submapper-0 images, preserving compatible boards
+  and historical mapper-3 conversions. NES 2.0 submapper 1 makes no conflicts explicit; submapper 2
+  selects original CNROM AND conflicts. The mapper entity still models that physical conflict path;
+  only the header-to-board compatibility policy changed.
 - Mapper 2 retains the generic iNES full-byte/no-conflict convention. Original UNROM/UOROM conflict
   behavior is selected with NES 2.0 submapper 2 without breaking compatible legacy images.
 - Mapper 7 follows the default iNES no-conflict behavior required by ANROM software. AMROM/AOROM

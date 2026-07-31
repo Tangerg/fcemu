@@ -301,14 +301,16 @@ NMI, then a still-maskable IRQ that stays pending until it can be serviced.
 ## Power-on and reset
 
 `powerOn()` applies the emulator's deterministic 2A03 cold-start policy: `A = X = Y = 0`, `SP = 0xFD`,
-`P = 0x24`, then `enterResetVector()`. `reset()` applies the front-loader reset-line state without a
-cold boot: it consumes three stack slots (`SP -= 3`), forces `I` via `P.reset()` (preserving the
-arithmetic flags and registers) and re-enters the reset vector. `enterResetVector()` resets the
-interrupt state to the current `I`, clears any active instruction / interrupt entry / indexed-read /
-RMW state and the poll flag, zeroes `cpuCycles`, clears `halted` and loads `PC` from the reset vector
-`[$FFFC]` in one step (it does not run a cycle-accurate 7-cycle reset). A `KIL`/`STP` opcode sets
-`halted`; a halted CPU repeats its read each cycle, still captures IRQ line state, and only a reset
-clears the jam.
+`P = 0x24`, then enters the reset vector unless the cartridge mapper supplies a one-time RAM-card
+loader entry. Such an entry either replaces the initial `PC` or creates a synthetic subroutine stack
+frame that returns to the already-read reset vector. `reset()` never consults that cold-boot hook: it
+applies the front-loader reset-line state, consumes three stack slots (`SP -= 3`), forces `I` via
+`P.reset()` (preserving the arithmetic flags and registers) and re-enters the reset vector.
+`enterResetVector()` resets the interrupt state to the current `I`, clears any active instruction /
+interrupt entry / indexed-read / RMW state and the poll flag, zeroes `cpuCycles`, clears `halted` and
+loads `PC` from `[$FFFC]` in one step (it does not run a cycle-accurate 7-cycle reset). A `KIL`/`STP`
+opcode sets `halted`; a halted CPU repeats its read each cycle, still captures IRQ line state, and
+only a reset clears the jam.
 
 ## DMA interaction surface
 

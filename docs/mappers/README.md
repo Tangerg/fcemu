@@ -34,6 +34,7 @@ to the rest of core.
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
 | `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (serial filters, IRQ counters/delays).               |
 | `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                           |
+| `powerOnCpuEntry()`          | Optional cold-boot entry/call target supplied by a RAM-card loader.                      |
 | `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                              |
 | `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.   |
 
@@ -59,6 +60,11 @@ so a board asserts and acknowledges independently.
 `observeCpuBusCycle` is invoked once per CPU (M2) bus cycle — every CPU read, DMA read and CPU write
 routes through it, including dummy and DMA-stall cycles — so a board that counts CPU cycles (FME-7)
 sees an accurate total.
+
+`powerOnCpuEntry` is consulted only after a cold power-on and never for a warm reset. The CPU either
+jumps directly to the returned address or creates the loader's documented subroutine-return stack
+frame. This keeps copier-specific startup behavior in the cartridge boundary without allowing a
+mapper to mutate CPU registers directly.
 
 ## The selection factory
 
@@ -97,12 +103,15 @@ counters against their bit width and all booleans by runtime type) and throws
 | 2   | UxROM          | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
 | 3   | CNROM          | `cnrom`            | `cnrom-mapper.ts`            | default AND   | no   |
 | 4   | MMC3           | `mmc3`             | `mmc3-mapper.ts`             | no            | A12  |
+| 6   | Magic Card     | `ffe-magic-card`   | `ffe-magic-card-mapper.ts`   | no            | cyc. |
 | 7   | AxROM          | `axrom`            | `axrom-mapper.ts`            | submapper     | no   |
+| 8   | Magic Card m4  | `ffe-magic-card`   | `ffe-magic-card-mapper.ts`   | no            | cyc. |
 | 9   | MMC2 / PxROM   | `mmc2`             | `mmc2-mapper.ts`             | no            | no   |
 | 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
 | 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
 | 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
 | 16  | Bandai FCG     | `bandai-fcg`       | `bandai-fcg-mapper.ts`       | no            | cyc. |
+| 17  | Super Magic    | `ffe-magic-card`   | `ffe-magic-card-mapper.ts`   | no            | both |
 | 18  | Jaleco SS8806  | `jaleco-ss8806`    | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
 | 21  | Konami VRC4a/c | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | cyc. |
 | 22  | Konami VRC2a   | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | no   |
@@ -197,6 +206,35 @@ swappable between `$8000` and `$C000` by the PRG mode. `$A000`/`$A001` set mirro
 enable/write-protect. The revision-B IRQ counter clocks on filtered PPU A12 rising edges (`tickPpu`
 counts low dots; `observePpuAddress` clocks a rise after ≥10 low dots). See the
 [NESdev MMC3 page](https://www.nesdev.org/wiki/MMC3).
+
+## FFE Magic Card / Super Magic Card (6, 8, 17)
+
+These mapper numbers identify play-mode disk extractions for Front Fareast copier RAM cards, not
+three unrelated mask-ROM ASICs. The iNES PRG/CHR payload is copied into mutable card memory on
+power-on. Magic Card provides 256 KiB PRG RAM, 32 KiB CHR RAM and 32 KiB banked work RAM; Super
+Magic Card expands those limits to 512 KiB PRG RAM and 256 KiB CHR RAM while retaining 32 KiB work
+RAM and adding 4 KiB scratch RAM. Battery headers fail closed because the hardware does not retain
+these memories.
+
+Mapper 6 legacy images start in latch mode 1; NES 2.0 submappers 0-7 select the precise initial latch
+mode. Mapper 8 is the mapper-6 mode-4 synonym. The common card ports select 1/2 Mbit PRG layouts,
+8 KiB CHR banks, PRG write protection and vertical/horizontal or lower/upper one-screen mirroring.
+The Magic Card FDS-compatible data source asserts periodically at 1,792 master-clock cycles.
+
+Mapper 17 models Super Magic Card play mode. `$4504-$4507` select four 8 KiB PRG windows,
+`$4510-$4517` select eight 1 KiB CHR windows, and `$4518-$451B` can route CHR RAM behind each
+nametable. Its mode register can instead select common 8 KiB CHR banking or MMC4-style
+read-triggered CHR latches. A 16-bit up-counter IRQ clocks from CPU M2 or unfiltered PPU-A12 rises.
+All mutable PRG/CHR/scratch bytes and in-flight IRQ/latch state are captured transactionally.
+
+An optional 512-byte trainer represents the copier loader, not generic `$7000` initialization.
+Mapper 6 loads it at `$7000`, cold-calls `$7003`, then returns to the ROM reset vector. Mapper 17
+submappers 0-3 cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`; warm reset always uses the normal
+reset vector. The external FDS/BIOS, copier GUI, transfer port and pass-through cartridge hardware
+used to create an extraction are deliberately outside this execution format. See
+[NESdev mapper 6](https://www.nesdev.org/wiki/INES_Mapper_006),
+[mapper 17](https://www.nesdev.org/wiki/INES_Mapper_017), and
+[Super Magic Card](https://www.nesdev.org/wiki/Super_Magic_Card).
 
 ## AxROM (7)
 

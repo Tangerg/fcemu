@@ -103,6 +103,8 @@ export interface CpuSnapshot {
  */
 class CPU {
   private readonly memory: CPUMemory;
+  private readonly mapperPowerOnEntry: () =>
+    { readonly address: number; readonly returnsToResetVector: boolean } | undefined;
   // Accumulator register
   private A = 0;
   // X index register
@@ -138,6 +140,7 @@ class CPU {
    */
   constructor(bus: Bus) {
     this.memory = new CPUMemory(bus);
+    this.mapperPowerOnEntry = () => bus.Mapper.powerOnCpuEntry?.();
     this.interruptEntryPort = {
       readByte: (address) => this.readByte(address),
       pushByte: (value) => this.pushByteToStack(value),
@@ -724,7 +727,7 @@ class CPU {
   public reset(): void {
     this.SP = (this.SP - 3) & 0xff;
     this.P.reset();
-    this.enterResetVector();
+    this.enterResetVector(false);
   }
 
   /** Applies this emulator's deterministic 2A03 cold-start policy. */
@@ -732,10 +735,10 @@ class CPU {
     this.A = this.X = this.Y = 0;
     this.SP = 0xfd;
     this.P.powerOn();
-    this.enterResetVector();
+    this.enterResetVector(true);
   }
 
-  private enterResetVector(): void {
+  private enterResetVector(coldBoot: boolean): void {
     this.interrupts.reset(this.P.I);
     this.interruptEntry = undefined;
     this.activeInstruction = undefined;
@@ -744,7 +747,18 @@ class CPU {
     this.interruptPolledThisCycle = false;
     this.cpuCycles = 0;
     this.halted = false;
-    this.PC = this.readWord(0xfffc);
+    const resetVector = this.readWord(0xfffc);
+    const entry = coldBoot ? this.mapperPowerOnEntry() : undefined;
+    if (!entry) {
+      this.PC = resetVector;
+    } else if (entry.returnsToResetVector) {
+      const returnAddress = (resetVector - 1) & 0xffff;
+      this.pushByteToStack(returnAddress >>> 8);
+      this.pushByteToStack(returnAddress & 0xff);
+      this.PC = entry.address;
+    } else {
+      this.PC = entry.address;
+    }
   }
 
   /** Executes one complete instruction/interrupt step through the cycle engine. */

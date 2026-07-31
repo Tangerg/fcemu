@@ -25,6 +25,7 @@ const LEGACY_RAM_UNIT = 8192;
 const TAITO_X1_005_RAM_SIZE = 0x80;
 const TAITO_X1_017_RAM_SIZE = 0x1400;
 const BANDAI_24C02_NVRAM_SIZE = 0x100;
+const FFE_MAGIC_CARD_WRAM_SIZE = 0x8000;
 const SIGNATURE = [0x4e, 0x45, 0x53, 0x1a] as const;
 
 /** Immutable interpretation of an iNES or NES 2.0 header. */
@@ -120,6 +121,13 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       ...header,
       prgRamSize: 0,
       prgNvRamSize: BANDAI_24C02_NVRAM_SIZE,
+    });
+  }
+  if ([6, 8, 17].includes(header.mapperNumber)) {
+    return Object.freeze({
+      ...header,
+      prgRamSize: FFE_MAGIC_CARD_WRAM_SIZE,
+      prgNvRamSize: 0,
     });
   }
   let internalPrgBytes = 0;

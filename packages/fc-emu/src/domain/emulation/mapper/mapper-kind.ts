@@ -16,6 +16,7 @@ export const MapperKind = {
   Codemasters: "codemasters",
   Bandai74: "bandai-74",
   BandaiFcg: "bandai-fcg",
+  FfeMagicCard: "ffe-magic-card",
   Jaleco87: "jaleco-87",
   JalecoJf: "jaleco-jf",
   JalecoSs8806: "jaleco-ss8806",

@@ -10,6 +10,8 @@ import { CodemastersMapper } from "./codemasters-mapper.js";
 import { ColorDreamsMapper } from "./color-dreams-mapper.js";
 import { CpromMapper } from "./cprom-mapper.js";
 import { Ej0061Mapper } from "./ej-006-1-mapper.js";
+import { findFfeMagicCardBoard, type FfeMagicCardBoard } from "./ffe-magic-card-board.js";
+import { FfeMagicCardMapper } from "./ffe-magic-card-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
@@ -91,6 +93,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWritableChrSize(cartridge, 0x2000);
       requireMmc3PrgRam(cartridge);
       return new Mmc3Mapper(interruptPort, cartridge);
+    case 6:
+    case 8:
+    case 17: {
+      const board = resolveFfeMagicCardBoard(cartridge);
+      requireFfeMagicCardLayout(cartridge, board);
+      return new FfeMagicCardMapper(interruptPort, cartridge, board);
+    }
     case 7:
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x80_000, 0);
@@ -482,6 +491,33 @@ function requireBandaiFcgMemory(cartridge: Cartridge, board: BandaiFcgBoard): vo
   }
 }
 
+function requireFfeMagicCardLayout(cartridge: Cartridge, board: FfeMagicCardBoard): void {
+  const minimumPrgBytes = board.hasSuperMagicCardFeatures
+    ? 0x8000
+    : board.initialLatchMode === 2 || board.initialLatchMode === 3
+      ? 0x40_000
+      : 0x20_000;
+  if (
+    cartridge.prgRom.byteLength < minimumPrgBytes ||
+    cartridge.prgRom.byteLength > board.prgMemoryBytes
+  ) {
+    throw configurationError(
+      cartridge,
+      `FFE ${board.id} PRG image must be ${formatBytes(minimumPrgBytes)}-${formatBytes(board.prgMemoryBytes)}`,
+    );
+  }
+  if (cartridge.chrMemoryBytes > board.chrMemoryBytes) {
+    throw configurationError(
+      cartridge,
+      `FFE ${board.id} CHR initialization cannot exceed ${formatBytes(board.chrMemoryBytes)}`,
+    );
+  }
+  if (cartridge.prgRamBytes !== 0x8000 || cartridge.prgNvRamBytes !== 0) {
+    throw configurationError(cartridge, "FFE RAM cartridges require 32 KiB of volatile WRAM");
+  }
+  requireTwoScreenNametables(cartridge, `FFE ${board.id}`);
+}
+
 function requireVrc24Memory(cartridge: Cartridge, board: Vrc24Board): void {
   requireDirectPrgRam(cartridge);
   const bytes = cartridge.prgWritableBytes;
@@ -618,6 +654,18 @@ function resolveBandaiFcgBoard(cartridge: Cartridge): BandaiFcgBoard {
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }
+}
+
+function resolveFfeMagicCardBoard(cartridge: Cartridge): FfeMagicCardBoard {
+  const board = findFfeMagicCardBoard(
+    cartridge.mapperNumber,
+    cartridge.format,
+    cartridge.submapperNumber,
+  );
+  if (!board) {
+    throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+  return board;
 }
 
 function resolveVrc24Board(cartridge: Cartridge): Vrc24Board {

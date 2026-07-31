@@ -22,8 +22,9 @@ constructor is private. It runs a fixed pipeline:
    `CARTRIDGE_HEADER_SIZE` (16): optional 512-byte trainer, then PRG ROM, then CHR ROM. Each slice
    is bounds-checked against `arrayBuffer.byteLength` and raises a distinct incompleteness error if
    the file is truncated.
-4. The private constructor allocates `CartridgeMemory` from the header's four RAM sizes, copies the
-   trainer into PRG memory when present, and freezes the derived board facts.
+4. The private constructor allocates `CartridgeMemory` from the header's four RAM sizes, retains an
+   immutable trainer copy, performs the default PRG-memory initialization when applicable, and
+   freezes the derived board facts.
 
 Body layout and the errors raised when a region is truncated:
 
@@ -33,19 +34,22 @@ Body layout and the errors raised when a region is truncated:
 | PRG ROM | always (size > 0 enforced) | `header.prgRomSize`            | `INCOMPLETE_PRG_ROM` |
 | CHR ROM | `header.chrRomSize > 0`    | `header.chrRomSize`            | `INCOMPLETE_CHR_ROM` |
 
-When present, the trainer is copied into PRG memory at `TRAINER_RAM_OFFSET` (`0x1000`) via
-`memory.initializePrg`, i.e. offset `0x1000` inside the `$6000`-based PRG RAM window, matching the
-CPU `$7000-$71FF` load address. CHR ROM absent leaves `chrRom` as a zero-length array, and CHR
-accesses then fall through to writable CHR memory.
+By default, the trainer is copied into PRG memory at `TRAINER_RAM_OFFSET` (`0x1000`) via
+`memory.initializePrg`, i.e. offset `0x1000` inside the `$6000`-based PRG RAM window, matching CPU
+`$7000-$71FF`. FFE RAM-card mappers 6/8/17 defer initialization to their board owner because mapper
+17 can relocate the trainer into scratch RAM and both families attach cold-start execution
+semantics. The aggregate exposes only `trainerByteLength` and bounds-checked `readTrainer(index)`;
+the mapper never receives a mutable trainer array. CHR ROM absent leaves `chrRom` as a zero-length
+array, and CHR accesses then fall through to writable CHR memory.
 
 ### Derived aggregate facts
 
 The constructor exposes the following read-only fields (all `readonly` except `mirroringMode`, which
 mappers may reassign at runtime): `format`, `mapperNumber`, `submapperNumber`, `timingMode`,
 `mirroringMode`, `hasBatteryBackup`, `hasWritableChrMemory`, and the four RAM sizes
-`prgRamBytes`/`prgNvRamBytes`/`chrRamBytes`/`chrNvRamBytes`. `hasBatteryBackup` is true when
-`CartridgeMemory` holds any NVRAM; `hasWritableChrMemory` is true when the CHR address space is
-non-empty.
+`prgRamBytes`/`prgNvRamBytes`/`chrRamBytes`/`chrNvRamBytes`, plus `trainerByteLength`.
+`hasBatteryBackup` is true when `CartridgeMemory` holds any NVRAM; `hasWritableChrMemory` is true
+when the CHR address space is non-empty.
 
 ## Header parsing
 
@@ -136,10 +140,11 @@ one of ROM, volatile RAM, or NVRAM.
 `Uint8Array` regions sized from the header. It never returns a reference to a backing array; all
 access goes through index-based accessors, and the frozen `layout` records the four sizes.
 
-`applyBoardMemoryPolicy` first replaces unrepresentable Taito ASIC capacities with physical sizes:
-128 bytes for mapper 80's X1-005 and 5 KiB for mapper 82's X1-017. They then use the same
-`CartridgeMemory` ownership, power-loss and battery snapshot paths as ordinary PRG memory; the
-mapper alone owns address decoding and protection keys.
+`applyBoardMemoryPolicy` replaces header-generic capacities with physical board sizes when the
+format cannot express them faithfully: 32 KiB volatile work RAM for FFE mappers 6/8/17, 128 bytes
+for mapper 80's X1-005, and 5 KiB for mapper 82's X1-017. They then use the same `CartridgeMemory`
+ownership, power-loss and battery snapshot paths as ordinary PRG memory; the mapper alone owns
+address decoding and protection keys.
 
 | Region           | Backing field | Volatile | In battery save | Cleared by `powerOn` | Logical space (order) |
 | ---------------- | ------------- | -------- | --------------- | -------------------- | --------------------- |

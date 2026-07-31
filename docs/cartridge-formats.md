@@ -15,7 +15,7 @@ execution.
 | Console             | Standard NES/Famicom                              | Standard NES/Famicom                     |
 | PRG writable memory | Direct or board-implied internal memory           | Direct, MMC1-banked or board-implied     |
 | CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied | Explicit CHR RAM or CHR NVRAM            |
-| Trainer             | Loaded at CPU `$7000-$71FF`                       | Loaded at CPU `$7000-$71FF`              |
+| Trainer             | Default `$7000`; mapper-owned loader exceptions   | Default plus mapper/submapper exceptions |
 | Miscellaneous ROMs  | Not encoded                                       | None                                     |
 | Default expansion   | Legacy/default                                    | Unspecified or standard controllers      |
 
@@ -35,6 +35,12 @@ the battery flag decides whether those bytes are volatile or persistent. NES 2.0
 declare the exact 128 bytes. Mapper 82 always normalizes to the X1-017's physical 5 KiB NVRAM,
 because neither header format can encode that capacity exactly; mapper creation additionally
 requires the battery flag.
+
+Mapper 6/8/17 images are extracted FFE copier-card memory, so their PRG/CHR payload initializes
+mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.
+Battery declarations are rejected. Their optional trainer is a loader entry rather than passive
+generic initialization: mapper 6/8 loads `$7000-$71FF`, cold-calls `$7003` and returns to the reset
+vector; mapper 17 submappers 0-3 load and cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`.
 
 These rules follow the NES 2.0 distinction between volatile/non-volatile PRG and CHR fields and the
 documented [MMC1 board wiring](https://www.nesdev.org/wiki/MMC1). Declared capacity is accepted only
@@ -56,6 +62,10 @@ for fixed-PRG SEROM/SHROM/SH1ROM. For Mapper 2, 3 and 7, submapper 1 selects no 
 submapper 2 selects AND-type bus conflicts. Other submappers are rejected. Mapper 0 and 4 currently
 accept only submapper 0. Mapper 34 submapper 1 selects NINA-001 and submapper 2 selects BNROM;
 submapper 0 chooses exactly one board from CHR geometry instead of exposing both register sets.
+Mapper 6 NES 2.0 submappers 0-7 select the initial Magic Card latch mode; legacy mapper 6 means mode
+
+1. Mapper 8 is its mode-4 synonym and accepts submapper 0. Mapper 17 accepts submappers 0-3 solely
+   for the trainer relocation described above.
 
 This policy keeps parser completeness separate from emulation claims: understanding a header field
 does not imply that the corresponding hardware is silently approximated.
@@ -75,7 +85,8 @@ codes and body layout are documented in [Cartridge subsystem](./subsystems/cartr
 
 - VS System, PlayChoice-10 and extended console types.
 - Miscellaneous ROM payloads and non-standard default expansion devices.
-- Mapper-internal EEPROM/battery memory outside the explicit Taito X1-005/X1-017 policies.
+- Mapper-internal EEPROM/battery memory outside the explicit Bandai FCG and Taito X1-005/X1-017
+  policies.
 - Simultaneous CHR ROM and writable CHR memory outside TQROM, or simultaneous CHR RAM and CHR
   NVRAM.
 - Unknown submappers and geometries with unreachable declared memory.

@@ -27,6 +27,7 @@ class Cartridge {
   readonly prgRom: Uint8Array;
   readonly chrRom: Uint8Array;
   private readonly memory: CartridgeMemory;
+  private readonly trainer: Uint8Array;
 
   readonly format: CartridgeFormat;
   readonly mapperNumber: number;
@@ -79,6 +80,7 @@ class Cartridge {
   ) {
     this.prgRom = prgRom;
     this.chrRom = chrRom;
+    this.trainer = trainer?.slice() ?? new Uint8Array(0);
     this.prgRamBytes = header.prgRamSize;
     this.prgNvRamBytes = header.prgNvRamSize;
     this.chrRamBytes = header.chrRamSize;
@@ -89,7 +91,9 @@ class Cartridge {
       chrRamBytes: this.chrRamBytes,
       chrNvRamBytes: this.chrNvRamBytes,
     });
-    if (trainer) this.memory.initializePrg(TRAINER_RAM_OFFSET, trainer);
+    if (trainer && ![6, 8, 17].includes(header.mapperNumber)) {
+      this.memory.initializePrg(TRAINER_RAM_OFFSET, trainer);
+    }
 
     this.format = header.format;
     this.mapperNumber = header.mapperNumber;
@@ -110,6 +114,14 @@ class Cartridge {
 
   get chrWritableBytes(): number {
     return this.memory.chrAddressSpaceBytes;
+  }
+
+  get trainerByteLength(): number {
+    return this.trainer.byteLength;
+  }
+
+  readTrainer(index: number): number {
+    return this.trainer[index] ?? 0;
   }
 
   readPrgRam(index: number): number {

@@ -64,6 +64,34 @@ export type MapperState =
         readonly previousSda: number;
       } | null;
     }
+  | {
+      readonly kind: "ffe-magic-card";
+      readonly board: "magic-card-6" | "magic-card-8" | "super-magic-card";
+      readonly prgBanks: readonly number[];
+      readonly chrRegisters: readonly number[];
+      readonly latchMode: number;
+      readonly latchValue: number;
+      readonly prgWriteProtected: boolean;
+      readonly twoScreenMirroring: boolean;
+      readonly mirroringSetting: boolean;
+      readonly bankingMode: "latch" | "2m" | "4m";
+      readonly bankingModeAddressBits: number;
+      readonly chr8kBank: number;
+      readonly superMode: number;
+      readonly latch0Fe: boolean;
+      readonly latch1Fe: boolean;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly a12High: boolean;
+      readonly fdsIrqDivider: number;
+      readonly fdsIrqEnabled: boolean;
+      readonly fdsIrqPending: boolean;
+      readonly mirroring: number;
+      readonly scratchRam: Uint8Array;
+      readonly prgMemory: Uint8Array;
+      readonly chrMemory: Uint8Array;
+    }
   | { readonly kind: "jaleco-87"; readonly selectedChrBank: number }
   | {
       readonly kind: "jaleco-jf";
@@ -324,6 +352,15 @@ export interface Mapper {
   captureState(): MapperState;
 
   restoreState(state: MapperState): void;
+
+  /**
+   * Optional cold-boot interception performed by an external cartridge loader.
+   *
+   * `returnsToResetVector` models a loader calling a trainer subroutine; false
+   * models a direct jump. Warm reset always uses the normal CPU reset vector.
+   */
+  powerOnCpuEntry?():
+    { readonly address: number; readonly returnsToResetVector: boolean } | undefined;
 
   read(address: number): number;
 

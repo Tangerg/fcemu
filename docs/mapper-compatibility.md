@@ -16,12 +16,15 @@ describes evidence maturity rather than a runtime feature flag.
 | 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                |
 | 3      | CNROM          | Implemented | PRG/CHR/conflict/oversize tests; facade smoke                  |
 | 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned  |
+| 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture          |
 | 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned      |
+| 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture    |
 | 9      | MMC2/PxROM     | Implemented | Unit tests; full-address sprite/read-order integration tests   |
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM              |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM        |
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture      |
+| 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture          |
 | 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture       |
 | 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture       |
 | 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture     |
@@ -86,6 +89,11 @@ Mapper 16 accepts submapper 0 for legacy unspecified FCG/LZ93D50 images, submapp
 FCG-1/2 and submapper 5 for high-range LZ93D50 with no EEPROM or a 256-byte 24C02. Deprecated
 submappers 1-3 are rejected in favor of their current mapper IDs 159, 157 and 153.
 
+Mapper 6 accepts NES 2.0 submappers 0-7 as the exact initial Magic Card latch mode; legacy iNES
+mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper 0. Mapper 17 accepts
+submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
+`$5F00`.
+
 Mappers 21/23/25 accept submapper 0 as the historical VRC4 compatibility superset with both
 non-overlapping CPU-address pin routes. Their exact NES 2.0 variants are mapper 21 submappers 1/2
 (VRC4a/c), mapper 23 submappers 1/2/3 (VRC4f/e and VRC2b), and mapper 25 submappers 1/2/3
@@ -118,6 +126,16 @@ submappers remain rejected rather than infer nonexistent boards.
   out of scope.
 - Mapper 4 implements the MMC3 `$A001` PRG-RAM enable and write-protect bits. MMC6 remains excluded
   by its NES 2.0 submapper and different split protection scheme.
+- Mappers 6/8/17 follow their current NESdev disk-extraction definitions rather than the obsolete
+  FFE ASIC approximations found in older emulator tables. The iNES PRG/CHR payload initializes
+  mutable card RAM, and each board owns exactly 32 KiB of volatile work RAM with no battery-backed
+  storage. Magic Card supports its latch modes, PRG write protection, mirroring and FDS-compatible
+  periodic data IRQ. Super Magic Card adds four 8 KiB PRG windows, eight 1 KiB CHR windows, optional
+  CHR-backed nametables/MMC4 latches, four work-RAM banks and a 16-bit M2/PPU-A12 IRQ. An optional
+  trainer is a hardware loader entry: mapper 6 calls `$7003` and returns to the reset vector, while
+  mapper 17 cold-starts directly at its submapper-selected address. This support executes extracted
+  play-mode images; the external BIOS/FDC, parallel transfer interface, copier GUI and cartridge
+  pass-through used to create those images are not modeled.
 - Mapper 34 never combines its unrelated register sets. Legacy CHR ROM above 8 KiB selects
   NINA-001; CHR RAM or at most 8 KiB CHR ROM selects BNROM. NINA-001 maps its `$7FFD-$7FFF`
   registers over 8 KiB PRG RAM. BNROM applies original-board AND bus conflicts; NES 2.0 submapper 2

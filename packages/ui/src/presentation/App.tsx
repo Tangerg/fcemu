@@ -132,12 +132,17 @@ export function App({ createApplication }: AppProps) {
   return (
     <main className="workbench">
       <header className="hero enter-one">
-        <div className="eyebrow">
-          <span className="signal" />
-          FC / NES EMULATION LAB
+        <div className="hero-copy">
+          <div className="eyebrow">
+            <span className="signal" />
+            FC / NES EMULATION LAB
+          </div>
+          <h1>把红白机，装进浏览器。</h1>
         </div>
-        <h1>把一台红白机，装进浏览器。</h1>
-        <p>平台无关的模拟器核心，配上一层克制的浏览器工作台。</p>
+        <p>
+          <span>LOCAL RUNTIME</span>
+          ROM 只在本机读取
+        </p>
       </header>
 
       <section
@@ -147,7 +152,10 @@ export function App({ createApplication }: AppProps) {
       >
         <div className="screen-shell">
           <div className="screen-header">
-            <span>{snapshot.rom?.name ?? snapshot.pendingRomName ?? "NO CARTRIDGE"}</span>
+            <span className="cartridge-name">
+              <i aria-hidden="true" data-active={isRunning || undefined} />
+              {snapshot.rom?.name ?? snapshot.pendingRomName ?? "NO CARTRIDGE"}
+            </span>
             <output
               className={`status status-${snapshot.status}`}
               aria-live="polite"
@@ -172,66 +180,32 @@ export function App({ createApplication }: AppProps) {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="control-panel">
-          <div className="metrics" aria-label="运行统计">
-            <Metric label="FRAME" value={snapshot.frameCount.toLocaleString()} />
-            <Metric label="CPU CYCLES" value={snapshot.cpuCycles.toLocaleString()} />
-            <Metric label="MAPPER" value={snapshot.rom ? formatMapperLabel(snapshot.rom) : "—"} />
-            <Metric
-              label="FPS ACT / TARGET"
+          <div className="screen-rail" aria-label="当前运行信息">
+            <ScreenFact
+              label="MAPPER"
+              value={snapshot.rom ? formatMapperLabel(snapshot.rom) : "—"}
+            />
+            <ScreenFact label="REGION" value={snapshot.rom?.consoleRegion.toUpperCase() ?? "—"} />
+            <ScreenFact
+              label="FPS"
               value={`${formatRate(diagnostics.actualFrameRateHz)} / ${formatRate(
                 diagnostics.targetFrameRateHz,
               )}`}
             />
-            <Metric
-              label="AUDIO MS RING / QUEUE"
-              value={`${formatAudioMilliseconds(
-                diagnostics.audio.bufferedSamples,
-                diagnostics.audio.sampleRate,
-              )} / ${formatAudioMilliseconds(
-                diagnostics.audio.pendingSamples,
-                diagnostics.audio.sampleRate,
-              )}`}
-            />
-            <Metric
-              label="XRUN / DROPPED"
-              value={`${diagnostics.audio.underruns} / ${diagnostics.audio.droppedSamples}`}
-            />
           </div>
+        </div>
 
-          <fieldset className="region-control">
-            <legend>
-              <span>EXECUTION REGION</span>
-              <strong>ACTIVE {snapshot.rom?.consoleRegion.toUpperCase() ?? "—"}</strong>
-            </legend>
-            <div className="region-options">
-              {REGION_PREFERENCES.map((preference) => (
-                <button
-                  key={preference}
-                  className="region-option"
-                  type="button"
-                  value={preference}
-                  disabled={
-                    snapshot.rom?.consoleType === 1 &&
-                    preference !== "auto" &&
-                    preference !== "ntsc"
-                  }
-                  aria-pressed={snapshot.regionPreference === preference}
-                  onClick={(event) =>
-                    runApplicationAction((application) =>
-                      application.setRegionPreference(
-                        parseRegionPreference(event.currentTarget.value),
-                      ),
-                    )
-                  }
-                >
-                  {preference.toUpperCase()}
-                </button>
-              ))}
+        <div className="control-panel">
+          <div className="panel-heading">
+            <div>
+              <span>CONTROL DECK</span>
+              <strong>主机控制台</strong>
             </div>
-          </fieldset>
+            <span className="power-indicator" data-active={canToggle || undefined}>
+              <i aria-hidden="true" />
+              {canToggle ? "POWER" : "OFF"}
+            </span>
+          </div>
 
           {snapshot.error && (
             <p className="error-message" role="alert">
@@ -262,8 +236,16 @@ export function App({ createApplication }: AppProps) {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
-              <span className="picker-title">{canToggle ? "更换 ROM" : "选择 ROM"}</span>
-              <span className="picker-hint">或拖放 .nes 文件到这里</span>
+              <span className="picker-icon" aria-hidden="true">
+                ↳
+              </span>
+              <span className="picker-copy">
+                <span className="picker-title">{canToggle ? "更换游戏卡带" : "插入游戏卡带"}</span>
+                <span className="picker-hint">选择或拖放 .nes 文件</span>
+              </span>
+              <span className="picker-action" aria-hidden="true">
+                浏览
+              </span>
             </button>
 
             <button
@@ -336,79 +318,142 @@ export function App({ createApplication }: AppProps) {
                 取出卡带
               </button>
             </div>
-            <div className="quick-save-slots" aria-label="快速存档槽位">
-              {QUICK_SAVE_SLOTS.map((slot) => {
-                const isSelected = snapshot.selectedQuickSaveSlot === slot;
-                const hasSave = snapshot.quickSaveSlots.includes(slot);
-                return (
+
+            <section className="panel-section save-section" aria-labelledby="save-section-title">
+              <SectionHeading id="save-section-title" label="QUICK SAVE" title="快速存档" />
+              <div className="quick-save-slots" aria-label="快速存档槽位">
+                {QUICK_SAVE_SLOTS.map((slot) => {
+                  const isSelected = snapshot.selectedQuickSaveSlot === slot;
+                  const hasSave = snapshot.quickSaveSlots.includes(slot);
+                  return (
+                    <button
+                      key={slot}
+                      className="quick-save-slot"
+                      type="button"
+                      aria-label={`槽位 ${slot}${hasSave ? "，已有存档" : "，空"}`}
+                      aria-pressed={isSelected}
+                      data-saved={hasSave || undefined}
+                      disabled={!canToggle}
+                      onClick={() =>
+                        runApplicationAction((application) => application.selectQuickSaveSlot(slot))
+                      }
+                    >
+                      <span>SLOT {slot}</span>
+                      <i aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="state-actions" aria-label="快速存档操作">
+                <button
+                  className="state-button"
+                  type="button"
+                  disabled={!canToggle}
+                  onClick={() =>
+                    runApplicationAction((application) => application.quickSaveCurrentState())
+                  }
+                >
+                  <span aria-hidden="true">◇</span>
+                  {hasQuickSave ? "覆盖槽位" : "保存槽位"}
+                </button>
+                <button
+                  className="state-button"
+                  type="button"
+                  disabled={!canToggle || !hasQuickSave}
+                  onClick={() =>
+                    runApplicationAction((application) => application.quickLoadCurrentState())
+                  }
+                >
+                  <span aria-hidden="true">↶</span>
+                  读取槽位
+                </button>
+                <button
+                  className="state-button state-button-danger"
+                  type="button"
+                  disabled={!canToggle || !hasQuickSave}
+                  aria-label={`${
+                    quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
+                      ? "确认清空"
+                      : "清空"
+                  }槽位 ${snapshot.selectedQuickSaveSlot}`}
+                  data-confirm={
+                    quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot || undefined
+                  }
+                  onBlur={() => setQuickSaveRemovalConfirmation(undefined)}
+                  onClick={handleQuickSaveRemoval}
+                >
+                  <span aria-hidden="true">×</span>
+                  <span aria-live="polite">
+                    {quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
+                      ? "确认清空"
+                      : "清空槽位"}
+                  </span>
+                </button>
+              </div>
+            </section>
+
+            <fieldset className="region-control">
+              <legend>
+                <span>EXECUTION REGION</span>
+                <strong>ACTIVE {snapshot.rom?.consoleRegion.toUpperCase() ?? "—"}</strong>
+              </legend>
+              <div className="region-options">
+                {REGION_PREFERENCES.map((preference) => (
                   <button
-                    key={slot}
-                    className="quick-save-slot"
+                    key={preference}
+                    className="region-option"
                     type="button"
-                    aria-label={`槽位 ${slot}${hasSave ? "，已有存档" : "，空"}`}
-                    aria-pressed={isSelected}
-                    data-saved={hasSave || undefined}
-                    disabled={!canToggle}
-                    onClick={() =>
-                      runApplicationAction((application) => application.selectQuickSaveSlot(slot))
+                    value={preference}
+                    disabled={
+                      snapshot.rom?.consoleType === 1 &&
+                      preference !== "auto" &&
+                      preference !== "ntsc"
+                    }
+                    aria-pressed={snapshot.regionPreference === preference}
+                    onClick={(event) =>
+                      runApplicationAction((application) =>
+                        application.setRegionPreference(
+                          parseRegionPreference(event.currentTarget.value),
+                        ),
+                      )
                     }
                   >
-                    <span>SLOT {slot}</span>
-                    <i aria-hidden="true" />
+                    {preference.toUpperCase()}
                   </button>
-                );
-              })}
-            </div>
-            <div className="state-actions" aria-label="快速存档操作">
-              <button
-                className="state-button"
-                type="button"
-                disabled={!canToggle}
-                onClick={() =>
-                  runApplicationAction((application) => application.quickSaveCurrentState())
-                }
-              >
-                <span aria-hidden="true">◇</span>
-                {hasQuickSave ? "覆盖槽位" : "保存槽位"}
-              </button>
-              <button
-                className="state-button"
-                type="button"
-                disabled={!canToggle || !hasQuickSave}
-                onClick={() =>
-                  runApplicationAction((application) => application.quickLoadCurrentState())
-                }
-              >
-                <span aria-hidden="true">↶</span>
-                读取槽位
-              </button>
-              <button
-                className="state-button state-button-danger"
-                type="button"
-                disabled={!canToggle || !hasQuickSave}
-                aria-label={`${
-                  quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
-                    ? "确认清空"
-                    : "清空"
-                }槽位 ${snapshot.selectedQuickSaveSlot}`}
-                data-confirm={
-                  quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot || undefined
-                }
-                onBlur={() => setQuickSaveRemovalConfirmation(undefined)}
-                onClick={handleQuickSaveRemoval}
-              >
-                <span aria-hidden="true">×</span>
-                <span aria-live="polite">
-                  {quickSaveRemovalConfirmation === snapshot.selectedQuickSaveSlot
-                    ? "确认清空"
-                    : "清空槽位"}
-                </span>
-              </button>
-            </div>
-            <p id="controller-help" className="controls-hint">
-              {snapshot.rom?.consoleType === 1 && "VS：使用“投币”添加游戏点数 · "}
-              P1：WASD 移动 · J / K 操作 · Enter 开始 · Space 选择 · P2：方向键移动 · 0 / 1 操作
-            </p>
+                ))}
+              </div>
+            </fieldset>
+
+            <details className="diagnostics">
+              <summary>
+                <span>运行诊断</span>
+                <strong>
+                  {snapshot.frameCount.toLocaleString()} F ·{" "}
+                  {formatRate(diagnostics.actualFrameRateHz)}
+                  FPS
+                </strong>
+              </summary>
+              <div className="metrics" aria-label="运行统计">
+                <Metric label="FRAME" value={snapshot.frameCount.toLocaleString()} />
+                <Metric label="CPU CYCLES" value={snapshot.cpuCycles.toLocaleString()} />
+                <Metric
+                  label="AUDIO MS RING / QUEUE"
+                  value={`${formatAudioMilliseconds(
+                    diagnostics.audio.bufferedSamples,
+                    diagnostics.audio.sampleRate,
+                  )} / ${formatAudioMilliseconds(
+                    diagnostics.audio.pendingSamples,
+                    diagnostics.audio.sampleRate,
+                  )}`}
+                />
+                <Metric
+                  label="XRUN / DROPPED"
+                  value={`${diagnostics.audio.underruns} / ${diagnostics.audio.droppedSamples}`}
+                />
+              </div>
+            </details>
+
+            <ControllerGuide isVsSystem={snapshot.rom?.consoleType === 1} />
           </div>
         </div>
       </section>
@@ -430,6 +475,74 @@ function Metric({ label, value }: { readonly label: string; readonly value: stri
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function ScreenFact({ label, value }: { readonly label: string; readonly value: string }) {
+  return (
+    <div className="screen-fact">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function SectionHeading({
+  id,
+  label,
+  title,
+}: {
+  readonly id: string;
+  readonly label: string;
+  readonly title: string;
+}) {
+  return (
+    <div className="section-heading" id={id}>
+      <span>{label}</span>
+      <strong>{title}</strong>
+    </div>
+  );
+}
+
+function ControllerGuide({ isVsSystem }: { readonly isVsSystem: boolean }) {
+  return (
+    <section id="controller-help" className="controller-guide" aria-label="键盘操作">
+      <div className="controller-guide-heading">
+        <span>KEYBOARD</span>
+        <strong>双人键位</strong>
+      </div>
+      <div className="controller-player">
+        <b>P1</b>
+        <span>
+          <kbd>WASD</kbd> 移动
+        </span>
+        <span>
+          <kbd>J</kbd> A
+        </span>
+        <span>
+          <kbd>K</kbd> B
+        </span>
+        <span>
+          <kbd>Enter</kbd> 开始
+        </span>
+        <span>
+          <kbd>Space</kbd> 选择
+        </span>
+      </div>
+      <div className="controller-player">
+        <b>P2</b>
+        <span>
+          <kbd>方向键</kbd> 移动
+        </span>
+        <span>
+          <kbd>0</kbd> A
+        </span>
+        <span>
+          <kbd>1</kbd> B
+        </span>
+      </div>
+      {isVsSystem && <p>VS 模式使用“投币”按钮添加游戏点数。</p>}
+    </section>
   );
 }
 

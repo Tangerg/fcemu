@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { ControllerButton } from "@fcemu/core";
+import type { EmulatorSaveState } from "@fcemu/core";
 import { CoreEmulatorFactory } from "./core-emulator-adapter.js";
 
 describe("CoreEmulatorFactory", () => {
@@ -24,6 +26,19 @@ describe("CoreEmulatorFactory", () => {
     );
 
     expect(runtime.cartridge.consoleRegion).toBe("dendy");
+  });
+
+  it("preserves A and B semantics at the core boundary", () => {
+    const runtime = factory.create(
+      { id: "controller", name: "controller.nes", bytes: createLegacyRom("ntsc") },
+      "auto",
+    );
+
+    runtime.setControllerButton(1, "a", true);
+    const state = runtime.captureSaveState().data as EmulatorSaveState;
+
+    expect(state.state.controller1.buttons[ControllerButton.A]).toBe(true);
+    expect(state.state.controller1.buttons[ControllerButton.B]).toBe(false);
   });
 
   it("keeps core save-state details opaque while preserving deterministic continuation", () => {

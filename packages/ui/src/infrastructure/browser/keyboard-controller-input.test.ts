@@ -5,6 +5,27 @@ import { KeyboardControllerInput } from "./keyboard-controller-input.js";
 afterEach(() => vi.unstubAllGlobals());
 
 describe("KeyboardControllerInput", () => {
+  it("maps J to A and K to B for player one", () => {
+    const keyboard = new TestKeyboardTarget();
+    vi.stubGlobal("window", keyboard);
+    const listener = vi.fn<(event: ControllerInputEvent) => void>();
+    const unsubscribe = new KeyboardControllerInput().subscribe(listener);
+
+    key(keyboard, "keydown", "KeyJ");
+    key(keyboard, "keydown", "KeyK");
+    key(keyboard, "keyup", "KeyJ");
+    key(keyboard, "keyup", "KeyK");
+
+    expect(listener.mock.calls.map(([event]) => event)).toEqual([
+      { player: 1, button: "a", pressed: true },
+      { player: 1, button: "b", pressed: true },
+      { player: 1, button: "a", pressed: false },
+      { player: 1, button: "b", pressed: false },
+    ]);
+
+    unsubscribe();
+  });
+
   it("maps separate keyboard controls to player one and player two", () => {
     const keyboard = new TestKeyboardTarget();
     vi.stubGlobal("window", keyboard);

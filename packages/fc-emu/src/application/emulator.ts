@@ -11,7 +11,7 @@ import type { EmulatorOutputPorts, VideoFrame } from "./ports/emulator-output.js
 import { createRomIdentity } from "../domain/model/rom-identity.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
-const SAVE_STATE_VERSION = 14;
+const SAVE_STATE_VERSION = 15;
 
 export interface CartridgeInfo {
   readonly format: CartridgeFormat;
@@ -28,6 +28,8 @@ export interface CartridgeInfo {
   readonly prgNvRamBytes: number;
   readonly chrRamBytes: number;
   readonly chrNvRamBytes: number;
+  readonly mapperRamBytes: number;
+  readonly mapperNvRamBytes: number;
 }
 
 export interface FrameExecution {
@@ -93,6 +95,8 @@ export class Emulator {
       prgNvRamBytes: cartridge.prgNvRamBytes,
       chrRamBytes: cartridge.chrRamBytes,
       chrNvRamBytes: cartridge.chrNvRamBytes,
+      mapperRamBytes: cartridge.mapperRamBytes,
+      mapperNvRamBytes: cartridge.mapperNvRamBytes,
     });
 
     if (outputs.audio) {

@@ -20,6 +20,7 @@ export { CartridgeTimingMode, NametableMirroring } from "./cartridge-header.js";
 export type { CartridgeFormat } from "./cartridge-header.js";
 
 const MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000;
+const NAMCO_163_INTERNAL_RAM_SIZE = 0x80;
 const TRAINER_RAM_OFFSET = 0x1000;
 
 /** Cartridge ROM, writable memory and board-identifying metadata. */
@@ -40,6 +41,8 @@ class Cartridge {
   readonly prgNvRamBytes: number;
   readonly chrRamBytes: number;
   readonly chrNvRamBytes: number;
+  readonly mapperRamBytes: number;
+  readonly mapperNvRamBytes: number;
 
   static fromArrayBuffer(arrayBuffer: ArrayBuffer, sourceName = "ROM"): Cartridge {
     const header = parseCartridgeHeader(arrayBuffer, sourceName);
@@ -85,11 +88,16 @@ class Cartridge {
     this.prgNvRamBytes = header.prgNvRamSize;
     this.chrRamBytes = header.chrRamSize;
     this.chrNvRamBytes = header.chrNvRamSize;
+    const mapperMemoryBytes = header.mapperNumber === 19 ? NAMCO_163_INTERNAL_RAM_SIZE : 0;
+    this.mapperRamBytes = header.hasBatteryFlag ? 0 : mapperMemoryBytes;
+    this.mapperNvRamBytes = header.hasBatteryFlag ? mapperMemoryBytes : 0;
     this.memory = new CartridgeMemory({
       prgRamBytes: this.prgRamBytes,
       prgNvRamBytes: this.prgNvRamBytes,
       chrRamBytes: this.chrRamBytes,
       chrNvRamBytes: this.chrNvRamBytes,
+      mapperRamBytes: this.mapperRamBytes,
+      mapperNvRamBytes: this.mapperNvRamBytes,
     });
     if (trainer && ![6, 8, 17].includes(header.mapperNumber)) {
       this.memory.initializePrg(TRAINER_RAM_OFFSET, trainer);
@@ -148,6 +156,14 @@ class Cartridge {
     this.memory.writeChr(index, value);
   }
 
+  readMapperRam(index: number): number {
+    return this.memory.readMapper(index);
+  }
+
+  writeMapperRam(index: number, value: number): void {
+    this.memory.writeMapper(index, value);
+  }
+
   powerOn(): void {
     this.memory.powerOn();
   }
@@ -203,7 +219,12 @@ class Cartridge {
         "NVRAM requires the battery flag",
       );
     }
-    if (header.hasBatteryFlag && header.prgNvRamSize === 0 && header.chrNvRamSize === 0) {
+    if (
+      header.hasBatteryFlag &&
+      header.prgNvRamSize === 0 &&
+      header.chrNvRamSize === 0 &&
+      header.mapperNumber !== 19
+    ) {
       throw new CartridgeFormatError(
         "UNSUPPORTED_BATTERY_MEMORY",
         sourceName,
@@ -223,7 +244,11 @@ class Cartridge {
       }
     } else if (
       header.chrRamSize + header.chrNvRamSize > 0 &&
-      !(header.mapperNumber === 119 && header.chrRamSize > 0 && header.chrNvRamSize === 0)
+      !(
+        [19, 119].includes(header.mapperNumber) &&
+        header.chrRamSize > 0 &&
+        header.chrNvRamSize === 0
+      )
     ) {
       throw Cartridge.unsupportedRamLayout(
         sourceName,

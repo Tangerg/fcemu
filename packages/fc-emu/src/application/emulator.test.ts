@@ -41,6 +41,47 @@ describe("Emulator", () => {
       chrRomBytes: 0,
       chrRamBytes: 8192,
       chrNvRamBytes: 0,
+      mapperRamBytes: 0,
+      mapperNvRamBytes: 0,
+    });
+  });
+
+  it("persists mapper-owned Namco 163 RAM through the public battery-save port", () => {
+    const rom = createTestRom({
+      mapper: 19,
+      nes2: true,
+      submapper: 3,
+      prgBanks: 2,
+      chrBanks: 1,
+      battery: true,
+      prgNvRamShift: 0,
+      program: [
+        0xa9,
+        0x02,
+        0x8d,
+        0x00,
+        0xf8, // select internal RAM $02
+        0xa9,
+        0x5a,
+        0x8d,
+        0x00,
+        0x48, // write through the N163 data port
+        0x4c,
+        0x0a,
+        0x80,
+      ],
+    });
+    const emulator = Emulator.fromRom(rom);
+    emulator.runFrame();
+
+    expect(emulator.cartridge).toMatchObject({
+      mapperRamBytes: 0,
+      mapperNvRamBytes: 128,
+      hasBatteryBackup: true,
+    });
+    expect(emulator.captureBatterySave()).toMatchObject({
+      revision: 1,
+      data: expect.objectContaining({ length: 128, 2: 0x5a }),
     });
   });
 

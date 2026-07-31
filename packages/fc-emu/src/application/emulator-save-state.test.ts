@@ -97,6 +97,49 @@ describe("Emulator save states", () => {
     expect(runAndCapture(restored, 2)).toEqual(expected);
   });
 
+  it("restores Namco 163 mapper-owned NVRAM and data-port state as one transaction", () => {
+    const emulator = Emulator.fromRom(
+      createTestRom({
+        mapper: 19,
+        nes2: true,
+        submapper: 3,
+        prgBanks: 2,
+        chrBanks: 1,
+        battery: true,
+        prgNvRamShift: 0,
+        program: [
+          0xa9,
+          0x02,
+          0x8d,
+          0x00,
+          0xf8, // select internal RAM $02
+          0xad,
+          0x00,
+          0x48, // read
+          0x18, // clear carry
+          0x69,
+          0x01, // increment
+          0x8d,
+          0x00,
+          0x48, // write
+          0x4c,
+          0x05,
+          0x80,
+        ],
+      }),
+    );
+    emulator.runFrame();
+    const snapshot = emulator.captureSaveState();
+    const savedBattery = emulator.captureBatterySave();
+    if (!savedBattery) throw new Error("Expected Namco 163 battery save");
+
+    emulator.runFrame();
+    expect(emulator.captureBatterySave()?.revision).toBeGreaterThan(savedBattery.revision);
+    emulator.restoreSaveState(snapshot);
+
+    expect(emulator.captureBatterySave()).toEqual(savedBattery);
+  });
+
   it("captures and restores an in-flight sprite DMA transfer", () => {
     const emulator = Emulator.fromRom(
       createTestRom({
@@ -215,8 +258,8 @@ describe("Emulator save states", () => {
   it("rejects unknown state versions", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const snapshot = emulator.captureSaveState();
-    expect(snapshot.version).toBe(14);
-    const future = { ...snapshot, version: 15 } as unknown as EmulatorSaveState;
+    expect(snapshot.version).toBe(15);
+    const future = { ...snapshot, version: 16 } as unknown as EmulatorSaveState;
     expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
   });
 });

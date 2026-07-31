@@ -23,11 +23,11 @@ The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes neve
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
 MMC1 SOROM/SZROM may combine one 8 KiB volatile PRG region with one 8 KiB battery region; SUROM,
 SOROM, SXROM and SZROM bank selection follows the board wiring rather than concatenating capacities
-into the direct `$6000-$7FFF` window. TQROM is the one supported mixed-CHR exception: mapper 119
-selects 16–64 KiB CHR ROM or 8 KiB volatile CHR RAM per 1 KiB bank; legacy iNES implies that RAM and
-NES 2.0 declares it. Other simultaneous CHR RAM/NVRAM, CHR ROM plus writable CHR memory, and
-mapper-internal battery memory remain rejected unless an implemented ASIC defines the exact
-capacity and protection rules.
+into the direct `$6000-$7FFF` window. Two implemented ASICs define mixed CHR explicitly: mapper 119
+TQROM selects 16–64 KiB CHR ROM or 8 KiB volatile CHR RAM per 1 KiB bank, while mapper 19 Namco 163
+uses `$00-$DF` for ROM and `$E0-$FF` for up to 32 KiB RAM when CIRAM substitution is disabled.
+Other simultaneous CHR RAM/NVRAM, CHR ROM plus writable CHR memory, and mapper-internal battery
+memory remain rejected unless an implemented ASIC defines the exact capacity and protection rules.
 
 Taito X1 memory is a deliberate board-derived exception to the header's power-of-two units.
 Mapper 80 normalizes legacy iNES's generic 8 KiB RAM implication to the X1-005's 128 internal bytes;
@@ -41,6 +41,14 @@ mutable board RAM and their work RAM is normalized to the physical 32 KiB volati
 Battery declarations are rejected. Their optional trainer is a loader entry rather than passive
 generic initialization: mapper 6/8 loads `$7000-$71FF`, cold-calls `$7003` and returns to the reset
 vector; mapper 17 submappers 0-3 load and cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`.
+
+Mapper 19 derives the Namco 163 ASIC's 128-byte shared RAM independently from header PRG/CHR
+fields. The battery flag makes those bytes persistent even when the NES 2.0 PRG NVRAM field is
+zero. Optional external memory is absent or exactly 8 KiB; NES 2.0 must declare it as volatile PRG
+RAM without a battery or PRG NVRAM with one. Legacy iNES retains the conventional implicit 8 KiB
+external allocation because it cannot describe absence. Submapper 1 requires battery-backed
+internal RAM and no external WRAM; submappers 1/2 omit audio mixing, while 3/4/5 name the published
+N163 mix levels.
 
 The address-latch multicarts use board-exact geometry rather than arbitrary modulo banking. Mapper
 15 is 1 MiB PRG plus 8 KiB volatile CHR RAM. Mapper 225 accepts matched 1 MiB/512 KiB or 2 MiB/1 MiB
@@ -92,10 +100,10 @@ codes and body layout are documented in [Cartridge subsystem](./subsystems/cartr
 
 - VS System, PlayChoice-10 and extended console types.
 - Miscellaneous ROM payloads and non-standard default expansion devices.
-- Mapper-internal EEPROM/battery memory outside the explicit Bandai FCG and Taito X1-005/X1-017
-  policies.
-- Simultaneous CHR ROM and writable CHR memory outside TQROM, or simultaneous CHR RAM and CHR
-  NVRAM.
+- Mapper-internal EEPROM/battery memory outside the explicit Bandai FCG, Taito X1-005/X1-017 and
+  Namco 163 policies.
+- Simultaneous CHR ROM and writable CHR memory outside Namco 163/TQROM, or simultaneous CHR RAM and
+  CHR NVRAM.
 - Unknown submappers and geometries with unreachable declared memory.
 
 This list is a policy boundary, not a parser limitation.

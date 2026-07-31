@@ -27,6 +27,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture        |
 | 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture            |
 | 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture         |
+| 19     | Namco 129/163  | Implemented | CIRAM/WRAM/IRQ/shared-RAM/audio/state tests; no fixture          |
 | 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture         |
 | 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture       |
 | 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture      |
@@ -207,6 +208,18 @@ second register model.
   Legacy iNES cannot say that the optional RAM is absent and therefore keeps its conventional 8 KiB
   allocation; NES 2.0 can declare zero. Optional boards' external µPD7755/7756 sample-playback chip
   is not emulated.
+- Mapper 19 models the Namco 129/163 ASIC rather than treating chip RAM as ordinary PRG RAM. Three
+  switchable 8 KiB PRG banks precede a fixed tail; eight pattern and four nametable selectors can
+  address 1 KiB CHR banks or route CIRAM per slot. Mixed CHR ROM/RAM uses `$00-$DF` for ROM and
+  `$E0-$FF` for up to 32 KiB RAM when pattern-side CIRAM substitution is disabled. The four external
+  2 KiB WRAM regions have exact `$F800` write-protection bits, while reads remain visible. The
+  15-bit CPU-cycle IRQ saturates at `$7FFF`. Its shared 128-byte mapper RAM participates in power,
+  battery and version-15 full-state policy; the data-port address saturates rather than wrapping.
+  Audio services one of up to eight descending wavetable channels every 15 CPU cycles and retains
+  the held multiplexed output instead of averaging channels. Submappers 1/2 mute audio, while
+  3/4/5 select the documented board mix levels. Pin-44 diagnostic CHR data remains an explicit
+  evidence gap because its output encoding is not published; raw control state is retained without
+  invented behavior.
 - Mappers 21/22/23/25 share one VRC2/VRC4 register and banking owner, but `Vrc24Board` keeps every
   PCB's two register-select address lines immutable. Submapper 0 for 21/23/25 ORs the two
   historically combined, non-overlapping address routes and deliberately behaves as the VRC4

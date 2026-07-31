@@ -210,6 +210,54 @@ describe("Cartridge", () => {
     },
   );
 
+  it("owns Namco 163 chip RAM independently from optional external WRAM", () => {
+    const volatile = Cartridge.fromArrayBuffer(
+      createTestRom({
+        mapper: 19,
+        nes2: true,
+        prgBanks: 2,
+        chrBanks: 1,
+        submapper: 3,
+      }),
+    );
+    expect(volatile).toMatchObject({
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
+      mapperRamBytes: 128,
+      mapperNvRamBytes: 0,
+      hasBatteryBackup: false,
+    });
+    volatile.writeMapperRam(3, 0x41);
+    volatile.powerOn();
+    expect(volatile.readMapperRam(3)).toBe(0);
+
+    const persistent = Cartridge.fromArrayBuffer(
+      createTestRom({
+        mapper: 19,
+        nes2: true,
+        prgBanks: 2,
+        chrBanks: 1,
+        submapper: 3,
+        battery: true,
+        prgNvRamShift: 0,
+      }),
+    );
+    expect(persistent).toMatchObject({
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
+      mapperRamBytes: 0,
+      mapperNvRamBytes: 128,
+      hasBatteryBackup: true,
+    });
+    persistent.writeMapperRam(3, 0x52);
+    expect(persistent.captureBatterySave()).toMatchObject({
+      revision: 1,
+      data: expect.objectContaining({ length: 128, 3: 0x52 }),
+    });
+    persistent.powerOn();
+    expect(persistent.readMapperRam(3)).toBe(0x52);
+  });
+
   it("keeps mixed CHR ROM/RAM fail-closed outside TQROM", () => {
     expect(() =>
       Cartridge.fromArrayBuffer(
@@ -217,6 +265,23 @@ describe("Cartridge", () => {
         "mixed-chr.nes",
       ),
     ).toThrow(/simultaneous CHR ROM and writable CHR memory/);
+  });
+
+  it("represents Namco 163 mixed CHR ROM/RAM as separate physical memories", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({
+        mapper: 19,
+        nes2: true,
+        prgBanks: 2,
+        chrBanks: 2,
+        chrRamShift: 7,
+      }),
+    );
+    expect(cartridge).toMatchObject({
+      chrRom: expect.objectContaining({ length: 16_384 }),
+      chrRamBytes: 8192,
+      chrWritableBytes: 8192,
+    });
   });
 
   it("separates volatile PRG RAM from persistable PRG NVRAM", () => {

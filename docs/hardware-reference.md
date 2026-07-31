@@ -102,8 +102,9 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   address low byte; this is separate from the CPU-facing PPU register open-bus latch.
 - Cartridge wiring may drive CIRAM A10 from a CHR bank output instead of a global mirroring latch.
   Namco 3425 and TxSROM therefore select nametable memory per PPU address slot through current bank
-  registers. Sunsoft-4 can instead disable CIRAM and drive nametable reads from CHR ROM. TQROM
-  separately uses CHR bank bit 6 as ROM/RAM chip select.
+  registers. Namco 163 can additionally replace individual pattern-table banks with either CIRAM
+  page. Sunsoft-4 can instead disable CIRAM and drive nametable reads from CHR ROM. TQROM separately
+  uses CHR bank bit 6 as ROM/RAM chip select.
 - The PPU drives a physical `/NMI` level; the CPU edge detector samples it during its input phase and
   transfers the detected edge through a second polling latch. Vector selection is fixed before the
   interrupt status push, not immediately before the vector read.

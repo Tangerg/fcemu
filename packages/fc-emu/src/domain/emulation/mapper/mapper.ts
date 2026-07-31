@@ -233,6 +233,27 @@ export type MapperState =
       };
     }
   | {
+      readonly kind: "namco-163";
+      readonly audioLevel: "mute" | "12db" | "16.5db" | "18.75db";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly disableLowPatternCiram: boolean;
+      readonly disableHighPatternCiram: boolean;
+      readonly soundDisabled: boolean;
+      readonly pinControl: number;
+      readonly wramControl: number;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly audio: {
+        readonly address: number;
+        readonly autoIncrement: boolean;
+        readonly divider: number;
+        readonly nextChannel: number;
+        readonly output: number;
+      };
+    }
+  | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];
@@ -541,6 +562,15 @@ export interface Mapper {
    * multiplexed address/data pins rather than from a fabricated mapper byte.
    */
   ppuReadDriveMask?(address: number): number;
+
+  /**
+   * Optional pattern-table routing into the console's 2 KiB CIRAM.
+   *
+   * The returned index is used instead of cartridge CHR for this access.
+   * Namco 163 boards expose this physical substitution independently for
+   * each 1 KiB pattern bank.
+   */
+  mapPatternToCiramAddress?(address: number): number | undefined;
 
   /**
    * Optional cartridge-controlled CIRAM routing for one nametable access.

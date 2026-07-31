@@ -14,20 +14,25 @@ describe("CartridgeMemory", () => {
     expect(memory.captureSave()?.data[0]).toBe(0x22);
   });
 
-  it("combines PRG and CHR NVRAM into one immutable persistence snapshot", () => {
-    const memory = createMemory({ prgNvRamBytes: 2, chrNvRamBytes: 2 });
+  it("combines PRG, CHR and mapper NVRAM into one immutable persistence snapshot", () => {
+    const memory = createMemory({ prgNvRamBytes: 2, chrNvRamBytes: 2, mapperNvRamBytes: 2 });
     memory.writePrg(0, 0x10);
     memory.writeChr(1, 0x20);
+    memory.writeMapper(0, 0x30);
 
     const snapshot = memory.captureSave();
-    expect(snapshot).toMatchObject({ revision: 2, data: Uint8Array.of(0x10, 0, 0, 0x20) });
+    expect(snapshot).toMatchObject({
+      revision: 3,
+      data: Uint8Array.of(0x10, 0, 0, 0x20, 0x30, 0),
+    });
     if (!snapshot) throw new Error("Expected battery save");
     snapshot.data[0] = 0xff;
     expect(memory.readPrg(0)).toBe(0x10);
 
-    memory.restoreSave(Uint8Array.of(1, 2, 3, 4));
+    memory.restoreSave(Uint8Array.of(1, 2, 3, 4, 5, 6));
     expect(memory.readPrg(1)).toBe(2);
     expect(memory.readChr(0)).toBe(3);
+    expect(memory.readMapper(1)).toBe(6);
     expect(memory.captureSave()?.revision).toBe(0);
   });
 
@@ -45,7 +50,14 @@ describe("CartridgeMemory", () => {
   });
 
   it("owns an immutable validated copy of its memory layout", () => {
-    const layout = { prgRamBytes: 1, prgNvRamBytes: 0, chrRamBytes: 0, chrNvRamBytes: 0 };
+    const layout = {
+      prgRamBytes: 1,
+      prgNvRamBytes: 0,
+      chrRamBytes: 0,
+      chrNvRamBytes: 0,
+      mapperRamBytes: 0,
+      mapperNvRamBytes: 0,
+    };
     const memory = new CartridgeMemory(layout);
     layout.prgRamBytes = 2;
 
@@ -60,11 +72,15 @@ describe("CartridgeMemory", () => {
       prgNvRamBytes: 1,
       chrRamBytes: 1,
       chrNvRamBytes: 1,
+      mapperRamBytes: 1,
+      mapperNvRamBytes: 1,
     });
     memory.writePrg(0, 0x11);
     memory.writePrg(1, 0x12);
     memory.writeChr(0, 0x21);
     memory.writeChr(1, 0x22);
+    memory.writeMapper(0, 0x31);
+    memory.writeMapper(1, 0x32);
 
     memory.powerOn();
 
@@ -72,7 +88,9 @@ describe("CartridgeMemory", () => {
     expect(memory.readPrg(1)).toBe(0x12);
     expect(memory.readChr(0)).toBe(0);
     expect(memory.readChr(1)).toBe(0x22);
-    expect(memory.captureSave()).toMatchObject({ revision: 2 });
+    expect(memory.readMapper(0)).toBe(0);
+    expect(memory.readMapper(1)).toBe(0x32);
+    expect(memory.captureSave()).toMatchObject({ revision: 3 });
   });
 });
 
@@ -82,6 +100,8 @@ function createMemory(
     readonly prgNvRamBytes: number;
     readonly chrRamBytes: number;
     readonly chrNvRamBytes: number;
+    readonly mapperRamBytes: number;
+    readonly mapperNvRamBytes: number;
   }>,
 ): CartridgeMemory {
   return new CartridgeMemory({
@@ -89,6 +109,8 @@ function createMemory(
     prgNvRamBytes: 0,
     chrRamBytes: 0,
     chrNvRamBytes: 0,
+    mapperRamBytes: 0,
+    mapperNvRamBytes: 0,
     ...overrides,
   });
 }

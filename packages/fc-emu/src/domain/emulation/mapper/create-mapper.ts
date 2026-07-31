@@ -43,6 +43,7 @@ import {
   MAPPER_95_BOARD,
   Namco118Mapper,
 } from "./namco118-mapper.js";
+import { Namco163Mapper, type Namco163AudioLevel } from "./namco163-mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
 import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
@@ -166,6 +167,11 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireOptional8KiBPrgRam(cartridge, "Jaleco SS8806");
       requireTwoScreenNametables(cartridge, "Jaleco SS8806");
       return new JalecoSs8806Mapper(interruptPort, cartridge);
+    case 19: {
+      const audioLevel = resolveNamco163AudioLevel(cartridge);
+      requireNamco163Layout(cartridge);
+      return new Namco163Mapper(interruptPort, cartridge, audioLevel);
+    }
     case 21:
     case 22:
     case 23:
@@ -684,6 +690,77 @@ function requireVrc6Memory(cartridge: Cartridge): void {
     throw configurationError(cartridge, "VRC6 requires exactly 8 KiB of PRG RAM or NVRAM");
   }
 }
+
+function resolveNamco163AudioLevel(cartridge: Cartridge): Namco163AudioLevel {
+  switch (cartridge.submapperNumber) {
+    case 0:
+    case 3:
+      return "12db";
+    case 1:
+    case 2:
+      return "mute";
+    case 4:
+      return "16.5db";
+    case 5:
+      return "18.75db";
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+}
+
+function requireNamco163Layout(cartridge: Cartridge): void {
+  requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+  requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+  requireTwoScreenNametables(cartridge, "Namco 163");
+
+  const hasExternalWram = cartridge.prgWritableBytes === 0x2000;
+  const validExternalMemory =
+    (cartridge.prgRamBytes === 0 && cartridge.prgNvRamBytes === 0) ||
+    (cartridge.prgRamBytes === 0x2000 && cartridge.prgNvRamBytes === 0) ||
+    (cartridge.prgRamBytes === 0 &&
+      cartridge.prgNvRamBytes === 0x2000 &&
+      cartridge.hasBatteryBackup);
+  if (!validExternalMemory) {
+    throw configurationError(
+      cartridge,
+      "Namco 163 supports only optional 8 KiB external PRG RAM or NVRAM",
+    );
+  }
+  if (cartridge.submapperNumber === 1 && hasExternalWram) {
+    throw configurationError(
+      cartridge,
+      "Namco 129 submapper 1 has internal NVRAM but no external PRG RAM",
+    );
+  }
+  if (cartridge.submapperNumber === 1 && !cartridge.hasBatteryBackup) {
+    throw configurationError(
+      cartridge,
+      "Namco 129 submapper 1 requires battery-backed internal RAM",
+    );
+  }
+  if (
+    cartridge.mapperRamBytes + cartridge.mapperNvRamBytes !== 0x80 ||
+    cartridge.chrNvRamBytes !== 0
+  ) {
+    throw configurationError(
+      cartridge,
+      "Namco 163 requires 128 bytes of internal RAM and does not battery-back CHR RAM",
+    );
+  }
+  if (
+    cartridge.chrRom.byteLength > 0 &&
+    cartridge.chrWritableBytes > 0 &&
+    (cartridge.chrWritableBytes > 0x8000 ||
+      cartridge.chrWritableBytes % CHR_BANK_SIZE_FOR_VALIDATION !== 0)
+  ) {
+    throw configurationError(
+      cartridge,
+      "Namco 163 mixed CHR ROM/RAM supports at most 32 KiB of 1 KiB-banked CHR RAM",
+    );
+  }
+}
+
+const CHR_BANK_SIZE_FOR_VALIDATION = 0x0400;
 
 function resolveVrc7Board(cartridge: Cartridge): Vrc7Board {
   switch (cartridge.submapperNumber) {

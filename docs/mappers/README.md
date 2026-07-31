@@ -17,27 +17,28 @@ board. Support status and evidence are tracked separately in
 `mapper.ts` defines the address-space contract. Every board implements it and nothing else is exposed
 to the rest of core.
 
-| Member                       | Role                                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------- |
-| `read(address)`              | Reads a CPU (`$6000-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout. |
-| `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
-| `cpuReadDriveMask(address)`  | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
-| `readCpuExpansion(address)`  | Optional value/drive mask for a cartridge device in CPU `$4018-$5FFF`.                   |
-| `writeCpuExpansion(addr, v)` | Optional cartridge register write in CPU `$4018-$5FFF`.                                  |
-| `readCpuRegisterOpenBus(a)`  | Optional cartridge drive on otherwise floating write-only 2A03 reads.                    |
-| `ppuReadDriveMask(address)`  | Optional PPU pattern-data mask; omitted means fully driven, `0` means CHR is tri-stated. |
-| `mapNametableAddress(addr)`  | Optional direct CIRAM/nametable-memory routing for cartridge-controlled wiring.          |
-| `readNametable(address)`     | Optional cartridge-driven nametable byte, such as Sunsoft-4 CHR ROM.                     |
-| `writeNametable(addr, v)`    | Optionally consumes a cartridge-owned nametable write.                                   |
-| `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
-| `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
-| `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
-| `observeCpuBusCycle(write)`  | Optional per-M2-cycle CPU R/W snoop (serial filters, IRQ counters/delays).               |
-| `powerOn()`                  | Restores the board's deterministic fresh-instance latch state.                           |
-| `reset()`                    | Optional warm-reset signal for boards whose latch is physically resettable.              |
-| `powerOnCpuEntry()`          | Optional cold-boot entry/call target supplied by a RAM-card loader.                      |
-| `captureState()`             | Returns a typed `MapperState` discriminated-union snapshot.                              |
-| `restoreState(state)`        | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.   |
+| Member                        | Role                                                                                     |
+| ----------------------------- | ---------------------------------------------------------------------------------------- |
+| `read(address)`               | Reads a CPU (`$6000-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout. |
+| `write(address, value)`       | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
+| `cpuReadDriveMask(address)`   | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
+| `readCpuExpansion(address)`   | Optional value/drive mask for a cartridge device in CPU `$4018-$5FFF`.                   |
+| `writeCpuExpansion(addr, v)`  | Optional cartridge register write in CPU `$4018-$5FFF`.                                  |
+| `readCpuRegisterOpenBus(a)`   | Optional cartridge drive on otherwise floating write-only 2A03 reads.                    |
+| `ppuReadDriveMask(address)`   | Optional PPU pattern-data mask; omitted means fully driven, `0` means CHR is tri-stated. |
+| `mapPatternToCiramAddress(a)` | Optional per-access pattern-page routing into the console's 2 KiB CIRAM.                 |
+| `mapNametableAddress(addr)`   | Optional direct CIRAM/nametable-memory routing for cartridge-controlled wiring.          |
+| `readNametable(address)`      | Optional cartridge-driven nametable byte, such as Sunsoft-4 CHR ROM.                     |
+| `writeNametable(addr, v)`     | Optionally consumes a cartridge-owned nametable write.                                   |
+| `observePpuAddress(address)`  | Optional PPU address-line snoop for boards such as MMC3.                                 |
+| `observePpuRead(address)`     | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
+| `tickPpu()`                   | Optional one-dot clock used by address-line timing filters.                              |
+| `observeCpuBusCycle(write)`   | Optional per-M2-cycle CPU R/W snoop (serial filters, IRQ counters/delays).               |
+| `powerOn()`                   | Restores the board's deterministic fresh-instance latch state.                           |
+| `reset()`                     | Optional warm-reset signal for boards whose latch is physically resettable.              |
+| `powerOnCpuEntry()`           | Optional cold-boot entry/call target supplied by a RAM-card loader.                      |
+| `captureState()`              | Returns a typed `MapperState` discriminated-union snapshot.                              |
+| `restoreState(state)`         | Validates and restores a snapshot, rejecting mismatched kinds and out-of-range fields.   |
 
 PPU capabilities are structural: boards implement only the optional signal hooks they physically
 consume. Address-line changes and completed reads are deliberately separate because MMC3 reacts to
@@ -49,10 +50,11 @@ byte from `read` while `cpuReadDriveMask` reports that a write-only register or 
 drives no data lines; `CPUMemory` then combines the driven bits with the retained external bus.
 Pattern-table reads follow the same separation through `ppuReadDriveMask`; `PPUMemory` supplies the
 current address low byte on undriven multiplexed PPU pins instead of asking a mapper to invent open
-bus. `mapNametableAddress` similarly keeps per-access CIRAM wiring distinct from the cartridge's
-fixed header mirroring. `readNametable`/`writeNametable` separately model memory that replaces CIRAM
-entirely, so ROM ownership is not hidden in a magic address value. Expansion-range reads return their
-value and drive mask together; an absent result remains normal CPU open bus.
+bus. `mapPatternToCiramAddress` models boards such as Namco 163 that replace a selected 1 KiB CHR
+page with CIRAM, while `mapNametableAddress` keeps per-access nametable wiring distinct from fixed
+header mirroring. `readNametable`/`writeNametable` separately model memory that replaces CIRAM
+entirely, so ROM ownership is not hidden in a magic address value. Expansion-range reads return
+their value and drive mask together; an absent result remains normal CPU open bus.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -115,6 +117,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 16  | Bandai FCG     | `bandai-fcg`              | `bandai-fcg-mapper.ts`       | no            | cyc. |
 | 17  | Super Magic    | `ffe-magic-card`          | `ffe-magic-card-mapper.ts`   | no            | both |
 | 18  | Jaleco SS8806  | `jaleco-ss8806`           | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
+| 19  | Namco 129/163  | `namco-163`               | `namco163-mapper.ts`         | no            | cyc. |
 | 21  | Konami VRC4a/c | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | cyc. |
 | 22  | Konami VRC2a   | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | no   |
 | 23  | VRC2b/VRC4e/f  | `vrc2-vrc4`               | `vrc2-vrc4-mapper.ts`        | no            | opt. |
@@ -362,6 +365,37 @@ current [NESdev mapper 18](https://www.nesdev.org/wiki/INES_Mapper_018) hardware
 Mesen and Nestopia currently assert one cycle earlier on the 1→0 transition, so focused tests pin the
 underflow interpretation rather than hiding the contradiction. `$F003` is the port for an optional
 external µPD7755/7756 sample player; that separate audio device is not emulated.
+
+## Namco 129 / 163 (19)
+
+`Namco163Mapper` owns three switchable and one final-fixed 8 KiB PRG windows, eight 1 KiB pattern
+selectors and four independent 1 KiB nametable selectors. Values `$00-$DF` select CHR. Values
+`$E0-$FF` select either CIRAM page D0 or the final 32 CHR banks; `$E800` bits 6/7 disable CIRAM
+substitution independently for the lower/upper pattern half. Nametable selectors always use CIRAM
+for `$E0-$FF`, and otherwise let CHR ROM/RAM drive the nametable bus. Mixed CHR boards therefore
+keep ROM in banks `$00-$DF` and expose up to 32 KiB RAM in `$E0-$FF`.
+
+The optional external 8 KiB WRAM remains readable while `$F800`'s exact `$4x` protection pattern
+write-enables any of its four 2 KiB windows whose corresponding low bit is clear. `$5000/$5800`
+form a 15-bit CPU-cycle up-counter: it stops and asserts at `$7FFF`, and writing either byte
+acknowledges the line. `$4800` accesses 128 bytes of chip RAM through the `$F800` address and
+saturating auto-increment control. This internal RAM is a distinct cartridge-memory region because
+it may be battery-backed even when external WRAM is absent.
+
+`Namco163Audio` shares those same 128 bytes with software. Up to eight wavetable channels occupy
+`$40-$7F`; one enabled channel advances every 15 CPU cycles in descending order, writes its 24-bit
+phase back to chip RAM, and holds its instantaneous 4-bit sample voltage until the next channel.
+No averaging removes the characteristic channel-switching output. NES 2.0 submappers 1/2 mute the
+cartridge audio path; 3/4/5 select the documented approximately 12/16.5/18.75 dB mix levels, while
+legacy submapper 0 uses the conservative 12 dB profile.
+
+`$F000` bits 6-7 are retained as the chip's pin-44 control state. Current primary documentation
+identifies a diagnostic CHR-output mode when PRG bank `$3F` is selected but does not publish the
+resulting bit pattern, so the core does not invent observable debugger data. Banking, IRQ, WRAM,
+shared-RAM, audio scheduler and all retained control state are save-state validated. See
+[NESdev mapper 19](https://www.nesdev.org/wiki/INES_Mapper_019),
+[Namco 163 audio](https://www.nesdev.org/wiki/Namco_106_audio) and
+[Namco 163 family pinout](https://www.nesdev.org/wiki/Namcot_163_family_pinout).
 
 ## Konami VRC2 / VRC4 (21, 22, 23, 25)
 

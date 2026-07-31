@@ -292,17 +292,20 @@ runs `validateSnapshot` first: it rejects non-integer or negative scalars, non-f
 a mismatched sample rate, a frame-sequencer `period`/`pendingPeriod` outside `{4, 5}`, a
 `frameIrqClearDelay > 2`, and any queued write outside `$4000`–`$4017` or with a value above `0xFF`.
 `sampleBuffer` and `lastClockCycle` are omitted from their snapshots when undefined. The APU state
-travels inside the console's current version 14 save-state envelope. Output-filter history first
-entered the schema in version 13; version 14 additionally carries the PPU's real sprite-fetch
-pipeline state.
+travels inside the console's current version 15 save-state envelope. Output-filter history first
+entered the schema in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and
+version 15 adds mapper-owned RAM/NVRAM for Namco 163.
 
 ## Audio output boundary
 
 The native pulse and TND nonlinear outputs are combined with the mapper's optional cartridge-audio
 voltage before the shared 90 Hz/440 Hz high-pass and 14 kHz low-pass chain. The APU sees only
 `cartridgeAudioSample()` on its bus port: oscillator clocks, registers and snapshot state remain
-owned by the mapper. VRC6 pulse/saw and VRC7 six-channel FM both enter through this boundary. Their
-devices advance from CPU M2 through the same mapper bus observation used by cycle IRQs.
+owned by the mapper. VRC6 pulse/saw, VRC7 six-channel FM and Namco 163 eight-channel wavetable
+output all enter through this boundary. Their devices advance from CPU M2 through the same mapper
+bus observation used by cycle IRQs. Namco 163 preserves the chip's time-division output: one
+enabled channel advances every 15 CPU cycles and its voltage remains held until the next channel is
+serviced.
 
 The core produces one filtered sample per output tick and pushes it to listeners registered through
 `addListener`; the application layer wires that to the audio output port
@@ -318,7 +321,7 @@ checksum-pinned AccuracyCoin bus/DMA matrix, both Sprite/DMC collision ROMs and 
 APU visual matrix documented in
 [External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md).
 
-VRC6 and VRC7 cartridge audio are mixed and stateful. Sunsoft 5B, Namco 163 and MMC5 audio remain
+VRC6, VRC7 and Namco 163 cartridge audio are mixed and stateful. Sunsoft 5B and MMC5 audio remain
 separate mapper-device work until their own chip models are connected through the same narrow
 boundary. NTSC uses the measured RP2A03H/late-G implicit-stop behavior; PAL and Dendy intentionally
 use the conservative DMC silicon profile until equivalent measurements exist. These are explicit

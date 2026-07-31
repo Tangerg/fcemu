@@ -137,7 +137,7 @@ plain `JSON.stringify`/`JSON.parse` is not a supported serializer. The core vali
 - every nested CPU, PPU, APU, DMA, mapper, clock, controller and cartridge invariant.
 
 Restore is transactional: if any nested validation fails, the live runtime is rolled back. Schema
-version 14 is intentionally exact rather than forward/backward compatible.
+version 15 is intentionally exact rather than forward/backward compatible.
 
 ## Diagnostics
 

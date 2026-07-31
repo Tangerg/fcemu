@@ -347,7 +347,7 @@ any out-of-range dot (0-340), scanline, render-mask pipeline (`0x18`-masked, del
 typed-array shape, non-6-bit palette byte, invalid sprite-evaluation counters or an impossible
 pending-and-latched sprite-zero pair.
 
-The public save-state envelope is version 14. Sprite pattern bytes are fetched at their real PPU
+The public save-state envelope is version 15. Sprite pattern bytes are fetched at their real PPU
 dots, so no delayed mapper-observation queue exists or needs to be reconstructed after restore.
 Older snapshots are rejected instead of inferring missing bus state.
 

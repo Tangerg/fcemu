@@ -3,6 +3,8 @@ interface CartridgeMemoryLayout {
   readonly prgNvRamBytes: number;
   readonly chrRamBytes: number;
   readonly chrNvRamBytes: number;
+  readonly mapperRamBytes: number;
+  readonly mapperNvRamBytes: number;
 }
 
 export interface CartridgeSaveSnapshot {
@@ -15,6 +17,8 @@ export interface CartridgeMemoryState {
   readonly prgNvRam: Uint8Array;
   readonly chrRam: Uint8Array;
   readonly chrNvRam: Uint8Array;
+  readonly mapperRam: Uint8Array;
+  readonly mapperNvRam: Uint8Array;
   readonly saveRevision: number;
 }
 
@@ -30,6 +34,8 @@ export class CartridgeMemory {
   private readonly prgNvRam: Uint8Array;
   private readonly chrRam: Uint8Array;
   private readonly chrNvRam: Uint8Array;
+  private readonly mapperRam: Uint8Array;
+  private readonly mapperNvRam: Uint8Array;
   private saveRevision = 0;
 
   constructor(layout: CartridgeMemoryLayout) {
@@ -38,6 +44,8 @@ export class CartridgeMemory {
       ["prgNvRamBytes", layout.prgNvRamBytes],
       ["chrRamBytes", layout.chrRamBytes],
       ["chrNvRamBytes", layout.chrNvRamBytes],
+      ["mapperRamBytes", layout.mapperRamBytes],
+      ["mapperNvRamBytes", layout.mapperNvRamBytes],
     ] as const;
     for (const [region, bytes] of regions) {
       if (!Number.isSafeInteger(bytes) || bytes < 0) {
@@ -49,6 +57,8 @@ export class CartridgeMemory {
     this.prgNvRam = new Uint8Array(this.layout.prgNvRamBytes);
     this.chrRam = new Uint8Array(this.layout.chrRamBytes);
     this.chrNvRam = new Uint8Array(this.layout.chrNvRamBytes);
+    this.mapperRam = new Uint8Array(this.layout.mapperRamBytes);
+    this.mapperNvRam = new Uint8Array(this.layout.mapperNvRamBytes);
   }
 
   get prgAddressSpaceBytes(): number {
@@ -85,10 +95,19 @@ export class CartridgeMemory {
     this.write(this.chrRam, this.chrNvRam, index, value);
   }
 
+  readMapper(index: number): number {
+    return this.read(this.mapperRam, this.mapperNvRam, index);
+  }
+
+  writeMapper(index: number, value: number): void {
+    this.write(this.mapperRam, this.mapperNvRam, index, value);
+  }
+
   /** Clears power-lost memory while retaining battery-backed bytes and revision. */
   powerOn(): void {
     this.prgRam.fill(0);
     this.chrRam.fill(0);
+    this.mapperRam.fill(0);
   }
 
   captureSave(): CartridgeSaveSnapshot | undefined {
@@ -96,6 +115,7 @@ export class CartridgeMemory {
     const data = new Uint8Array(this.saveBytes);
     data.set(this.prgNvRam);
     data.set(this.chrNvRam, this.prgNvRam.byteLength);
+    data.set(this.mapperNvRam, this.prgNvRam.byteLength + this.chrNvRam.byteLength);
     return { revision: this.saveRevision, data };
   }
 
@@ -109,7 +129,10 @@ export class CartridgeMemory {
       );
     }
     this.prgNvRam.set(data.subarray(0, this.prgNvRam.byteLength));
-    this.chrNvRam.set(data.subarray(this.prgNvRam.byteLength));
+    const chrStart = this.prgNvRam.byteLength;
+    const mapperStart = chrStart + this.chrNvRam.byteLength;
+    this.chrNvRam.set(data.subarray(chrStart, mapperStart));
+    this.mapperNvRam.set(data.subarray(mapperStart));
     this.saveRevision = 0;
   }
 
@@ -119,6 +142,8 @@ export class CartridgeMemory {
       prgNvRam: this.prgNvRam.slice(),
       chrRam: this.chrRam.slice(),
       chrNvRam: this.chrNvRam.slice(),
+      mapperRam: this.mapperRam.slice(),
+      mapperNvRam: this.mapperNvRam.slice(),
       saveRevision: this.saveRevision,
     };
   }
@@ -129,6 +154,8 @@ export class CartridgeMemory {
       ["PRG NVRAM", state.prgNvRam, this.prgNvRam],
       ["CHR RAM", state.chrRam, this.chrRam],
       ["CHR NVRAM", state.chrNvRam, this.chrNvRam],
+      ["mapper RAM", state.mapperRam, this.mapperRam],
+      ["mapper NVRAM", state.mapperNvRam, this.mapperNvRam],
     ] as const;
     for (const [name, source, destination] of regions) {
       if (!(source instanceof Uint8Array) || source.byteLength !== destination.byteLength) {
@@ -143,7 +170,7 @@ export class CartridgeMemory {
   }
 
   private get saveBytes(): number {
-    return this.prgNvRam.byteLength + this.chrNvRam.byteLength;
+    return this.prgNvRam.byteLength + this.chrNvRam.byteLength + this.mapperNvRam.byteLength;
   }
 
   private read(volatile: Uint8Array, nonvolatile: Uint8Array, index: number): number {

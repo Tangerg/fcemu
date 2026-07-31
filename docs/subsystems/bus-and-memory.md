@@ -157,6 +157,10 @@ so reducing it to one mutable horizontal/vertical enum would lose hardware state
 `readNametable`/`writeNametable` capabilities let Sunsoft-4 replace CIRAM with read-only CHR ROM
 without encoding memory ownership in an address sentinel.
 
+Before a pattern-table access reaches CHR, `mapPatternToCiramAddress` can instead route it to one
+of the console's two CIRAM pages. Namco 163 uses this narrow capability independently for each
+1 KiB pattern selector; the PPU retains ownership of CIRAM bytes and the mapper owns only wiring.
+
 Pattern-table reads also apply the mapper's optional `ppuReadDriveMask`. The cartridge normally
 drives all eight bits. When CHR is disabled and the cartridge tri-states those pins, undriven bits
 come from the current address low byte because the RP2C02 multiplexes its video-memory address and

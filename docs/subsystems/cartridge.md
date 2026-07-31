@@ -123,22 +123,22 @@ parser; the rationale and the exact accepted matrix live in
 | `defaultExpansionDevice > 1`                                              | `UNSUPPORTED_EXPANSION_DEVICE` | `validateSupportedHeader` |
 | Combined PRG RAM + NVRAM > 32 KiB (`MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000`) | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | NVRAM declared without the battery flag                                   | `INVALID_NES2_RAM_FLAGS`       | `validateSupportedHeader` |
-| Battery flag with no supported PRG/CHR or normalized X1 NVRAM             | `UNSUPPORTED_BATTERY_MEMORY`   | `validateSupportedHeader` |
+| Battery flag with no supported PRG/CHR or mapper-owned NVRAM              | `UNSUPPORTED_BATTERY_MEMORY`   | `validateSupportedHeader` |
 | No CHR ROM and no CHR RAM/NVRAM                                           | `MISSING_CHR_MEMORY`           | `validateSupportedHeader` |
 | Simultaneous CHR RAM and CHR NVRAM                                        | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
-| CHR ROM together with any writable CHR memory                             | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
+| CHR ROM together with writable CHR outside mapper 19/119 policy           | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | Trainer present with < 8 KiB combined PRG RAM window                      | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 
 The console/expansion checks accept only standard NES/Famicom images (`consoleType === 0`) with an
 unspecified or standard-controller default expansion device (`0` or `1`). The RAM checks keep the
-battery flag and the NES 2.0 NVRAM nibbles mutually consistent, and confine writable CHR to exactly
-one of ROM, volatile RAM, or NVRAM.
+battery flag and the NES 2.0 NVRAM nibbles mutually consistent. Mixed CHR is accepted only where
+mapper 19 or 119 supplies an explicit ROM/RAM chip-select circuit.
 
 ## Writable memory regions
 
-`CartridgeMemory` (`packages/fc-emu/src/domain/model/cartridge-memory.ts`) owns four independent
+`CartridgeMemory` (`packages/fc-emu/src/domain/model/cartridge-memory.ts`) owns six independent
 `Uint8Array` regions sized from the header. It never returns a reference to a backing array; all
-access goes through index-based accessors, and the frozen `layout` records the four sizes.
+access goes through index-based accessors, and the frozen `layout` records all six sizes.
 
 `applyBoardMemoryPolicy` replaces header-generic capacities with physical board sizes when the
 format cannot express them faithfully: 32 KiB volatile work RAM for FFE mappers 6/8/17, 128 bytes
@@ -146,12 +146,19 @@ for mapper 80's X1-005, and 5 KiB for mapper 82's X1-017. They then use the same
 ownership, power-loss and battery snapshot paths as ordinary PRG memory; the mapper alone owns
 address decoding and protection keys.
 
-| Region           | Backing field | Volatile | In battery save | Cleared by `powerOn` | Logical space (order) |
-| ---------------- | ------------- | -------- | --------------- | -------------------- | --------------------- |
-| Volatile PRG RAM | `prgRam`      | yes      | no              | yes                  | PRG (first)           |
-| PRG NVRAM        | `prgNvRam`    | no       | yes             | no                   | PRG (after volatile)  |
-| Volatile CHR RAM | `chrRam`      | yes      | no              | yes                  | CHR (first)           |
-| CHR NVRAM        | `chrNvRam`    | no       | yes             | no                   | CHR (after volatile)  |
+Namco 163's 128-byte shared chip RAM does not occupy PRG or CHR address space. `Cartridge` derives
+that exact capacity for mapper 19 and allocates it as mapper RAM or mapper NVRAM according to the
+battery flag. This keeps optional external WRAM independent and lets a battery-only internal-RAM
+board persist without fabricating an 8 KiB PRG region.
+
+| Region              | Backing field | Volatile | In battery save | Cleared by `powerOn` | Logical space (order)   |
+| ------------------- | ------------- | -------- | --------------- | -------------------- | ----------------------- |
+| Volatile PRG RAM    | `prgRam`      | yes      | no              | yes                  | PRG (first)             |
+| PRG NVRAM           | `prgNvRam`    | no       | yes             | no                   | PRG (after volatile)    |
+| Volatile CHR RAM    | `chrRam`      | yes      | no              | yes                  | CHR (first)             |
+| CHR NVRAM           | `chrNvRam`    | no       | yes             | no                   | CHR (after volatile)    |
+| Volatile mapper RAM | `mapperRam`   | yes      | no              | yes                  | Mapper (first)          |
+| Mapper NVRAM        | `mapperNvRam` | no       | yes             | no                   | Mapper (after volatile) |
 
 ### Logical address spaces exposed to mappers
 
@@ -165,7 +172,9 @@ address a single flat index per space; the memory object decides which physical 
   otherwise it reads the combined CHR RAM + CHR NVRAM space. `writeChr(index, value)` is a no-op when
   CHR ROM is present and otherwise writes the CHR memory space, so CHR ROM is never mutated.
 - `readWritableChr(index)` / `writeWritableChr(index, value)` explicitly address writable CHR when
-  a board such as TQROM owns CHR ROM and RAM simultaneously.
+  a board such as Namco 163 or TQROM owns CHR ROM and RAM simultaneously.
+- `readMapperRam(index)` / `writeMapperRam(index, value)` address mapper-owned memory without
+  pretending that it lives in the CPU PRG window.
 - `prgWritableBytes` reports `prgAddressSpaceBytes` (PRG RAM + PRG NVRAM).
 - `chrMemoryBytes` reports the CHR ROM length, or `chrAddressSpaceBytes` when there is no CHR ROM.
 - `chrWritableBytes` reports CHR RAM + CHR NVRAM independently of CHR ROM presence.
@@ -174,27 +183,27 @@ Reads clamp out of range: a negative index reads `0`, and an index past the non-
 `0`. Writes drop negative and past-end indices; values are masked to a byte (`value & 0xFF`). The
 volatile/non-volatile boundary in each space is the volatile region's `byteLength`.
 
-`powerOn()` zero-fills only the volatile PRG and CHR regions, leaving both NVRAM regions and the save
+`powerOn()` zero-fills volatile PRG, CHR and mapper regions, leaving all NVRAM regions and the save
 revision intact, which models battery-backed retention across a power cycle.
 
 ## Battery save snapshot
 
 `captureBatterySave()` (delegating to `CartridgeMemory.captureSave`) returns a
 `CartridgeSaveSnapshot` — `{ revision, data }` — or `undefined` when the cartridge has no NVRAM. The
-`data` array concatenates PRG NVRAM first, then CHR NVRAM, so an image with only PRG NVRAM produces a
-byte-for-byte-compatible legacy save. The snapshot is a fresh copy; the internal regions are never
-aliased into it.
+`data` array concatenates PRG NVRAM, CHR NVRAM and mapper NVRAM in that order, so an image with only
+PRG/CHR NVRAM preserves its existing byte layout. The snapshot is a fresh copy; the internal
+regions are never aliased into it.
 
 The `revision` counter increments only when a write actually changes an NVRAM byte: volatile writes,
 out-of-range writes, and writes that store the same byte already present do not advance it. Callers
 therefore use `revision` to detect whether persisted battery memory has diverged from the last save.
 `restoreBatterySave(data)` requires an existing battery region (throws otherwise), requires the exact
-combined NVRAM size (throwing `RangeError` on mismatch), splits the payload back into PRG then CHR
-NVRAM, and resets the save revision to `0`.
+combined NVRAM size (throwing `RangeError` on mismatch), splits the payload back into PRG, CHR then
+mapper NVRAM, and resets the save revision to `0`.
 
 ## Memory-state capture and restore
 
-Full save states use `captureMemoryState()` / `restoreMemoryState(state)`, which round-trip all four
+Full save states use `captureMemoryState()` / `restoreMemoryState(state)`, which round-trip all six
 regions plus the save revision as a `CartridgeMemoryState`. Capture returns defensive `slice()`
 copies of every region and the current `saveRevision`. Restore validates that each incoming region is
 a `Uint8Array` of exactly the matching size and that `saveRevision` is a non-negative safe integer,
@@ -224,13 +233,13 @@ not covered here.
 ## Verification and known limits
 
 Focused tests cover iNES/NES 2.0 field decoding, linear/exponent ROM sizes, RAM shifts, trainers,
-truncation errors, region metadata, four physical writable regions, battery snapshots, save-state
+truncation errors, region metadata, six physical writable regions, battery snapshots, save-state
 validation and ROM identity. Mapper factory tests separately prove that parsed capacities are
 reachable by the selected board.
 
 The core CRC-32 identity is a compatibility key, not a cryptographic content address. The browser
 adapter independently uses SHA-256 for IndexedDB identity. Unsupported console/expansion types,
-ambiguous writable-memory layouts and mapper-internal EEPROM fail before execution; see
+ambiguous writable-memory layouts and unsupported mapper-internal EEPROM fail before execution; see
 [Cartridge formats](../cartridge-formats.md).
 
 ## Source files
@@ -239,7 +248,7 @@ ambiguous writable-memory layouts and mapper-internal EEPROM fail before executi
   pipeline, supported-format policy, and public memory accessors.
 - `packages/fc-emu/src/domain/model/cartridge-header.ts` — `parseCartridgeHeader`, `CartridgeHeader`,
   size/RAM decoders, `CartridgeFormat`, `CartridgeTimingMode`, `NametableMirroring`.
-- `packages/fc-emu/src/domain/model/cartridge-memory.ts` — `CartridgeMemory`, the four regions,
+- `packages/fc-emu/src/domain/model/cartridge-memory.ts` — `CartridgeMemory`, the six regions,
   logical address spaces, battery snapshot, and memory-state capture/restore.
 - `packages/fc-emu/src/domain/model/cartridge-format-error.ts` — `CartridgeFormatError` and
   `CartridgeFormatErrorCode`.

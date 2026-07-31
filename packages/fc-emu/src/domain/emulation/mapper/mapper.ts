@@ -198,6 +198,21 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "cony-yoko";
+      readonly board: "cony-83-0" | "cony-83-1" | "cony-83-2" | "cony-83-3";
+      readonly prgBase: number;
+      readonly mode: number;
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly irqSourceA12: boolean;
+      readonly a12High: boolean;
+      readonly scratchRam: Uint8Array;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "jaleco-ss8806";
       readonly prgRegisters: readonly number[];
       readonly chrRegisters: readonly number[];

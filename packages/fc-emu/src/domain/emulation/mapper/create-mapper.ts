@@ -14,6 +14,8 @@ import { CnromMapper } from "./cnrom-mapper.js";
 import { CodemastersMapper } from "./codemasters-mapper.js";
 import { ColorDreamsMapper } from "./color-dreams-mapper.js";
 import { CpromMapper } from "./cprom-mapper.js";
+import { findConyYokoBoard, type ConyYokoBoard } from "./cony-yoko-board.js";
+import { ConyYokoMapper } from "./cony-yoko-mapper.js";
 import { Ej0061Mapper } from "./ej-006-1-mapper.js";
 import { findFfeMagicCardBoard, type FfeMagicCardBoard } from "./ffe-magic-card-board.js";
 import { FfeMagicCardMapper } from "./ffe-magic-card-mapper.js";
@@ -290,6 +292,11 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireTaitoX1017Ram(cartridge);
       requireTwoScreenNametables(cartridge, "Taito X1-017");
       return new TaitoX1017Mapper(interruptPort, cartridge);
+    case 83: {
+      const board = resolveConyYokoBoard(cartridge);
+      requireConyYokoLayout(cartridge, board);
+      return new ConyYokoMapper(interruptPort, cartridge, board);
+    }
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);
@@ -604,6 +611,29 @@ function requireFfeMagicCardLayout(cartridge: Cartridge, board: FfeMagicCardBoar
   requireTwoScreenNametables(cartridge, `FFE ${board.id}`);
 }
 
+function requireConyYokoLayout(cartridge: Cartridge, board: ConyYokoBoard): void {
+  requireBankedLayout(cartridge, 0x2000, board.innerPrgBytes, board.chrBankBytes, 0x2000);
+  requireMaximumRomSize(cartridge, (board.prgAddressMask + 1) * 0x4000, board.maximumChrBytes);
+  requireChrRom(cartridge, board.id);
+  requireTwoScreenNametables(cartridge, board.id);
+
+  if (board.maps32KiBPrgNvRam) {
+    if (
+      cartridge.format !== "nes2" ||
+      !cartridge.hasBatteryBackup ||
+      cartridge.prgRamBytes !== 0 ||
+      cartridge.prgNvRamBytes !== 0x8000
+    ) {
+      throw configurationError(
+        cartridge,
+        `${board.id} requires exactly 32 KiB of battery-backed PRG NVRAM`,
+      );
+    }
+    return;
+  }
+  requireNoBatteryPrgRam(cartridge, board.id);
+}
+
 function requireVrc24Memory(cartridge: Cartridge, board: Vrc24Board): void {
   requireDirectPrgRam(cartridge);
   const bytes = cartridge.prgWritableBytes;
@@ -756,6 +786,18 @@ function resolveFfeMagicCardBoard(cartridge: Cartridge): FfeMagicCardBoard {
 
 function resolveVrc24Board(cartridge: Cartridge): Vrc24Board {
   const board = findVrc24Board(cartridge.mapperNumber, cartridge.submapperNumber);
+  if (!board) {
+    throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+  return board;
+}
+
+function resolveConyYokoBoard(cartridge: Cartridge): ConyYokoBoard {
+  const board = findConyYokoBoard(
+    cartridge.mapperNumber,
+    cartridge.format,
+    cartridge.submapperNumber,
+  );
   if (!board) {
     throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }

@@ -32,6 +32,7 @@ export const MapperKind = {
   TaitoTc0690: "taito-tc0690",
   TaitoX1005: "taito-x1-005",
   TaitoX1017: "taito-x1-017",
+  ConyYoko: "cony-yoko",
   IremG101: "irem-g101",
   IremH3001: "irem-h3001",
   Rambo1: "rambo-1",

@@ -48,6 +48,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM     |
 | 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture        |
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM       |
+| 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                     |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM               |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM            |
@@ -88,6 +89,12 @@ counter bias.
 
 Mapper 91 accepts submapper 0 for JY830623C/YY840238C outer banking and fixed 64-rise A12 IRQs,
 and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counter.
+
+Mapper 83 accepts legacy iNES as the standard 83.0 board and NES 2.0 submappers 0-3 as the four
+currently allocated Cony PCBs. Submapper 1 rewires CHR into four 2 KiB windows; submapper 2 adds
+shared PRG/CHR outer lines and four battery-backed 8 KiB NVRAM banks; submapper 3 uses a 128 KiB
+inner PRG region and separate CHR outer lines. Mapper 264's different register-address wiring is a
+separate mapper and is not inferred from ROM size.
 
 Mapper 16 accepts submapper 0 for legacy unspecified FCG/LZ93D50 images, submapper 4 for low-range
 FCG-1/2 and submapper 5 for high-range LZ93D50 with no EEPROM or a 256-byte 24C02. Deprecated
@@ -255,6 +262,17 @@ submappers remain rejected rather than infer nonexistent boards.
   regions of 5 KiB NVRAM and strong pull-downs on otherwise floating CPU reads. The reverse-
   engineered IRQ counter implements the distinct control/acknowledge reload formulas and
   asynchronous output gate. The corrected 512 KiB PRG wiring belongs to NES 2.0 mapper 552, not 82.
+- Mapper 83 models the shared Cony/Yoko ASIC through four immutable PCB descriptions. The ASIC
+  provides UxROM, mirrored-16 KiB and four-register 8 KiB PRG modes, four-way nametable control,
+  four scratch bytes and a 16-bit one-shot IRQ clocked by CPU M2 or unfiltered PPU-A12 rises.
+  Submapper 0 has eight 1 KiB CHR windows; submapper 1 physically combines them into four 2 KiB
+  windows using registers 0/1/6/7. Submapper 2 routes PRG-base bits 7-6 to four battery-backed
+  8 KiB NVRAM banks and bits 5-4 to shared PRG/CHR outer lines. Submapper 3 instead has a 128 KiB
+  inner PRG region and routes base bits 7-6 only to CHR outer lines. `$5000` drives only the two
+  solder-pad bits; the default unbridged value is zero because iNES/NES 2.0 has no field for that
+  external board setting. IRQ-source writes `$00` and `$FF` select M2 and PPU A12 respectively;
+  other byte patterns preserve the selection because current hardware evidence does not identify
+  which individual ASIC data input is decisive.
 - Mapper 69 (Sunsoft FME-7) commits a `$8000-$9FFF` command register with a following `$A000-$BFFF`
   parameter write: eight 1 KiB CHR banks, a `$6000-$7FFF` window that selects PRG ROM or enabled PRG
   RAM through bits 6-7, three 8 KiB PRG banks with `$E000` fixed, four-way mirroring, and a 16-bit IRQ

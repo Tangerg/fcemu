@@ -572,6 +572,30 @@ The reverse-engineered IRQ uses an 8-bit latch at `$7EFD`, control at `$7EFE`, a
 asynchronously gates a pending IRQ. See [NESdev X1-017](https://www.nesdev.org/wiki/INES_Mapper_082)
 and the [hardware test record](https://forums.nesdev.org/viewtopic.php?t=19724).
 
+## Cony/Yoko ASIC (83)
+
+Mapper 83 uses one ASIC on four electrically distinct PCBs. `ConyYokoBoard` keeps those connections
+immutable: submapper 0 has eight 1 KiB CHR-ROM windows, submapper 1 rewires registers 0/1/6/7 into
+four 2 KiB windows, submapper 2 adds shared PRG/CHR outer lines plus four battery-backed 8 KiB
+NVRAM banks, and submapper 3 reduces the inner PRG region from 256 KiB to 128 KiB while routing the
+top base bits to CHR only. Legacy iNES selects the standard 83.0 board; unsupported submappers and
+contradictory RAM/ROM declarations fail at creation rather than use title hashes.
+
+The PRG base and mode registers select UxROM, mirrored 16 KiB or two equivalent four-register 8 KiB
+modes. In register mode, `$8300-$8302` select the first three CPU windows, `$E000-$FFFF` is fixed to
+the last bank inside the selected region, and `$8303` supplies an optional ROM bank at
+`$6000-$7FFF`; submapper 2 always uses that range for its selected NVRAM bank instead. Mode bits
+also select vertical, horizontal or either one-screen nametable arrangement.
+
+The ASIC decodes four mirrored scratch bytes in expansion space. `$5000` reads drive only D1-D0
+from external solder pads, leaving D7-D2 on the CPU bus; the default board setting is the unbridged
+value zero because neither accepted header format records it. The 16-bit one-shot IRQ counter can
+increment or decrement on every CPU M2 cycle or on every unfiltered PPU-A12 rise. LSB writes
+acknowledge, MSB writes arm counting when the mode's enable bit is set, and reaching zero disables
+the counter and asserts IRQ. Current hardware evidence proves `$00`/`$FF` as the two source values
+but not the decisive individual data bit, so other patterns deliberately preserve the prior
+source. See [NESdev mapper 83](https://www.nesdev.org/wiki/INES_Mapper_083).
+
 ## Jaleco CHR (87)
 
 A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →

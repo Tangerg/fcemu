@@ -23,6 +23,10 @@ describes evidence maturity rather than a runtime feature flag.
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM        |
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture      |
 | 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture       |
+| 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture       |
+| 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture     |
+| 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture    |
+| 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture      |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM     |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM      |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                 |
@@ -81,6 +85,12 @@ and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counte
 Mapper 16 accepts submapper 0 for legacy unspecified FCG/LZ93D50 images, submapper 4 for low-range
 FCG-1/2 and submapper 5 for high-range LZ93D50 with no EEPROM or a 256-byte 24C02. Deprecated
 submappers 1-3 are rejected in favor of their current mapper IDs 159, 157 and 153.
+
+Mappers 21/23/25 accept submapper 0 as the historical VRC4 compatibility superset with both
+non-overlapping CPU-address pin routes. Their exact NES 2.0 variants are mapper 21 submappers 1/2
+(VRC4a/c), mapper 23 submappers 1/2/3 (VRC4f/e and VRC2b), and mapper 25 submappers 1/2/3
+(VRC4b/d and VRC2c). Mapper 22 submapper 0 is the single VRC2a wiring. Unallocated VRC2
+submappers remain rejected rather than infer nonexistent boards.
 
 ## Legacy-header assumptions
 
@@ -145,6 +155,15 @@ submappers 1-3 are rejected in favor of their current mapper IDs 159, 157 and 15
   Legacy iNES cannot say that the optional RAM is absent and therefore keeps its conventional 8 KiB
   allocation; NES 2.0 can declare zero. Optional boards' external µPD7755/7756 sample-playback chip
   is not emulated.
+- Mappers 21/22/23/25 share one VRC2/VRC4 register and banking owner, but `Vrc24Board` keeps every
+  PCB's two register-select address lines immutable. Submapper 0 for 21/23/25 ORs the two
+  historically combined, non-overlapping address routes and deliberately behaves as the VRC4
+  compatibility superset. Exact VRC2b/VRC2c variants do not gain VRC4's PRG swap mode, one-screen
+  mirroring or IRQ device; VRC2b instead exposes only its physical D0 latch at `$6000-$6FFF` when
+  no 8 KiB RAM is declared. VRC2a additionally ignores CHR-bank bit 0. VRC4 supports 9-bit CHR
+  registers, gated 2 KiB-mirrored or 8 KiB PRG RAM, and its shared CPU/cycle-or-scanline IRQ core
+  with the 341-dot prescaler. PRG is capped at 256 KiB; reachable CHR capacity is capped per ASIC
+  and VRC2a wiring rather than silently modulo an unreachable declaration.
 - Mapper 32 (Irem G-101) exposes two switchable 8 KiB PRG banks, two fixed tail banks and eight
   1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
   windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major

@@ -85,6 +85,37 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "vrc2-vrc4";
+      readonly board:
+        | "vrc4-21-auto"
+        | "vrc4a"
+        | "vrc4c"
+        | "vrc2a"
+        | "vrc4-23-auto"
+        | "vrc4f"
+        | "vrc4e"
+        | "vrc2b"
+        | "vrc4-25-auto"
+        | "vrc4b"
+        | "vrc4d"
+        | "vrc2c";
+      readonly prgBanks: readonly number[];
+      readonly chrRegisters: readonly number[];
+      readonly prgMode: number;
+      readonly wramEnabled: boolean;
+      readonly microwireLatch: number;
+      readonly mirroring: number;
+      readonly irq: {
+        readonly latch: number;
+        readonly counter: number;
+        readonly prescaler: number;
+        readonly enabled: boolean;
+        readonly enabledAfterAcknowledge: boolean;
+        readonly cycleMode: boolean;
+        readonly pending: boolean;
+      } | null;
+    }
+  | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];

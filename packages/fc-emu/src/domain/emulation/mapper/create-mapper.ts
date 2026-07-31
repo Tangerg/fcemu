@@ -57,6 +57,8 @@ import {
   UxromMapper,
 } from "./uxrom-mapper.js";
 import { Vrc1Mapper } from "./vrc1-mapper.js";
+import { findVrc24Board, type Vrc24Board } from "./vrc2-vrc4-board.js";
+import { Vrc2Vrc4Mapper } from "./vrc2-vrc4-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -143,6 +145,18 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireOptional8KiBPrgRam(cartridge, "Jaleco SS8806");
       requireTwoScreenNametables(cartridge, "Jaleco SS8806");
       return new JalecoSs8806Mapper(interruptPort, cartridge);
+    case 21:
+    case 22:
+    case 23:
+    case 25: {
+      const board = resolveVrc24Board(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, board.maximumChrBytes);
+      requireChrRom(cartridge, "Konami VRC2/VRC4");
+      requireTwoScreenNametables(cartridge, "Konami VRC2/VRC4");
+      requireVrc24Memory(cartridge, board);
+      return new Vrc2Vrc4Mapper(interruptPort, cartridge, board);
+    }
     case 32:
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
@@ -468,6 +482,21 @@ function requireBandaiFcgMemory(cartridge: Cartridge, board: BandaiFcgBoard): vo
   }
 }
 
+function requireVrc24Memory(cartridge: Cartridge, board: Vrc24Board): void {
+  requireDirectPrgRam(cartridge);
+  const bytes = cartridge.prgWritableBytes;
+  const accepted =
+    board.chip === "vrc2" ? bytes === 0 || bytes === 0x2000 : [0, 0x0800, 0x2000].includes(bytes);
+  if (!accepted) {
+    throw configurationError(
+      cartridge,
+      board.chip === "vrc2"
+        ? "VRC2 supports either its one-bit latch or exactly 8 KiB of PRG RAM"
+        : "VRC4 PRG RAM must be absent, 2 KiB or 8 KiB",
+    );
+  }
+}
+
 function requireTwoScreenNametables(cartridge: Cartridge, board: string): void {
   if (cartridge.mirroringMode === NametableMirroring.FourScreen) {
     throw configurationError(cartridge, `${board} does not provide four-screen nametable memory`);
@@ -589,6 +618,14 @@ function resolveBandaiFcgBoard(cartridge: Cartridge): BandaiFcgBoard {
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }
+}
+
+function resolveVrc24Board(cartridge: Cartridge): Vrc24Board {
+  const board = findVrc24Board(cartridge.mapperNumber, cartridge.submapperNumber);
+  if (!board) {
+    throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+  return board;
 }
 
 function resolveCnromProtectionChip(cartridge: Cartridge): number {

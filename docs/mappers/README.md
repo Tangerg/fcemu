@@ -104,6 +104,10 @@ counters against their bit width and all booleans by runtime type) and throws
 | 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
 | 16  | Bandai FCG     | `bandai-fcg`       | `bandai-fcg-mapper.ts`       | no            | cyc. |
 | 18  | Jaleco SS8806  | `jaleco-ss8806`    | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
+| 21  | Konami VRC4a/c | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | cyc. |
+| 22  | Konami VRC2a   | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | no   |
+| 23  | VRC2b/VRC4e/f  | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | opt. |
+| 25  | VRC2c/VRC4b/d  | `vrc2-vrc4`        | `vrc2-vrc4-mapper.ts`        | no            | opt. |
 | 32  | Irem G-101     | `irem-g101`        | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
@@ -274,6 +278,35 @@ current [NESdev mapper 18](https://www.nesdev.org/wiki/INES_Mapper_018) hardware
 Mesen and Nestopia currently assert one cycle earlier on the 1→0 transition, so focused tests pin the
 underflow interpretation rather than hiding the contradiction. `$F003` is the port for an optional
 external µPD7755/7756 sample player; that separate audio device is not emulated.
+
+## Konami VRC2 / VRC4 (21, 22, 23, 25)
+
+`Vrc2Vrc4Mapper` owns the register file and banking shared by both ASICs: two switchable 8 KiB PRG
+registers and eight independent 1 KiB CHR registers. VRC2 fixes the final 16 KiB at
+`$C000-$FFFF`, supports only horizontal/vertical mirroring and has 8-bit CHR registers. VRC4 can
+exchange its `$8000` switchable and `$C000` second-to-last-fixed windows, adds either one-screen
+layout, and exposes a ninth CHR bank bit. VRC2a (mapper 22) additionally leaves CHR bank bit 0
+unconnected, so the stored bank value is shifted right once before reaching ROM.
+
+The ASIC's two register-select inputs are not assumed to be CPU A0/A1. `Vrc24Board` records the
+physical address-line pair for VRC4a/c/e/f, VRC4b/d and VRC2a/b/c. NES 2.0 submappers 1/2/3 select
+one exact wiring. Historical submapper 0 for mappers 21/23/25 remains a VRC4 compatibility owner:
+it ORs the two non-overlapping routes assigned to that iNES mapper, matching the established
+dual-decode contract without a title hash. Unallocated VRC2 routes fail closed.
+
+VRC2b submapper 3 exposes the PCB's one-bit latch on D0 at `$6000-$6FFF` when no 8 KiB RAM is
+declared; the other seven CPU data lines remain open bus. VRC4 accepts either its 2 KiB RAM mirrored
+through `$6000-$6FFF` or an externally decoded 8 KiB window. `$9002` bit 0 gates that RAM and bit 1
+selects PRG swap mode. VRC2 RAM, when declared, is an always-visible 8 KiB window.
+
+VRC4's `$F00x` ports assemble an 8-bit IRQ latch, configure cycle/scanline mode and acknowledge the
+level-sensitive output. Cycle mode clocks its up-counter every CPU cycle. Scanline mode starts a
+341-dot prescaler and subtracts three per CPU cycle, producing the repeating 114/114/113-cycle
+sequence; a `$FF` counter clock reloads the latch and asserts IRQ. `VrcIrq` is an independent
+domain component so later VRC6/VRC7 boards can reuse this actual circuit without importing VRC4
+banking. See [NESdev VRC2/VRC4](https://www.nesdev.org/wiki/VRC4),
+[NES 2.0 submappers](https://www.nesdev.org/wiki/NES_2.0_submappers) and
+[VRC IRQ](https://www.nesdev.org/wiki/VRC_IRQ).
 
 ## Irem G-101 (32)
 

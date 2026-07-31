@@ -258,6 +258,22 @@ describe("Cartridge", () => {
     expect(persistent.readMapperRam(3)).toBe(0x52);
   });
 
+  it("owns MMC5 ExRAM as volatile mapper memory even on a battery board", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 5, battery: true, prgBanks: 2, chrBanks: 1 }),
+    );
+
+    expect(cartridge).toMatchObject({
+      mapperRamBytes: 1024,
+      mapperNvRamBytes: 0,
+      prgNvRamBytes: 8192,
+    });
+    cartridge.writeMapperRam(0x12, 0x5a);
+    expect(cartridge.captureBatterySave()?.data).toHaveLength(8192);
+    cartridge.powerOn();
+    expect(cartridge.readMapperRam(0x12)).toBe(0);
+  });
+
   it("keeps mixed CHR ROM/RAM fail-closed outside TQROM", () => {
     expect(() =>
       Cartridge.fromArrayBuffer(

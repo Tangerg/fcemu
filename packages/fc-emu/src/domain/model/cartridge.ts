@@ -20,6 +20,7 @@ export { CartridgeTimingMode, NametableMirroring } from "./cartridge-header.js";
 export type { CartridgeFormat } from "./cartridge-header.js";
 
 const MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000;
+const MMC5_EXRAM_SIZE = 0x0400;
 const NAMCO_163_INTERNAL_RAM_SIZE = 0x80;
 const TRAINER_RAM_OFFSET = 0x1000;
 
@@ -88,9 +89,15 @@ class Cartridge {
     this.prgNvRamBytes = header.prgNvRamSize;
     this.chrRamBytes = header.chrRamSize;
     this.chrNvRamBytes = header.chrNvRamSize;
-    const mapperMemoryBytes = header.mapperNumber === 19 ? NAMCO_163_INTERNAL_RAM_SIZE : 0;
-    this.mapperRamBytes = header.hasBatteryFlag ? 0 : mapperMemoryBytes;
-    this.mapperNvRamBytes = header.hasBatteryFlag ? mapperMemoryBytes : 0;
+    const mapperMemoryBytes =
+      header.mapperNumber === 5
+        ? MMC5_EXRAM_SIZE
+        : header.mapperNumber === 19
+          ? NAMCO_163_INTERNAL_RAM_SIZE
+          : 0;
+    const mapperMemoryIsPersistent = header.mapperNumber === 19 && header.hasBatteryFlag;
+    this.mapperRamBytes = mapperMemoryIsPersistent ? 0 : mapperMemoryBytes;
+    this.mapperNvRamBytes = mapperMemoryIsPersistent ? mapperMemoryBytes : 0;
     this.memory = new CartridgeMemory({
       prgRamBytes: this.prgRamBytes,
       prgNvRamBytes: this.prgNvRamBytes,

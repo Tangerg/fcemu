@@ -16,6 +16,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                  |
 | 3      | CNROM          | Implemented | PRG/CHR/conflict/oversize tests; facade smoke                    |
 | 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned    |
+| 5      | MMC5/ExROM     | Implemented | Banking/ExRAM/split/IRQ/audio/state tests; no conformance ROM    |
 | 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture            |
 | 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned        |
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture      |
@@ -77,7 +78,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/9/10/11/13/18/24/26/33/64/65/66/68/69/70/75/76/79/80/82/87/88/89/90/93/94/95/97/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/75/76/79/80/82/87/88/89/90/93/94/95/97/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -156,6 +157,15 @@ second register model.
   out of scope.
 - Mapper 4 implements the MMC3 `$A001` PRG-RAM enable and write-protect bits. MMC6 remains excluded
   by its NES 2.0 submapper and different split protection scheme.
+- Mapper 5 models MMC5/ExROM rather than an MMC3-shaped banking subset. Four PRG and CHR modes,
+  A/B fetch-selected CHR register sets, dynamic CIRAM/ExRAM/fill nametables, extended attributes and
+  vertical split all follow the ASIC's physical outputs. The PPU supplies background/sprite fetch
+  ownership without exposing scanline internals to the board. Commercial 0/8/16/32 KiB PRG-RAM
+  layouts are accepted; ETROM's bank values 0–3 select its battery chip and 4–7 its volatile chip.
+  The write key remains the exact `$5102=2`, `$5103=1` pair. Scanline, MMC5A timer and PCM sources
+  share one level-sensitive IRQ output, while the two pulse channels and PCM DAC enter the normal
+  expansion-audio path. Unknown diagnostic pins and `$5207/$5208` behavior remain open bus instead
+  of fabricated registers.
 - Mappers 6/8/17 follow their current NESdev disk-extraction definitions rather than the obsolete
   FFE ASIC approximations found in older emulator tables. The iNES PRG/CHR payload initializes
   mutable card RAM, and each board owns exactly 32 KiB of volatile work RAM with no battery-backed

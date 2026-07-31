@@ -50,6 +50,13 @@ external allocation because it cannot describe absence. Submapper 1 requires bat
 internal RAM and no external WRAM; submappers 1/2 omit audio mixing, while 3/4/5 name the published
 N163 mix levels.
 
+Mapper 5 always owns 1 KiB of volatile ExRAM independently from header RAM fields; the battery flag
+never makes ExRAM persistent. ExROM accepts CHR ROM and 32 KiB–1 MiB PRG/8 KiB–1 MiB CHR ROM
+geometry. Writable PRG memory may be absent, one 8 KiB chip, one 32 KiB chip, or ETROM's exact
+8 KiB volatile plus 8 KiB battery pair. Legacy iNES retains its conventional single 8 KiB chip.
+NES 2.0 submapper 0 is accepted; unallocated variants and four-screen headers fail closed because
+MMC5 owns all four nametable routes itself.
+
 The address-latch multicarts use board-exact geometry rather than arbitrary modulo banking. Mapper
 15 is 1 MiB PRG plus 8 KiB volatile CHR RAM. Mapper 225 accepts matched 1 MiB/512 KiB or 2 MiB/1 MiB
 PRG/CHR ROM pairs. Mapper 227 is 1 MiB PRG plus 8 KiB volatile CHR RAM; only submapper 0 may also

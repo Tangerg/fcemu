@@ -1,4 +1,5 @@
 import type Bus from "./bus.js";
+import type { PpuFetchContext } from "./mapper/mapper.js";
 
 /**
  * CPU address-space mapping.
@@ -51,12 +52,18 @@ export class CPUMemory {
 
     // 0x0000-0x1FFF: internal RAM (2 KiB, mirrored across 8 KiB).
     if (address < 0x2000) {
-      return this.readFullyDriven(this.bus.RAM[address % 0x0800], cpuOwnsRead);
+      return this.finishRead(
+        address,
+        this.readFullyDriven(this.bus.RAM[address % 0x0800], cpuOwnsRead),
+      );
     }
 
     // 0x2000-0x3FFF: PPU registers (eight registers, repeatedly mirrored).
     if (address < 0x4000) {
-      return this.readFullyDriven(this.bus.PPU.readRegister(0x2000 + (address % 8)), cpuOwnsRead);
+      return this.finishRead(
+        address,
+        this.readFullyDriven(this.bus.PPU.readRegister(0x2000 + (address % 8)), cpuOwnsRead),
+      );
     }
 
     // 0x4000-0x4017: APU and I/O registers.
@@ -66,41 +73,52 @@ export class CPUMemory {
         // internal CPU bus, and the status read does not drive external pins.
         const value = this.bus.APU.readRegister(address) | (this.internalDataBus & 0x20);
         if (cpuOwnsRead) this.internalDataBus = value;
-        return value;
+        return this.finishRead(address, value);
       }
       if (address === 0x4016) {
-        return this.readPartiallyDriven(this.bus.Controller1.currentButton, 0x1f, cpuOwnsRead);
+        return this.finishRead(
+          address,
+          this.readPartiallyDriven(this.bus.Controller1.currentButton, 0x1f, cpuOwnsRead),
+        );
       }
       if (address === 0x4017) {
-        return this.readPartiallyDriven(this.bus.Controller2.currentButton, 0x1f, cpuOwnsRead);
+        return this.finishRead(
+          address,
+          this.readPartiallyDriven(this.bus.Controller2.currentButton, 0x1f, cpuOwnsRead),
+        );
       }
       // $4000-$4014 are write-only. With CPU test mode disabled, no
       // Control Deck device drives a read from these addresses.
       const cartridgeDrive = this.bus.Mapper.readCpuRegisterOpenBus?.(address);
       if (cartridgeDrive !== undefined) {
-        return this.readPartiallyDriven(
-          cartridgeDrive.value,
-          cartridgeDrive.drivenMask,
-          cpuOwnsRead,
+        return this.finishRead(
+          address,
+          this.readPartiallyDriven(cartridgeDrive.value, cartridgeDrive.drivenMask, cpuOwnsRead),
         );
       }
-      return this.readOpenBus(cpuOwnsRead);
+      return this.finishRead(address, this.readOpenBus(cpuOwnsRead));
     }
 
     // 0x4018-0x5FFF: expansion ROM region (typically unused).
     if (address < 0x6000) {
       const result = this.bus.Mapper.readCpuExpansion?.(address);
-      return result === undefined
-        ? this.readOpenBus(cpuOwnsRead)
-        : this.readPartiallyDriven(result.value, result.drivenMask, cpuOwnsRead);
+      return this.finishRead(
+        address,
+        result === undefined
+          ? this.readOpenBus(cpuOwnsRead)
+          : this.readPartiallyDriven(result.value, result.drivenMask, cpuOwnsRead),
+      );
     }
 
     // 0x6000-0xFFFF: cartridge space (PRG RAM, PRG ROM).
     const mapper = this.bus.Mapper;
-    return this.readPartiallyDriven(
-      mapper.read(address),
-      mapper.cpuReadDriveMask?.(address) ?? 0xff,
-      cpuOwnsRead,
+    return this.finishRead(
+      address,
+      this.readPartiallyDriven(
+        mapper.read(address),
+        mapper.cpuReadDriveMask?.(address) ?? 0xff,
+        cpuOwnsRead,
+      ),
     );
   }
 
@@ -117,6 +135,7 @@ export class CPUMemory {
     value = value & 0xff;
     this.internalDataBus = value;
     this.externalDataBus = value;
+    this.bus.Mapper.observeCpuWrite?.(address, value);
 
     // 0x0000-0x1FFF: internal RAM (2 KiB, mirrored across 8 KiB).
     if (address < 0x2000) {
@@ -157,6 +176,11 @@ export class CPUMemory {
   private readOpenBus(cpuOwnsRead: boolean): number {
     if (cpuOwnsRead) this.internalDataBus = this.externalDataBus;
     return this.externalDataBus;
+  }
+
+  private finishRead(address: number, value: number): number {
+    this.bus.Mapper.observeCpuRead?.(address, value);
+    return value;
   }
 
   private readFullyDriven(value: number, cpuOwnsRead: boolean): number {
@@ -217,7 +241,7 @@ export class PPUMemory {
    * @param address 14-bit address (0x0000-0x3FFF)
    * @returns 8-bit data (0-255)
    */
-  public read(address: number): number {
+  public read(address: number, context?: PpuFetchContext): number {
     // Constrain the address to the PPU address space (0x0000-0x3FFF).
     address &= 0x3fff;
     const mapper = this.bus.Mapper;
@@ -226,23 +250,25 @@ export class PPUMemory {
     let value: number;
     // 0x0000-0x1FFF: pattern tables (CHR ROM/RAM).
     if (address < 0x2000) {
-      const ciramAddress = mapper.mapPatternToCiramAddress?.(address);
+      const ciramAddress = mapper.mapPatternToCiramAddress?.(address, context);
       if (ciramAddress !== undefined) {
         value = this.bus.PPU.nameTableData[ciramAddress] ?? 0;
       } else {
         const drivenMask = mapper.ppuReadDriveMask?.(address) ?? 0xff;
         value =
-          (mapper.read(address) & drivenMask & 0xff) | (address & 0xff & (~drivenMask & 0xff));
+          (mapper.read(address, context) & drivenMask & 0xff) |
+          (address & 0xff & (~drivenMask & 0xff));
       }
     } else if (address < 0x3f00) {
       // 0x2000-0x3EFF: nametables (VRAM).
-      const cartridgeValue = mapper.readNametable?.(address);
+      const cartridgeValue = mapper.readNametable?.(address, context);
       if (cartridgeValue !== undefined) {
         value = cartridgeValue;
       } else {
         const mode = this.bus.Cartridge.mirroringMode;
         const mirroredAddr =
-          mapper.mapNametableAddress?.(address) ?? PPUMemory.mirrorAddress(mode, address) - 0x2000;
+          mapper.mapNametableAddress?.(address, context) ??
+          PPUMemory.mirrorAddress(mode, address) - 0x2000;
         value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
       }
     } else {
@@ -250,7 +276,7 @@ export class PPUMemory {
       value = this.bus.PPU.readPalette(address % 32);
     }
 
-    mapper.observePpuRead?.(address);
+    mapper.observePpuRead?.(address, context);
     return value;
   }
 

@@ -25,6 +25,7 @@ export const MapperKind = {
   Jy830623c: "jy-830623c",
   Ej0061: "ej-006-1",
   Namco163: "namco-163",
+  Mmc5: "mmc5",
   Namco118: "namco-118",
   Sunsoft1: "sunsoft-1",
   Sunsoft2: "sunsoft-2",

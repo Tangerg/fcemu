@@ -36,6 +36,7 @@ import { Mmc1Mapper } from "./mmc1-mapper.js";
 import { Mmc2Mapper } from "./mmc2-mapper.js";
 import { Mmc3Mapper } from "./mmc3-mapper.js";
 import { Mmc4Mapper } from "./mmc4-mapper.js";
+import { Mmc5Mapper } from "./mmc5-mapper.js";
 import type { Mapper, MapperInterruptPort } from "./mapper.js";
 import {
   MAPPER_76_BOARD,
@@ -104,6 +105,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWritableChrSize(cartridge, 0x2000);
       requireMmc3PrgRam(cartridge);
       return new Mmc3Mapper(interruptPort, cartridge);
+    case 5:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x100_000, 0x100_000);
+      requireChrRom(cartridge, "MMC5");
+      requireTwoScreenNametables(cartridge, "MMC5");
+      requireMmc5PrgRam(cartridge);
+      return new Mmc5Mapper(interruptPort, cartridge);
     case 6:
     case 8:
     case 17: {
@@ -571,6 +580,20 @@ function requireMmc3PrgRam(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
   if (cartridge.prgWritableBytes !== 0 && cartridge.prgWritableBytes !== 0x2000) {
     throw configurationError(cartridge, "MMC3 PRG RAM must be 8 KiB when present");
+  }
+}
+
+function requireMmc5PrgRam(cartridge: Cartridge): void {
+  const bytes = cartridge.prgWritableBytes;
+  const valid8KiB = bytes === 0x2000;
+  const validEtrom =
+    bytes === 0x4000 && cartridge.prgRamBytes === 0x2000 && cartridge.prgNvRamBytes === 0x2000;
+  const valid32KiB = bytes === 0x8000;
+  if (bytes !== 0 && !valid8KiB && !validEtrom && !valid32KiB) {
+    throw configurationError(
+      cartridge,
+      "MMC5 supports 0, 8 or 32 KiB PRG RAM, or ETROM's mixed 8 KiB RAM + 8 KiB NVRAM",
+    );
   }
 }
 

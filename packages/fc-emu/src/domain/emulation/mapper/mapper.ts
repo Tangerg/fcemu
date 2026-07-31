@@ -254,6 +254,61 @@ export type MapperState =
       };
     }
   | {
+      readonly kind: "mmc5";
+      readonly prgMode: number;
+      readonly chrMode: number;
+      readonly prgBanks: readonly number[];
+      readonly chrBanksA: readonly number[];
+      readonly chrBanksB: readonly number[];
+      readonly chrUpperBits: number;
+      readonly lastChrSet: "a" | "b";
+      readonly prgRamProtect1: number;
+      readonly prgRamProtect2: number;
+      readonly exRamMode: number;
+      readonly nametableMapping: number;
+      readonly fillTile: number;
+      readonly fillPalette: number;
+      readonly splitControl: number;
+      readonly splitScroll: number;
+      readonly splitBank: number;
+      readonly irqTarget: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly inFrame: boolean;
+      readonly scanlineCounter: number;
+      readonly ppuIdleCpuCycles: number;
+      readonly spriteSize16: boolean;
+      readonly ppuSubstitutionsEnabled: boolean;
+      readonly extendedAttribute: number;
+      readonly splitActive: boolean;
+      readonly splitFineY: number;
+      readonly splitColumn: number;
+      readonly splitY: number;
+      readonly multiplierA: number;
+      readonly multiplierB: number;
+      readonly timerCounter: number;
+      readonly timerRunning: boolean;
+      readonly timerPending: boolean;
+      readonly audio: {
+        readonly enabledMask: number;
+        readonly frameDivider: number;
+        readonly timerPhase: boolean;
+        readonly pcmControl: number;
+        readonly pcmOutput: number;
+        readonly pcmPending: boolean;
+        readonly pulses: readonly {
+          readonly control: number;
+          readonly period: number;
+          readonly divider: number;
+          readonly dutyStep: number;
+          readonly length: number;
+          readonly envelopeStart: boolean;
+          readonly envelopeDivider: number;
+          readonly envelopeDecay: number;
+        }[];
+      };
+    }
+  | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];
@@ -499,6 +554,27 @@ export type MapperState =
       readonly mirroring: number;
     };
 
+/**
+ * Meaning of a rendering fetch on the PPU bus.
+ *
+ * MMC5 physically selects different CHR and ExRAM wiring for background and
+ * sprite fetches. Keeping that fact on the bus boundary avoids exposing PPU
+ * scanline implementation details to cartridge boards.
+ */
+export type PpuFetchContext =
+  | {
+      readonly kind: "background";
+      readonly phase: "nametable" | "attribute" | "pattern";
+      readonly tile: number;
+      readonly visible: boolean;
+    }
+  | {
+      readonly kind: "sprite";
+      readonly phase: "nametable" | "pattern";
+      readonly slot: number;
+      readonly visible: boolean;
+    };
+
 export interface Mapper {
   /** Restores this board's deterministic fresh-instance latch state. */
   powerOn(): void;
@@ -519,7 +595,7 @@ export interface Mapper {
   powerOnCpuEntry?():
     { readonly address: number; readonly returnsToResetVector: boolean } | undefined;
 
-  read(address: number): number;
+  read(address: number, context?: PpuFetchContext): number;
 
   write(address: number, value: number): void;
 
@@ -570,7 +646,7 @@ export interface Mapper {
    * Namco 163 boards expose this physical substitution independently for
    * each 1 KiB pattern bank.
    */
-  mapPatternToCiramAddress?(address: number): number | undefined;
+  mapPatternToCiramAddress?(address: number, context?: PpuFetchContext): number | undefined;
 
   /**
    * Optional cartridge-controlled CIRAM routing for one nametable access.
@@ -578,7 +654,7 @@ export interface Mapper {
    * The returned index addresses the console/cartridge nametable memory
    * directly. Returning undefined leaves routing to fixed header mirroring.
    */
-  mapNametableAddress?(address: number): number | undefined;
+  mapNametableAddress?(address: number, context?: PpuFetchContext): number | undefined;
 
   /**
    * Optional cartridge-driven nametable byte.
@@ -587,7 +663,7 @@ export interface Mapper {
    * that replace CIRAM with CHR ROM without encoding memory ownership in an
    * address sentinel.
    */
-  readNametable?(address: number): number | undefined;
+  readNametable?(address: number, context?: PpuFetchContext): number | undefined;
 
   /**
    * Optional cartridge-owned nametable write.
@@ -601,6 +677,12 @@ export interface Mapper {
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;
 
+  /** Optional completed CPU-read observation for boards that snoop console traffic. */
+  observeCpuRead?(address: number, value: number): void;
+
+  /** Optional CPU-write observation for boards that snoop console registers. */
+  observeCpuWrite?(address: number, value: number): void;
+
   /** Optional cartridge-audio voltage contribution sampled by the console mixer. */
   expansionAudioSample?(): number;
 
@@ -608,7 +690,7 @@ export interface Mapper {
   observePpuAddress?(address: number): void;
 
   /** Optional completed PPU-read observation for read-triggered boards such as MMC2/MMC4. */
-  observePpuRead?(address: number): void;
+  observePpuRead?(address: number, context?: PpuFetchContext): void;
 
   /** Optional per-dot clock paired with PPU address-line observation. */
   tickPpu?(): void;

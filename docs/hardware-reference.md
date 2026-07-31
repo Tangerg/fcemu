@@ -105,6 +105,11 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   registers. Namco 163 can additionally replace individual pattern-table banks with either CIRAM
   page. Sunsoft-4 can instead disable CIRAM and drive nametable reads from CHR ROM. TQROM separately
   uses CHR bank bit 6 as ROM/RAM chip select.
+- MMC5 selects CHR and nametable data from the semantic owner of each physical PPU fetch: background
+  nametable/attribute/pattern, sprite nametable/pattern, or unspecialized PPUDATA. The PPU therefore
+  attaches a narrow fetch context to memory reads; it does not call mapper-specific scanline hooks.
+  MMC5 uses that bus fact for its A/B CHR sets, extended attributes and vertical split, while its
+  scanline detector still observes completed rendering reads.
 - The PPU drives a physical `/NMI` level; the CPU edge detector samples it during its input phase and
   transfers the detected edge through a second polling latch. Vector selection is fixed before the
   interrupt status push, not immediately before the vector read.

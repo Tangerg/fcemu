@@ -5,6 +5,7 @@ import type { ConsoleTiming } from "./console-timing.js";
 import { PpuIoBusLatch, type PpuIoBusState } from "./ppu/ppu-io-bus-latch.js";
 import { SpriteEvaluator, type SpriteEvaluationState } from "./ppu/sprite-evaluator.js";
 import { resolveSpritePatternAddress } from "./ppu/sprite-pattern-address.js";
+import type { PpuFetchContext } from "./mapper/mapper.js";
 
 interface SpriteZeroHitState {
   readonly pending: boolean;
@@ -607,14 +608,14 @@ class PPU {
 
   private fetchNameTableByte() {
     const address = 0x2000 | (this.v & 0x0fff);
-    this.nameTableByte = this.readBackgroundByte(address);
+    this.nameTableByte = this.readBackgroundByte(address, "nametable");
   }
 
   private fetchAttributeTableByte() {
     const v = this.v;
     const address = 0x23c0 | (v & 0x0c00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07);
     const shift = ((v >> 4) & 4) | (v & 2);
-    this.attributeTableByte = ((this.readBackgroundByte(address) >> shift) & 3) << 2;
+    this.attributeTableByte = ((this.readBackgroundByte(address, "attribute") >> shift) & 3) << 2;
   }
 
   private fetchLowTileByte() {
@@ -622,7 +623,7 @@ class PPU {
     const table = this.flagBackgroundTable;
     const tile = this.nameTableByte;
     const address = 0x1000 * table + tile * 16 + fineY;
-    this.lowTileByte = this.readBackgroundByte(address);
+    this.lowTileByte = this.readBackgroundByte(address, "pattern");
   }
 
   private fetchHighTileByte() {
@@ -630,7 +631,7 @@ class PPU {
     const table = this.flagBackgroundTable;
     const tile = this.nameTableByte;
     const address = 0x1000 * table + tile * 16 + fineY;
-    this.highTileByte = this.readBackgroundByte(address + 8);
+    this.highTileByte = this.readBackgroundByte(address + 8, "pattern");
   }
 
   private storeTileData() {
@@ -917,14 +918,17 @@ class PPU {
   private clockSpriteFetch(): void {
     const phase = this.cycle % 8;
     if (phase === 0 || phase === 2) {
-      this.memory.read(0x2000);
+      this.memory.read(0x2000, this.spriteFetchContext("nametable"));
       return;
     }
     if (phase !== 4 && phase !== 6) return;
 
     const slot = Math.floor((this.cycle - 257) / 8);
     const lowPlaneAddress = this.spritePatternAddress(slot);
-    const value = this.memory.read(lowPlaneAddress + (phase === 6 ? 8 : 0));
+    const value = this.memory.read(
+      lowPlaneAddress + (phase === 6 ? 8 : 0),
+      this.spriteFetchContext("pattern"),
+    );
     if (phase === 4) {
       this.spriteLowTileBytes[slot] = value;
       return;
@@ -954,8 +958,28 @@ class PPU {
     this.bus.Mapper.observePpuAddress?.(address & 0x3fff);
   }
 
-  private readBackgroundByte(address: number): number {
-    return this.memory.read(address);
+  private readBackgroundByte(
+    address: number,
+    phase: Extract<PpuFetchContext, { kind: "background" }>["phase"],
+  ): number {
+    const tile = this.cycle <= 256 ? (this.cycle - 1) >>> 3 : 32 + ((this.cycle - 321) >>> 3);
+    return this.memory.read(address, {
+      kind: "background",
+      phase,
+      tile,
+      visible: this.scanLine < 240,
+    });
+  }
+
+  private spriteFetchContext(
+    phase: Extract<PpuFetchContext, { kind: "sprite" }>["phase"],
+  ): PpuFetchContext {
+    return {
+      kind: "sprite",
+      phase,
+      slot: Math.floor((this.cycle - 257) / 8),
+      visible: this.scanLine < 240,
+    };
   }
 
   private clearSpriteZeroHit(): void {

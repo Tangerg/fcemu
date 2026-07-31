@@ -21,6 +21,7 @@ to the rest of core.
 | ---------------------------- | ---------------------------------------------------------------------------------------- |
 | `read(address)`              | Reads a CPU (`$6000-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout. |
 | `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
+| `cpuReadDriveMask(address)`  | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
 | `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
 | `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
@@ -33,6 +34,10 @@ PPU capabilities are structural: boards implement only the optional signal hooks
 consume. Address-line changes and completed reads are deliberately separate because MMC3 reacts to
 A12 before data transfer, while MMC2/MMC4 change their CHR latch only after the triggering byte has
 been read.
+
+CPU reads keep value selection and electrical drive behavior separate. A board may return a neutral
+byte from `read` while `cpuReadDriveMask` reports that a write-only register or disabled RAM window
+drives no data lines; `CPUMemory` then combines the driven bits with the retained external bus.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -92,8 +97,10 @@ counters against their bit width and all booleans by runtime type) and throws
 | 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
 | 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
+| 140 | Jaleco JF      | `jaleco-jf`        | `jaleco-jf-mapper.ts`        | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
+| 184 | Sunsoft-1      | `sunsoft-1`        | `sunsoft1-mapper.ts`         | no            | no   |
 | 206 | Namco 118      | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
@@ -257,6 +264,23 @@ bank 0 at `$8000-$BFFF` and switches `$C000-$FFFF` from bits 2-0. Its legacy def
 conflicts, while NES 2.0 submapper 1/2 selects no-conflict/conflict behavior explicitly. See
 [NESdev mapper 94](https://www.nesdev.org/wiki/INES_Mapper_094) and
 [NESdev mapper 180](https://www.nesdev.org/wiki/INES_Mapper_180).
+
+## Jaleco JF-11/JF-14 (140)
+
+A write-only latch throughout `$6000-$7FFF` uses bits 5-4 to select one of four 32 KiB PRG banks and
+bits 3-0 to select one of sixteen 8 KiB CHR-ROM banks. The register occupies otherwise-unmapped
+space, so writes have no bus conflicts and reads remain open bus. PRG and CHR are limited to the
+128 KiB reachable by those physical select lines. See
+[NESdev mapper 140](https://www.nesdev.org/wiki/INES_Mapper_140).
+
+## Sunsoft-1 (184)
+
+PRG ROM is a fixed 32 KiB window. The write-only `$6000-$7FFF` latch selects the lower 4 KiB CHR bank
+from bits 2-0 and the upper 4 KiB bank from bits 5-4; the upper CHR A14 line is hard-wired high, so
+that window selects banks 4-7 on a 32 KiB CHR ROM and mirrors onto banks 0-3 on a 16 KiB ROM. Reads
+from the latch window remain open bus. See
+[NESdev mapper 184](https://www.nesdev.org/wiki/INES_Mapper_184) and the
+[Sunsoft-1 pinout](https://www.nesdev.org/wiki/Sunsoft_1_pinout).
 
 ## Namco 118 / DxROM (206)
 

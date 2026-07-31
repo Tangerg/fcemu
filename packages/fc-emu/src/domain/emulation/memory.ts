@@ -85,7 +85,12 @@ export class CPUMemory {
     }
 
     // 0x6000-0xFFFF: cartridge space (PRG RAM, PRG ROM).
-    return this.readFullyDriven(this.bus.Mapper.read(address), cpuOwnsRead);
+    const mapper = this.bus.Mapper;
+    return this.readPartiallyDriven(
+      mapper.read(address),
+      mapper.cpuReadDriveMask?.(address) ?? 0xff,
+      cpuOwnsRead,
+    );
   }
 
   /**

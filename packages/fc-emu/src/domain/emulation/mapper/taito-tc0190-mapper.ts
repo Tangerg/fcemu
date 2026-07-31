@@ -84,6 +84,10 @@ export class TaitoTc0190Mapper implements Mapper {
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + (address & 0x1fff)] ?? 0;
   }
 
+  cpuReadDriveMask(address: number): number {
+    return address >= 0x8000 ? 0xff : 0;
+  }
+
   write(address: number, value: number): void {
     if (address < 0x8000 || address > 0xbfff) return;
     switch (address & 0xa003) {

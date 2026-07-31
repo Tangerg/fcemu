@@ -30,14 +30,17 @@ describes evidence maturity rather than a runtime feature flag.
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM     |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                   |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM   |
+| 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM  |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM              |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM        |
+| 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM        |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                   |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
-[mappers/README.md](./mappers/README.md). Mapper 0/4/9/10/11/13/33/66/69/70/87/94/152/206 currently
-accept only submapper 0. Mapper 1 accepts submapper 0, deprecated geometry-qualified
+[mappers/README.md](./mappers/README.md). Mapper
+0/4/9/10/11/13/33/66/69/70/87/94/140/152/184/206 currently accept only submapper 0. Mapper 1 accepts
+submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
 accept submapper 0 plus the NES 2.0 bus-conflict variants below. Mapper 34 accepts submapper 0
 through a single-board CHR-geometry decision, submapper 1 as NINA-001 and submapper 2 as BNROM.
@@ -57,7 +60,7 @@ submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fa
   because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/33/66/70/71/78/87/94/152/180/206 because those selected boards do not decode a writable
+  9/11/13/33/66/70/71/78/87/94/140/152/180/184/206 because those selected boards do not decode a writable
   `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB allocation remains a parser-compatibility
   detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -113,9 +116,15 @@ submapper 1 (Cosmo Carrier) and 3 (Holy Diver); ambiguous NES 2.0 submapper 0 fa
   and there are no bus conflicts.
 - Mapper 94 (HVC-UN1ROM) is UxROM with a conflict-prone bank field shifted to bits 4-2. It requires
   128 KiB PRG ROM and fixed 8 KiB CHR RAM.
+- Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB
+  PRG bank and bits 3-0 select an 8 KiB CHR-ROM bank. The window has no bus conflicts and reads are
+  open bus rather than a fabricated zero.
 - Mapper 180 uses the opposite UxROM window arrangement: the first 16 KiB PRG bank is fixed at
   `$8000-$BFFF`, while `$C000-$FFFF` is switchable. Legacy images use original UNROM AND conflicts;
   NES 2.0 submapper 1 disables them and submapper 2 makes them explicit.
+- Mapper 184 (Sunsoft-1) fixes 32 KiB PRG and selects two 4 KiB CHR-ROM windows through a write-only
+  `$6000-$7FFF` latch. Bits 2-0 select the lower bank; bits 5-4 select the upper bank with CHR A14
+  hard-wired high. Its 16 KiB and 32 KiB CHR layouts are both modeled explicitly.
 - Mapper 206 (Namco 118 / DxROM) is the discrete predecessor to MMC3. It reuses the `$8000`/`$8001`
   bank-select and bank-data ports for two 2 KiB plus four 1 KiB CHR windows and two 8 KiB PRG banks
   with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring

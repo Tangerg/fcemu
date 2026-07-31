@@ -51,6 +51,10 @@ export class GxromMapper implements Mapper {
     return 0;
   }
 
+  cpuReadDriveMask(address: number): number {
+    return address >= 0x8000 ? 0xff : 0;
+  }
+
   write(address: number, value: number): void {
     if (address < 0x2000) {
       this.cartridge.writeChr(this.chrOffset(address), value);

@@ -44,6 +44,16 @@ export type MapperState =
     }
   | { readonly kind: "jaleco-87"; readonly selectedChrBank: number }
   | {
+      readonly kind: "jaleco-jf";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+    }
+  | {
+      readonly kind: "sunsoft-1";
+      readonly selectedChrBank0: number;
+      readonly selectedChrBank1: number;
+    }
+  | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];
@@ -133,6 +143,15 @@ export interface Mapper {
   read(address: number): number;
 
   write(address: number, value: number): void;
+
+  /**
+   * Bits driven by the cartridge during a CPU read.
+   *
+   * Most mapped reads drive all eight data lines, so omitting this capability
+   * means 0xFF. Boards return 0 for write-only or disabled windows, allowing
+   * the CPU memory bus to retain its previous value instead of inventing data.
+   */
+  cpuReadDriveMask?(address: number): number;
 
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;

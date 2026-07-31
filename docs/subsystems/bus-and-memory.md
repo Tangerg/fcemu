@@ -105,7 +105,7 @@ See NESdev [CPU memory map](https://www.nesdev.org/wiki/CPU_memory_map).
 | `$4016`       | 1 B    | Controller 1 / OUT latch   | Controller 1 serial bit on D0-D4, external D5-D7    | scheduled `$4016` OUT-latch write       |
 | `$4017`       | 1 B    | Controller 2 / frame ctr   | Controller 2 serial bit on D0-D4, external D5-D7    | scheduled APU frame-counter write       |
 | `$4018-$5FFF` | ~7 KiB | Expansion (unused)         | open bus (external latch)                           | ignored (no effect)                     |
-| `$6000-$FFFF` | 40 KiB | Cartridge (PRG RAM/ROM)    | `Mapper.read`                                       | `Mapper.write`                          |
+| `$6000-$FFFF` | 40 KiB | Cartridge (PRG RAM/ROM)    | `Mapper.read` + optional data-line drive mask       | `Mapper.write`                          |
 
 ### Internal vs external data-bus latches and open bus
 
@@ -114,12 +114,14 @@ See NESdev [CPU memory map](https://www.nesdev.org/wiki/CPU_memory_map).
 CPU reads (`read` -> `readMapped(…, true)`) from DMA bus-master reads (`readForDma` ->
 `readMapped(…, false)`):
 
-- `readFullyDriven` (RAM, PPU registers, cartridge) drives the external latch to the returned byte,
-  and the internal latch too only when the CPU owns the read.
+- `readFullyDriven` (RAM and PPU registers) drives the external latch to the returned byte, and the
+  internal latch too only when the CPU owns the read.
 - `readOpenBus` (write-only `$4000-$4014`, `$4018-$5FFF`) returns the retained external latch; the
   internal latch copies it only on a CPU-owned read. Nothing on the Control Deck drives these pins.
-- `readPartiallyDriven` (controller ports) drives only the bits in the mask and retains the rest of
-  the external latch, mirroring the internal latch on a CPU-owned read.
+- `readPartiallyDriven` (controller ports and cartridge reads) drives only the bits in the mask and
+  retains the rest of the external latch, mirroring the internal latch on a CPU-owned read. A mapper
+  omitting `cpuReadDriveMask` drives all eight bits; write-only or disabled cartridge windows return
+  mask `0`, preserving open bus.
 - Writes drive both latches to the written value before dispatching.
 
 A DMA fetch therefore updates the external pins without disturbing the CPU's internal bus, which is

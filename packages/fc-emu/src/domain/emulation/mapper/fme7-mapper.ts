@@ -121,6 +121,13 @@ export class Fme7Mapper implements Mapper {
     return 0;
   }
 
+  cpuReadDriveMask(address: number): number {
+    if (address >= 0x8000) return 0xff;
+    if (address < 0x6000) return 0;
+    if ((this.prgBank0 & 0x40) === 0) return 0xff;
+    return (this.prgBank0 & 0x80) !== 0 && this.cartridge.prgWritableBytes > 0 ? 0xff : 0;
+  }
+
   write(address: number, value: number): void {
     if (address < 0x2000) {
       this.cartridge.writeChr(this.chrOffset(address), value);

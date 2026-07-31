@@ -103,6 +103,13 @@ export class Mmc1Mapper implements Mapper {
     return 0;
   }
 
+  cpuReadDriveMask(address: number): number {
+    return address >= 0x8000 ||
+      (address >= 0x6000 && this.isPrgRamEnabled && this.cartridge.prgWritableBytes > 0)
+      ? 0xff
+      : 0;
+  }
+
   write(address: number, value: number): void {
     if (address < 0x2000) {
       this.activeChrRegister = address < 0x1000 ? 0 : 1;

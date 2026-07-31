@@ -10,6 +10,7 @@ import { CpromMapper } from "./cprom-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
+import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
@@ -27,6 +28,7 @@ import {
   UnsupportedMapperVariantError,
 } from "./mapper-errors.js";
 import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
+import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import {
   createInvertedUxromBoard,
   GENERIC_UXROM_BOARD,
@@ -154,6 +156,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRam(cartridge, "UN1ROM");
       requireNoPrgRam(cartridge);
       return new UxromMapper(cartridge, UN1ROM_BOARD);
+    case 140:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "Jaleco JF-11/JF-14");
+      requireNoPrgRam(cartridge);
+      return new JalecoJfMapper(cartridge);
     case 152:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
@@ -169,6 +178,12 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
         cartridge,
         createInvertedUxromBoard(resolveBusConflicts(cartridge, true)),
       );
+    case 184:
+      requireBaseSubmapper(cartridge);
+      requireSunsoft1Layout(cartridge);
+      requireChrRom(cartridge, "Sunsoft-1");
+      requireNoPrgRam(cartridge);
+      return new Sunsoft1Mapper(cartridge);
     case 206:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -344,6 +359,15 @@ function requireCnromLayout(cartridge: Cartridge): void {
     cartridge.chrMemoryBytes % 0x2000 !== 0
   ) {
     throw configurationError(cartridge, "CHR memory must contain one to sixteen 8 KiB banks");
+  }
+}
+
+function requireSunsoft1Layout(cartridge: Cartridge): void {
+  if (cartridge.prgRom.byteLength !== 0x8000) {
+    throw configurationError(cartridge, "Sunsoft-1 PRG ROM must be 32 KiB");
+  }
+  if (cartridge.chrMemoryBytes !== 0x4000 && cartridge.chrMemoryBytes !== 0x8000) {
+    throw configurationError(cartridge, "Sunsoft-1 CHR ROM must be 16 KiB or 32 KiB");
   }
 }
 

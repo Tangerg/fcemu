@@ -13,6 +13,38 @@ describe("Bus lifecycle", () => {
     expect(bus.CPU.readByte(0x4018)).toBe(0xa5);
   });
 
+  it("retains the external CPU bus when a cartridge leaves $6000-$7FFF undriven", () => {
+    const bus = new Bus(createTestCartridge({ mapper: 11, prgBanks: 2, chrBanks: 1 }));
+    bus.RAM[0] = 0xa5;
+
+    expect(bus.CPU.readByte(0)).toBe(0xa5);
+    expect(bus.CPU.readByte(0x6000)).toBe(0xa5);
+    expect(bus.CPU.readByte(0x7fff)).toBe(0xa5);
+  });
+
+  it("lets mapped cartridge RAM replace the retained external CPU bus", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.Mapper.write(0x6000, 0x3c);
+    bus.RAM[0] = 0xa5;
+
+    expect(bus.CPU.readByte(0)).toBe(0xa5);
+    expect(bus.CPU.readByte(0x6000)).toBe(0x3c);
+  });
+
+  it("distinguishes FME-7's driven ROM window from its disabled $6000 window", () => {
+    const cartridge = createTestCartridge({ mapper: 69, prgBanks: 2, chrBanks: 1 });
+    cartridge.prgRom[0] = 0x36;
+    const bus = new Bus(cartridge);
+
+    expect(bus.CPU.readByte(0x6000)).toBe(0x36);
+    bus.Mapper.write(0x8000, 0x08);
+    bus.Mapper.write(0xa000, 0x40);
+    bus.RAM[0] = 0xa5;
+    bus.CPU.readByte(0);
+
+    expect(bus.CPU.readByte(0x6000)).toBe(0xa5);
+  });
+
   it("preserves the external CPU bus across an internal $4015 status read", () => {
     const bus = new Bus(createTestCartridge());
     bus.RAM[0] = 0x20;

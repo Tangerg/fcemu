@@ -139,6 +139,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 80  | Taito X1-005   | `taito-x1-005`            | `taito-x1-005-mapper.ts`     | no            | no   |
 | 82  | Taito X1-017   | `taito-x1-017`            | `taito-x1-017-mapper.ts`     | no            | cyc. |
 | 83  | Cony/Yoko ASIC | `cony-yoko`               | `cony-yoko-mapper.ts`        | no            | both |
+| 85  | Konami VRC7    | `vrc7`                    | `vrc7-mapper.ts`             | no            | cyc. |
 | 87  | Jaleco CHR     | `jaleco-87`               | `jaleco-mapper.ts`           | no            | no   |
 | 88  | Namco 3433     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`               | `sunsoft2-mapper.ts`         | AND           | no   |
@@ -413,6 +414,32 @@ Every divider, duty step, saw accumulator, bank and pending IRQ is serialized. S
 [NESdev VRC6](https://www.nesdev.org/wiki/VRC6),
 [VRC6 audio](https://www.nesdev.org/wiki/VRC6_audio) and
 [VRC6 pinout](https://www.nesdev.org/wiki/VRC6_pinout).
+
+## Konami VRC7 (85)
+
+`Vrc7Mapper` maps three independently selected 8 KiB PRG windows followed by the fixed final bank,
+eight 1 KiB CHR-ROM or CHR-RAM windows, and the vertical/horizontal/two one-screen CIRAM modes.
+`$E000` bit 7 gates an optional exact 8 KiB WRAM/NVRAM window. The byte-wide IRQ latch, control and
+acknowledge ports reuse `VrcIrq`.
+
+The board descriptor keeps the physical register-select input immutable. Legacy iNES/submapper 0
+accepts either A3 (`$x008`) or A4 (`$x010`) for historical images. NES 2.0 submapper 1 selects
+VRC7b/A3 and has no audible expansion circuit because its PCB omits the resonator and mixer.
+Submapper 2 selects VRC7a/A4 and decodes `$9010`/`$9030` into the sound device.
+
+`Vrc7Audio` is a deliberately bounded six-channel OPLL core. It includes only VRC7 melodic mode:
+the recovered 15-instrument ROM, one shared custom patch, paired phase/envelope generators,
+feedback, key scaling, tremolo, vibrato and the VRC7 test register. It advances one native sample
+per 36 NTSC CPU clocks and feeds its signed output into the shared console filter path. `$E000` bit
+6 clears sound registers, envelopes and tremolo phase, ignores sound-port writes while asserted,
+and leaves the independently running vibrato phase intact. All divider, register, operator,
+feedback, envelope, bank and IRQ phases participate in save states.
+
+The synthesis algorithm is adapted from MIT-licensed
+[emu2413 1.5.9](https://github.com/digital-sound-antiques/emu2413); its license is preserved in the
+repository's [third-party notices](../../THIRD_PARTY_NOTICES.md). Board behavior follows
+[NESdev VRC7](https://www.nesdev.org/wiki/INES_Mapper_085) and
+[VRC7 audio](https://www.nesdev.org/wiki/VRC7_audio).
 
 ## Irem G-101 (32)
 

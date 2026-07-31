@@ -301,8 +301,8 @@ pipeline state.
 The native pulse and TND nonlinear outputs are combined with the mapper's optional cartridge-audio
 voltage before the shared 90 Hz/440 Hz high-pass and 14 kHz low-pass chain. The APU sees only
 `cartridgeAudioSample()` on its bus port: oscillator clocks, registers and snapshot state remain
-owned by the mapper. VRC6 is the first implementation of this boundary; its two pulse channels and
-saw DAC advance on CPU M2 through the same mapper bus observation used by cycle IRQs.
+owned by the mapper. VRC6 pulse/saw and VRC7 six-channel FM both enter through this boundary. Their
+devices advance from CPU M2 through the same mapper bus observation used by cycle IRQs.
 
 The core produces one filtered sample per output tick and pushes it to listeners registered through
 `addListener`; the application layer wires that to the audio output port
@@ -318,7 +318,7 @@ checksum-pinned AccuracyCoin bus/DMA matrix, both Sprite/DMC collision ROMs and 
 APU visual matrix documented in
 [External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md).
 
-VRC6 cartridge audio is mixed and stateful. Sunsoft 5B, Namco 163, VRC7 and MMC5 audio remain
+VRC6 and VRC7 cartridge audio are mixed and stateful. Sunsoft 5B, Namco 163 and MMC5 audio remain
 separate mapper-device work until their own chip models are connected through the same narrow
 boundary. NTSC uses the measured RP2A03H/late-G implicit-stop behavior; PAL and Dendy intentionally
 use the conservative DMC silicon profile until equivalent measurements exist. These are explicit

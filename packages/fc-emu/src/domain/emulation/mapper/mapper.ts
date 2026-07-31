@@ -199,6 +199,40 @@ export type MapperState =
       };
     }
   | {
+      readonly kind: "vrc7";
+      readonly board: "vrc7-auto" | "vrc7b" | "vrc7a";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly control: number;
+      readonly audio: {
+        readonly reset: boolean;
+        readonly selectedRegister: number;
+        readonly registers: readonly number[];
+        readonly divider: number;
+        readonly output: number;
+        readonly pmPhase: number;
+        readonly amPhase: number;
+        readonly envelopeCounter: number;
+        readonly slots: readonly {
+          readonly phase: number;
+          readonly currentOutput: number;
+          readonly previousOutput: number;
+          readonly envelopeState: number;
+          readonly envelopeOutput: number;
+          readonly keyOn: boolean;
+        }[];
+      } | null;
+      readonly irq: {
+        readonly latch: number;
+        readonly counter: number;
+        readonly prescaler: number;
+        readonly enabled: boolean;
+        readonly enabledAfterAcknowledge: boolean;
+        readonly cycleMode: boolean;
+        readonly pending: boolean;
+      };
+    }
+  | {
       readonly kind: "taito-tc0190";
       readonly prgBanks: readonly number[];
       readonly chrBanks: readonly number[];

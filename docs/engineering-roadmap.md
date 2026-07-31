@@ -13,7 +13,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 60 implemented mapper IDs; four board families currently have reproducible external or pinned
+- 61 implemented mapper IDs; four board families currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-14 save states and independent battery-backed NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
@@ -38,7 +38,7 @@ the historical title table, whose own introduction warns that those fields are i
 | FFE and simple multicart | 6, 8, 15, 17, 225, 227, 228    | RAM-card state; outer/inner multicart banks   | Implemented |
 | Cony clone ASIC          | 83                             | Outer banks; NVRAM; dual-source IRQ           | Implemented |
 | JY clone ASIC            | 90                             | Multiplier, outer banks and IRQ variants      | Implemented |
-| Expansion-audio boards   | 19, 24, 26, 85                 | VRC6 done; Namco 163 and VRC7 remain          | In progress |
+| Expansion-audio boards   | 19, 24, 26, 85                 | VRC6/VRC7 done; Namco 163 remains             | In progress |
 | Advanced console boards  | 5, 99                          | MMC5 features; VS System console/header model | Planned     |
 
 Completion means all 31 IDs meet the mapper definition of done below. It does not expand scope to
@@ -48,7 +48,7 @@ every assigned iNES/NES 2.0 number or permit title hashes and guessed board vari
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 6, 8, 9, 10, 11,
 13, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 32, 33, 48, 64, 65, 66, 68, 69, 70, 71, 75, 76, 78,
-79, 80, 82, 83, 87, 88, 89, 90, 91, 93, 94, 95, 97, 118, 119, 140, 152, 180, 184, 185, 206, 225,
+79, 80, 82, 83, 85, 87, 88, 89, 90, 91, 93, 94, 95, 97, 118, 119, 140, 152, 180, 184, 185, 206, 225,
 227 and 228 are implemented but do not yet all have executable external verification.
 
 For each board family:

@@ -70,6 +70,7 @@ import { Vrc1Mapper } from "./vrc1-mapper.js";
 import { findVrc24Board, type Vrc24Board } from "./vrc2-vrc4-board.js";
 import { Vrc2Vrc4Mapper } from "./vrc2-vrc4-mapper.js";
 import { Vrc6Mapper } from "./vrc6-mapper.js";
+import { Vrc7Mapper, type Vrc7Board } from "./vrc7-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -312,6 +313,12 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireConyYokoLayout(cartridge, board);
       return new ConyYokoMapper(interruptPort, cartridge, board);
     }
+    case 85:
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireOptional8KiBPrgRam(cartridge, "Konami VRC7");
+      requireTwoScreenNametables(cartridge, "Konami VRC7");
+      return new Vrc7Mapper(interruptPort, cartridge, resolveVrc7Board(cartridge));
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);
@@ -675,6 +682,19 @@ function requireVrc6Memory(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
   if (cartridge.prgWritableBytes !== 0x2000) {
     throw configurationError(cartridge, "VRC6 requires exactly 8 KiB of PRG RAM or NVRAM");
+  }
+}
+
+function resolveVrc7Board(cartridge: Cartridge): Vrc7Board {
+  switch (cartridge.submapperNumber) {
+    case 0:
+      return "vrc7-auto";
+    case 1:
+      return "vrc7b";
+    case 2:
+      return "vrc7a";
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }
 }
 

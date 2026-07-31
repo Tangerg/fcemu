@@ -51,6 +51,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture         |
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM        |
 | 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture  |
+| 85     | Konami VRC7    | Implemented | Three PCBs/banking/IRQ/FM/reset/state tests; no conformance ROM  |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                      |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM             |
@@ -98,6 +99,11 @@ currently allocated Cony PCBs. Submapper 1 rewires CHR into four 2 KiB windows; 
 shared PRG/CHR outer lines and four battery-backed 8 KiB NVRAM banks; submapper 3 uses a 128 KiB
 inner PRG region and separate CHR outer lines. Mapper 264's different register-address wiring is a
 separate mapper and is not inferred from ROM size.
+
+Mapper 85 accepts legacy/submapper 0 as the historical VRC7 compatibility wiring, where either A3
+or A4 can select the second register in a pair. NES 2.0 submapper 1 is VRC7b with A3 routing and no
+working oscillator/mixer; submapper 2 is VRC7a with A4 routing and six-channel FM audio. Other
+submappers fail closed.
 
 Mapper 16 accepts submapper 0 for legacy unspecified FCG/LZ93D50 images, submapper 4 for low-range
 FCG-1/2 and submapper 5 for high-range LZ93D50 with no EEPROM or a 256-byte 24C02. Deprecated
@@ -216,6 +222,14 @@ second register model.
   the fourteen-step saw accumulator and `$9003` halt/16×/256× scaling. The linear six-bit DAC is
   sampled through the mapper audio capability and added before the console RC filters; oscillator,
   divider, accumulator, IRQ and bank phase all participate in save state.
+- Mapper 85 owns three 8 KiB PRG registers, a fixed final bank, eight byte-wide 1 KiB CHR
+  registers, four CIRAM arrangements, an optional gated 8 KiB WRAM/NVRAM window and the shared VRC
+  IRQ. Legacy images accept either A3/A4 register-select route; submapper 1 fixes VRC7b's A3 route
+  and absent resonator/audio path, while submapper 2 fixes VRC7a's A4 route and FM output. The
+  VRC7-only sound core models six two-operator channels, the recovered instrument ROM, custom
+  patch, logarithmic envelope/phase generators, tremolo/vibrato, test register and 36-CPU-cycle
+  native sample divider. `$E000` bit 6 clears and silences sound-register state while vibrato phase
+  continues; complete operator feedback/envelope/phase state is serialized.
 - Mapper 32 (Irem G-101) exposes two switchable 8 KiB PRG banks, two fixed tail banks and eight
   1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
   windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major

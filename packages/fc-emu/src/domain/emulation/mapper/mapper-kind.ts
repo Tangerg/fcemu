@@ -44,6 +44,7 @@ export const MapperKind = {
   Vrc1: "vrc1",
   Vrc2Vrc4: "vrc2-vrc4",
   Vrc6: "vrc6",
+  Vrc7: "vrc7",
   Mmc1: "mmc1",
   Mmc2: "mmc2",
   Mmc3: "mmc3",

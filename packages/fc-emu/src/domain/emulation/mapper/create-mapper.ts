@@ -1,3 +1,4 @@
+import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
 import { AxromMapper } from "./axrom-mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
@@ -8,6 +9,7 @@ import { ColorDreamsMapper } from "./color-dreams-mapper.js";
 import { CpromMapper } from "./cprom-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
+import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
@@ -24,7 +26,13 @@ import {
   UnsupportedMapperError,
   UnsupportedMapperVariantError,
 } from "./mapper-errors.js";
-import { UxromMapper } from "./uxrom-mapper.js";
+import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
+import {
+  createInvertedUxromBoard,
+  GENERIC_UXROM_BOARD,
+  UN1ROM_BOARD,
+  UxromMapper,
+} from "./uxrom-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -41,7 +49,10 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireWritableChrSize(cartridge, 0x2000);
       requireDirectPrgRam(cartridge);
-      return new UxromMapper(cartridge, resolveBusConflicts(cartridge, false));
+      return new UxromMapper(cartridge, {
+        ...GENERIC_UXROM_BOARD,
+        hasBusConflicts: resolveBusConflicts(cartridge, false),
+      });
     case 3:
       requireCnromLayout(cartridge);
       requireWritableChrSize(cartridge, 0x2000);
@@ -91,6 +102,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       requireNoPrgRam(cartridge);
       return new CpromMapper(cartridge);
+    case 33:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
+      requireChrRom(cartridge, "Taito TC0190");
+      requireNoPrgRam(cartridge);
+      return new TaitoTc0190Mapper(cartridge);
     case 34: {
       const board = resolveMapper34Board(cartridge);
       return board === "nina-001" ? new Nina001Mapper(cartridge) : new BnromMapper(cartridge);
@@ -119,17 +137,38 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWritableChrSize(cartridge, 0x2000);
       requireNoPrgRam(cartridge);
       return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
+    case 78:
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "mapper 78");
+      requireNoPrgRam(cartridge);
+      return new Irem78Mapper(cartridge, resolveIrem78Mirroring(cartridge));
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);
       requireNoPrgRam(cartridge);
       return new JalecoMapper(cartridge);
+    case 94:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x2000);
+      requireChrRam(cartridge, "UN1ROM");
+      requireNoPrgRam(cartridge);
+      return new UxromMapper(cartridge, UN1ROM_BOARD);
     case 152:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
       requireNoPrgRam(cartridge);
       return new Bandai74Mapper(cartridge, true);
+    case 180:
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x2000);
+      requireChrRam(cartridge, "inverted UxROM");
+      requireNoPrgRam(cartridge);
+      return new UxromMapper(
+        cartridge,
+        createInvertedUxromBoard(resolveBusConflicts(cartridge, true)),
+      );
     case 206:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -160,6 +199,18 @@ function requireWritableChrSize(cartridge: Cartridge, requiredBytes: number): vo
       cartridge,
       `writable CHR memory must be ${formatBytes(requiredBytes)}`,
     );
+  }
+}
+
+function requireChrRom(cartridge: Cartridge, board: string): void {
+  if (cartridge.hasWritableChrMemory) {
+    throw configurationError(cartridge, `${board} requires CHR ROM`);
+  }
+}
+
+function requireChrRam(cartridge: Cartridge, board: string): void {
+  if (!cartridge.hasWritableChrMemory) {
+    throw configurationError(cartridge, `${board} requires writable CHR RAM`);
   }
 }
 
@@ -212,6 +263,22 @@ function requireCodemastersMirroring(cartridge: Cartridge): boolean {
       return false;
     case 1:
       return true;
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+}
+
+function resolveIrem78Mirroring(cartridge: Cartridge): Irem78Mirroring {
+  if (cartridge.format === "ines") {
+    return cartridge.mirroringMode === NametableMirroring.FourScreen
+      ? "horizontal-vertical"
+      : "single-screen";
+  }
+  switch (cartridge.submapperNumber) {
+    case 1:
+      return "single-screen";
+    case 3:
+      return "horizontal-vertical";
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }

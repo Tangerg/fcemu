@@ -17,6 +17,8 @@ export const MapperKind = {
   Bandai74: "bandai-74",
   Jaleco87: "jaleco-87",
   Namco118: "namco-118",
+  TaitoTc0190: "taito-tc0190",
+  Irem78: "irem-78",
   Mmc1: "mmc1",
   Mmc2: "mmc2",
   Mmc3: "mmc3",

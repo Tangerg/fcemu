@@ -94,6 +94,47 @@ describe("Emulator", () => {
   });
 
   it.each([
+    [33, { prgBanks: 2, chrBanks: 1 }],
+    [78, { prgBanks: 2, chrBanks: 1 }],
+    [94, { prgBanks: 8 }],
+  ] as const)("boots mapper %i through the public emulator facade", (mapper, layout) => {
+    const emulator = Emulator.fromRom(
+      createTestRom({
+        mapper,
+        ...layout,
+        program: [0x4c, 0x00, 0x80],
+        resetVector: 0x8000,
+      }),
+    );
+
+    expect(emulator.cartridge.mapperNumber).toBe(mapper);
+    expect(emulator.runFrame().frameNumber).toBe(1);
+    expect(emulator.diagnostics).toMatchObject({ programCounter: 0x8000, cpuHalted: false });
+  });
+
+  it("boots mapper 180 from the switchable upper window's power-on bank", () => {
+    const rom = new Uint8Array(
+      createTestRom({
+        mapper: 180,
+        prgBanks: 8,
+        program: [0x4c, 0x00, 0xc0],
+        resetVector: 0xc000,
+      }),
+    );
+    const firstBankVectors = 16 + 0x4000 - 6;
+    for (let vector = 0; vector < 3; vector++) {
+      rom[firstBankVectors + vector * 2] = 0x00;
+      rom[firstBankVectors + vector * 2 + 1] = 0xc0;
+    }
+
+    const emulator = Emulator.fromRom(rom.buffer);
+
+    expect(emulator.cartridge.mapperNumber).toBe(180);
+    expect(emulator.runFrame().frameNumber).toBe(1);
+    expect(emulator.diagnostics).toMatchObject({ programCounter: 0xc000, cpuHalted: false });
+  });
+
+  it.each([
     [1, { prgBanks: 4, chrBanks: 8, prgRamShift: 7 }],
     [2, { prgBanks: 8, chrRamShift: 7 }],
   ] as const)(

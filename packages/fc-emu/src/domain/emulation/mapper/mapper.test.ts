@@ -412,6 +412,32 @@ describe("cartridge mappers", () => {
     fme7.write(0xa000, 0x34);
     fme7.write(0x8000, 0x0d);
     fme7.write(0xa000, 0x81);
+    const taito33 = createMapper(
+      createTestCartridge({ mapper: 33, prgBanks: 8, chrBanks: 8 }),
+      interruptPort,
+    );
+    taito33.write(0x8000, 0x45);
+    taito33.write(0x8001, 3);
+    taito33.write(0x8002, 4);
+    taito33.write(0xa003, 7);
+    const irem78Cartridge = createTestCartridge({
+      nes2: true,
+      mapper: 78,
+      submapper: 3,
+      prgBanks: 8,
+      chrBanks: 16,
+    });
+    irem78Cartridge.prgRom[0] = 0xff;
+    const irem78 = createMapper(irem78Cartridge, interruptPort);
+    irem78.write(0x8000, 0x29);
+    const un1romCartridge = createTestCartridge({ mapper: 94, prgBanks: 8 });
+    un1romCartridge.prgRom[0] = 0xff;
+    const un1rom = createMapper(un1romCartridge, interruptPort);
+    un1rom.write(0x8000, 0x14);
+    const invertedUxromCartridge = createTestCartridge({ mapper: 180, prgBanks: 8 });
+    invertedUxromCartridge.prgRom[0] = 0xff;
+    const invertedUxrom = createMapper(invertedUxromCartridge, interruptPort);
+    invertedUxrom.write(0x8000, 5);
 
     for (const mapper of [
       nrom,
@@ -433,6 +459,10 @@ describe("cartridge mappers", () => {
       jaleco,
       namco118,
       fme7,
+      taito33,
+      irem78,
+      un1rom,
+      invertedUxrom,
     ]) {
       const state = mapper.captureState();
       mapper.powerOn();
@@ -568,6 +598,37 @@ describe("cartridge mappers", () => {
       "Namco 118 with PRG RAM",
       { nes2: true, mapper: 206, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
     ],
+    ["Taito TC0190 with CHR RAM", { nes2: true, mapper: 33, prgBanks: 2, chrRamShift: 7 }],
+    [
+      "Taito TC0190 with PRG RAM",
+      { nes2: true, mapper: 33, prgBanks: 2, chrBanks: 1, prgRamShift: 7 },
+    ],
+    [
+      "mapper 78 with CHR RAM",
+      { nes2: true, mapper: 78, submapper: 1, prgBanks: 2, chrRamShift: 7 },
+    ],
+    [
+      "mapper 78 with an ambiguous NES 2.0 submapper",
+      { nes2: true, mapper: 78, submapper: 0, prgBanks: 2, chrBanks: 1 },
+    ],
+    ["UN1ROM with CHR ROM", { nes2: true, mapper: 94, prgBanks: 8, chrBanks: 1 }],
+    [
+      "inverted UxROM with CHR ROM",
+      { nes2: true, mapper: 180, submapper: 1, prgBanks: 2, chrBanks: 1 },
+    ],
+    [
+      "inverted UxROM with PRG RAM",
+      { nes2: true, mapper: 180, submapper: 1, prgBanks: 2, prgRamShift: 7 },
+    ],
+    [
+      "Taito TC0190 with an unmodeled submapper",
+      { nes2: true, mapper: 33, submapper: 1, prgBanks: 2, chrBanks: 1 },
+    ],
+    ["UN1ROM with an unmodeled submapper", { nes2: true, mapper: 94, submapper: 1, prgBanks: 8 }],
+    [
+      "inverted UxROM with an unmodeled submapper",
+      { nes2: true, mapper: 180, submapper: 3, prgBanks: 2 },
+    ],
     [
       "MMC3 with a partial direct PRG-RAM window",
       { nes2: true, mapper: 4, prgBanks: 2, chrBanks: 1, prgRamShift: 5 },
@@ -591,6 +652,10 @@ describe("cartridge mappers", () => {
     ["FME-7 beyond its 512 KiB PRG capacity", { mapper: 69, prgBanks: 33, chrBanks: 1 }],
     ["Jaleco 87 with a non-NROM PRG size", { mapper: 87, prgBanks: 4, chrBanks: 1 }],
     ["Namco 118 beyond its 64 KiB CHR capacity", { mapper: 206, prgBanks: 8, chrBanks: 9 }],
+    ["Taito TC0190 beyond its 512 KiB PRG capacity", { mapper: 33, prgBanks: 33, chrBanks: 1 }],
+    ["mapper 78 beyond its 128 KiB CHR capacity", { mapper: 78, prgBanks: 2, chrBanks: 17 }],
+    ["UN1ROM with the wrong PRG geometry", { mapper: 94, prgBanks: 4 }],
+    ["inverted UxROM beyond its 128 KiB PRG capacity", { mapper: 180, prgBanks: 9 }],
   ] as const)("rejects %s instead of exposing unreachable memory", (_name, options) => {
     const cartridge = createTestCartridge(options);
     expect(() => createMapper(cartridge, { setMapperIrq() {} })).toThrow(

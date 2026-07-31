@@ -44,6 +44,18 @@ export type MapperState =
     }
   | { readonly kind: "jaleco-87"; readonly selectedChrBank: number }
   | {
+      readonly kind: "taito-tc0190";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly mirroring: number;
+    }
+  | {
+      readonly kind: "irem-78";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "namco-118";
       readonly register: number;
       readonly registers: readonly number[];

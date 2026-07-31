@@ -56,9 +56,9 @@ sees an accurate total.
 
 Unknown mapper numbers raise `UnsupportedMapperError`. The shared validators
 (`requireBankedLayout`, `requireRomLayout`, `requireMaximumRomSize`, `requireWritableChrSize`,
-`requireDirectPrgRam`, `requireNoPrgRam`, `resolveBusConflicts`, `requireBaseSubmapper`) keep the
-accept/reject policy in one place. Declared capacity is accepted only when the selected board can
-address every byte.
+`requireChrRom`, `requireChrRam`, `requireDirectPrgRam`, `requireNoPrgRam`,
+`resolveBusConflicts`, `requireBaseSubmapper`) keep the accept/reject policy in one place. Declared
+capacity is accepted only when the selected board can address every byte.
 
 ## Save state
 
@@ -83,13 +83,17 @@ counters against their bit width and all booleans by runtime type) and throws
 | 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
 | 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
 | 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
+| 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001` | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
 | 66  | GxROM / MHROM  | `gxrom`            | `gxrom-mapper.ts`            | AND           | no   |
 | 69  | Sunsoft FME-7  | `fme7`             | `fme7-mapper.ts`             | no            | cyc. |
 | 70  | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 71  | Codemasters    | `codemasters`      | `codemasters-mapper.ts`      | no            | no   |
+| 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
+| 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
 | 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
+| 180 | Inverted UxROM | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
 | 206 | Namco 118      | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
@@ -173,6 +177,16 @@ Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and 
 selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
 cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
 
+## Taito TC0190 (33)
+
+Two 8 KiB PRG registers at `$8000`/`$8001` map CPU `$8000-$BFFF`; the final two banks stay fixed at
+`$C000-$FFFF`. `$8002`/`$8003` select two 2 KiB CHR windows in **2 KiB units** (the low bit is not
+dropped as on MMC3), while `$A000-$A003` select four 1 KiB windows. Register decoding uses the
+documented `$A003` mask across `$8000-$BFFF`; `$8000` bit 6 selects vertical/horizontal mirroring.
+The first two CHR registers can address 512 KiB, while the 1 KiB registers address the lower
+256 KiB. Mapper 33 intentionally has no IRQ; IRQ-capable/mislabeled mapper-48 images are not
+approximated. See [NESdev mapper 33](https://www.nesdev.org/wiki/INES_Mapper_033).
+
 ## BNROM / NINA-001 (34)
 
 `resolveMapper34Board` (`mapper34-board.ts`) chooses exactly one board and never combines their
@@ -218,11 +232,31 @@ A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `
 to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire Hawk) adds single-screen
 mirroring from `$9000-$9FFF` bit 4; submapper 0 (BF9093) keeps the header's fixed mirroring.
 
+## Irem 74HC161/32 (78)
+
+One conflict-prone `$8000-$FFFF` latch combines a 16 KiB `$8000-$BFFF` PRG bank (last bank fixed at
+`$C000-$FFFF`), an 8 KiB CHR bank and nametable control. Bits 2-0 select PRG, bit 3 controls
+mirroring and bits 7-4 select CHR. The physical mirroring wire differs: Cosmo Carrier selects
+one-screen lower/upper, while Holy Diver selects horizontal/vertical. NES 2.0 submapper 1 and 3 name
+those boards; submapper 0 is rejected. For legacy iNES, the historical alternative-nametable flag
+selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. See
+[NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_078).
+
 ## Jaleco CHR (87)
 
 A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →
 CHR line 0, value bit 0 → CHR line 1). PRG ROM stays NROM-fixed; no bus conflicts because the latch
 occupies the otherwise-unmapped `$6000-$7FFF` space.
+
+## UxROM variants (94, 180)
+
+Both variants reuse `UxromMapper` through immutable board wiring rather than duplicate bank logic.
+UN1ROM (94) keeps the usual switchable `$8000-$BFFF`/fixed-last `$C000-$FFFF` layout but decodes the
+bank from conflict-masked bits 4-2; it requires 128 KiB PRG and 8 KiB CHR RAM. Mapper 180 fixes PRG
+bank 0 at `$8000-$BFFF` and switches `$C000-$FFFF` from bits 2-0. Its legacy default has AND
+conflicts, while NES 2.0 submapper 1/2 selects no-conflict/conflict behavior explicitly. See
+[NESdev mapper 94](https://www.nesdev.org/wiki/INES_Mapper_094) and
+[NESdev mapper 180](https://www.nesdev.org/wiki/INES_Mapper_180).
 
 ## Namco 118 / DxROM (206)
 

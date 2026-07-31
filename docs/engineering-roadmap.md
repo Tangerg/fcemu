@@ -13,8 +13,8 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 18 implemented mapper IDs; four board families currently have reproducible external or pinned real-ROM
-  verification.
+- 22 implemented mapper IDs; four board families currently have reproducible external or pinned
+  real-ROM verification.
 - Transactional version-14 save states and independent battery-backed NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
 - Checksum-pinned external conformance runners and Mario/Contra local smoke profiles.
@@ -25,8 +25,8 @@ evidence behind these statements.
 ## Priority 1: verify the implemented mapper set
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 9, 10, 11, 13,
-66, 69, 70, 71, 87, 152 and 206 are implemented but do not yet all have executable external
-verification.
+33, 66, 69, 70, 71, 78, 87, 94, 152, 180 and 206 are implemented but do not yet all have
+executable external verification.
 
 For each board family:
 

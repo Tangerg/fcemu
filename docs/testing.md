@@ -89,6 +89,20 @@ yarn smoke:real-rom -- contra /absolute/path/to/CONTRA.NES
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```
 
+Before creating profiles, inventory an explicitly supplied directory without changing it:
+
+```bash
+yarn catalog:roms -- /absolute/path/to/rom-directory
+```
+
+After reviewing the summary, append `--apply` to organize images by parsed mapper and loadability.
+The cataloger never deletes or patches a ROM. It preserves duplicate payloads and isolates dirty
+headers, trailing data, truncated files and unsupported board configurations for review:
+
+```bash
+yarn catalog:roms -- /absolute/path/to/rom-directory --apply
+```
+
 Profiles verify cartridge identity, several visual checkpoints, a deterministic input sequence,
 audio output, CPU-cycle counts and two identical save-state replays. Full details live in
 [`packages/fc-emu/test-support/real-roms.md`](../packages/fc-emu/test-support/real-roms.md).

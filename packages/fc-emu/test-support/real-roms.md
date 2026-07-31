@@ -5,6 +5,28 @@ files whose SHA-256 matches a committed profile; it never searches for, download
 content. The repository also ignores every `.nes` file to reduce the risk of committing one by
 accident.
 
+## Cataloging a supplied corpus
+
+The cataloger recursively inspects only the directory named on the command line. Its default mode is
+read-only and prints aggregate counts:
+
+```bash
+yarn catalog:roms -- /absolute/path/to/rom-directory
+```
+
+Use `--apply` only after reviewing that summary. The tool then moves, but never deletes or modifies,
+ROM images into `classified/loadable`, `classified/unsupported`, `review`, `quarantine` and
+`duplicates`. It writes a local `_catalog/roms.json` with whole-file and parsed-payload SHA-256 values
+and `_catalog/mapper-coverage.csv` with aggregate coverage:
+
+```bash
+yarn catalog:roms -- /absolute/path/to/rom-directory --apply
+```
+
+`review/dirty-header` and `review/trailing-data` are deliberately not normalized. Repairing an old
+header or stripping an appended payload would create a different ROM identity and requires explicit
+provenance outside this workflow.
+
 The current profiles cover the two files used during development:
 
 | Profile  | Expected file | SHA-256                                                            | Mapper |

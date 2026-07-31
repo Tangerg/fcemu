@@ -27,6 +27,7 @@
     "dev": "yarn workspace @fcemu/ui dev",
     "build": "yarn workspace @fcemu/core build && yarn workspace @fcemu/ui build",
     "benchmark:core": "yarn workspace @fcemu/core benchmark",
+    "catalog:roms": "yarn workspace @fcemu/core catalog:roms",
     "smoke:real-rom": "yarn workspace @fcemu/core smoke:real-rom",
     "conformance:rom": "yarn workspace @fcemu/core conformance:rom",
     "conformance:accuracy-coin": "yarn workspace @fcemu/core conformance:accuracy-coin",

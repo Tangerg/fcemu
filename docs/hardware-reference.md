@@ -54,9 +54,9 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   the two domains can power up in either alignment.
 - A DMC load DMA is scheduled for GET after `$4015` enables an empty reader buffer; a reload DMA is
   scheduled for PUT when the output unit consumes that buffer. A load halt is attempted on GET in
-  the second following APU cycle (the third or fourth CPU cycle after the write). The request phase
-  is part of DMA state, not a CPU-parity shortcut. During OAM DMA, the DMC GET wins and OAM realigns
-  before its next GET.
+  the second following APU cycle: three CPU cycles after a PUT write or four after a GET write. The
+  request phase is part of DMA state, not a CPU-parity shortcut. During OAM DMA, the DMC GET wins and
+  OAM realigns before its next GET.
 - NTSC execution uses the measured RP2A03H/late-RP2A03G one-byte stop behavior: completing on the
   output-counter boundary can request the same byte again, while completing one cycle earlier
   schedules a reload that is canceled after its halt. PAL and Dendy keep these revision-specific

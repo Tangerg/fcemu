@@ -9,10 +9,10 @@ import {
 
 describe("DeltaModulationChannel", () => {
   it.each([
-    { startingCycle: 0, delay: 3 },
-    { startingCycle: 1, delay: 4 },
+    { startingCycle: 0, phase: "GET", delay: 4 },
+    { startingCycle: 1, phase: "PUT", delay: 3 },
   ])(
-    "requests the $C000 power-on sample after a $delay-cycle enable delay",
+    "requests the $C000 power-on sample after a $delay-cycle enable delay from $phase",
     ({ startingCycle, delay }) => {
       const port = createPort(startingCycle);
       const channel = createChannel(port);
@@ -32,7 +32,7 @@ describe("DeltaModulationChannel", () => {
     const port = createPort(0);
     const channel = createChannel(port);
     channel.setEnabled(true);
-    advance(channel, port, 3);
+    advance(channel, port, 4);
     expect(port.requests).toEqual([0xc000]);
 
     channel.setEnabled(false);
@@ -80,7 +80,7 @@ describe("DeltaModulationChannel", () => {
     const channel = createChannel(port);
     channel.length = 1;
     channel.setEnabled(true);
-    advance(channel, port, 3);
+    advance(channel, port, 4);
     channel.completeDmaByte(0xa5);
 
     for (let bit = 0; bit < 8; bit++) channel.updateShifter();

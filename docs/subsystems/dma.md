@@ -77,8 +77,8 @@ predicates over the fields `address`, `haltAddress`, `preparationCycles`, `reque
 `DmcDma.start(address, haltPhase)`, passing the phase on which the halt should be attempted:
 
 - A **load** fetch is scheduled for **GET**: after a `$4015` write enables an empty reader buffer, the
-  channel arms `transferStartDelay` (3 or 4 CPU cycles depending on whether the write landed on GET or
-  PUT) and then calls `requestReaderDma(DmaBusPhase.Get)`.
+  channel arms `transferStartDelay` for 4 CPU cycles after a GET write or 3 after a PUT write, then
+  calls `requestReaderDma(DmaBusPhase.Get)`. Both paths target the next-but-one GET.
 - A **reload** fetch is scheduled for **PUT**: when the output shifter consumes the reader buffer
   (`updateShifter`), `requestReaderDma(DmaBusPhase.Put)` runs immediately rather than waiting a full
   DMC period. The measured NTSC implicit-stop "unexpected reload" path also schedules a PUT reload.

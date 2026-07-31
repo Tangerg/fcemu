@@ -182,7 +182,7 @@ power-on GET/PUT selection avoids tying it to CPU cycle-number parity.
 **Fetch scheduling.** `requestReaderDma(haltPhase)` requests a DMA only when no transfer-start delay
 is pending, `currentLength > 0`, the buffer is empty and no request is already outstanding. Two
 entry points feed it: a `$4015` enable of an empty channel (`setEnabled(true)` → `restart()` then
-`transferStartDelay = phase === Get ? 3 : 4`, later firing a **GET**-scheduled load from `clockCpu`)
+`transferStartDelay = phase === Get ? 4 : 3`, later firing a **GET**-scheduled load from `clockCpu`)
 and the output unit emptying the buffer (a **PUT**-scheduled reload). `completeDmaByte` clears the
 request, stores the byte, advances `currentAddress` with wrap to `0x8000`, decrements `currentLength`,
 and on reaching 0 either restarts (loop) or, if IRQ is enabled, sets `irqPending` and asserts the IRQ
@@ -201,12 +201,13 @@ the shifter, restarts and requests a PUT reload; with `implicitStopAbort`, a com
 earlier (`bitsRemaining === 1`, `tickValue < 2`) reloads the shifter, restarts and sets
 `disableDelay = 3` so the reload the following output clock schedules is aborted just after its halt.
 
-**Known conformance gap.** The pinned Blargg `apu_test` currently fails DMC basics test 19: “There
-should be a one-byte buffer that's filled immediately if empty.” The newer Sprite/DMC collision and
-AccuracyCoin cases still pass, so the project tracks this as an unresolved buffer-readiness boundary
-rather than changing the DMA schedule to satisfy one fixture in isolation. See
-[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md) for the exact fixture
-identity and invocation.
+**Load-DMA boundary.** A PUT-cycle `$4015` enable arms the load for three CPU cycles later; a
+GET-cycle enable arms it for four. In both cases the halt targets the next-but-one GET. This matters
+when `LDA $4015` immediately follows the enable: the load must stall that status read, fill the
+one-byte reader buffer, decrement `currentLength` to zero and assert DMC IRQ before the status value
+is sampled. A focused aggregate test pins the resulting `$80`, and the checksum-pinned Blargg
+`apu_test` passes all 8 sub-suites. See
+[External conformance ROMs](../../packages/fc-emu/test-support/external-roms.md) for the fixture.
 
 ## Status register and frame IRQ
 

@@ -158,9 +158,9 @@ export class DeltaModulationChannel {
       }
     } else if (this.currentLength === 0) {
       this.restart();
-      // The sample fetch halts the CPU on the third or fourth cycle after the
-      // $4015 write, depending on whether that write landed on GET or PUT.
-      this.transferStartDelay = this.port.currentDmaPhase() === DmaBusPhase.Get ? 3 : 4;
+      // The sample fetch halts on the next-but-one GET: three CPU cycles after
+      // a PUT write, or four after a GET write.
+      this.transferStartDelay = this.port.currentDmaPhase() === DmaBusPhase.Get ? 4 : 3;
     }
   }
 

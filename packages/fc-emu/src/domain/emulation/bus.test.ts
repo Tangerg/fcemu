@@ -76,6 +76,50 @@ describe("Bus lifecycle", () => {
     expect(internalSet.CPU.readByte(0x4018)).toBe(0);
   });
 
+  it("fills an empty one-byte DMC reader before the immediate $4015 status read", () => {
+    const bus = new Bus(
+      createTestCartridge({
+        program: [
+          0x78, // SEI
+          0xa9,
+          0x8f, // LDA #$8F: IRQ enabled, fastest DMC rate
+          0x8d,
+          0x10,
+          0x40, // STA $4010
+          0xa9,
+          0x00, // LDA #$00: one-byte sample
+          0x8d,
+          0x13,
+          0x40, // STA $4013
+          0xa9,
+          0x10, // LDA #$10: enable DMC
+          0x8d,
+          0x15,
+          0x40, // STA $4015 on a PUT cycle
+          0xad,
+          0x15,
+          0x40, // LDA $4015; the load DMA must stall this read
+          0x85,
+          0x00, // STA $00
+          0x02, // KIL
+        ],
+      }),
+    );
+    const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;
+
+    for (let step = 0; step < 64 && !bus.CPU.isHalted; step++) {
+      bus.updateSeconds(oneCpuCycle);
+    }
+
+    expect(bus.CPU.isHalted).toBe(true);
+    expect(bus.RAM[0]).toBe(0x80);
+    expect(bus.APU.captureState().deltaModulationChannel).toMatchObject({
+      currentLength: 0,
+      irqPending: true,
+      dmaRequested: false,
+    });
+  });
+
   it("combines DMC A0-A4 with a halted $4000-page CPU address", () => {
     const cartridge = createTestCartridge();
     cartridge.prgRom[0x16] = 0xe0;

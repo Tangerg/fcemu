@@ -59,10 +59,10 @@ yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/apu_tes
 ```
 
 Current recorded results are `nestest` 8,991/8,991, instruction behavior 16/16 in both official and
-all-instruction modes, PPU VBL/NMI 10/10, both Sprite/DMC DMA collision fixtures `Passed`, and the
-CPU timing final screen `PASSED`. The combined APU suite currently fails DMC basics test 19 because
-an empty sample buffer is not filled at the expected time. That failure is an open hardware defect,
-not an accepted baseline.
+all-instruction modes, PPU VBL/NMI 10/10, APU 8/8, both Sprite/DMC DMA collision fixtures `Passed`,
+and the CPU timing final screen `PASSED`. APU DMC basics test 19 specifically verifies that a
+one-byte load fills an empty reader before an immediately following `$4015` status read; its passing
+result pins the 3/4-cycle load-DMA phase boundary through the integrated CPU/APU/bus path.
 
 ## AccuracyCoin CPU data buses
 

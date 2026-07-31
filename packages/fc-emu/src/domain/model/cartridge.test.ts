@@ -190,6 +190,7 @@ describe("Cartridge", () => {
   });
 
   it.each([
+    { mapper: 16, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x100 },
     { mapper: 80, battery: false, prgRamBytes: 0x80, prgNvRamBytes: 0 },
     { mapper: 80, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x80 },
     { mapper: 82, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x1400 },

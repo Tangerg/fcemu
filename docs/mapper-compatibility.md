@@ -21,6 +21,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM              |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM            |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM        |
+| 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture      |
 | 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture       |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM     |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM      |
@@ -77,6 +78,10 @@ counter bias.
 Mapper 91 accepts submapper 0 for JY830623C/YY840238C outer banking and fixed 64-rise A12 IRQs,
 and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counter.
 
+Mapper 16 accepts submapper 0 for legacy unspecified FCG/LZ93D50 images, submapper 4 for low-range
+FCG-1/2 and submapper 5 for high-range LZ93D50 with no EEPROM or a 256-byte 24C02. Deprecated
+submappers 1-3 are rejected in favor of their current mapper IDs 159, 157 and 153.
+
 ## Legacy-header assumptions
 
 - Mapper 3 follows original CNROM AND-type bus conflicts. NES 2.0 submapper 1 (no conflicts) and
@@ -122,6 +127,13 @@ and submapper 1 for EJ-006-1 selectable mirroring and its 5/4-rate M2 IRQ counte
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.
+- Mapper 16 represents the Bandai FCG family without merging its ASIC revisions. Submapper 4
+  (FCG-1/2) decodes only `$6000-$7FFF` and writes its live 16-bit IRQ counter directly; submapper 5
+  (LZ93D50) decodes only `$8000-$FFFF`, writes a reload latch and copies it on IRQ control. Legacy
+  submapper 0 responds in both ranges and applies the corresponding semantics per write address.
+  All variants expose one switchable/final-fixed 16 KiB PRG pair, eight 1 KiB CHR-ROM windows and
+  four-way mirroring. LZ93D50 may connect a 256-byte 24C02 through register D; the serial protocol
+  state belongs to the mapper while its bytes use Cartridge NVRAM and normal battery persistence.
 - Mapper 18 (Jaleco SS8806) exposes three switchable and one fixed 8 KiB PRG windows plus eight
   1 KiB CHR-ROM windows. Because the ASIC sees only CPU A12-A14/A0-A1 and data D0-D3, every bank and
   16-bit IRQ reload value is assembled from mirrored nibble writes under the `$F003` address mask.

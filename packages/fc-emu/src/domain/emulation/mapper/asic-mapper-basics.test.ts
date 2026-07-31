@@ -180,6 +180,135 @@ describe("basic ASIC mappers", () => {
     ).toThrowError(UnsupportedMapperVariantError);
   });
 
+  it("selects current Bandai FCG boards and rejects reassigned or impossible variants", () => {
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 16, prgBanks: 16, chrBanks: 32 }), interruptPort),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          battery: true,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 4,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 5,
+          battery: true,
+          prgNvRamShift: 2,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).not.toThrow();
+
+    for (const submapper of [1, 2, 3, 6]) {
+      expect(() =>
+        createMapper(
+          createTestCartridge({
+            mapper: 16,
+            nes2: true,
+            submapper,
+            prgBanks: 16,
+            chrBanks: 32,
+          }),
+          interruptPort,
+        ),
+      ).toThrowError(UnsupportedMapperVariantError);
+    }
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 4,
+          battery: true,
+          prgNvRamShift: 2,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 5,
+          battery: true,
+          prgNvRamShift: 3,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 5,
+          prgBanks: 16,
+          chrBanks: 32,
+          fourScreen: true,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 16, nes2: true, submapper: 5, prgBanks: 16 }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 5,
+          prgBanks: 17,
+          chrBanks: 32,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 16,
+          nes2: true,
+          submapper: 5,
+          prgBanks: 16,
+          chrBanks: 33,
+        }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+  });
+
   it("accepts only the physical Tengen 800032 ROM and wiring envelope", () => {
     expect(() =>
       createMapper(createTestCartridge({ mapper: 64, prgBanks: 16, chrBanks: 32 }), interruptPort),

@@ -102,6 +102,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 10  | MMC4 / FxROM   | `mmc4`             | `mmc4-mapper.ts`             | no            | no   |
 | 11  | Color Dreams   | `color-dreams`     | `color-dreams-mapper.ts`     | AND           | no   |
 | 13  | CPROM          | `cprom`            | `cprom-mapper.ts`            | AND           | no   |
+| 16  | Bandai FCG     | `bandai-fcg`       | `bandai-fcg-mapper.ts`       | no            | cyc. |
 | 18  | Jaleco SS8806  | `jaleco-ss8806`    | `jaleco-ss8806-mapper.ts`    | no            | cyc. |
 | 32  | Irem G-101     | `irem-g101`        | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`     | `taito-tc0190-mapper.ts`     | no            | no   |
@@ -227,6 +228,29 @@ AND-type bus conflicts. The no-conflict prototype board variant is out of scope.
 Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and a `$1000-$1FFF` bank
 selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
 cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
+
+## Bandai FCG / LZ93D50 (16)
+
+All current mapper-16 boards expose one switchable 16 KiB PRG bank at `$8000`, the final bank at
+`$C000`, eight independent 1 KiB CHR-ROM banks and vertical, horizontal or either one-screen
+mirroring. The ASIC revision determines address decode and IRQ wiring. NES 2.0 submapper 4
+(FCG-1/2) responds only at `$6000-$7FFF`; registers B/C directly modify its live 16-bit down
+counter. Submapper 5 (LZ93D50) responds only at `$8000-$FFFF`; B/C modify a reload latch that
+register A copies into the counter while enabling or disabling it. The IRQ line asserts one CPU
+cycle after the counter reaches zero and remains level-sensitive until register A acknowledges it.
+
+Submapper 0 is intentionally a compatibility owner, not a guessed title database: both address
+ranges decode, and each write uses the semantics of the ASIC that physically owns that range.
+Submappers 1/2/3 are rejected because their 24C01, Datach and WRAM boards now belong to mappers
+159/157/153.
+
+LZ93D50 can connect a 256-byte 24C02. Register D drives SCL/SDA, while CPU reads at
+`$6000-$7FFF` drive only EEPROM D4 and leave the other data-bus bits open. `Eeprom24c02` owns the
+I²C-like protocol state; the bytes remain in Cartridge's 256-byte PRG NVRAM so battery saves,
+revision tracking and transactional save states use the existing persistence boundary. Legacy
+battery headers are normalized from iNES's misleading 8 KiB unit to this physical capacity. See
+[NESdev mapper 16](https://www.nesdev.org/wiki/INES_Mapper_016) and the
+[submapper table](https://www.nesdev.org/wiki/INES_Mapper_016/Submapper_table).
 
 ## Jaleco SS8806 (18)
 

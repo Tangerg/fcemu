@@ -15,6 +15,7 @@ export const MapperKind = {
   Cprom: "cprom",
   Codemasters: "codemasters",
   Bandai74: "bandai-74",
+  BandaiFcg: "bandai-fcg",
   Jaleco87: "jaleco-87",
   JalecoJf: "jaleco-jf",
   JalecoSs8806: "jaleco-ss8806",

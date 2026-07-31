@@ -2,6 +2,7 @@ import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
 import { AxromMapper } from "./axrom-mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
+import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { CnromProtectionMapper } from "./cnrom-protection-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
@@ -125,6 +126,15 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       requireNoPrgRam(cartridge);
       return new CpromMapper(cartridge);
+    case 16: {
+      const board = resolveBandaiFcgBoard(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "Bandai FCG");
+      requireTwoScreenNametables(cartridge, "Bandai FCG");
+      requireBandaiFcgMemory(cartridge, board);
+      return new BandaiFcgMapper(interruptPort, cartridge, board);
+    }
     case 18:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -435,6 +445,29 @@ function requireTaitoX1017Ram(cartridge: Cartridge): void {
   }
 }
 
+function requireBandaiFcgMemory(cartridge: Cartridge, board: BandaiFcgBoard): void {
+  const hasEeprom =
+    cartridge.prgRamBytes === 0 && cartridge.prgNvRamBytes === 0x100 && cartridge.hasBatteryBackup;
+  const hasNoExplicitMemory =
+    cartridge.prgRamBytes === 0 && cartridge.prgNvRamBytes === 0 && !cartridge.hasBatteryBackup;
+  const hasLegacyImplicitRam =
+    cartridge.format === "ines" &&
+    cartridge.prgRamBytes === 0x2000 &&
+    cartridge.prgNvRamBytes === 0 &&
+    !cartridge.hasBatteryBackup;
+  if (
+    (board === "fcg-1-2" && !hasNoExplicitMemory) ||
+    (board !== "fcg-1-2" && !hasEeprom && !hasNoExplicitMemory && !hasLegacyImplicitRam)
+  ) {
+    throw configurationError(
+      cartridge,
+      board === "fcg-1-2"
+        ? "FCG-1/2 does not provide writable PRG memory"
+        : "LZ93D50 supports either no save memory or exactly 256 bytes of 24C02 NVRAM",
+    );
+  }
+}
+
 function requireTwoScreenNametables(cartridge: Cartridge, board: string): void {
   if (cartridge.mirroringMode === NametableMirroring.FourScreen) {
     throw configurationError(cartridge, `${board} does not provide four-screen nametable memory`);
@@ -540,6 +573,19 @@ function resolveTaitoTc0690Revision(cartridge: Cartridge): TaitoTc0690IrqRevisio
       return "original";
     case 1:
       return "late";
+    default:
+      throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+}
+
+function resolveBandaiFcgBoard(cartridge: Cartridge): BandaiFcgBoard {
+  switch (cartridge.submapperNumber) {
+    case 0:
+      return "auto";
+    case 4:
+      return "fcg-1-2";
+    case 5:
+      return "lz93d50";
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }

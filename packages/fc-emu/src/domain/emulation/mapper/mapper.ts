@@ -42,6 +42,28 @@ export type MapperState =
       readonly selectedChrBank: number;
       readonly mirroring: number;
     }
+  | {
+      readonly kind: "bandai-fcg";
+      readonly board: "auto" | "fcg-1-2" | "lz93d50";
+      readonly chrBanks: readonly number[];
+      readonly prgBank: number;
+      readonly irqReload: number;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly mirroring: number;
+      readonly eeprom: {
+        readonly mode: number;
+        readonly nextMode: number;
+        readonly chipAddress: number;
+        readonly address: number;
+        readonly data: number;
+        readonly bitCounter: number;
+        readonly output: number;
+        readonly previousScl: number;
+        readonly previousSda: number;
+      } | null;
+    }
   | { readonly kind: "jaleco-87"; readonly selectedChrBank: number }
   | {
       readonly kind: "jaleco-jf";

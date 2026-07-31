@@ -96,6 +96,9 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
 - The PPU address bus is exactly 14 bits. Every PPU memory access uses the low 14 address bits;
   `$0000-$1FFF` reaches cartridge CHR, `$2000-$3EFF` reaches mirrored nametable wiring and
   `$3F00-$3FFF` reaches the internal palette mirrors.
+- The RP2C02 multiplexes the video-memory low address byte and data on the same external pins. If a
+  cartridge tri-states CHR during a pattern-table read, the undriven result follows the current
+  address low byte; this is separate from the CPU-facing PPU register open-bus latch.
 - The PPU drives a physical `/NMI` level; the CPU edge detector samples it during its input phase and
   transfers the detected edge through a second polling latch. Vector selection is fixed before the
   interrupt status push, not immediately before the vector read.

@@ -5,7 +5,8 @@ contract, factory and public errors through `index.ts`; concrete board classes a
 
 ## Maintainer boundary
 
-- `mapper.ts` defines CPU/PPU address-space, lifecycle, signal and deterministic-state capabilities.
+- `mapper.ts` defines CPU/PPU address-space, data-line drive, lifecycle, signal and deterministic-state
+  capabilities.
 - `create-mapper.ts` is the only mapper/submapper/board selection point.
 - `mapper-errors.ts` owns the three public failure categories.
 - `mapper-kind.ts` and the `MapperState` union keep snapshot identity explicit.

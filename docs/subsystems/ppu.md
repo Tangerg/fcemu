@@ -264,6 +264,12 @@ The PPU address bus is exactly 14 bits: every access masks `address &= 0x3FFF`. 
 | `$2000-$3EFF` | nametables (VRAM)    | `mirrorAddress(mode, address)` into `nameTableData` (4 KiB) |
 | `$3F00-$3FFF` | palette RAM          | `readPalette`/`writePalette(address % 32)`                  |
 
+For pattern reads, `PPUMemory` combines `Mapper.read` with the optional
+`Mapper.ppuReadDriveMask`. Omission means all eight cartridge data lines are driven. Disabled CHR
+can return mask `0`; the resulting byte is the current address low byte because the RP2C02's
+external video-memory pins multiplex low address and data. This external bus is distinct from the
+CPU-facing decaying `PpuIoBusLatch` documented below.
+
 `mirrorAddress` folds the address into `$0000-$0FFF`, splits it into a nametable index (0-3) and a
 1 KiB offset, and remaps the index through `MIRROR_LOOKUP[mode]`
 (see [Mirroring](https://www.nesdev.org/wiki/Mirroring)):

@@ -22,6 +22,7 @@ to the rest of core.
 | `read(address)`              | Reads a CPU (`$6000-$FFFF`) or PPU (`$0000-$1FFF`) byte through the current bank layout. |
 | `write(address, value)`      | Decodes a register write or routes a CHR/PRG-RAM write.                                  |
 | `cpuReadDriveMask(address)`  | Optional CPU data-line mask; omitted means fully driven, `0` means open bus.             |
+| `ppuReadDriveMask(address)`  | Optional PPU pattern-data mask; omitted means fully driven, `0` means CHR is tri-stated. |
 | `observePpuAddress(address)` | Optional PPU address-line snoop for boards such as MMC3.                                 |
 | `observePpuRead(address)`    | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
 | `tickPpu()`                  | Optional one-dot clock used by address-line timing filters.                              |
@@ -38,6 +39,9 @@ been read.
 CPU reads keep value selection and electrical drive behavior separate. A board may return a neutral
 byte from `read` while `cpuReadDriveMask` reports that a write-only register or disabled RAM window
 drives no data lines; `CPUMemory` then combines the driven bits with the retained external bus.
+Pattern-table reads follow the same separation through `ppuReadDriveMask`; `PPUMemory` supplies the
+current address low byte on undriven multiplexed PPU pins instead of asking a mapper to invent open
+bus.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -98,11 +102,13 @@ counters against their bit width and all booleans by runtime type) and throws
 | 78  | Irem 74HC161   | `irem-78`          | `irem78-mapper.ts`           | AND           | no   |
 | 87  | Jaleco CHR     | `jaleco-87`        | `jaleco-mapper.ts`           | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`        | `sunsoft2-mapper.ts`         | AND           | no   |
+| 93  | Sunsoft-3R     | `sunsoft-3r`       | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`            | `uxrom-mapper.ts`            | AND           | no   |
 | 140 | Jaleco JF      | `jaleco-jf`        | `jaleco-jf-mapper.ts`        | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`        | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`            | `uxrom-mapper.ts`            | submapper     | no   |
 | 184 | Sunsoft-1      | `sunsoft-1`        | `sunsoft1-mapper.ts`         | no            | no   |
+| 185 | CNROM protect  | `cnrom-protection` | `cnrom-protection-mapper.ts` | AND           | no   |
 | 206 | Namco 118      | `namco-118`        | `namco118-mapper.ts`         | no            | no   |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
@@ -275,6 +281,16 @@ mirroring. The board maps no PRG RAM. See
 [NESdev mapper 89](https://www.nesdev.org/wiki/INES_Mapper_089) and the
 [Sunsoft-2 pinout](https://www.nesdev.org/wiki/Sunsoft_2_pinout).
 
+## Sunsoft-2 / Sunsoft-3R (93)
+
+The Sunsoft-3R board uses the same Sunsoft-2 IC with different wiring. Bits 6-4 of its
+AND-conflicted `$8000-$FFFF` latch select the 16 KiB PRG bank at `$8000-$BFFF`; the final bank stays
+fixed at `$C000-$FFFF`. D0 controls the fixed 8 KiB CHR RAM: clear ignores writes and tri-states
+pattern reads, while set enables normal RAM access. Mirroring remains fixed from the cartridge
+header and no PRG RAM is decoded. See
+[NESdev mapper 93](https://www.nesdev.org/wiki/INES_Mapper_093) and the
+[Sunsoft-2 pinout](https://www.nesdev.org/wiki/Sunsoft_2_pinout).
+
 ## UxROM variants (94, 180)
 
 Both variants reuse `UxromMapper` through immutable board wiring rather than duplicate bank logic.
@@ -301,6 +317,15 @@ that window selects banks 4-7 on a 32 KiB CHR ROM and mirrors onto banks 0-3 on 
 from the latch window remain open bus. See
 [NESdev mapper 184](https://www.nesdev.org/wiki/INES_Mapper_184) and the
 [Sunsoft-1 pinout](https://www.nesdev.org/wiki/Sunsoft_1_pinout).
+
+## CNROM protection (185)
+
+Mapper 185 is a one-bank CNROM variant whose two-bit conflicted latch controls the CHR-ROM
+chip-select line rather than selecting among banks. When the selected value does not match the
+board's enable wiring, the cartridge tri-states PPU pattern reads. NES 2.0 submappers 4-7 explicitly
+identify enable values 0-3 and are supported; legacy/submapper 0 does not identify that value and
+fails closed. PRG stays fixed as a 16 KiB mirrored or 32 KiB image, and PRG RAM is absent. See
+[NESdev mapper 185](https://www.nesdev.org/wiki/INES_Mapper_185).
 
 ## Namco 118 / DxROM (206)
 

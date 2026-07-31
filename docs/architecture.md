@@ -131,7 +131,7 @@ See [Clock and timing](./subsystems/clock-and-timing.md).
 
 The mapper module is one cohesive cartridge-hardware submodule:
 
-- `Mapper` defines CPU/PPU read/write, CPU data-line drive masks, lifecycle and save-state
+- `Mapper` defines CPU/PPU read/write, CPU and PPU data-line drive masks, lifecycle and save-state
   capabilities.
 - Optional observations describe real pins/events: CPU R/W cycle, PPU address line, completed PPU
   read and per-dot timing.

@@ -215,7 +215,8 @@ export class PPUMemory {
     let value: number;
     // 0x0000-0x1FFF: pattern tables (CHR ROM/RAM).
     if (address < 0x2000) {
-      value = mapper.read(address);
+      const drivenMask = mapper.ppuReadDriveMask?.(address) ?? 0xff;
+      value = (mapper.read(address) & drivenMask & 0xff) | (address & 0xff & (~drivenMask & 0xff));
     } else if (address < 0x3f00) {
       // 0x2000-0x3EFF: nametables (VRAM).
       const mode = this.bus.Cartridge.mirroringMode;

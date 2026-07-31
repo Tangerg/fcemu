@@ -148,6 +148,12 @@ or four-screen) into `PPU.nameTableData`; and `$3F00-$3FFF` palette RAM via `PPU
 `PPU.writePalette` with `address % 32`. Nametable/palette internals and mirroring are detailed in
 [`ppu.md`](./ppu.md).
 
+Pattern-table reads also apply the mapper's optional `ppuReadDriveMask`. The cartridge normally
+drives all eight bits. When CHR is disabled and the cartridge tri-states those pins, undriven bits
+come from the current address low byte because the RP2C02 multiplexes its video-memory address and
+data on the same pins. This bus rule is modeled once in `PPUMemory`; mapper implementations report
+electrical drive state without fabricating an open-bus byte or owning a duplicate PPU latch.
+
 ## Standard controllers (`Controller`)
 
 Each `Controller` is a standard-controller serial shift register of eight booleans in fixed

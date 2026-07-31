@@ -3,6 +3,7 @@ import type Cartridge from "../../model/cartridge.js";
 import { AxromMapper } from "./axrom-mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
+import { CnromProtectionMapper } from "./cnrom-protection-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
 import { CodemastersMapper } from "./codemasters-mapper.js";
 import { ColorDreamsMapper } from "./color-dreams-mapper.js";
@@ -30,6 +31,7 @@ import {
 import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
+import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
 import {
   createInvertedUxromBoard,
   GENERIC_UXROM_BOARD,
@@ -166,6 +168,12 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Sunsoft-2");
       requireNoPrgRam(cartridge);
       return new Sunsoft2Mapper(cartridge);
+    case 93:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x8000, 0x10_000, 0x20_000], 0x2000);
+      requireChrRam(cartridge, "Sunsoft-3R");
+      requireNoPrgRam(cartridge);
+      return new Sunsoft3RMapper(cartridge);
     case 94:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x20_000], 0x2000);
@@ -200,6 +208,11 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Sunsoft-1");
       requireNoPrgRam(cartridge);
       return new Sunsoft1Mapper(cartridge);
+    case 185:
+      requireRomLayout(cartridge, [0x4000, 0x8000], 0x2000);
+      requireChrRom(cartridge, "CNROM protection");
+      requireNoPrgRam(cartridge);
+      return new CnromProtectionMapper(cartridge, resolveCnromProtectionChip(cartridge));
     case 206:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -313,6 +326,17 @@ function resolveIrem78Mirroring(cartridge: Cartridge): Irem78Mirroring {
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }
+}
+
+function resolveCnromProtectionChip(cartridge: Cartridge): number {
+  if (
+    cartridge.format !== "nes2" ||
+    cartridge.submapperNumber < 4 ||
+    cartridge.submapperNumber > 7
+  ) {
+    throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+  }
+  return cartridge.submapperNumber - 4;
 }
 
 function requireRomLayout(

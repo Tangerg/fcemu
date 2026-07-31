@@ -20,6 +20,8 @@ export const MapperKind = {
   Namco118: "namco-118",
   Sunsoft1: "sunsoft-1",
   Sunsoft2: "sunsoft-2",
+  Sunsoft3R: "sunsoft-3r",
+  CnromProtection: "cnrom-protection",
   TaitoTc0190: "taito-tc0190",
   Irem78: "irem-78",
   Vrc1: "vrc1",

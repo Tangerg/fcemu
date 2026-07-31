@@ -54,6 +54,8 @@ export type MapperState =
       readonly selectedChrBank1: number;
     }
   | { readonly kind: "sunsoft-2"; readonly register: number }
+  | { readonly kind: "sunsoft-3r"; readonly register: number }
+  | { readonly kind: "cnrom-protection"; readonly selectedChip: number }
   | {
       readonly kind: "vrc1";
       readonly prgBanks: readonly number[];
@@ -159,6 +161,15 @@ export interface Mapper {
    * the CPU memory bus to retain its previous value instead of inventing data.
    */
   cpuReadDriveMask?(address: number): number;
+
+  /**
+   * Bits driven by the cartridge during a PPU pattern-table read.
+   *
+   * Omitting this capability means all eight data lines are driven. A board
+   * may return 0 while CHR is disabled; undriven bits then come from the PPU's
+   * multiplexed address/data pins rather than from a fabricated mapper byte.
+   */
+  ppuReadDriveMask?(address: number): number;
 
   /** Optional CPU R/W pin observation for boards whose latches depend on adjacent bus cycles. */
   observeCpuBusCycle?(write: boolean): void;

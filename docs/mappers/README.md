@@ -190,6 +190,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 189 | TXC MMC3       | `txc-mmc3-189`            | `txc-mmc3-189-mapper.ts`     | no            | A12  |
 | 206 | Namco 118      | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 226 | BMC 42/63/76-1 | `bmc-226`                 | `bmc-226-mapper.ts`          | no            | no   |
 | 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 240 | C&E/Supertone  | `ce-supertone-240`        | `ce-supertone-mapper.ts`     | no            | no   |
@@ -404,6 +405,23 @@ path to NROM modes. The implemented scope is the standard 512 KiB single-ROM boa
 two-chip power-on selection remains explicit future work. A local _Wai Xin Zhan Shi_ image observes
 five latch states across 700 frames and completes deterministic 100-frame replay. See
 [NESdev mapper 242](https://www.nesdev.org/wiki/INES_Mapper_242).
+
+## BMC 42/63/76-in-1 (226)
+
+Mapper 226 has two byte latches selected by CPU address A0 throughout `$8000-$FFFF`. Register 0's
+D4-D0 and D7 plus register 1's D0 form a seven-bit 16 KiB PRG page. Register 0 D5 chooses a mirrored
+16 KiB page or an even/odd 32 KiB pair, while D6 selects horizontal or vertical mirroring. The
+unbanked 8 KiB CHR RAM is writable unless register 1 D1 asserts its documented write-protect line.
+There are no bus conflicts or PRG-RAM signals.
+
+Both latches clear on cold power and warm reset. `Bmc226Mapper` accepts the known 1 MiB 42-in-1,
+1.5 MiB 63-in-1 and 2 MiB 76-in-1 PRG layouts. The three-chip image decodes its two outer selector
+bits as physical blocks `0/0/1/2`; it is not treated as a flat 96-bank modulo array. State stores
+the two physical latch bytes, derives mirroring from them on restore and keeps CHR memory in the
+cartridge memory owner. A user-local 1 MiB _Super 42-in-1_ image selected the paired bank-30/31 menu
+path, rendered a nonblank seven-color frame, ran for 900 frames and completed an identical 100-frame
+replay without halting. Its bytes remain outside the repository. See
+[NESdev mapper 226](https://www.nesdev.org/wiki/INES_Mapper_226).
 
 ## Bandai FCG / LZ93D50 (16)
 

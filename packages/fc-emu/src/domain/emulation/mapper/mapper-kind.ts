@@ -10,6 +10,7 @@ export const MapperKind = {
   Cnrom: "cnrom",
   VsSystem: "vs-system",
   Bnrom: "bnrom",
+  Bmc226: "bmc-226",
   Nina001: "nina-001",
   Axrom: "axrom",
   Gxrom: "gxrom",

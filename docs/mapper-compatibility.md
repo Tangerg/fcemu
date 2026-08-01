@@ -85,6 +85,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 189    | TXC MMC3       | Implemented | Outer-PRG/MMC3/IRQ/state tests; two local replay smokes            |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
+| 226    | BMC 42/63/76-1 | Implemented | Three geometries/PRG/CHR-protect/reset/state tests; local smoke    |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
 | 240    | C&E/Supertone  | Implemented | Expansion-latch/PRG/CHR/WRAM/state tests; two local replay smokes  |
@@ -95,7 +96,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/182/184/189/206/240/242/245/248 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/182/184/189/206/226/240/242/245/248 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -133,7 +134,7 @@ mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
 
-Mappers 15/225/228/240/242 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/225/226/228/240/242 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -522,6 +523,13 @@ and `$6000.D6` supplying PRG A18.
   32 KiB PRG and A13 controls mirroring. Because the mapper number cannot distinguish populated
   from unpopulated 74x670 boards, the compatibility convention exposes the documented four mirrored
   low-nibble registers at `$5800-$5FFF`; they survive warm reset but not power loss.
+- Mapper 226 models the BMC 42/63/76-in-1 two-register latch. Register 0 supplies five inner PRG
+  lines, one outer line, mirrored-16 KiB versus paired-32 KiB mode and mirroring; register 1
+  supplies the final outer line and CHR-RAM write protection. Both registers clear on warm reset.
+  The accepted 1/1.5/2 MiB layouts retain their physical outer-chip wiring, including the 63-in-1
+  selector order `0/0/1/2`, rather than modulo-folding the three-chip image. A local 1 MiB _Super
+  42-in-1_ image exercised the paired bank-30/31 menu path, produced a nonblank seven-color frame,
+  ran 900 frames without halting and completed deterministic 100-frame replay.
 - Mapper 227 separates three published variants. Submapper 0 leaves its 8 KiB CHR RAM writable and
   maps an explicitly battery-backed 8 KiB RPG WRAM window; its missing UNROM circuit hardwires the
   PRG path to the NROM-128/NROM-256 modes. Submapper 1 protects CHR RAM in NROM modes and substitutes

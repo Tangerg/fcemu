@@ -43,6 +43,7 @@ export type MapperState =
   | { readonly kind: "cnrom"; readonly selectedChrBank: number }
   | { readonly kind: "vs-system"; readonly selectedBank: number }
   | { readonly kind: "bnrom"; readonly selectedPrgBank: number }
+  | { readonly kind: "bmc-226"; readonly register0: number; readonly register1: number }
   | {
       readonly kind: "nina-001";
       readonly selectedPrgBank: number;

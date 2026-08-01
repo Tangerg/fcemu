@@ -8,6 +8,7 @@ import { AddressLatchMulticartMapper } from "./address-latch-multicart-mapper.js
 import { AxromMapper } from "./axrom-mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
+import { Bmc226Mapper } from "./bmc-226-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { CeSupertoneMapper } from "./ce-supertone-mapper.js";
 import { CnromProtectionMapper } from "./cnrom-protection-mapper.js";
@@ -564,6 +565,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       return new Namco118Mapper(cartridge);
     case 225:
+      return createAddressLatchMulticartMapper(cartridge);
+    case 226:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x100_000, 0x180_000, 0x200_000], 0x2000);
+      requireVolatileChrRam(cartridge, "BMC mapper 226");
+      requireNoBatteryPrgRam(cartridge, "BMC mapper 226");
+      requireTwoScreenNametables(cartridge, "BMC mapper 226");
+      return new Bmc226Mapper(cartridge);
     case 227:
     case 228:
       return createAddressLatchMulticartMapper(cartridge);

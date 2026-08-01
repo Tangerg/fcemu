@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover twelve files used during development:
+The current profiles cover thirteen files used during development:
 
 | Profile        | Expected file                | SHA-256                                                            | Mapper |
 | -------------- | ---------------------------- | ------------------------------------------------------------------ | ------ |
@@ -42,6 +42,7 @@ The current profiles cover twelve files used during development:
 | `decathlon`    | `Cecathlon (C).nes`          | `b51a894b0e478bc16f88fb1940dad05109ad1f23897b778506349dda26adae24` | 244    |
 | `dragonquest7` | `勇者斗恶龙7(中文).nes`      | `7075d99f763e8512c0d55f4e0d2761ffb035ba887be04e124579345e91ba346d` | 245    |
 | `fengshenbang` | `封神榜.nes`                 | `f3596ffda5c1b83821e58d15827a3a2fbc94c85352b7a5b834c1039e70509a25` | 246    |
+| `baoqingtian`  | `Bao Qing Tian (C).nes`      | `4a4f0fa02305ea403464ec8f3a009aa567e191d6069e2d1edd568d5bdff005f7` | 248    |
 | `timediver`    | `Time Diver Avenger (C).nes` | `36bec12c4caccc958a70634e56eb18f6ec1e92c5e6d1a88afcfd1cd52050b54e` | 250    |
 
 Run one profile with an explicit file:
@@ -58,6 +59,7 @@ yarn smoke:real-rom -- waixin "/absolute/path/to/Wai Xin Zhan Shi.nes"
 yarn smoke:real-rom -- decathlon "/absolute/path/to/Cecathlon (C).nes"
 yarn smoke:real-rom -- dragonquest7 "/absolute/path/to/勇者斗恶龙7(中文).nes"
 yarn smoke:real-rom -- fengshenbang "/absolute/path/to/封神榜.nes"
+yarn smoke:real-rom -- baoqingtian "/absolute/path/to/Bao Qing Tian (C).nes"
 yarn smoke:real-rom -- timediver "/absolute/path/to/Time Diver Avenger (C).nes"
 ```
 
@@ -91,7 +93,8 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 117, 242, 244, 245, 246 or 250
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 117, 242, 244, 245, 246, 248
+or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.
 

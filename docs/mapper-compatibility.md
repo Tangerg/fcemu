@@ -99,7 +99,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
 | 245    | Waixing F003   | Verified    | Pin-routing tests; pinned _Dragon Quest VII_ real-ROM runner       |
 | 246    | C&E Fong Shen  | Verified    | Bank/alias tests; pinned _Feng Shen Bang_ real-ROM runner          |
-| 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
+| 248    | Kasheng MMC3   | Verified    | Shared-board tests; pinned _Bao Qing Tian_ real-ROM runner         |
 | 250    | MMC3 addr/data | Verified    | Rewiring/IRQ tests; pinned _Time Diver_ real-ROM runner            |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
@@ -458,9 +458,10 @@ and `$6000.D6` supplying PRG A18.
   fourth PRG slot remains focused-test evidence.
 - Mapper 248 is NESdev's duplicate assignment for the same Kasheng hardware, not a second guessed
   register model. The factory preserves mapper 248 in cartridge metadata while both IDs share one
-  board entity, validation policy and save-state shape. One local 256 KiB PRG + 256 KiB CHR
-  _Bao Qing Tian_ image completed a deterministic replay smoke; its bytes remain outside the
-  repository, so the status remains `Implemented`.
+  board entity, validation policy and save-state shape. The checksum-pinned 256 KiB PRG + 256 KiB
+  CHR _Bao Qing Tian_ profile verifies 1800 input-driven frames, 614 distinct frames, exact
+  visual/audio/cycle results and deterministic 120-frame save-state replay. Mapper 115's larger CHR
+  outer-bank path remains separate focused-test and unpinned local-ROM evidence.
 - Mapper 80 (Taito X1-005) maps three switchable 8 KiB PRG windows, two 2 KiB plus four 1 KiB CHR
   windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
   `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so

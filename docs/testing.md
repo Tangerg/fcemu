@@ -121,6 +121,7 @@ yarn smoke:real-rom -- waixin "/absolute/path/to/Wai Xin Zhan Shi.nes"
 yarn smoke:real-rom -- decathlon "/absolute/path/to/Cecathlon (C).nes"
 yarn smoke:real-rom -- dragonquest7 "/absolute/path/to/勇者斗恶龙7(中文).nes"
 yarn smoke:real-rom -- fengshenbang "/absolute/path/to/封神榜.nes"
+yarn smoke:real-rom -- baoqingtian "/absolute/path/to/Bao Qing Tian (C).nes"
 yarn smoke:real-rom -- timediver "/absolute/path/to/Time Diver Avenger (C).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```

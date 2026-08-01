@@ -1150,9 +1150,10 @@ an IRQ when a zero latch is reloaded on a qualified A12 rise.
 The board accepts 128–512 KiB PRG and 8–512 KiB CHR ROM with submapper 0 and two-screen nametables.
 Two local mapper-115 _Yuu Yuu Hakusho Final_ images complete 700 non-halted frames and deterministic
 100-frame save-state replays. The 512 KiB Chinese image actively toggles CHR A18; neither image
-enables NROM override. A local mapper-248 _Bao Qing Tian_ image with 256 KiB each of PRG and CHR
-also completes deterministic replay; focused tests prove both IDs enter the same board state
-machine. See
+enables NROM override. The checksum-pinned mapper-248 _Bao Qing Tian_ profile with 256 KiB each of
+PRG and CHR verifies 1800 input-driven frames, 614 distinct frames, exact visual/audio/cycle results
+and deterministic 120-frame save-state replay; focused tests prove both IDs enter the same board
+state machine. See
 [NESdev mapper 115](https://www.nesdev.org/wiki/INES_Mapper_115).
 
 ## Future Media (117)

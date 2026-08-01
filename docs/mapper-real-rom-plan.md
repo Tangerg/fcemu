@@ -131,7 +131,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |    244 | C&E Decathlon      | _Decathlon_ (pinned local profile)                                     | —                                                                                 | PRG/CHR permutation network and independent output latches       |
 |    245 | Waixing F003       | _勇者斗恶龙 VII - Dragon Quest_ (pinned local profile)                 | A smaller PRG F003 dump for the TNROM-like fallback                               | Dynamic 512 KiB outer PRG line, direct CHR-RAM and grounded A12  |
 |    246 | C&E Fong Shen Bang | _封神榜: 伏魔三太子_ (pinned local profile)                            | Modified no-encounter/dual-weapon images only as regression diversity             | Four PRG/CHR banks, 2 KiB SRAM and forced-A17 vector aliases     |
-|    248 | Kasheng MMC3       | _Bao Qing Tian_                                                        | —                                                                                 | Duplicate-ID routing, outer banks, solder pads and MMC3C IRQ     |
+|    248 | Kasheng MMC3       | _Bao Qing Tian_ (pinned local profile)                                 | —                                                                                 | Duplicate-ID routing, outer banks, solder pads and MMC3C IRQ     |
 |    250 | Time Diver MMC3    | _Time Diver Avenger_ (pinned local profile)                            | —                                                                                 | Address-carried register data, PRG/CHR banks, RAM and A12 IRQ    |
 
 ## Selection cautions

@@ -17,7 +17,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
   real-ROM verification.
 - Transactional version-17 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
-- Checksum-pinned external conformance runners and sixteen local real-ROM smoke profiles.
+- Checksum-pinned external conformance runners and seventeen local real-ROM smoke profiles.
 - A built-package consumer gate for public declarations, runtime exports and blocked deep imports.
 
 See [Mapper compatibility](./mapper-compatibility.md) and [Testing](./testing.md) for the precise
@@ -59,7 +59,7 @@ remains a separate follow-up.
 The largest compatibility risk is evidence depth, not missing class files. Mappers 6, 8, 10, 11,
 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 32, 33, 41, 48, 64, 65, 66, 67, 68, 69, 70, 71, 72,
 73, 74, 75, 76, 77, 78, 79, 80, 82, 83, 85, 87, 88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 112,
-113, 114, 115, 118, 119, 133, 140, 152, 180, 182, 184, 185, 206, 225, 227, 228, 241 and 243
+113, 114, 118, 119, 133, 140, 152, 180, 182, 184, 185, 206, 225, 227, 228, 241 and 243
 are implemented but do not yet have executable external verification.
 
 For each board family:

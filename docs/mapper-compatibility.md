@@ -75,7 +75,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
 | 114    | SuperGame MMC3 | Implemented | Two variants/outer banks/MMC3A/state tests; one local replay smoke |
-| 115    | Kasheng MMC3   | Implemented | Outer banks/pads/MMC3C/state tests; two local replay smokes        |
+| 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
@@ -442,9 +442,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 115 models the Kasheng SFC-02B/-03/-004 wiring without inheriting mapper 114's scrambling.
   `$6000` supplies PRG A18 and selects direct MMC3, mirrored NROM-128 or paired NROM-256 mode;
   `$6001` supplies CHR A18, while `$6002` drives only three solder-pad bits onto the CPU data bus.
-  The 256 KiB and 512 KiB CHR local images each completed 700 non-halted frames and deterministic
-  100-frame replay. The larger Chinese image actively toggled CHR A18; neither image selected NROM
-  override, so that path remains board-test evidence and status stays `Implemented`.
+  The checksum-pinned 512 KiB CHR Chinese _Yuu Yuu Hakusho Final_ profile verifies 3,600
+  input-driven frames from title through active combat, 1,472 distinct frames, exact visual, audio
+  and CPU-cycle results, and a deterministic 120-frame save-state replay. A separate trace observed
+  both CHR outer halves, two direct-MMC3 outer-register values, IRQ enable/disable and 59 distinct
+  MMC3 register sets. It does not select NROM override, so that path remains focused-test evidence.
 - Mapper 117 models the common Future Media board contract: four exact 8 KiB PRG registers, eight
   exact 1 KiB CHR registers, D0 mirroring and no decoded PRG RAM. Its IRQ has separate enable and
   armed gates; qualified PPU-A12 rises decrement a loaded byte counter and the zero transition
@@ -460,8 +462,9 @@ and `$6000.D6` supplying PRG A18.
   register model. The factory preserves mapper 248 in cartridge metadata while both IDs share one
   board entity, validation policy and save-state shape. The checksum-pinned 256 KiB PRG + 256 KiB
   CHR _Bao Qing Tian_ profile verifies 1800 input-driven frames, 614 distinct frames, exact
-  visual/audio/cycle results and deterministic 120-frame save-state replay. Mapper 115's larger CHR
-  outer-bank path remains separate focused-test and unpinned local-ROM evidence.
+  visual/audio/cycle results and deterministic 120-frame save-state replay. The pinned mapper-115
+  profile above independently covers the larger 512 KiB CHR outer-bank path through the same board
+  entity.
 - Mapper 80 (Taito X1-005) maps three switchable 8 KiB PRG windows, two 2 KiB plus four 1 KiB CHR
   windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
   `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so

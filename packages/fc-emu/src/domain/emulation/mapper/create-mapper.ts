@@ -143,12 +143,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x1000, 0x1000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x40_000);
       requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "MMC2");
       return new Mmc2Mapper(cartridge);
     case 10:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x1000, 0x1000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
       requireDirectPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "MMC4");
       return new Mmc4Mapper(cartridge);
     case 11:
       requireBaseSubmapper(cartridge);
@@ -273,6 +275,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
       requireDirectPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "FME-7");
       return new Fme7Mapper(interruptPort, cartridge);
     case 70:
       requireBaseSubmapper(cartridge);

@@ -611,6 +611,11 @@ describe("cartridge mappers", () => {
     ],
     ["AxROM with PRG RAM", { nes2: true, mapper: 7, submapper: 1, prgBanks: 2, prgRamShift: 7 }],
     ["MMC2 with PRG RAM", { nes2: true, mapper: 9, prgBanks: 8, chrBanks: 8, prgRamShift: 7 }],
+    ["MMC2 with four-screen nametables", { mapper: 9, prgBanks: 8, chrBanks: 8, fourScreen: true }],
+    [
+      "MMC4 with four-screen nametables",
+      { mapper: 10, prgBanks: 8, chrBanks: 8, fourScreen: true },
+    ],
     [
       "Color Dreams with PRG RAM",
       { nes2: true, mapper: 11, prgBanks: 4, chrBanks: 4, prgRamShift: 7 },
@@ -696,6 +701,10 @@ describe("cartridge mappers", () => {
       { nes2: true, mapper: 71, submapper: 2, prgBanks: 4 },
     ],
     ["FME-7 beyond its 512 KiB PRG capacity", { mapper: 69, prgBanks: 33, chrBanks: 1 }],
+    [
+      "FME-7 with four-screen nametables",
+      { mapper: 69, prgBanks: 8, chrBanks: 8, fourScreen: true },
+    ],
     ["Jaleco 87 with a non-NROM PRG size", { mapper: 87, prgBanks: 4, chrBanks: 1 }],
     ["Namco 118 beyond its 64 KiB CHR capacity", { mapper: 206, prgBanks: 8, chrBanks: 9 }],
     ["Taito TC0190 beyond its 512 KiB PRG capacity", { mapper: 33, prgBanks: 33, chrBanks: 1 }],

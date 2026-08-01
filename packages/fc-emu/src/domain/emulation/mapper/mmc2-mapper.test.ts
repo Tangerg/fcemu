@@ -98,4 +98,19 @@ describe("Mmc2Mapper", () => {
     ).toThrowError(/invalid bank register/i);
     expect(mapper.captureState()).toEqual(before);
   });
+
+  it("rejects four-screen mirroring before changing the mapper", () => {
+    const mapper = new Mmc2Mapper(createMmc2Cartridge());
+    mapper.write(0xa000, 0x02);
+    const before = mapper.captureState();
+
+    expect(() =>
+      mapper.restoreState({
+        ...before,
+        prgBank: 6,
+        mirroring: NametableMirroring.FourScreen,
+      } as MapperState),
+    ).toThrowError(/mirroring/i);
+    expect(mapper.captureState()).toEqual(before);
+  });
 });

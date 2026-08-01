@@ -131,4 +131,22 @@ describe("Fme7Mapper", () => {
       expect(() => mapper.restoreState(corrupted)).toThrow(/invalid register or counter state/i);
     },
   );
+
+  it("rejects four-screen mirroring before changing register state", () => {
+    const mapper = new Fme7Mapper(
+      noopInterrupt,
+      createTestCartridge({ mapper: 69, prgBanks: 8, chrBanks: 8 }),
+    );
+    command(mapper, 0x09, 4);
+    const before = mapper.captureState();
+
+    expect(() =>
+      mapper.restoreState({
+        ...before,
+        command: 3,
+        mirroring: NametableMirroring.FourScreen,
+      } as MapperState),
+    ).toThrow(/mirroring/i);
+    expect(mapper.captureState()).toEqual(before);
+  });
 });

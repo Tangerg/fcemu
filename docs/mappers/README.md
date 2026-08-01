@@ -109,6 +109,8 @@ variants require the exact fixed mode.
 MMC3 applies the same rule to board wiring: standard/TQROM boards accept the horizontal/vertical
 `$A000` output, four-screen boards retain header four-screen routing, and TxSROM retains its fixed
 header mode because CHR A17 replaces the ordinary mirroring register at the nametable address path.
+MMC2, MMC4 and FME-7 reject four-screen ROM declarations at the factory boundary and accept only
+the mirroring modes their own registers can drive when restoring state.
 
 ## Implemented boards
 

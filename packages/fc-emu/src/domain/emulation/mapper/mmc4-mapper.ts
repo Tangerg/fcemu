@@ -49,7 +49,10 @@ export class Mmc4Mapper implements Mapper {
     ) {
       throw new RangeError("MMC4 save state contains an invalid PRG bank");
     }
-    if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
+    if (
+      state.mirroring !== NametableMirroring.Horizontal &&
+      state.mirroring !== NametableMirroring.Vertical
+    ) {
       throw new RangeError("MMC4 save state contains invalid mirroring");
     }
     this.chr.validateState(state);

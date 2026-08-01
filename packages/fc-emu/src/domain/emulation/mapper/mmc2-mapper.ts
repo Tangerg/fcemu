@@ -49,7 +49,10 @@ export class Mmc2Mapper implements Mapper {
     ) {
       throw new RangeError("MMC2 save state contains an invalid PRG bank");
     }
-    if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
+    if (
+      state.mirroring !== NametableMirroring.Horizontal &&
+      state.mirroring !== NametableMirroring.Vertical
+    ) {
       throw new RangeError("MMC2 save state contains invalid mirroring");
     }
     this.chr.validateState(state);

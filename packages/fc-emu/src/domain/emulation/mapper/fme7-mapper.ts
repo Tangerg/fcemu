@@ -90,7 +90,7 @@ export class Fme7Mapper implements Mapper {
     ) {
       throw new RangeError("FME-7 save state contains invalid register or counter state");
     }
-    if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
+    if (!MIRRORING_MODES.some((mirroring) => mirroring === state.mirroring)) {
       throw new RangeError("FME-7 save state contains invalid mirroring");
     }
     this.command = state.command;

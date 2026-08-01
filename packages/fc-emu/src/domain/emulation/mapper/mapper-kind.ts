@@ -44,6 +44,7 @@ export const MapperKind = {
   Nina0306: "nina-03-06",
   HesNtd8: "hes-ntd8",
   NtdecAsder: "ntdec-asder",
+  OekaKids: "oeka-kids",
   IremTamS1: "irem-tam-s1",
   Irem78: "irem-78",
   Vrc1: "vrc1",

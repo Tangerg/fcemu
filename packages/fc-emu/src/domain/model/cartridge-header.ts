@@ -33,6 +33,7 @@ const TAITO_X1_005_RAM_SIZE = 0x80;
 const TAITO_X1_017_RAM_SIZE = 0x1400;
 const BANDAI_24C02_NVRAM_SIZE = 0x100;
 const FFE_MAGIC_CARD_WRAM_SIZE = 0x8000;
+const OEKA_KIDS_CHR_RAM_SIZE = 0x8000;
 const SIGNATURE = [0x4e, 0x45, 0x53, 0x1a] as const;
 
 /** Immutable interpretation of an iNES or NES 2.0 header. */
@@ -125,11 +126,18 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
 }
 
 /**
- * Normalizes ASIC-internal memory that the iNES/NES 2.0 RAM fields cannot
- * describe faithfully. The battery flag still owns volatility; only capacity
- * comes from the selected physical chip.
+ * Normalizes board-implied memory that the iNES/NES 2.0 RAM fields cannot
+ * describe faithfully. The battery flag still owns volatility where the board
+ * supports it; capacity comes from the selected physical memory chip.
  */
 function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
+  if (header.mapperNumber === 96 && header.format === "ines" && header.chrRomSize === 0) {
+    return Object.freeze({
+      ...header,
+      chrRamSize: OEKA_KIDS_CHR_RAM_SIZE,
+      chrNvRamSize: 0,
+    });
+  }
   if (header.mapperNumber === 99 && header.format === "ines") {
     return Object.freeze({
       ...header,

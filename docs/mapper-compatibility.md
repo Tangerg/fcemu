@@ -63,6 +63,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM         |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM        |
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM              |
+| 96     | Oeka Kids      | Implemented | Address-edge/CHR-RAM/conflict/state tests; two local replay smokes |
 | 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM           |
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
 | 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
@@ -82,7 +83,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/73/75/76/79/80/82/87/88/89/90/93/94/95/97/99/112/113/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/73/75/76/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -399,6 +400,13 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 95 connects Namco 108 CHR A15 to CIRAM A10. R0 controls the two nametable slots at
   `$2000-$27FF` and R1 controls `$2800-$2FFF`; the selected nametable is coupled to each 2 KiB CHR
   bank rather than represented by one global mirroring mode.
+- Mapper 96 (Bandai Oeka Kids) maps four 32 KiB PRG banks and eight 4 KiB banks within its physical
+  32 KiB CHR RAM. An AND-conflicted CPU latch selects PRG and the outer CHR half; a transition of
+  the PPU address bus into `$2xxx` captures A9-A8 for the lower pattern-table bank while the upper
+  bank remains 3 or 7. The implementation observes both rendering fetches and CPU PPUADDR/PPUDATA
+  transitions, preserves the prior address in save state and forces hardwired vertical mirroring.
+  Both user-local game images completed 180-frame starts with deterministic 60-frame save-state
+  replay. Their bytes and hashes remain outside the repository, and tablet input is not yet modeled.
 - Mapper 97 (Irem TAM-S1) fixes the final 16 KiB PRG bank at `$8000-$BFFF`, selects one of sixteen
   banks at `$C000-$FFFF` through D3-D0, and uses D7-D6 for lower one-screen, horizontal, vertical or
   upper one-screen mirroring. Its only known board carries 256 KiB PRG ROM and 8 KiB CHR RAM.

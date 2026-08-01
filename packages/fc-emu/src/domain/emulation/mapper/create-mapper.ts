@@ -50,6 +50,7 @@ import { NromMapper } from "./nrom-mapper.js";
 import { NtdecAsderMapper } from "./ntdec-asder-mapper.js";
 import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
+import { OekaKidsMapper } from "./oeka-kids-mapper.js";
 import { Rambo1Mapper } from "./rambo1-mapper.js";
 import {
   UnsupportedMapperConfigurationError,
@@ -410,6 +411,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Namco 3425");
       return new Namco118Mapper(cartridge, MAPPER_95_BOARD);
+    case 96:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x8000);
+      requireChrRam(cartridge, "Bandai Oeka Kids mapper 96");
+      requireNoBatteryPrgRam(cartridge, "Bandai Oeka Kids mapper 96");
+      requireTwoScreenNametables(cartridge, "Bandai Oeka Kids mapper 96");
+      return new OekaKidsMapper(cartridge);
     case 97:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x40_000], 0x2000);

@@ -501,6 +501,12 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "oeka-kids";
+      readonly register: number;
+      readonly innerChrBank: number;
+      readonly lastPpuAddress: number;
+    }
+  | {
       readonly kind: "irem-tam-s1";
       readonly prgBank: number;
       readonly mirroring: number;

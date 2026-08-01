@@ -14,7 +14,7 @@ execution.
 | Timing              | NTSC or PAL                                        | NTSC, PAL, multi-region or Dendy         |
 | Console             | Standard NES/Famicom; legacy mapper-99 VS identity | Standard NES/Famicom or VS UniSystem     |
 | PRG writable memory | Direct or board-implied internal memory            | Direct, MMC1-banked or board-implied     |
-| CHR writable memory | Implicit 8 KiB without CHR ROM; TQROM RAM implied  | Explicit CHR RAM or CHR NVRAM            |
+| CHR writable memory | Implicit 8 KiB; mapper 96/119 sizes board-implied  | Explicit CHR RAM or CHR NVRAM            |
 | Trainer             | Default `$7000`; mapper-owned loader exceptions    | Default plus mapper/submapper exceptions |
 | Miscellaneous ROMs  | Not encoded                                        | None                                     |
 | Default expansion   | Legacy/default                                     | Standard or VS controller port identity  |
@@ -35,6 +35,10 @@ the battery flag decides whether those bytes are volatile or persistent. NES 2.0
 declare the exact 128 bytes. Mapper 82 always normalizes to the X1-017's physical 5 KiB NVRAM,
 because neither header format can encode that capacity exactly; mapper creation additionally
 requires the battery flag.
+
+Mapper 96 similarly overrides legacy iNES's zero-CHR default with the Oeka Kids board's physical
+32 KiB volatile CHR RAM. NES 2.0 images must declare the same 32 KiB capacity explicitly; CHR ROM,
+CHR NVRAM and other writable sizes are rejected by board creation.
 
 Mapper 6/8/17 images are extracted FFE copier-card memory, so their PRG/CHR payload initializes
 mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.

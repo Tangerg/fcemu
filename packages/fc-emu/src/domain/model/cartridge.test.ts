@@ -171,6 +171,14 @@ describe("Cartridge", () => {
     expect(cartridge.prgNvRamBytes).toBe(0);
   });
 
+  it("normalizes legacy mapper 96 CHR RAM to its physical 32 KiB capacity", () => {
+    const cartridge = Cartridge.fromArrayBuffer(createTestRom({ mapper: 96, prgBanks: 8 }));
+
+    expect(cartridge.chrRom).toHaveLength(0);
+    expect(cartridge.chrRamBytes).toBe(0x8000);
+    expect(cartridge.chrNvRamBytes).toBe(0);
+  });
+
   it("represents mixed PRG RAM/NVRAM for mapper-owned bank selection", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({

@@ -155,6 +155,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 93  | Sunsoft-3R     | `sunsoft-3r`              | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`                   | `uxrom-mapper.ts`            | AND           | no   |
 | 95  | Namco 3425     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
+| 96  | Oeka Kids      | `oeka-kids`               | `oeka-kids-mapper.ts`        | AND           | no   |
 | 97  | Irem TAM-S1    | `irem-tam-s1`             | `irem-tam-s1-mapper.ts`      | no            | no   |
 | 99  | VS mainboard   | `vs-system`               | `vs-system-mapper.ts`        | no            | no   |
 | 112 | NTDEC/Asder    | `ntdec-asder`             | `ntdec-asder-mapper.ts`      | no            | no   |
@@ -835,6 +836,22 @@ used by `$2000-$27FF`; R1 selects `$2800-$2FFF`, producing horizontal or either 
 from the same bits that select the two 2 KiB CHR banks. Fixed mirroring and MMC3-style approximations
 would lose that coupling, so the mapper routes each nametable access directly. See
 [NESdev mapper 95](https://www.nesdev.org/wiki/INES_Mapper_095).
+
+## Bandai Oeka Kids (96)
+
+The board contains exactly 128 KiB PRG ROM and 32 KiB CHR RAM. One AND-conflicted
+`$8000-$FFFF` latch uses D1-D0 to select a 32 KiB PRG bank and D2 to select the outer 16 KiB CHR
+region. PPU `$1000-$1FFF` always uses logical 4 KiB bank 3 or 7; `$0000-$0FFF` combines that outer
+bit with a two-bit inner latch.
+
+The inner latch is driven by PPU address lines rather than read/write strobes. A transition from any
+non-`$2xxx` address to `$2xxx` captures PPU A9-A8, including transitions caused by CPU PPUADDR and
+PPUDATA activity. Save states therefore preserve the last observed 14-bit PPU address as well as
+both bank latches. Mirroring is hardwired vertical, and the board has no PRG RAM or IRQ. Legacy
+iNES cannot encode its 32 KiB CHR RAM, so cartridge format policy normalizes mapper 96's zero-CHR
+header to the physical capacity; NES 2.0 must declare it explicitly. The Oeka Kids tablet input
+device remains outside this mapper implementation. See
+[NESdev mapper 96](https://www.nesdev.org/wiki/INES_Mapper_096).
 
 ## Irem TAM-S1 (97)
 

@@ -58,6 +58,7 @@ import { Nina001Mapper } from "./nina001-mapper.js";
 import { OekaKidsMapper } from "./oeka-kids-mapper.js";
 import { Rambo1Mapper } from "./rambo1-mapper.js";
 import { SachenSa020aMapper } from "./sachen-sa020a-mapper.js";
+import { SachenSa72008Mapper } from "./sachen-sa72008-mapper.js";
 import {
   UnsupportedMapperConfigurationError,
   UnsupportedMapperError,
@@ -514,6 +515,12 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "TQROM");
       return new Mmc3Mapper(interruptPort, cartridge, "tqrom");
+    case 133:
+      requireBaseSubmapper(cartridge);
+      requireSachenSa72008Layout(cartridge);
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Sachen SA-72008");
+      return new SachenSa72008Mapper(cartridge);
     case 140:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
@@ -1285,6 +1292,17 @@ function requireSunsoft1Layout(cartridge: Cartridge): void {
 function requireMapper243Layout(cartridge: Cartridge): void {
   const prgSizes = [0x8000, 0x10_000, 0x20_000];
   const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000, 0x20_000];
+  if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
+  }
+  if (!chrSizes.includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, `CHR ROM must be ${formatSizes(chrSizes)}`);
+  }
+}
+
+function requireSachenSa72008Layout(cartridge: Cartridge): void {
+  const prgSizes = [0x8000, 0x10_000];
+  const chrSizes = [0x2000, 0x4000, 0x8000];
   if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
     throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
   }

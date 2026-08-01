@@ -76,6 +76,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 115    | Kasheng MMC3   | Implemented | Outer banks/pads/MMC3C/state tests; two local replay smokes        |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
+| 133    | Sachen SA72008 | Implemented | Expansion decode/banking/open-bus/state tests; local legacy smoke  |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
@@ -97,7 +98,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/182/184/189/206/226/240/242/243/245/248 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/133/140/152/182/184/189/206/226/240/242/243/245/248 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -135,7 +136,7 @@ mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
 
-Mappers 15/225/226/228/240/242/243 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/133/225/226/228/240/242/243 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -183,7 +184,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/140/152/180/182/184/185/206/248 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/133/140/152/180/182/184/185/206/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -496,6 +497,14 @@ and `$6000.D6` supplying PRG A18.
   16–64 KiB CHR ROM and eight 1 KiB banks of volatile CHR RAM. Official boards have 128 KiB PRG ROM
   and no PRG RAM. Legacy iNES implies the otherwise-unrepresentable 8 KiB CHR RAM; NES 2.0 declares
   it explicitly.
+- Mapper 133 follows the established SA-72008 compatibility path: writes matching `$E100=$4100`
+  latch D2 as one 32 KiB PRG line and D1-D0 as two 8 KiB CHR lines, while reads remain open bus and
+  mirroring stays hardwired. The early 60-pin Sachen 3009/AX-24G hardware is deliberately not
+  approximated; its _Jovial Race_ program also writes the compatible `$4120` latch before using its
+  native ports. A local early-release image ran 700 frames without halting, exercised latch values
+  `$00/$07/$03/$04`, produced 34 distinct frames in the first 600 and completed deterministic
+  100-frame replay. This is end-to-end compatibility evidence, not validation of the unimplemented
+  analog-feedback board.
 - Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB
   PRG bank and bits 3-0 select an 8 KiB CHR-ROM bank. The window has no bus conflicts and reads are
   open bus rather than a fabricated zero.

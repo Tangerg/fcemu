@@ -181,6 +181,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 115 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
+| 133 | Sachen SA72008 | `sachen-sa72008-133`      | `sachen-sa72008-mapper.ts`   | no            | no   |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
@@ -1101,6 +1102,23 @@ select 16–64 KiB CHR ROM, while set values select one of eight 1 KiB CHR-RAM b
 use 128 KiB PRG ROM, 8 KiB volatile CHR RAM and no PRG RAM. Legacy iNES cannot declare the mixed CHR
 layout, so mapper 119 implies the RAM; NES 2.0 must declare it explicitly. See
 [NESdev mapper 119](https://www.nesdev.org/wiki/TQROM).
+
+## Sachen SA-72008 (133)
+
+Mapper 133 uses the later 72-pin _Jovial Race_ board's write-only expansion latch. Addresses matching
+the `$E100` mask value `$4100`—including the game's `$4120` write—store the full byte. D2 selects one
+of two 32 KiB PRG banks and D1-D0 select one of four 8 KiB CHR-ROM banks; D7-D3 are retained in the
+physical latch state but have no bonded outputs. Expansion reads and `$6000-$7FFF` remain CPU open
+bus, `$8000-$FFFF` is ROM-only, and nametable mirroring remains hardwired from the cartridge header.
+The latch clears on cold power and survives warm reset.
+
+The factory accepts 32/64 KiB PRG and 8/16/32 KiB CHR-ROM, rejects explicit PRG RAM, CHR RAM,
+four-screen memory, non-power-of-two layouts and unknown submappers. Mapper 133 also historically
+labels the original 60-pin Sachen 3009 board, whose AX-24G clone has a different `$8000/$8001`
+register path and analog feedback. It is not guessed from a title hash: both early game programs
+already contain the compatible `$4120` write, so emulators only need the simpler SA-72008 behavior.
+A user-local early _Jovial Race_ image completed 700 frames and deterministic replay through that
+compatibility path. See [NESdev mapper 133](https://www.nesdev.org/wiki/INES_Mapper_133).
 
 ## Jaleco JF-11/JF-14 (140)
 

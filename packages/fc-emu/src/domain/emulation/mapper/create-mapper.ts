@@ -623,6 +623,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       return new WaixingF003Mapper(interruptPort, cartridge);
     case 248:
       return createKashengMapper(cartridge, interruptPort);
+    case 250:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireChrRom(cartridge, "MMC3 mapper 250");
+      requireMmc3PrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "MMC3 mapper 250");
+      return new Mmc3Mapper(interruptPort, cartridge, "mapper-250");
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
   }

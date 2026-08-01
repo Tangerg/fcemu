@@ -5,7 +5,7 @@ import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperInterruptPort, MapperState, Mmc3State } from "./mapper.js";
 import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
-export type Mmc3Board = "standard" | "txsrom" | "tqrom" | "waixing-type-a";
+export type Mmc3Board = "standard" | "txsrom" | "tqrom" | "waixing-type-a" | "mapper-250";
 export type Mmc3IrqRevision = "a" | "b";
 
 /** Nintendo MMC3 register core with explicit chip revision and board wiring. */
@@ -243,10 +243,21 @@ export class Mmc3Mapper implements Mapper {
       const offset = address % 0x0400;
       this.cartridge.writeChr(this.chrOffsets[bank] + offset, value);
     } else if (address >= 0x8000) {
-      this.writeRegister(address, value);
+      this.writeCpuRegister(address, value);
     } else if (address >= 0x6000 && this.mapsPrgRam && this.prgRamEnabled && this.prgRamWritable) {
       this.cartridge.writePrgRam(address - 0x6000, value);
     }
+  }
+
+  private writeCpuRegister(address: number, value: number): void {
+    if (this.board === "mapper-250") {
+      // This board ignores CPU D7-D0. CPU A10 selects the MMC3's odd/even
+      // register port, while CPU A7-A0 supply the byte normally carried by D7-D0.
+      const registerAddress = (address & 0xe000) | ((address & 0x0400) >>> 10);
+      this.writeRegister(registerAddress, address & 0xff);
+      return;
+    }
+    this.writeRegister(address, value);
   }
 
   private writeRegister(address: number, value: number): void {

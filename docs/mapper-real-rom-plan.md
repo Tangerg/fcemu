@@ -127,6 +127,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |    244 | C&E Decathlon      | _Decathlon_                                                            | —                                                                                 | PRG/CHR permutation network and independent output latches       |
 |    245 | Waixing F003       | _勇者斗恶龙 VII - Dragon Quest_ (Waixing translation)                  | A smaller PRG F003 dump for the TNROM-like fallback                               | Dynamic 512 KiB outer PRG line, direct CHR-RAM and grounded A12  |
 |    248 | Kasheng MMC3       | _Bao Qing Tian_                                                        | —                                                                                 | Duplicate-ID routing, outer banks, solder pads and MMC3C IRQ     |
+|    250 | Time Diver MMC3    | _Time Diver Avenger_                                                   | —                                                                                 | Address-carried register data, PRG/CHR banks, RAM and A12 IRQ    |
 
 ## Selection cautions
 

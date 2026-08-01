@@ -200,11 +200,13 @@ the mirroring modes their own registers can drive when restoring state.
 | 244 | C&E Decathlon  | `ce-decathlon-244`        | `ce-decathlon-mapper.ts`     | no            | no   |
 | 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
 | 248 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
+| 250 | MMC3 addr/data | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
 lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`. Namco
-76/88/95/206 select immutable pin-wiring values around one register core, while MMC3/TxSROM/TQROM
-select only the board behavior that differs around the shared MMC3 state machine.
+76/88/95/206 select immutable pin-wiring values around one register core, while
+MMC3/TxSROM/TQROM/mapper-250 select only the board behavior that differs around the shared MMC3
+state machine.
 Taito TC0190/TC0690 similarly share `TaitoTc0x90Banking`; their mirroring and IRQ pins remain in
 their board-specific owners.
 X1-005/X1-017 share only `TaitoX1Banking`, the three-PRG/eight-CHR data path actually common to both
@@ -1242,6 +1244,28 @@ register behavior through `Mmc3Mapper`, with both layers validated in save state
 128 KiB through 1 MiB are accepted only at power-of-two board sizes; images declaring CHR-ROM fail
 closed rather than being mistaken for this board. See
 [NESdev mapper 245](https://www.nesdev.org/wiki/INES_Mapper_245).
+
+## Time Diver MMC3 (250)
+
+Mapper 250 retains standard MMC3 PRG/CHR banking, mirroring, 8 KiB PRG-RAM protection and filtered
+PPU-A12 IRQ behavior, but rewires the CPU write bus. CPU A13-A14 still choose the `$8000`, `$A000`,
+`$C000` or `$E000` register pair; A10 becomes the MMC3 port-select bit, and A7-A0 supply the value
+normally driven by CPU D7-D0. The written CPU data byte is electrically ignored. The effective
+MMC3 write is therefore `(address & $E000) | ((address & $0400) >> 10)` with value
+`address & $00FF`.
+
+The board is an immutable wiring mode around `Mmc3Mapper`, so it does not duplicate the bank,
+mirroring, RAM, IRQ or save-state implementation. The factory accepts submapper 0, 32-512 KiB PRG
+ROM, 8-256 KiB CHR ROM, optional 8 KiB PRG RAM/NVRAM and two-screen nametables. Tests cover both
+address inputs, ignored CPU data, every register group, PRG/CHR banking, RAM protection, A12 IRQ,
+save-state restoration and the complete geometry boundary. A user-local 128 KiB + 128 KiB _Time
+Diver Avenger_ image ran 2200 frames without halting, exercised 15 distinct MMC3 bank-register
+states, produced 150 distinct frames through frame 2100 and completed deterministic 120-frame
+save-state replay. The address transform agrees in
+[NESdev mapper 250](https://www.nesdev.org/wiki/INES_Mapper_250),
+[MesenCE](https://github.com/nesdev-org/MesenCE/blob/master/Core/NES/Mappers/Mmc3Variants/MMC3_250.h),
+[puNES](https://github.com/punesemu/puNES/blob/master/src/core/mappers/mapper_250.c) and
+[FCEUX](https://github.com/TASEmulators/fceux/blob/master/src/boards/mmc3.cpp).
 
 ## Adding a mapper
 

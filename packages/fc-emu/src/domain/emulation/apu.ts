@@ -952,6 +952,7 @@ class APU {
   public reset(): void {
     this.clearPendingRegisterWrite();
     this.control = 0;
+    this.deltaModulationChannel.reset();
     this.frameSequencer.reset();
   }
 

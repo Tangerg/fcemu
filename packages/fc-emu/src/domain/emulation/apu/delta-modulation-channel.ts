@@ -125,10 +125,7 @@ export class DeltaModulationChannel {
   clockCpu(): void {
     if (this.disableDelay > 0 && --this.disableDelay === 0) {
       this.currentLength = 0;
-      if (this.dmaRequested) {
-        this.port.cancelDma();
-        this.dmaRequested = false;
-      }
+      this.abortDma();
     }
     if (this.transferStartDelay > 0 && --this.transferStartDelay === 0) {
       this.requestReaderDma(DmaBusPhase.Get);
@@ -211,6 +208,21 @@ export class DeltaModulationChannel {
   clearIRQ(): void {
     this.irqPending = false;
     this.port.setIrq(false);
+  }
+
+  /** Applies the settled reset state without discarding the output unit or programmed registers. */
+  reset(): void {
+    this.clearIRQ();
+    this.currentLength = 0;
+    this.transferStartDelay = 0;
+    this.disableDelay = 0;
+    this.abortDma();
+  }
+
+  private abortDma(): void {
+    if (!this.dmaRequested) return;
+    this.port.cancelDma();
+    this.dmaRequested = false;
   }
 
   /**
@@ -311,7 +323,12 @@ export class DeltaModulationChannel {
       (state.irqPending && (!state.irqEnabled || state.currentLength !== 0)) ||
       typeof state.dmaRequested !== "boolean" ||
       !isIntegerInRange(state.transferStartDelay, 0, 4) ||
-      !isIntegerInRange(state.disableDelay, 0, 3)
+      !isIntegerInRange(state.disableDelay, 0, 3) ||
+      (state.dmaRequested &&
+        (state.currentLength === 0 ||
+          state.sampleBuffer !== undefined ||
+          state.transferStartDelay !== 0)) ||
+      (state.transferStartDelay > 0 && state.currentLength === 0)
     ) {
       throw new RangeError("APU save state contains an invalid DMC channel");
     }

@@ -133,6 +133,26 @@ describe("DeltaModulationChannel", () => {
     expect(channel.captureState()).toEqual(before);
   });
 
+  it("rejects reader-DMA states that cannot be produced by the channel", () => {
+    const channel = createChannel(createPort(0));
+    const before = channel.captureState();
+    const activeReader = {
+      ...before,
+      currentAddress: 0xc000,
+      currentLength: 1,
+    };
+
+    for (const invalid of [
+      { ...before, currentAddress: 0xc000, dmaRequested: true },
+      { ...activeReader, sampleBuffer: 0x5a, dmaRequested: true },
+      { ...activeReader, transferStartDelay: 1, dmaRequested: true },
+      { ...before, transferStartDelay: 1 },
+    ]) {
+      expect(() => channel.restoreState(invalid)).toThrow(/DMC channel/i);
+      expect(channel.captureState()).toEqual(before);
+    }
+  });
+
   it("repeats a one-byte sample completed on the output-counter reset boundary", () => {
     const port = createPort(0);
     const channel = createChannel(port, RP2A03H_DMC_PROFILE);

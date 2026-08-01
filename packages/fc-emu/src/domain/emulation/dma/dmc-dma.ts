@@ -148,6 +148,13 @@ export class DmcDma {
       throw new RangeError("An idle DMC DMA save state cannot retain preparation cycles");
     }
     if (
+      (!state.requested && (state.address !== 0 || state.haltAddress !== 0)) ||
+      (state.requested && state.address < 0x8000) ||
+      (state.requested && !state.running && state.haltAddress !== 0)
+    ) {
+      throw new RangeError("DMC DMA save state contains inconsistent transfer addresses");
+    }
+    if (
       state.haltPhase !== undefined &&
       state.haltPhase !== DmaBusPhase.Get &&
       state.haltPhase !== DmaBusPhase.Put

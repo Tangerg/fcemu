@@ -178,6 +178,14 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (irqSources.includes(IRQSource.Mapper) !== mapperIrqAsserted(state.mapper)) {
       throw new Error("Bus save-state mapper IRQ source disagrees with the mapper output");
     }
+    const dmcChannel = state.apu.deltaModulationChannel;
+    const dmcDma = state.dma.dmc;
+    if (dmcChannel.dmaRequested !== dmcDma.requested) {
+      throw new Error("Bus save-state DMC channel request disagrees with the DMA arbiter");
+    }
+    if (dmcChannel.dmaRequested && dmcChannel.currentAddress !== dmcDma.address) {
+      throw new Error("Bus save-state DMC channel address disagrees with the DMA transfer");
+    }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);
     this.mapper.restoreState(state.mapper);

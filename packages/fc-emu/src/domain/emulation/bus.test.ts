@@ -276,6 +276,99 @@ describe("Bus lifecycle", () => {
     expect(bus.captureState()).toEqual(asserted);
   });
 
+  it("rejects disagreement between the DMC channel and DMA request latch", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      apu: {
+        ...before.apu,
+        deltaModulationChannel: {
+          ...before.apu.deltaModulationChannel,
+          currentAddress: 0xc000,
+          currentLength: 1,
+          dmaRequested: true,
+        },
+      },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/DMC channel request disagrees/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("rejects disagreement between the DMC reader and DMA transfer addresses", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      apu: {
+        ...before.apu,
+        deltaModulationChannel: {
+          ...before.apu.deltaModulationChannel,
+          currentAddress: 0xc000,
+          currentLength: 1,
+          dmaRequested: true,
+        },
+      },
+      dma: {
+        ...before.dma,
+        dmc: {
+          ...before.dma.dmc,
+          address: 0xc001,
+          requested: true,
+          haltPhase: "get" as const,
+        },
+      },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/DMC channel address disagrees/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("cancels both sides of a pending DMC DMA on soft reset", () => {
+    const bus = new Bus(createTestCartridge());
+    const apu = bus.APU.captureState();
+    bus.APU.restoreState({
+      ...apu,
+      deltaModulationChannel: {
+        ...apu.deltaModulationChannel,
+        currentAddress: 0xc000,
+        currentLength: 1,
+        dmaRequested: true,
+      },
+    });
+    bus.requestDmcDma(0xc000, "get");
+
+    expect(bus.captureState()).toMatchObject({
+      apu: { deltaModulationChannel: { dmaRequested: true } },
+      dma: { dmc: { requested: true } },
+    });
+
+    bus.reset();
+    const reset = bus.captureState();
+
+    expect(reset).toMatchObject({
+      apu: {
+        deltaModulationChannel: {
+          currentLength: 0,
+          dmaRequested: false,
+          transferStartDelay: 0,
+          disableDelay: 0,
+        },
+      },
+      dma: { dmc: { requested: false } },
+      clock: {
+        committedCpuCycle: 0,
+        synchronizedApuCycle: 0,
+        synchronizedPpuMasterClock: 0,
+      },
+    });
+
+    bus.powerOn();
+    bus.restoreState(reset);
+    expect(bus.captureState()).toEqual(reset);
+  });
+
   it("commits only the latest $4016 write on a PUT cycle", () => {
     const bus = new Bus(createTestCartridge());
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;

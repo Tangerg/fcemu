@@ -189,6 +189,12 @@ and on reaching 0 either restarts (loop) or, if IRQ is enabled, sets `irqPending
 line. `setEnabled(false)` schedules `disableDelay = phase === Get ? 2 : 3`; when it expires in
 `clockCpu` the length is zeroed and any outstanding request is cancelled.
 
+The reader request and DMA arbiter latch are one logical transaction. A soft reset represents the
+settled reset state: it aborts both sides, clears bytes remaining and cancels enable/disable delays
+while retaining the programmed registers and output unit. Save-state validation rejects an
+outstanding request with no bytes, a filled reader buffer or a load delay, and the bus requires the
+channel/arbiter request bits and transfer addresses to agree before restoring either aggregate.
+
 **Silicon profile.** `DmcSiliconProfile` carries two flags, `implicitStopAbort` and
 `unexpectedReload`. `RP2A03H_DMC_PROFILE` sets both; `CONSERVATIVE_DMC_PROFILE` clears both.
 `APU.initializeChannels` selects the RP2A03H profile only when `timing.region === "ntsc"` and the
@@ -315,7 +321,8 @@ bus's restore-only IRQ port: DMC is asserted exactly when `irqPending` is set; f
 when `frameIRQPending` is set and no status-read clear delay remains. This port updates physical
 source levels without treating restoration as a newly sampled runtime edge. Validation also rejects
 a DMC IRQ without IRQ enable (or with bytes still remaining), a frame IRQ while the sequencer is
-inhibited, and a frame-clear delay without a pending frame flag.
+inhibited, a frame-clear delay without a pending frame flag, and DMC reader/DMA state that could not
+be produced by the request state machine.
 
 ## Audio output boundary
 

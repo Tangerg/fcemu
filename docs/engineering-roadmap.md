@@ -13,7 +13,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 81 implemented mapper IDs; seven board families currently have reproducible external or pinned
+- 82 implemented mapper IDs; seven board families currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-17 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
@@ -44,19 +44,21 @@ the historical title table, whose own introduction warns that those fields are i
 | VS System console board  | 99                             | VS System console/header model              | Implemented |
 
 All 31 IDs in that bounded track meet the mapper implementation definition of done below. Mappers 67
-(Sunsoft-3), 74 (Waixing Type A), 114/182 (SuperGame MMC3), 115/248 (Kasheng MMC3), 133 (Sachen
-SA-72008), 189 (TXC MMC3), 226 (BMC 42/63/76-in-1), 240 (C&E/Supertone), 242 (Waixing 43272), 243
+(Sunsoft-3), 74 (Waixing Type A), 114/182 (SuperGame MMC3), 115/248 (Kasheng MMC3), 117 (Future
+Media), 133 (Sachen SA-72008), 189 (TXC MMC3), 226 (BMC 42/63/76-in-1), 240 (C&E/Supertone), 242
+(Waixing 43272), 243
 (Sachen SA-020A), 244 (C&E Decathlon), 245 (Waixing F003), 246 (C&E Fong Shen Bang) and 250 (Time
-Diver MMC3) were added afterwards from current hardware documentation and corpus evidence. Those
-post-track additions do not expand scope to every assigned iNES/NES 2.0 number or permit title
-hashes and guessed board variants. External `Verified` evidence remains a separate follow-up.
+Diver MMC3) were added afterwards from current hardware documentation, maintained implementation
+consensus and corpus evidence. Those post-track additions do not expand scope to every assigned
+iNES/NES 2.0 number or permit title hashes and guessed board variants. External `Verified` evidence
+remains a separate follow-up.
 
 ## Priority 1: verify the implemented mapper set
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 6, 8, 10, 11,
 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 32, 33, 48, 64, 65, 66, 67, 68, 69, 70, 71, 72,
 73, 74, 75, 76, 77, 78, 79, 80, 82, 83, 85, 87, 88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 112,
-113, 114, 115, 118, 119, 133, 140, 152, 180, 182, 184, 185, 189, 206, 225, 226, 227, 228, 240,
+113, 114, 115, 117, 118, 119, 133, 140, 152, 180, 182, 184, 185, 189, 206, 225, 226, 227, 228, 240,
 242, 243, 244, 245, 246, 248 and 250 are implemented but do not yet all have executable external verification.
 
 For each board family:

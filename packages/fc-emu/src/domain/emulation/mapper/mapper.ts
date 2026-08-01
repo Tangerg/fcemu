@@ -645,6 +645,20 @@ export type MapperState =
       readonly mmc3: Mmc3State;
     }
   | {
+      readonly kind: "future-media-117";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+      readonly irqLatch: number;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqArmed: boolean;
+      readonly irqPending: boolean;
+      readonly ppuClock: number;
+      readonly a12High: boolean;
+      readonly a12LowSince: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "txc-mmc3-189";
       readonly selectedPrgBank: number;
       readonly mmc3: Mmc3State;

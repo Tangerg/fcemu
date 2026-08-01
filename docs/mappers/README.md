@@ -179,6 +179,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 113 | HES NTD-8      | `hes-ntd8`                | `hes-ntd8-mapper.ts`         | no            | no   |
 | 114 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
 | 115 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
+| 117 | Future Media   | `future-media-117`        | `future-media-117-mapper.ts` | no            | A12  |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 133 | Sachen SA72008 | `sachen-sa72008-133`      | `sachen-sa72008-mapper.ts`   | no            | no   |
@@ -1091,6 +1092,32 @@ enables NROM override. A local mapper-248 _Bao Qing Tian_ image with 256 KiB eac
 also completes deterministic replay; focused tests prove both IDs enter the same board state
 machine. See
 [NESdev mapper 115](https://www.nesdev.org/wiki/INES_Mapper_115).
+
+## Future Media (117)
+
+Mapper 117 exposes four exact 8 KiB PRG registers at `$8000-$8003` and eight exact 1 KiB CHR
+registers at `$A000-$A007`; the power-on PRG values `$FC-$FF` select the final four banks after the
+physical address lines are masked. `$D000.D0` selects vertical or horizontal mirroring. CPU
+`$6000-$7FFF` is electrically open and the known 128/256 KiB PRG plus 256 KiB CHR boards have no
+writable cartridge memory.
+
+The byte written to `$C001` is copied into the IRQ counter and arms it only when `$C003` is written.
+`$E000.D0` independently enables counting and acknowledges the output; `$C002` acknowledges without
+changing either gate or the counter. Each PPU-A12 rise after at least ten low PPU cycles decrements a
+nonzero armed counter. Reaching zero asserts IRQ once and clears the armed gate, so software must
+reload before another IRQ. Save state retains both gates, the pending output and the complete A12
+filter phase.
+
+Three maintained implementations independently corroborate this contract:
+[Mesen CE](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Unlicensed/Mapper117.h),
+[FCEUX](https://github.com/TASEmulators/fceux/blob/a62b868e9247c4aafd66f597cdfa8d2609704087/src/boards/117.cpp) and
+[Nestopia](https://github.com/0ldsk00l/nestopia/blob/a0079a045b6ad87410ed7c4192977314bb86e222/source/core/board/NstBoardFutureMedia.cpp).
+Current puNES describes a wider, incompatible register model, but no assigned submapper or published
+hardware evidence identifies it as the base board. The factory therefore accepts only the shared
+Future Media geometry and fails closed on variants instead of blending both behaviors. A user-local
+_San Guo Zhi IV: Chi Bi Feng Yun_ image exercises the three software-used PRG windows, all CHR
+registers, mirroring and both IRQ gates through deterministic replay; its bytes are not a repository
+fixture.
 
 ## TxSROM and TQROM (118, 119)
 

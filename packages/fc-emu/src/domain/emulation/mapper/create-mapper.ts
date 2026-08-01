@@ -24,6 +24,7 @@ import { Ej0061Mapper } from "./ej-006-1-mapper.js";
 import { findFfeMagicCardBoard, type FfeMagicCardBoard } from "./ffe-magic-card-board.js";
 import { FfeMagicCardMapper } from "./ffe-magic-card-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
+import { FutureMedia117Mapper } from "./future-media-117-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
 import { HesNtd8Mapper } from "./hes-ntd8-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
@@ -503,6 +504,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       return createSuperGameMapper(cartridge, interruptPort, cartridge.submapperNumber);
     case 115:
       return createKashengMapper(cartridge, interruptPort);
+    case 117:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000, 0x40_000], 0x40_000);
+      requireChrRom(cartridge, "Future Media mapper 117");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Future Media mapper 117");
+      return new FutureMedia117Mapper(interruptPort, cartridge);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

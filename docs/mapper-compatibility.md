@@ -74,6 +74,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
 | 114    | SuperGame MMC3 | Implemented | Two variants/outer banks/MMC3A/state tests; one local replay smoke |
 | 115    | Kasheng MMC3   | Implemented | Outer banks/pads/MMC3C/state tests; two local replay smokes        |
+| 117    | Future Media   | Implemented | Exact banks/filtered-A12/one-shot IRQ/state tests; local replay    |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
 | 133    | Sachen SA72008 | Implemented | Expansion decode/banking/open-bus/state tests; local legacy smoke  |
@@ -101,7 +102,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/133/140/152/182/184/189/206/226/240/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/152/182/184/189/206/226/240/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -187,7 +188,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/133/140/152/180/182/184/185/206/244/248 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/152/180/182/184/185/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -410,6 +411,16 @@ and `$6000.D6` supplying PRG A18.
   The 256 KiB and 512 KiB CHR local images each completed 700 non-halted frames and deterministic
   100-frame replay. The larger Chinese image actively toggled CHR A18; neither image selected NROM
   override, so that path remains board-test evidence and status stays `Implemented`.
+- Mapper 117 models the common Future Media board contract: four exact 8 KiB PRG registers, eight
+  exact 1 KiB CHR registers, D0 mirroring and no decoded PRG RAM. Its IRQ has separate enable and
+  armed gates; qualified PPU-A12 rises decrement a loaded byte counter and the zero transition
+  asserts once, then disarms until `$C003` reloads it. Mesen CE, FCEUX and Nestopia agree on that
+  contract. Current puNES instead describes incompatible `$6000` ROM banking, fixed upper PRG and
+  selectable CPU/A12 IRQ modes; no NES 2.0 submapper or published hardware trace distinguishes that
+  variant, so the base mapper deliberately does not combine it with the independently corroborated
+  board. A user-local _San Guo Zhi IV_ image completed non-halted deterministic replay and exercised
+  every documented register family; its bytes remain outside the repository, so status stays
+  `Implemented`.
 - Mapper 248 is NESdev's duplicate assignment for the same Kasheng hardware, not a second guessed
   register model. The factory preserves mapper 248 in cartridge metadata while both IDs share one
   board entity, validation policy and save-state shape. One local 256 KiB PRG + 256 KiB CHR

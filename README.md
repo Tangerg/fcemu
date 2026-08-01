@@ -24,7 +24,7 @@ mapper compatibility.
 
 Implemented mapper IDs: **0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24,
 25, 26, 32, 33, 34, 48, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 82, 83, 85, 87,
-88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 112, 113, 114, 115, 118, 119, 133, 140, 152, 180, 182, 184, 185, 189, 206, 225, 226, 227,
+88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 112, 113, 114, 115, 117, 118, 119, 133, 140, 152, 180, 182, 184, 185, 189, 206, 225, 226, 227,
 228, 240, 242, 243, 244, 245, 246, 248 and 250**. “Implemented” and “verified” have different evidence requirements; see
 [Mapper compatibility](./docs/mapper-compatibility.md) before filing a game-compatibility report.
 

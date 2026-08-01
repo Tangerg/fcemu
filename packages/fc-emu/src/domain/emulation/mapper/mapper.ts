@@ -64,6 +64,11 @@ export type MapperState =
       readonly selectedPrgBank: number;
       readonly selectedChrBank: number;
     }
+  | {
+      readonly kind: "ce-supertone-240";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+    }
   | { readonly kind: "cprom"; readonly selectedChrBank: number }
   | {
       readonly kind: "codemasters";

@@ -192,6 +192,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 240 | C&E/Supertone  | `ce-supertone-240`        | `ce-supertone-mapper.ts`     | no            | no   |
 | 242 | Waixing 43272  | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
 | 248 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
@@ -1130,6 +1131,21 @@ writes it: R0/R1 are 2 KiB CHR banks at PPU `$0000`/`$0800`, R2-R5 are 1 KiB CHR
 is no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the header. Writes
 to `$A000-$FFFF` are ignored. See
 [NESdev mapper 206](https://www.nesdev.org/wiki/INES_Mapper_206).
+
+## C&E / Supertone (240)
+
+Mapper 240 uses one data latch in the cartridge expansion range. Writes at `$4020-$5FFF` route
+D5-D4 to a 32 KiB PRG bank and D3-D0 to an 8 KiB CHR bank. Reads in that range remain CPU open bus;
+writes at `$8000-$FFFF` target ROM and do not provide a second GNROM-style register path. The latch
+starts at bank zero on cold power and is not connected to the console's warm-reset signal.
+
+The known board carries exactly 128 KiB each of PRG and CHR ROM, a directly mapped 8 KiB PRG RAM
+or battery-backed NVRAM window at `$6000-$7FFF`, and hardwired horizontal or vertical mirroring.
+`CeSupertoneMapper` owns those signals and validates effective bank outputs transactionally in save
+state. Two user-local _Jing Ke Xin Zhuan_ images exercised five bank states across 700 frames,
+produced 182/153 distinct frames in their first 600 and completed identical 100-frame replay
+segments without halting. Their copyrighted bytes remain outside the repository. See
+[NESdev mapper 240](https://www.nesdev.org/wiki/INES_Mapper_240).
 
 ## Waixing F003 (245)
 

@@ -9,6 +9,7 @@ import { AxromMapper } from "./axrom-mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
+import { CeSupertoneMapper } from "./ce-supertone-mapper.js";
 import { CnromProtectionMapper } from "./cnrom-protection-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
 import { CodemastersMapper } from "./codemasters-mapper.js";
@@ -565,6 +566,20 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
     case 225:
     case 227:
     case 228:
+      return createAddressLatchMulticartMapper(cartridge);
+    case 240:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x20_000);
+      requireChrRom(cartridge, "C&E/Supertone mapper 240");
+      requireDirectPrgRam(cartridge);
+      if (cartridge.prgWritableBytes !== 0x2000) {
+        throw configurationError(
+          cartridge,
+          "C&E/Supertone mapper 240 requires exactly 8 KiB of PRG RAM or NVRAM",
+        );
+      }
+      requireTwoScreenNametables(cartridge, "C&E/Supertone mapper 240");
+      return new CeSupertoneMapper(cartridge);
     case 242:
       return createAddressLatchMulticartMapper(cartridge);
     case 245:

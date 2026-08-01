@@ -14,6 +14,7 @@ export const MapperKind = {
   Axrom: "axrom",
   Gxrom: "gxrom",
   ColorDreams: "color-dreams",
+  CeSupertone240: "ce-supertone-240",
   Cprom: "cprom",
   Codemasters: "codemasters",
   Bandai74: "bandai-74",

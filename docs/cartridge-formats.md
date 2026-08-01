@@ -89,6 +89,11 @@ declare 8 KiB PRG NVRAM. Mapper 228 accepts 512 KiB or the NES 2.0/iNES-represen
 layout plus exactly 512 KiB CHR ROM. Mapper 242 accepts 512 KiB PRG plus 8 KiB volatile CHR RAM;
 its battery variant requires exactly 8 KiB PRG NVRAM.
 
+Mapper 240 accepts the singleton C&E/Supertone layout: exactly 128 KiB each of PRG and CHR ROM plus
+one direct 8 KiB PRG RAM or NVRAM window. Legacy iNES uses its conventional implicit 8 KiB
+allocation and lets the battery flag choose persistence. NES 2.0 must declare exactly one 8 KiB
+volatile or non-volatile region; four-screen headers and writable CHR memory fail closed.
+
 These rules follow the NES 2.0 distinction between volatile/non-volatile PRG and CHR fields and the
 documented [MMC1 board wiring](https://www.nesdev.org/wiki/MMC1). Declared capacity is accepted only
 when the selected mapper can address every byte.
@@ -120,7 +125,7 @@ submapper 0. Mapper 34 submapper 1 selects NINA-001 and submapper 2 selects BNRO
 submapper 0 chooses exactly one board from CHR geometry instead of exposing both register sets.
 Mapper 6 NES 2.0 submappers 0-7 select the initial Magic Card latch mode; legacy mapper 6 means mode
 1, while mapper 8 is its mode-4 synonym and accepts submapper 0. Mapper 17 accepts submappers 0-3
-solely for the trainer relocation described above. Mappers 15/225/228/242 accept submapper 0 only.
+solely for the trainer relocation described above. Mappers 15/225/228/240/242 accept submapper 0 only.
 Mapper 227 accepts submapper 0 (RPG/optional NVRAM), submapper 1 (protected multicart/solder-pad
 reads), and submapper 2 (protected multicart/outer-bank reset rule).
 

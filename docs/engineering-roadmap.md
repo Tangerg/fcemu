@@ -45,7 +45,7 @@ the historical title table, whose own introduction warns that those fields are i
 
 All 31 IDs in that bounded track meet the mapper implementation definition of done below. Mappers 67
 (Sunsoft-3), 74 (Waixing Type A), 114/182 (SuperGame MMC3), 115/248 (Kasheng MMC3), 189 (TXC MMC3),
-242 (Waixing 43272) and 245 (Waixing F003) were added afterwards from current hardware documentation
+240 (C&E/Supertone), 242 (Waixing 43272) and 245 (Waixing F003) were added afterwards from current hardware documentation
 and corpus evidence. Those post-track additions do not expand scope to every assigned iNES/NES 2.0 number or permit title
 hashes and guessed board variants. External `Verified` evidence remains a separate follow-up.
 
@@ -54,7 +54,7 @@ hashes and guessed board variants. External `Verified` evidence remains a separa
 The largest compatibility risk is evidence depth, not missing class files. Mappers 6, 8, 10, 11,
 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 32, 33, 48, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77,
 78, 79, 80, 82, 83, 85, 87, 88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 112, 113, 114, 115, 118, 119, 140, 152, 180, 182, 184, 185, 189, 206, 225,
-227, 228, 242, 245 and 248 are implemented but do not yet all have executable external verification.
+227, 228, 240, 242, 245 and 248 are implemented but do not yet all have executable external verification.
 
 For each board family:
 

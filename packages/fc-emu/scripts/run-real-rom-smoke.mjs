@@ -121,6 +121,59 @@ const PROFILES = Object.freeze({
       cpuCycles: 3_573_661,
     },
   },
+  kage: {
+    title: "The Legend of Kage",
+    fileName: "KAGE.NES",
+    sha256: "72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 3,
+      submapperNumber: 0,
+      consoleRegion: "ntsc",
+      prgRomBytes: 32_768,
+      chrRomBytes: 16_384,
+      hasWritableChrMemory: false,
+    },
+    baseline: {
+      frames: 360,
+      minimumDistinctFrames: 200,
+      finalFrameSha256: "aa51739dda43b3e3b2172c5a0e0c909e021294df97b15065558e256fa5061a02",
+      frameSequenceSha256: "b594c4eedea8dff218e360335464e0f8bd910f46b62df0926ffc043f50fc32a8",
+      cpuCycles: 10_693_588,
+    },
+    interactive: {
+      frames: 900,
+      minimumDistinctFrames: 500,
+      events: [
+        { frame: 300, button: "start", pressed: true },
+        { frame: 302, button: "start", pressed: false },
+        { frame: 420, button: "right", pressed: true },
+        { frame: 540, button: "right", pressed: false },
+      ],
+      checkpoints: {
+        240: "726f642183ce5975f245c0447c1c3bbba2a97535d37d99bcae3717c1c2edc002",
+        300: "abd1dcba683910ce245dd1c822d2ae97e229c85f7392e2e30b9d9126a0e9b30f",
+        360: "eba1e560dea38ece703a834f256427a0e3c5493bcba5f7f40413655e52366e6e",
+        420: "9767a38e7cd49900f0d45cfe47586868a708acdd404a47e67260b39c3fac116f",
+        480: "cfa183906bc3c0750c0e6c1459d8278689077b7446ab75e1c5ee79df59d5b1f1",
+        600: "6fa0b260b3e860f25fe3ed6ce32b19203da8c7ed2838844aa271f20119763f59",
+        900: "60230877dd3a45e696e01db07645a7a28448c1e9f9c752cb4ed6f2db154b164f",
+      },
+      finalFrameSha256: "60230877dd3a45e696e01db07645a7a28448c1e9f9c752cb4ed6f2db154b164f",
+      frameSequenceSha256: "afe1172fa1fa6c047449c94a48c1bd470975049486aa10911842a3ac97a79ceb",
+      audioSamples: 659_737,
+      audioSha256: "62b14e5d71a72a256f2f49b3419e340c6b83137ca101bfe9402dd1e2cfd6d590",
+      cpuCycles: 26_775_058,
+    },
+    replay: {
+      checkpointFrame: 480,
+      frames: 120,
+      frameSequenceSha256: "d3eed93fe024078a67436efb06867b21c3235cc4006c322fed0636d20e8a7384",
+      audioSamples: 88_055,
+      audioSha256: "39f7a0e79c04ebb1d2de92f3296e3d144b0f9255ae3e08ac40272bc3fe0678f8",
+      cpuCycles: 3_573_660,
+    },
+  },
 });
 
 const profileArgument = process.argv[2];
@@ -425,7 +478,7 @@ function printResults(results) {
 
 function printUsage() {
   console.error(
-    "Usage: yarn smoke:real-rom -- <mario|contra> /path/to/file.nes\n" +
+    "Usage: yarn smoke:real-rom -- <mario|contra|kage> /path/to/file.nes\n" +
       "       yarn smoke:real-rom -- all /path/to/rom-directory\n" +
       "       yarn smoke:real-rom -- --list",
   );

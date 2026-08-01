@@ -104,6 +104,7 @@ matches a committed profile:
 ```bash
 yarn smoke:real-rom -- mario /absolute/path/to/MARIO.NES
 yarn smoke:real-rom -- contra /absolute/path/to/CONTRA.NES
+yarn smoke:real-rom -- kage /absolute/path/to/KAGE.NES
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```
 
@@ -157,7 +158,7 @@ Changes to `MachineClock`, CPU read/write phases, PPU fetches, interrupts or DMA
 - PPU vblank/NMI, sprite and OAM suites;
 - APU/DMC and OAM/DMC collision suites;
 - MMC3 A12/IRQ tests;
-- both real-ROM smoke profiles.
+- all pinned real-ROM smoke profiles.
 
 The exact external command depends on which local fixtures are available; report skipped fixtures
 rather than claiming they passed.

@@ -14,7 +14,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 0      | NROM           | Verified    | Unit tests; pinned `MARIO.NES` real-ROM runner                     |
 | 1      | MMC1/SxROM     | Verified    | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5                      |
 | 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                    |
-| 3      | CNROM          | Implemented | PRG/CHR/conflict/oversize tests; facade smoke                      |
+| 3      | CNROM          | Verified    | Tests; pinned _The Legend of Kage_ real-ROM runner                 |
 | 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned      |
 | 5      | MMC5/ExROM     | Implemented | Banking/ExRAM/split/IRQ/audio/state tests; no conformance ROM      |
 | 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture              |
@@ -149,7 +149,10 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 3 uses no conflicts for ambiguous legacy/submapper-0 images, preserving compatible boards
   and historical mapper-3 conversions. NES 2.0 submapper 1 makes no conflicts explicit; submapper 2
   selects original CNROM AND conflicts. The mapper entity still models that physical conflict path;
-  only the header-to-board compatibility policy changed.
+  only the header-to-board compatibility policy changed. The pinned _The Legend of Kage_ profile
+  locks this distinction: forcing its legacy image through submapper-2 AND conflicts corrupts the
+  title sequence, while the compatibility path completes 900 deterministic frames and save-state
+  replay without embedding the commercial ROM.
 - Mapper 2 retains the generic iNES full-byte/no-conflict convention. Original UNROM/UOROM conflict
   behavior is selected with NES 2.0 submapper 2 without breaking compatible legacy images.
 - Mapper 7 follows the default iNES no-conflict behavior required by ANROM software. AMROM/AOROM

@@ -123,7 +123,7 @@ Do not add speculative silicon-profile flags to preserve two incompatible approx
 - Source and current contradiction recorded.
 - State transition implemented in the physical owner.
 - Focused test and boundary-level regression added.
-- Relevant external suites and both real-ROM profiles run or explicitly reported unavailable.
+- Relevant external suites and all pinned real-ROM profiles run or explicitly reported unavailable.
 - Save-state and reset/power-on semantics covered when state changes.
 - Subsystem and compatibility documentation updated.
 

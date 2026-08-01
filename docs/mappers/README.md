@@ -235,7 +235,9 @@ Fixed PRG; a `$8000-$FFFF` register selects an 8 KiB CHR bank. The legacy defaul
 CNROM-compatible banking without bus conflicts because iNES mapper 3 also covers historical mapper
 hacks and compatible boards that require writable, non-conflicting registers. NES 2.0 submapper 1
 makes that behavior explicit; submapper 2 selects original CNROM AND conflicts. A declared 2 KiB PRG
-RAM is mirrored through the 8 KiB `$6000-$7FFF` window.
+RAM is mirrored through the 8 KiB `$6000-$7FFF` window. A pinned local _The Legend of Kage_ profile
+locks the legacy no-conflict path across its title sequence, gameplay, audio and save-state replay;
+forcing the same bytes through submapper 2 reproduces the CHR corruption that policy prevents.
 
 ## MMC3 (4)
 

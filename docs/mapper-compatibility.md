@@ -90,13 +90,14 @@ describes evidence maturity rather than a runtime feature flag.
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
 | 240    | C&E/Supertone  | Implemented | Expansion-latch/PRG/CHR/WRAM/state tests; two local replay smokes  |
 | 242    | Waixing 43272  | Implemented | Six PRG modes/CHR protect/WRAM/state tests; one local replay smoke |
+| 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/182/184/189/206/226/240/242/245/248 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/182/184/189/206/226/240/242/243/245/248 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -134,7 +135,7 @@ mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
 
-Mappers 15/225/226/228/240/242 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/225/226/228/240/242/243 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -557,6 +558,16 @@ and `$6000.D6` supplying PRG A18.
   UNROM path. A local _Wai Xin Zhan Shi_ image exercised five latch values over 700 frames, produced
   174 distinct frames and completed deterministic 100-frame replay without halting. The optional
   640 KiB two-chip ET-113 variant remains unsupported until a matching corpus image is available.
+- Mapper 243 models the eight-register ASIC on Sachen's SA-020A board. The index/data ports use the
+  full `$C101` decode through `$4100-$7FFF`; data reads drive only D2-D0, while every register retains
+  all three bits even when it has no external output. R5 selects 32 KiB PRG, R2/R4/R6 independently
+  drive the four 8 KiB CHR bank lines, and R7 selects flipped-L, horizontal, vertical or upper
+  single-screen nametable routing. Cold power clears the ASIC while warm reset leaves it untouched.
+  A local legacy _Poker III 5-in-1_ image ran 700 frames without halting, exercised seven register
+  states, produced 310 distinct frames in the first 600 and completed deterministic 100-frame
+  replay. Its known historical header/CHR-order convention is not treated as physical SA-020A
+  validation and does not introduce a title-hash quirk; an accurate _Honey Peach_ image remains the
+  board-level validation target.
 - Mapper 245 models the Waixing F003 pin routing rather than treating it as an MMC3 bank mask. PPU
   A10/A11 select the active MMC3 CHR register while its A12 input is grounded; that register's CHR
   A11 output becomes PRG A19, selecting one 512 KiB half for every CPU ROM window. CHR-RAM remains

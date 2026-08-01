@@ -57,6 +57,7 @@ import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
 import { OekaKidsMapper } from "./oeka-kids-mapper.js";
 import { Rambo1Mapper } from "./rambo1-mapper.js";
+import { SachenSa020aMapper } from "./sachen-sa020a-mapper.js";
 import {
   UnsupportedMapperConfigurationError,
   UnsupportedMapperError,
@@ -591,6 +592,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       return new CeSupertoneMapper(cartridge);
     case 242:
       return createAddressLatchMulticartMapper(cartridge);
+    case 243:
+      requireBaseSubmapper(cartridge);
+      requireMapper243Layout(cartridge);
+      requireChrRom(cartridge, "Sachen SA-020A");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Sachen SA-020A");
+      return new SachenSa020aMapper(cartridge);
     case 245:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x20_000, 0x40_000, 0x80_000, 0x100_000], 0x2000);
@@ -1271,6 +1279,17 @@ function requireSunsoft1Layout(cartridge: Cartridge): void {
   }
   if (cartridge.chrMemoryBytes !== 0x4000 && cartridge.chrMemoryBytes !== 0x8000) {
     throw configurationError(cartridge, "Sunsoft-1 CHR ROM must be 16 KiB or 32 KiB");
+  }
+}
+
+function requireMapper243Layout(cartridge: Cartridge): void {
+  const prgSizes = [0x8000, 0x10_000, 0x20_000];
+  const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000, 0x20_000];
+  if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
+  }
+  if (!chrSizes.includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, `CHR ROM must be ${formatSizes(chrSizes)}`);
   }
 }
 

@@ -70,6 +70,11 @@ export type MapperState =
       readonly selectedPrgBank: number;
       readonly selectedChrBank: number;
     }
+  | {
+      readonly kind: "sachen-sa020a-243";
+      readonly selectedRegister: number;
+      readonly registers: readonly number[];
+    }
   | { readonly kind: "cprom"; readonly selectedChrBank: number }
   | {
       readonly kind: "codemasters";

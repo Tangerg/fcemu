@@ -195,6 +195,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 240 | C&E/Supertone  | `ce-supertone-240`        | `ce-supertone-mapper.ts`     | no            | no   |
 | 242 | Waixing 43272  | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 243 | Sachen SA-020A | `sachen-sa020a-243`       | `sachen-sa020a-mapper.ts`    | no            | no   |
 | 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
 | 248 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
 
@@ -1164,6 +1165,27 @@ state. Two user-local _Jing Ke Xin Zhuan_ images exercised five bank states acro
 produced 182/153 distinct frames in their first 600 and completed identical 100-frame replay
 segments without halting. Their copyrighted bytes remain outside the repository. See
 [NESdev mapper 240](https://www.nesdev.org/wiki/INES_Mapper_240).
+
+## Sachen SA-020A (243)
+
+Mapper 243 exposes the three-bit index and data ports of Sachen's eight-register ASIC through the
+`$C101` address mask from `$4100` through `$7FFF`. The data port is readable and drives only D2-D0;
+all eight registers retain those three bits, including R0/R1/R3 whose outputs are not bonded to
+board signals. Writes outside the decoded ports do not invent PRG-RAM or ROM register aliases.
+
+R5 D1-D0 select one 32 KiB PRG bank. R2 D0, R4 D0 and R6 D1-D0 respectively drive CHR A13, A14 and
+A16-A15, selecting one 8 KiB CHR bank without conflating the differently wired mapper-150 board.
+R7 D2-D1 selects the physical nametable pages `[0,0,0,1]`, `[0,0,1,1]`, `[0,1,0,1]` or
+`[1,1,1,1]`; the first mode remains a true vertically flipped L rather than an approximation using
+the header mirroring enum. The ASIC powers up with all registers clear and retains them across warm
+reset. Save state captures the selected index and all eight validated register values.
+
+The factory accepts power-of-two PRG capacities from 32 to 128 KiB and CHR-ROM capacities from 8
+to 128 KiB, rejects explicit PRG RAM, CHR RAM, four-screen memory and unknown submappers, and keeps
+ROM mirroring electrical rather than modulo-folding non-power-of-two images. A user-local legacy
+_Poker III 5-in-1_ image completed a deterministic smoke, but its historical CHR convention is not
+evidence for the SA-020A wiring and is not handled with a title hash. See
+[NESdev mapper 243](https://www.nesdev.org/wiki/INES_Mapper_243).
 
 ## Waixing F003 (245)
 

@@ -478,6 +478,12 @@ export type MapperState =
       readonly chrBank: number;
     }
   | {
+      readonly kind: "hes-ntd8";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-tam-s1";
       readonly prgBank: number;
       readonly mirroring: number;

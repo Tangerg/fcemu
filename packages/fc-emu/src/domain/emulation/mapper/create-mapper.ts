@@ -21,6 +21,7 @@ import { findFfeMagicCardBoard, type FfeMagicCardBoard } from "./ffe-magic-card-
 import { FfeMagicCardMapper } from "./ffe-magic-card-mapper.js";
 import { Fme7Mapper } from "./fme7-mapper.js";
 import { GxromMapper } from "./gxrom-mapper.js";
+import { HesNtd8Mapper } from "./hes-ntd8-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
 import { IremG101Mapper, type IremG101Board } from "./irem-g101-mapper.js";
 import { IremH3001Mapper } from "./irem-h3001-mapper.js";
@@ -410,6 +411,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireVsSystemMapperLayout(cartridge);
       return new VsSystemMapper(cartridge);
+    case 113:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
+      requireChrRom(cartridge, "HES NTD-8");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "HES NTD-8");
+      return new HesNtd8Mapper(cartridge);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

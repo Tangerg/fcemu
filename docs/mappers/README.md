@@ -156,6 +156,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 95  | Namco 3425     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 97  | Irem TAM-S1    | `irem-tam-s1`             | `irem-tam-s1-mapper.ts`      | no            | no   |
 | 99  | VS mainboard   | `vs-system`               | `vs-system-mapper.ts`        | no            | no   |
+| 113 | HES NTD-8      | `hes-ntd8`                | `hes-ntd8-mapper.ts`         | no            | no   |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
@@ -846,6 +847,18 @@ approximated with one CPU. See [NESdev mapper 99](https://www.nesdev.org/wiki/IN
 decoded Super Xevious phases follow the maintained
 [MAME VS driver](https://github.com/mamedev/mame/blob/master/src/mame/nintendo/vsnes.cpp); the
 device remains console-owned because those boards use mapper 206, not mapper 99.
+
+## HES NTD-8 (113)
+
+The NTD-8 extends NINA-03/NINA-06 with a single write-only expansion latch decoded when
+`(address & $E100) == $4100`. Bits 5-3 select one of eight 32 KiB PRG-ROM banks. CHR selection is
+deliberately non-contiguous: bit 6 supplies the high bit and bits 2-0 supply the low three bits for
+one of sixteen 8 KiB CHR-ROM banks. Bit 7 selects horizontal (0) or vertical (1) mirroring.
+
+Expansion reads remain open bus. The board has no PRG RAM, bus conflicts, IRQ or expansion audio;
+power-on clears both bank fields and selects horizontal mirroring. Unsupported submappers,
+four-screen nametable memory, CHR RAM and ROM images beyond 256 KiB PRG or 128 KiB CHR fail closed.
+See [NESdev mapper 113](https://www.nesdev.org/wiki/INES_Mapper_113).
 
 ## TxSROM and TQROM (118, 119)
 

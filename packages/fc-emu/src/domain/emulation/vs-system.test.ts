@@ -57,6 +57,46 @@ describe("VsSystem", () => {
     expect(() => restored.restoreState({ ...state, coin1CyclesRemaining: 51 })).toThrow(RangeError);
   });
 
+  it.each([
+    { hardwareType: 0, protectionIndex: 1 },
+    { hardwareType: 3, protectionIndex: 2 },
+    { hardwareType: 4, protectionIndex: 1 },
+  ])(
+    "rejects protection position $protectionIndex for hardware type $hardwareType",
+    ({ hardwareType, protectionIndex }) => {
+      const system = new VsSystem(hardwareType, 1000);
+      system.powerOn();
+      const before = system.captureState();
+
+      expect(() => system.restoreState({ ...before, protectionIndex })).toThrow(/cabinet I\/O/i);
+      expect(system.captureState()).toEqual(before);
+    },
+  );
+
+  it("accepts every reachable stream and Super Xevious protection position", () => {
+    const stream = new VsSystem(1, 1000);
+    stream.powerOn();
+    stream.restoreState({ ...stream.captureState(), protectionIndex: 31 });
+    expect(stream.captureState().protectionIndex).toBe(31);
+
+    const xevious = new VsSystem(3, 1000);
+    xevious.powerOn();
+    xevious.restoreState({ ...xevious.captureState(), protectionIndex: 1 });
+    expect(xevious.captureState().protectionIndex).toBe(1);
+  });
+
+  it("rejects unsupported construction and invalid clock steps", () => {
+    expect(() => new VsSystem(5, 1000)).toThrow(/hardware type/i);
+    expect(() => new VsSystem(0, 0)).toThrow(/CPU frequency/i);
+    expect(() => new VsSystem(0, Number.NaN)).toThrow(/CPU frequency/i);
+
+    const system = new VsSystem(0, 1000);
+    system.powerOn();
+    const before = system.captureState();
+    expect(() => system.tickCpuCycles(-1)).toThrow(/clock step/i);
+    expect(system.captureState()).toEqual(before);
+  });
+
   it("rejects malformed cabinet commands without changing cabinet state", () => {
     const system = new VsSystem(0, 1000);
     system.powerOn();

@@ -148,7 +148,9 @@ ports. A committed `$4016` write also presents OUT2 to mapper 99.
 `VsSystem` observes the mirrored `$4020-$5FFF` coin-counter address decode before mapper expansion
 ports. Reads write the current external open-bus D0 into that output, matching the cabinet circuit.
 The same console device supplies the header-selected RBI, TKO and Super Xevious protection reads;
-all cabinet/protection state participates in transactional save states.
+all cabinet/protection state participates in transactional save states. Restore validates the
+position against the selected hardware: RBI/TKO streams use `0..31`, Super Xevious uses its two
+phases `0..1`, and boards without a stream keep the position at 0.
 
 ## PPU memory map (`PPUMemory`)
 

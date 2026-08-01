@@ -46,7 +46,17 @@ export class VsSystem {
     readonly hardwareType: number,
     cpuFrequencyHz: number,
   ) {
-    this.coinPulseCycles = Math.max(1, Math.round(cpuFrequencyHz * 0.05));
+    if (!Number.isInteger(hardwareType) || hardwareType < 0 || hardwareType > 4) {
+      throw new RangeError("Vs. hardware type must identify a supported UniSystem device");
+    }
+    if (!Number.isFinite(cpuFrequencyHz) || cpuFrequencyHz <= 0) {
+      throw new RangeError("Vs. cabinet timing requires a positive CPU frequency");
+    }
+    const coinPulseCycles = Math.max(1, Math.round(cpuFrequencyHz * 0.05));
+    if (!Number.isSafeInteger(coinPulseCycles)) {
+      throw new RangeError("Vs. cabinet coin timing exceeds the safe cycle range");
+    }
+    this.coinPulseCycles = coinPulseCycles;
   }
 
   get forcesStartButton(): boolean {
@@ -68,6 +78,9 @@ export class VsSystem {
   }
 
   tickCpuCycles(cycles: number): void {
+    if (!Number.isSafeInteger(cycles) || cycles < 0) {
+      throw new RangeError("Vs. cabinet clock step must be a non-negative safe integer");
+    }
     this.coin1CyclesRemaining = Math.max(0, this.coin1CyclesRemaining - cycles);
     this.coin2CyclesRemaining = Math.max(0, this.coin2CyclesRemaining - cycles);
   }
@@ -152,9 +165,7 @@ export class VsSystem {
       typeof state.coinCounterLine !== "boolean" ||
       !Number.isSafeInteger(state.coinCounterPulses) ||
       state.coinCounterPulses < 0 ||
-      !Number.isInteger(state.protectionIndex) ||
-      state.protectionIndex < 0 ||
-      state.protectionIndex > 31
+      !this.isProtectionIndex(state.protectionIndex)
     ) {
       throw new RangeError("Vs. System save state contains invalid cabinet I/O");
     }
@@ -220,5 +231,12 @@ export class VsSystem {
 
   private static isCycleCount(value: number, maximum: number): boolean {
     return Number.isSafeInteger(value) && value >= 0 && value <= maximum;
+  }
+
+  private isProtectionIndex(value: number): boolean {
+    if (!Number.isInteger(value) || value < 0) return false;
+    if (this.hardwareType === 1 || this.hardwareType === 2) return value <= 31;
+    if (this.hardwareType === 3) return value <= 1;
+    return value === 0;
   }
 }

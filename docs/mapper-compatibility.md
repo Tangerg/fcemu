@@ -61,6 +61,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM          |
 | 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture    |
 | 85     | Konami VRC7    | Implemented | Three PCBs/banking/IRQ/FM/reset/state tests; no conformance ROM    |
+| 86     | Jaleco JF-13   | Implemented | Banking/mirror/state tests; µPD7756C and canonical fixture pending |
 | 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                        |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                  |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM               |
@@ -110,7 +111,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/164/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/86/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/164/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -200,7 +201,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/142/150/152/180/182/184/185/187/206/244/248 because those
+  9/11/13/32/33/41/64/66/70/71/75/76/78/79/86/87/88/89/91/93/94/95/97/114/115/117/119/133/140/142/150/152/180/182/184/185/187/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -329,6 +330,16 @@ and `$6000.D6` supplying PRG A18.
   patch, logarithmic envelope/phase generators, tremolo/vibrato, test register and 36-CPU-cycle
   native sample divider. `$E000` bit 6 clears and silences sound-register state while vibrato phase
   continues; complete operator feedback/envelope/phase state is serialized.
+- Mapper 86 models Jaleco's JF-13 discrete banking circuit with its exact 128 KiB PRG and 64 KiB
+  CHR layout. `$6000-$6FFF` selects one 32 KiB PRG bank from D5-D4 and one 8 KiB CHR bank from
+  D6/D1-D0; the board's incomplete `/ROMSEL` decode mirrors this latch at `$E000-$EFFF` without bus
+  conflicts. `$7000-$7FFF` and its `$F000-$FFFF` mirror control the external µPD7756C speech chip.
+  The core does not synthesize that voice path because its recorded sample data is not present in
+  the `.nes` payload. A local _Urusei Yatsura: Lum no Wedding Bell_ image is not JF-13 evidence: it
+  declares mapper 86 with an impossible 32/32 KiB geometry, while that title belongs to JF-10/J87.
+  The factory rejects it instead of adding a title or hash exception. A separate local _Moero!! Pro
+  Yakyuu_ container carries the known Rev 1.3 payload but also 524,304 trailing padding bytes, so it
+  remains review-only despite a coherent 1,500-frame smoke and deterministic save-state replay.
 - Mapper 32 (Irem G-101) exposes two switchable 8 KiB PRG banks, two fixed tail banks and eight
   1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
   windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major

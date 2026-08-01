@@ -93,6 +93,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     82 | Taito X1-017       | _Kyuukyoku Harikiri Stadium III_ (Japan)                               | —                                                                                 | PRG/CHR banking, pull-down behavior, RAM and cycle IRQ           |
 |     83 | Cony/Yoko ASIC     | _Street Fighter II Pro_ (unlicensed, mapper 83.0)                      | _World Heroes 2'_ (83.1), _Dragon Ball Party_ (83.2), _1994 Super 20-in-1_ (83.3) | Four PCB wirings, NVRAM, outer banks and dual-source IRQ         |
 |     85 | Konami VRC7        | _Lagrange Point_ (Japan, VRC7a)                                        | _Tiny Toon Adventures 2_ (Japan, VRC7b)                                           | Pin routing, IRQ, audible six-channel FM and muted PCB           |
+|     86 | Jaleco JF-13       | _Moero!! Pro Yakyuu_ (Japan, red or black JF-13 release)               | The other JF-13 revision plus identified µPD7756C sample data                     | PRG/CHR latch, mirrored decode and speech control                |
 |     87 | Jaleco J87         | _City Connection_ (Japan)                                              | _The Goonies_ (Japan)                                                             | Reversed CHR select bits without bus conflicts                   |
 |     88 | Namco 3433         | _Dragon Spirit: Aratanaru Densetsu_ (Japan)                            | —                                                                                 | Split lower/upper 64 KiB CHR wiring                              |
 |     89 | Sunsoft-2          | _Tenka no Goikenban: Mito Koumon_ (Japan)                              | —                                                                                 | Split-field CHR bank, PRG bank, mirroring and conflicts          |
@@ -150,6 +151,13 @@ the same ID covers materially different hardware that the primary image cannot e
 - Mapper 69 can validate FME-7 banking and IRQ with _Batman: Return of the Joker_. _Gimmick!_ also
   requires Sunsoft 5B audio, which is not implemented, so its audio must not be accepted as a passing
   baseline yet.
+- The local _Urusei Yatsura: Lum no Wedding Bell_ image is not Mapper 86 evidence. It declares an
+  impossible 32 KiB PRG/32 KiB CHR JF-13 layout; the title is a JF-10/J87 board. Keep it rejected
+  and obtain a canonical 128 KiB PRG/64 KiB CHR _Moero!! Pro Yakyuu_ image instead. The local
+  _Moero!! Pro Yakyuu_ file's declared PRG+CHR payload matches known Rev 1.3 SHA-1
+  `89C455E1793A1603BB977AD7215AB308B3586958`, but its container adds 524,304 trailing padding bytes
+  and remains under review rather than becoming a pinned profile. Recorded speech also requires
+  separate, identified µPD7756C sample data before audio can be verified.
 - Mapper 99 is not the whole VS platform. Some VS protection games use mapper 206; their VS console
   metadata must remain present for cabinet inputs, RGB PPU selection and protection reads.
 - Mapper 113 is the HES/AVE multicart extension of mapper 79. Reject 32 KiB single-game NINA-03/06

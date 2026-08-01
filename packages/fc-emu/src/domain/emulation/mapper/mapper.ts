@@ -202,6 +202,11 @@ export type MapperState =
       readonly prgMemory: Uint8Array;
       readonly chrMemory: Uint8Array;
     }
+  | {
+      readonly kind: "jaleco-jf13-86";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+    }
   | { readonly kind: "jaleco-87"; readonly selectedChrBank: number }
   | {
       readonly kind: "jaleco-jf";

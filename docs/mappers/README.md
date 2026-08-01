@@ -166,6 +166,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 82  | Taito X1-017   | `taito-x1-017`            | `taito-x1-017-mapper.ts`     | no            | cyc. |
 | 83  | Cony/Yoko ASIC | `cony-yoko`               | `cony-yoko-mapper.ts`        | no            | both |
 | 85  | Konami VRC7    | `vrc7`                    | `vrc7-mapper.ts`             | no            | cyc. |
+| 86  | Jaleco JF-13   | `jaleco-jf13-86`          | `jaleco-jf13-mapper.ts`      | no            | no   |
 | 87  | Jaleco CHR     | `jaleco-87`               | `jaleco-mapper.ts`           | no            | no   |
 | 88  | Namco 3433     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 89  | Sunsoft-2      | `sunsoft-2`               | `sunsoft2-mapper.ts`         | AND           | no   |
@@ -943,6 +944,29 @@ acknowledge, MSB writes arm counting when the mode's enable bit is set, and reac
 the counter and asserts IRQ. Current hardware evidence proves `$00`/`$FF` as the two source values
 but not the decisive individual data bit, so other patterns deliberately preserve the prior
 source. See [NESdev mapper 83](https://www.nesdev.org/wiki/INES_Mapper_083).
+
+## Jaleco JF-13 (86)
+
+JF-13 exposes exactly four 32 KiB PRG-ROM banks and eight 8 KiB CHR-ROM banks. Writes in
+`$6000-$6FFF` select PRG from D5-D4 and CHR from D6/D1-D0. Because the discrete decode observes an
+incomplete `/ROMSEL` signal, the same banking register is accidentally mirrored at `$E000-$EFFF`;
+reads there remain ordinary PRG-ROM reads, and neither register location has bus conflicts. Reads
+from the write-only `$6000-$7FFF` window remain open bus.
+
+`$7000-$7FFF` and its `$F000-$FFFF` mirror drive a NEC µPD7756C speech device. The recorded speech
+data is external to the `.nes` PRG/CHR payload, so the core currently keeps that path silent rather
+than fabricating samples. A canonical fixture and identified sample set are required before audio
+or whole-game behavior can be marked verified.
+
+The local file named _Urusei Yatsura: Lum no Wedding Bell_ is deliberately rejected: its mapper-86
+header declares 32 KiB PRG and 32 KiB CHR, contradicting JF-13's fixed 128/64 KiB layout, and the
+original title belongs to JF-10/J87. A separate local _Moero!! Pro Yakyuu_ container's declared
+payload matches the known Rev 1.3 SHA-1 but is followed by 524,304 padding bytes; it remains
+review-only rather than weakening the clean-image profile policy. No filename, checksum or
+relaxed-geometry exception exists in the mapper factory. See
+[NESdev mapper 86](https://www.nesdev.org/wiki/INES_Mapper_086), the
+[NES Directory JF-13 record](https://nesdir.github.io/30BF2DBA_Japan.html) and the
+[Mesen 2 JF-13 implementation](https://github.com/SourMesen/Mesen2/blob/b9fa69ddc6d0a331fb103fdb5eef6904305703c2/Core/NES/Mappers/Jaleco/JalecoJf13.h).
 
 ## Jaleco CHR (87)
 

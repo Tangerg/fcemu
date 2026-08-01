@@ -35,6 +35,7 @@ import { IremG101Mapper, type IremG101Board } from "./irem-g101-mapper.js";
 import { IremH3001Mapper } from "./irem-h3001-mapper.js";
 import { IremLrog017Mapper } from "./irem-lrog017-mapper.js";
 import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
+import { JalecoJf13Mapper } from "./jaleco-jf13-mapper.js";
 import { JalecoJf17Mapper } from "./jaleco-jf17-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
@@ -424,6 +425,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireOptional8KiBPrgRam(cartridge, "Konami VRC7");
       requireTwoScreenNametables(cartridge, "Konami VRC7");
       return new Vrc7Mapper(interruptPort, cartridge, resolveVrc7Board(cartridge));
+    case 86:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x10_000);
+      requireChrRom(cartridge, "Jaleco JF-13");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Jaleco JF-13");
+      return new JalecoJf13Mapper(cartridge);
     case 87:
       requireBaseSubmapper(cartridge);
       requireJalecoLayout(cartridge);

@@ -21,7 +21,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned          |
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture        |
 | 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
-| 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM                  |
+| 10     | MMC4/FxROM     | Verified    | Tests; pinned _Fire Emblem_ FKROM real-ROM runner                  |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
 | 12     | Rex/FFE 4M     | Verified    | MMC3A/card tests; pinned SL-5020B _DBZ5_ real-ROM runner           |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
@@ -261,7 +261,13 @@ and `$6000.D6` supplying PRG A18.
   then verifies visual/audio output, CPU cycles and an input-active save-state replay.
 - Mapper 10 (MMC4) shares the MMC2 CHR latch banks but flips both latches across the full
   `$xFD8-$xFDF`/`$xFE8-$xFEF` ranges, switches a 16 KiB `$8000-$BFFF` bank with `$C000-$FFFF` fixed,
-  and adds an 8 KiB PRG-RAM window at `$6000-$7FFF`.
+  and adds an 8 KiB PRG-RAM window at `$6000-$7FFF`. The pinned FKROM-01 _Fire Emblem: Ankoku Ryuu
+  to Hikari no Tsurugi_ profile matches PRG CRC32 `2078DCE4` and CHR CRC32 `8118B30B`, runs 2,400
+  input-driven frames with 359 distinct frames, and locks exact visual/audio/CPU-cycle output plus
+  six MMC4 state checkpoints. Those checkpoints cross PRG and all four CHR register changes,
+  mapper-controlled mirroring and the right pattern-table latch's FD-to-FE state transition; the
+  full trigger ranges and 8 KiB NVRAM remain covered by focused bus tests. A 120-frame replay from
+  frame 1,800 verifies that the input-active mapper and NVRAM state restore deterministically.
 - Mapper 11 (Color Dreams) and mapper 66 (GxROM/MHROM) each latch one register with documented
   AND-type bus conflicts. Color Dreams takes PRG from bits 1-0 and CHR from bits 7-4; GxROM takes
   PRG from bits 5-4 and CHR from bits 1-0. The no-conflict Color Dreams prototype board is out of

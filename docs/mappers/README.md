@@ -372,7 +372,10 @@ CPU-cycle and input-active save-state output.
 Like MMC2 but with a 16 KiB `$8000-$BFFF` bank (fixed last at `$C000-$FFFF`), an 8 KiB PRG-RAM window
 at `$6000-$7FFF`, and both CHR latches flipping across the full `$xFD8-$xFDF`/`$xFE8-$xFEF` ranges.
 MMC2 and MMC4 share `ChrLatchBanks` (`chr-latch-banks.ts`). Representative titles: Fire Emblem,
-Famicom Wars.
+Famicom Wars. A pinned FKROM-01 _Fire Emblem: Ankoku Ryuu to Hikari no Tsurugi_ profile locks 2,400
+input-driven frames, exact visual/audio/CPU output and a deterministic save-state replay. Six mapper
+checkpoints capture PRG and all four CHR registers, mirroring and the right pattern-table latch before
+and after its first FE transition; focused tests retain full FD/FE range and NVRAM coverage.
 
 ## Color Dreams (11)
 

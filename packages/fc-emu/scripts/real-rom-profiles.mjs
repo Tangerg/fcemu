@@ -300,6 +300,146 @@ export const REAL_ROM_PROFILES = Object.freeze({
       cpuCycles: 3_573_660,
     },
   },
+  "fire-emblem": {
+    title: "Fire Emblem: Ankoku Ryuu to Hikari no Tsurugi (Japan)",
+    fileName: "Fire Emblem (J).nes",
+    sha256: "718770a459c4c1140efcddaa78c2d44eefc32de373692d9fdfcc3a032e1f1731",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 10,
+      submapperNumber: 0,
+      consoleRegion: "ntsc",
+      mirroringMode: 0,
+      hasBatteryBackup: true,
+      prgRomBytes: 262_144,
+      chrRomBytes: 131_072,
+      prgRamBytes: 0,
+      prgNvRamBytes: 8192,
+      hasWritableChrMemory: false,
+    },
+    baseline: {
+      frames: 600,
+      minimumDistinctFrames: 10,
+      finalFrameSha256: "3d9e3ac98541c2afb9f47a647580a80cd7a19ec380b0641842699f60df67c6df",
+      frameSequenceSha256: "6066d24011ec66cda9454b0afbc2408c362d6ed5c0fc57cf52eeb03675e3ceed",
+      cpuCycles: 17_840_908,
+    },
+    interactive: {
+      frames: 2400,
+      minimumDistinctFrames: 300,
+      events: [
+        { frame: 300, button: "start", pressed: true },
+        { frame: 306, button: "start", pressed: false },
+        { frame: 600, button: "start", pressed: true },
+        { frame: 606, button: "start", pressed: false },
+        { frame: 840, button: "a", pressed: true },
+        { frame: 846, button: "a", pressed: false },
+        { frame: 1080, button: "down", pressed: true },
+        { frame: 1090, button: "down", pressed: false },
+        { frame: 1200, button: "a", pressed: true },
+        { frame: 1206, button: "a", pressed: false },
+        { frame: 1440, button: "start", pressed: true },
+        { frame: 1446, button: "start", pressed: false },
+        { frame: 1680, button: "right", pressed: true },
+        { frame: 1740, button: "right", pressed: false },
+        { frame: 1800, button: "a", pressed: true },
+        { frame: 1806, button: "a", pressed: false },
+      ],
+      checkpoints: {
+        300: "7e42c65341b4ec1bdb130960b6ca1b172ee391744c96e4c4d15330ea88b2727a",
+        600: "3d9e3ac98541c2afb9f47a647580a80cd7a19ec380b0641842699f60df67c6df",
+        720: "376894618fd75b4031d84ff78ffa240f130dc580aeb0d3a264a840f7eab2f325",
+        960: "2de05b37f9b610cf9ed224479fe2ec5fa9e154efedf80dbeb0a421673a47a3a4",
+        1200: "814b3b2adc80b3bd2c1a721ac7a6b08be304b62748bbab3c7fde0ffd3602ded9",
+        1440: "4ba72433b61bc778b12aad492d8a6bb0b29f351e1f682340637b1d5ec81103a4",
+        1680: "2fba58c995dd4028044d33e3d5acf185337e62bb6c1a8bed3c9e81ba74ee7586",
+        1800: "596952426e692a7916a5f4e24cbcf5d3c580dc9b0792704574df24e036fc344a",
+        2040: "4704272c76622203be4fd7fd3531e403e7729c8625a95982f74bfdc162e47bc0",
+        2400: "31cf766b3234ee7b4f7c7739d4aacc83c84272acf1e13a8743087975ede09449",
+      },
+      mapperCheckpoints: {
+        4: {
+          kind: "mmc4",
+          prgBank: 6,
+          chrBank0Fd: 0,
+          chrBank0Fe: 0,
+          chrBank1Fd: 0,
+          chrBank1Fe: 0,
+          latch0Fe: false,
+          latch1Fe: false,
+          mirroring: 1,
+        },
+        7: {
+          kind: "mmc4",
+          prgBank: 13,
+          chrBank0Fd: 20,
+          chrBank0Fe: 20,
+          chrBank1Fd: 0,
+          chrBank1Fe: 0,
+          latch0Fe: false,
+          latch1Fe: false,
+          mirroring: 1,
+        },
+        549: {
+          kind: "mmc4",
+          prgBank: 13,
+          chrBank0Fd: 20,
+          chrBank0Fe: 20,
+          chrBank1Fd: 0,
+          chrBank1Fe: 20,
+          latch0Fe: false,
+          latch1Fe: false,
+          mirroring: 1,
+        },
+        629: {
+          kind: "mmc4",
+          prgBank: 6,
+          chrBank0Fd: 26,
+          chrBank0Fe: 26,
+          chrBank1Fd: 0,
+          chrBank1Fe: 0,
+          latch0Fe: false,
+          latch1Fe: true,
+          mirroring: 1,
+        },
+        1200: {
+          kind: "mmc4",
+          prgBank: 6,
+          chrBank0Fd: 26,
+          chrBank0Fe: 26,
+          chrBank1Fd: 0,
+          chrBank1Fe: 0,
+          latch0Fe: false,
+          latch1Fe: true,
+          mirroring: 1,
+        },
+        2400: {
+          kind: "mmc4",
+          prgBank: 6,
+          chrBank0Fd: 17,
+          chrBank0Fe: 17,
+          chrBank1Fd: 0,
+          chrBank1Fe: 24,
+          latch0Fe: false,
+          latch1Fe: true,
+          mirroring: 1,
+        },
+      },
+      finalFrameSha256: "31cf766b3234ee7b4f7c7739d4aacc83c84272acf1e13a8743087975ede09449",
+      frameSequenceSha256: "1fff8ed91fee4ab8c39f9d671f2e988c4d30668755e3af0d8eea8f3bbe1fdf64",
+      audioSamples: 1_760_424,
+      audioSha256: "b6fa2d336d3cc46fde0819abab339621af2ba2c75ec29b1fd3df2e1f57ce6275",
+      cpuCycles: 71_445_813,
+    },
+    replay: {
+      checkpointFrame: 1800,
+      frames: 120,
+      frameSequenceSha256: "bcea8c362f9d22b95e328a90a0332359448def2b4dcfa0f6eefe70fc4f55d337",
+      audioSamples: 88_055,
+      audioSha256: "c7f8ab67dba078f90eafbc600e34bbeb184e98686e0efa590149cb8331b22c0e",
+      cpuCycles: 3_573_660,
+    },
+  },
   dbz5: {
     title: "Dragon Ball Z 5 (Chinese)",
     fileName: "dbz5cn.nes",
@@ -2408,6 +2548,7 @@ function validateScenario(id, name, scenario, includesAudio) {
   requireSha256(id, `${name}.finalFrameSha256`, scenario.finalFrameSha256);
   requireSha256(id, `${name}.frameSequenceSha256`, scenario.frameSequenceSha256);
   requireInteger(id, `${name}.cpuCycles`, scenario.cpuCycles, 1);
+  validateMapperCheckpoints(id, name, scenario.mapperCheckpoints, scenario.frames);
   if (!includesAudio) return;
 
   requireInteger(id, `${name}.audioSamples`, scenario.audioSamples, 0);
@@ -2429,6 +2570,27 @@ function validateScenario(id, name, scenario, includesAudio) {
   }
   if (scenario.checkpoints[scenario.frames] !== scenario.finalFrameSha256) {
     fail(id, `${name} final checkpoint must match finalFrameSha256`);
+  }
+}
+
+function validateMapperCheckpoints(id, scenarioName, checkpoints, scenarioFrames) {
+  if (checkpoints === undefined) return;
+  if (!isRecord(checkpoints) || Object.keys(checkpoints).length === 0) {
+    fail(id, `${scenarioName}.mapperCheckpoints must be a non-empty object when present`);
+  }
+  for (const [frameText, state] of Object.entries(checkpoints)) {
+    const frame = Number(frameText);
+    if (
+      !Number.isInteger(frame) ||
+      String(frame) !== frameText ||
+      frame < 1 ||
+      frame > scenarioFrames
+    ) {
+      fail(id, `${scenarioName}.mapperCheckpoints contains invalid frame ${frameText}`);
+    }
+    if (!isRecord(state) || typeof state.kind !== "string" || state.kind.length === 0) {
+      fail(id, `${scenarioName}.mapperCheckpoints.${frameText} must contain a mapper kind`);
+    }
   }
 }
 

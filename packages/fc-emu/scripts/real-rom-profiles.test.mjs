@@ -108,6 +108,20 @@ describe("real-ROM profile validation", () => {
     );
   });
 
+  it("rejects malformed mapper-state checkpoints", () => {
+    const outsideScenario = cloneOneProfile();
+    outsideScenario.fixture.interactive.mapperCheckpoints = { 9999: { kind: "mmc3" } };
+    expect(() => validateRealRomProfiles(outsideScenario, BUTTON_NAMES)).toThrowError(
+      /mapperCheckpoints contains invalid frame 9999/,
+    );
+
+    const missingKind = cloneOneProfile();
+    missingKind.fixture.interactive.mapperCheckpoints = { 1: { prgBank: 2 } };
+    expect(() => validateRealRomProfiles(missingKind, BUTTON_NAMES)).toThrowError(
+      /mapperCheckpoints\.1.*mapper kind/,
+    );
+  });
+
   it("rejects replay segments outside the pinned interactive timeline", () => {
     const profiles = cloneOneProfile();
     profiles.fixture.replay.frames = profiles.fixture.interactive.frames;

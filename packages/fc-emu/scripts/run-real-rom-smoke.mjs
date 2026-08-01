@@ -95,7 +95,15 @@ function executeProfile(id, profile, romPath) {
   }
   checkEqual(failures, "cpuHalted after boot", metadataEmulator.diagnostics.cpuHalted, false);
 
-  const baseline = runScenario(rom, profile.fileName, profile.baseline.frames, []);
+  const baseline = runScenario(
+    rom,
+    profile.fileName,
+    profile.baseline.frames,
+    [],
+    [],
+    false,
+    Object.keys(profile.baseline.mapperCheckpoints ?? {}).map(Number),
+  );
   checkMinimum(
     failures,
     "baseline distinct frames",
@@ -115,6 +123,12 @@ function executeProfile(id, profile, romPath) {
     profile.baseline.frameSequenceSha256,
   );
   checkEqual(failures, "baseline CPU cycles", baseline.cpuCycles, profile.baseline.cpuCycles);
+  checkMapperCheckpoints(
+    failures,
+    "baseline",
+    baseline.mapperCheckpoints,
+    profile.baseline.mapperCheckpoints,
+  );
 
   const interactive = runScenario(
     rom,
@@ -123,6 +137,7 @@ function executeProfile(id, profile, romPath) {
     profile.interactive.events,
     Object.keys(profile.interactive.checkpoints).map(Number),
     true,
+    Object.keys(profile.interactive.mapperCheckpoints ?? {}).map(Number),
   );
   checkMinimum(
     failures,
@@ -168,6 +183,12 @@ function executeProfile(id, profile, romPath) {
       expected,
     );
   }
+  checkMapperCheckpoints(
+    failures,
+    "interactive",
+    interactive.mapperCheckpoints,
+    profile.interactive.mapperCheckpoints,
+  );
 
   const replay = runReplay(rom, profile.fileName, profile.interactive.events, profile.replay);
   checkEqual(
@@ -205,7 +226,15 @@ function executeProfile(id, profile, romPath) {
   };
 }
 
-function runScenario(rom, sourceName, frames, events, checkpointFrames = [], captureAudio = false) {
+function runScenario(
+  rom,
+  sourceName,
+  frames,
+  events,
+  checkpointFrames = [],
+  captureAudio = false,
+  mapperCheckpointFrames = [],
+) {
   const samples = [];
   const outputs = captureAudio
     ? { audio: { sampleRate: AUDIO_SAMPLE_RATE, writeSample: (sample) => samples.push(sample) } }
@@ -214,6 +243,7 @@ function runScenario(rom, sourceName, frames, events, checkpointFrames = [], cap
   const frameSequence = crypto.createHash("sha256");
   const distinctFrames = new Set();
   const checkpoints = {};
+  const mapperCheckpoints = {};
   let finalFrameSha256 = "";
 
   for (let frame = 1; frame <= frames; frame++) {
@@ -224,6 +254,9 @@ function runScenario(rom, sourceName, frames, events, checkpointFrames = [], cap
     distinctFrames.add(finalFrameSha256);
     frameSequence.update(pixels);
     if (checkpointFrames.includes(frame)) checkpoints[frame] = finalFrameSha256;
+    if (mapperCheckpointFrames.includes(frame)) {
+      mapperCheckpoints[frame] = emulator.captureSaveState().state.mapper;
+    }
   }
 
   return {
@@ -235,6 +268,7 @@ function runScenario(rom, sourceName, frames, events, checkpointFrames = [], cap
     audioSha256: captureAudio ? hashAudio(samples) : undefined,
     cpuCycles: emulator.diagnostics.cpuCycles,
     checkpoints,
+    mapperCheckpoints,
   };
 }
 
@@ -315,6 +349,12 @@ function checkEqual(failures, label, actual, expected) {
 function checkMinimum(failures, label, actual, expected) {
   if (actual < expected)
     failures.push(`${label}: expected at least ${expected}, received ${actual}`);
+}
+
+function checkMapperCheckpoints(failures, scenarioName, actual, expected = {}) {
+  for (const [frame, state] of Object.entries(expected)) {
+    checkEqual(failures, `${scenarioName} frame ${frame} mapper state`, actual[frame], state);
+  }
 }
 
 function printResults(results) {

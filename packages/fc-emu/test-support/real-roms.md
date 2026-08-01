@@ -65,7 +65,14 @@ Each profile verifies:
 - a pinned no-input visual sequence;
 - a deterministic Start/A/B/directional input timeline with visual, audio and CPU-cycle checks;
 - several intermediate frame hashes so a failure can be localized;
-- a Save State checkpoint followed by two identical 120-frame visual/audio replays.
+- a Save State checkpoint followed by two identical 100–120-frame visual/audio replays.
+
+Profile data lives in
+[`scripts/real-rom-profiles.mjs`](../scripts/real-rom-profiles.mjs), separate from runner execution
+logic. Before reading a ROM, the runner rejects invalid IDs, path-bearing or duplicate filenames,
+malformed SHA-256 values, unsorted or unknown input events, checkpoint gaps and replay segments that
+leave the pinned interactive timeline. The validator has focused regressions in
+[`scripts/real-rom-profiles.test.mjs`](../scripts/real-rom-profiles.test.mjs).
 
 These commands are intentionally not part of CI because the ROM files cannot be distributed with the
 repository. Updating a pinned result requires deliberate review of the affected frame or audio

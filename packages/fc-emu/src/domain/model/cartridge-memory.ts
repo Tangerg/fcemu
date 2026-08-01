@@ -123,6 +123,9 @@ export class CartridgeMemory {
     if (!this.hasBatteryBackup) {
       throw new Error("Cannot restore cartridge memory without battery backup");
     }
+    if (!(data instanceof Uint8Array)) {
+      throw new TypeError("Cartridge save data must be a Uint8Array");
+    }
     if (data.byteLength !== this.saveBytes) {
       throw new RangeError(
         `Cartridge save size mismatch: expected ${this.saveBytes}, received ${data.byteLength}`,

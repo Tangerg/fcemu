@@ -33,6 +33,8 @@ one private `ActiveEmulation` record and are installed or cleared atomically.
 
 Eject, disposal and load failure cancel scheduled frames, clear the active pair and reset runtime
 diagnostics. Battery persistence is best-effort and cannot later stop or replace a newer session.
+The IndexedDB adapter rejects battery records that are not the `ArrayBuffer` shape it writes; it
+never coerces an unrelated structured-clone value into zero-filled NVRAM.
 
 ## Frame scheduling
 

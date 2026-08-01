@@ -250,6 +250,12 @@ describe("Emulator", () => {
     emulator.powerCycle();
     expect(emulator.captureBatterySave()?.data[0]).toBe(0x42);
 
+    const beforeInvalidRestore = emulator.captureBatterySave();
+    expect(() =>
+      emulator.restoreBatterySave(new ArrayBuffer(8192) as unknown as Uint8Array),
+    ).toThrow(/Uint8Array/i);
+    expect(emulator.captureBatterySave()).toEqual(beforeInvalidRestore);
+
     const withoutBattery = Emulator.fromRom(createTestRom());
     expect(withoutBattery.captureBatterySave()).toBeUndefined();
     expect(() => withoutBattery.restoreBatterySave(restored)).toThrow(/without battery/i);

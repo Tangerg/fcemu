@@ -174,10 +174,8 @@ export class Emulator {
     };
   }
 
-  restoreSaveState(snapshot: EmulatorSaveState): void {
-    if (snapshot.format !== SAVE_STATE_FORMAT || snapshot.version !== SAVE_STATE_VERSION) {
-      throw new Error(`Unsupported emulator save-state format or version`);
-    }
+  restoreSaveState(snapshot: unknown): void {
+    assertSaveStateEnvelope(snapshot);
     if (snapshot.romIdentity !== this.romIdentity) {
       throw new Error("Cannot restore a save state created from another ROM image");
     }
@@ -215,4 +213,32 @@ export class Emulator {
     const usesPort1 = firstPlayerUsesPort2 ? player === 2 : player === 1;
     return usesPort1 ? this.bus.Controller1 : this.bus.Controller2;
   }
+}
+
+function assertSaveStateEnvelope(snapshot: unknown): asserts snapshot is EmulatorSaveState {
+  if (
+    typeof snapshot !== "object" ||
+    snapshot === null ||
+    !("format" in snapshot) ||
+    !("version" in snapshot) ||
+    snapshot.format !== SAVE_STATE_FORMAT ||
+    snapshot.version !== SAVE_STATE_VERSION
+  ) {
+    throw new Error("Unsupported emulator save-state format or version");
+  }
+  if (
+    !("romIdentity" in snapshot) ||
+    typeof snapshot.romIdentity !== "string" ||
+    !("consoleRegion" in snapshot) ||
+    !isConsoleRegion(snapshot.consoleRegion) ||
+    !("state" in snapshot) ||
+    typeof snapshot.state !== "object" ||
+    snapshot.state === null
+  ) {
+    throw new TypeError("Malformed emulator save-state envelope");
+  }
+}
+
+function isConsoleRegion(value: unknown): value is ConsoleRegion {
+  return value === "ntsc" || value === "pal" || value === "dendy";
 }

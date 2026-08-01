@@ -208,6 +208,11 @@ executing aggregate exposes a typed snapshot
 with runtime validation. `Bus.restoreState()` is transactional: a nested failure rolls the entire
 machine back to the pre-restore snapshot.
 
+The UI runtime port deliberately carries save-state payloads as `unknown`. Its core adapter forwards
+that payload without asserting an internal type; `Emulator.restoreSaveState()` owns envelope
+validation before the bus transaction begins. IndexedDB likewise accepts battery data only when the
+stored record is the `ArrayBuffer` shape written by its storage adapter.
+
 Controller buttons currently held by physical input devices are UI intent, not historical machine
 state. The Workbench reapplies them after restoring or rebuilding a runtime.
 

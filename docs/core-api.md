@@ -127,7 +127,8 @@ emulator.restoreBatterySave(savedBytes);
 
 `captureBatterySave()` returns `undefined` for cartridges without a battery. The monotonic revision
 changes only when NVRAM content changes, allowing hosts to avoid redundant writes.
-`restoreBatterySave()` validates the exact persistent-memory length.
+`restoreBatterySave()` requires a `Uint8Array` and validates the exact persistent-memory length
+before mutating cartridge memory.
 
 Battery data and save states are different contracts: battery data is durable game-owned NVRAM;
 save state is a versioned emulator execution snapshot.
@@ -144,6 +145,7 @@ A save state contains typed arrays and internal aggregate snapshots. Treat it as
 plain `JSON.stringify`/`JSON.parse` is not a supported serializer. The core validates:
 
 - format and exact schema version;
+- the outer envelope shape even when the caller supplies untyped persisted data;
 - whole-ROM identity;
 - console region;
 - audio sample rate inside the nested APU snapshot;

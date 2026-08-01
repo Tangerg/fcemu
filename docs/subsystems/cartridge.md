@@ -205,9 +205,9 @@ regions are never aliased into it.
 The `revision` counter increments only when a write actually changes an NVRAM byte: volatile writes,
 out-of-range writes, and writes that store the same byte already present do not advance it. Callers
 therefore use `revision` to detect whether persisted battery memory has diverged from the last save.
-`restoreBatterySave(data)` requires an existing battery region (throws otherwise), requires the exact
-combined NVRAM size (throwing `RangeError` on mismatch), splits the payload back into PRG, CHR then
-mapper NVRAM, and resets the save revision to `0`.
+`restoreBatterySave(data)` requires an existing battery region (throws otherwise), requires a real
+`Uint8Array` and the exact combined NVRAM size (throwing before mutation on mismatch), splits the
+payload back into PRG, CHR then mapper NVRAM, and resets the save revision to `0`.
 
 ## Memory-state capture and restore
 

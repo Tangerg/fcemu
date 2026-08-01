@@ -291,6 +291,28 @@ describe("Emulator save states", () => {
     const future = { ...snapshot, version: 17 } as unknown as EmulatorSaveState;
     expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
   });
+
+  it("rejects unknown and malformed persisted envelopes before touching runtime state", () => {
+    const emulator = Emulator.fromRom(createTestRom());
+    emulator.runFrame();
+    const before = emulator.captureSaveState();
+
+    for (const invalid of [
+      null,
+      {},
+      { format: "fcemu-state", version: 16 },
+      {
+        format: "fcemu-state",
+        version: 16,
+        romIdentity: before.romIdentity,
+        consoleRegion: before.consoleRegion,
+        state: null,
+      },
+    ]) {
+      expect(() => emulator.restoreSaveState(invalid)).toThrow(/format|malformed/i);
+      expect(emulator.captureSaveState()).toEqual(before);
+    }
+  });
 });
 
 function runAndCapture(emulator: Emulator, frames: number) {

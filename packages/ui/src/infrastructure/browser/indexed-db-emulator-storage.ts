@@ -18,13 +18,13 @@ export class IndexedDbEmulatorStorage implements SaveRamStoragePort, QuickSaveSt
 
   async load(cartridgeId: string): Promise<Uint8Array | undefined> {
     const database = await this.open();
-    const value = await request<ArrayBuffer | undefined>(
+    const value = await request<unknown>(
       database
         .transaction(BATTERY_SAVE_STORE, "readonly")
         .objectStore(BATTERY_SAVE_STORE)
         .get(cartridgeId),
     );
-    return value ? new Uint8Array(value) : undefined;
+    return value instanceof ArrayBuffer ? new Uint8Array(value) : undefined;
   }
 
   async save(cartridgeId: string, data: Uint8Array): Promise<void> {

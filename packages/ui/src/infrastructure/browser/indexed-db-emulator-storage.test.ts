@@ -85,6 +85,19 @@ describe("IndexedDbEmulatorStorage", () => {
 
     await expect(storage.loadQuickSave("rom-a", "ntsc", 1)).resolves.toBeUndefined();
   });
+
+  it("rejects battery records that are not the ArrayBuffer written by the storage contract", async () => {
+    const factory = new FakeIdbFactory();
+    const storage = new IndexedDbEmulatorStorage(factory);
+    await storage.save("rom-a", Uint8Array.of(0x42));
+    const database = await openDatabase(factory, 2);
+    const transaction = database.transaction("battery-saves", "readwrite");
+    transaction.objectStore("battery-saves").put(8192, "rom-a");
+    await transactionComplete(transaction);
+    database.close();
+
+    await expect(storage.load("rom-a")).resolves.toBeUndefined();
+  });
 });
 
 function quickSave({

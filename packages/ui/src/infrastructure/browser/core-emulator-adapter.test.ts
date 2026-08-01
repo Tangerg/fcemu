@@ -55,6 +55,15 @@ describe("CoreEmulatorFactory", () => {
     runtime.runFrame();
     expect(runtime.captureSaveState()).toEqual(expected);
   });
+
+  it("forwards untyped persisted state to the core validation boundary", () => {
+    const runtime = factory.create(
+      { id: "invalid-state", name: "invalid-state.nes", bytes: createLegacyRom("ntsc") },
+      "auto",
+    );
+
+    expect(() => runtime.restoreSaveState({ data: null })).toThrow(/format or version/i);
+  });
 });
 
 function createLegacyRom(region: "ntsc" | "pal"): ArrayBuffer {

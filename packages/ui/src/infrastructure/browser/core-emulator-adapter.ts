@@ -1,5 +1,5 @@
 import { ControllerButton, Emulator } from "@fcemu/core";
-import type { AudioSampleSink, EmulatorSaveState, VideoFrameSink } from "@fcemu/core";
+import type { AudioSampleSink, VideoFrameSink } from "@fcemu/core";
 import type {
   EmulatorFactoryPort,
   EmulatorFrameResult,
@@ -37,7 +37,7 @@ class CoreEmulatorRuntime implements EmulatorRuntimePort {
   }
 
   restoreSaveState(state: { readonly data: unknown }): void {
-    this.emulator.restoreSaveState(state.data as EmulatorSaveState);
+    this.emulator.restoreSaveState(state.data);
   }
 
   captureBatterySave() {

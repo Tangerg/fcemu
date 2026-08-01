@@ -1125,11 +1125,14 @@ rejected. Standard mode retains MMC3 PRG windows, horizontal/vertical mirroring 
 but uses the MMC3A rule that reloading a zero IRQ latch does not assert IRQ.
 
 Mapper 114 accepts submappers 0/1; mapper 182 accepts only submapper 0. Both identities accept
-128–256 KiB PRG ROM, 8–512 KiB CHR ROM and two-screen nametables. One local 256+256 KiB _The Lion
-King_ image advances through 800 frames, changes the MMC3 register set 27 times and reproduces an
-IRQ-active 100-frame save-state replay. A same-sized mapper-182 _Pocahontas_ image also completes
-deterministic replay. Both leave the outer registers zero, so NROM and CHR-A18 paths remain focused
-board-test evidence. See [NESdev mapper 114/182](https://www.nesdev.org/wiki/INES_Mapper_182).
+128–256 KiB PRG ROM, 8–512 KiB CHR ROM and two-screen nametables. The checksum-pinned 256+256 KiB
+submapper-0 _The Lion King_ profile runs 1,680 input-driven frames from title into scrolling
+gameplay, produces 742 distinct frames, and verifies exact visual/audio/CPU-cycle results plus a
+deterministic 120-frame save-state replay. Its trace observes 104 MMC3 register sets, IRQ
+enable/disable and both pending states. A same-sized user-local mapper-182 _Pocahontas_ image also
+completes deterministic replay. Both leave the outer registers zero, so NROM and CHR-A18 paths
+remain focused board-test evidence; submapper 1 likewise remains focused-test evidence. See
+[NESdev mapper 114/182](https://www.nesdev.org/wiki/INES_Mapper_182).
 
 ## Kasheng MMC3 clone (115, 248)
 

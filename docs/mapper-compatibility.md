@@ -74,7 +74,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
 | 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
-| 114    | SuperGame MMC3 | Implemented | Two variants/outer banks/MMC3A/state tests; one local replay smoke |
+| 114    | SuperGame MMC3 | Verified    | Scramble/MMC3A tests; pinned _The Lion King_ real-ROM runner       |
 | 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
@@ -432,9 +432,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 114 models the SuperGame protection board around an MMC3A core. Submappers 0/1 retain their
   different register-address and bank-index permutations. `$6000` selects mirrored NROM-128 or
   paired NROM-256 override windows and `$6001` supplies CHR A18 without passing through MMC3 WRAM
-  protection. One local _The Lion King_ image exercised 27 MMC3 register sets across 800 non-halted
-  frames and an IRQ-active deterministic 100-frame save-state replay. It did not select the outer
-  registers, so those remain board-test evidence and the overall status stays `Implemented`.
+  protection. The checksum-pinned submapper-0 _The Lion King_ profile verifies 1,680 input-driven
+  frames from title into scrolling gameplay, 742 distinct frames, exact visual, audio and CPU-cycle
+  results, and a deterministic 120-frame save-state replay. A separate trace observed 104 distinct
+  MMC3 register sets, IRQ enable/disable and both pending states. It leaves the outer registers zero,
+  so NROM/CHR-A18 paths and submapper 1 remain focused-test evidence.
 - Mapper 182 preserves the historical header identity while resolving to mapper 114's submapper-0
   Hosenkan board contract; it cannot select the submapper-1 Boogerman wiring. One local 256 KiB PRG
   - 256 KiB CHR _Pocahontas_ image completed deterministic replay without halting. Its bytes remain

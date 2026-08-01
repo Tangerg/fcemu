@@ -938,6 +938,7 @@ describe("EmulatorApplication", () => {
       selectedQuickSaveSlot: 3,
       quickSaveSlots: [2, 3],
     });
+    await Promise.resolve();
     expect(saveQuickSave).toHaveBeenCalledWith(
       expect.objectContaining({
         format: "fcemu-quick-save",
@@ -959,6 +960,110 @@ describe("EmulatorApplication", () => {
       frameCount: 40,
       cpuCycles: 4000,
     });
+  });
+
+  it("serializes rapid overwrites of the same quick-save slot", async () => {
+    const firstWrite = deferred<void>();
+    const saveQuickSave = vi
+      .fn<(snapshot: PersistedQuickSave) => Promise<void>>()
+      .mockImplementation((snapshot) =>
+        (snapshot.runtimeState.data as { revision: number }).revision === 1
+          ? firstWrite.promise
+          : Promise.resolve(),
+      );
+    let revision = 0;
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game-sha", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: () =>
+          createRuntime({
+            consoleRegion: "ntsc",
+            captureSaveState: () => ({ data: { revision: ++revision } }),
+          }),
+      },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave: async () => undefined,
+        saveQuickSave,
+        removeQuickSave: async () => undefined,
+      },
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    application.quickSaveCurrentState();
+    application.quickSaveCurrentState();
+    await Promise.resolve();
+    const stopping = application.stop();
+
+    expect(saveQuickSave).toHaveBeenCalledTimes(1);
+    firstWrite.resolve();
+    await stopping;
+    expect(
+      saveQuickSave.mock.calls.map(
+        ([snapshot]) => (snapshot.runtimeState.data as { revision: number }).revision,
+      ),
+    ).toEqual([1, 2]);
+  });
+
+  it("keeps in-memory quick saves across an immediate same-ROM reload", async () => {
+    const persistence = deferred<void>();
+    const restoreReplacement = vi.fn<(state: { readonly data: unknown }) => void>();
+    const create = vi
+      .fn<() => ReturnType<typeof createRuntime>>()
+      .mockReturnValueOnce(
+        createRuntime({
+          consoleRegion: "ntsc",
+          captureSaveState: () => ({ data: { revision: 1 } }),
+        }),
+      )
+      .mockReturnValueOnce(
+        createRuntime({ consoleRegion: "ntsc", restoreSaveState: restoreReplacement }),
+      );
+    const loadQuickSave = vi.fn<() => Promise<undefined>>().mockResolvedValue(undefined);
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "same-sha", name: "same.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave,
+        saveQuickSave: () => persistence.promise,
+        removeQuickSave: async () => undefined,
+      },
+    });
+
+    await application.loadRom(testFile("same.nes"));
+    application.quickSaveCurrentState();
+    await application.loadRom(testFile("same.nes"));
+
+    expect(loadQuickSave).toHaveBeenCalledTimes(3);
+    expect(application.getSnapshot().quickSaveSlots).toEqual([1]);
+    await application.quickLoadCurrentState();
+    expect(restoreReplacement).toHaveBeenCalledWith({ data: { revision: 1 } });
+
+    persistence.resolve();
+    await application.stop();
   });
 
   it("keeps the in-memory quick save when persistent removal fails", async () => {
@@ -1039,7 +1144,7 @@ describe("EmulatorApplication", () => {
     expect(application.getSnapshot()).toMatchObject({
       quickSaveSlots: [1],
     });
-    expect(saveQuickSave).toHaveBeenCalledTimes(3);
+    expect(saveQuickSave).toHaveBeenCalledTimes(2);
     expect(saveQuickSave).toHaveBeenLastCalledWith(
       expect.objectContaining({ runtimeState: { data: { revision: 2 } } }),
     );

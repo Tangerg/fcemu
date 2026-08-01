@@ -70,6 +70,7 @@ export class EmulatorApplication {
   private readonly unsubscribeControllerInput: () => void;
   private readonly quickSaves = new Map<QuickSaveSlot, PersistedQuickSave>();
   private readonly persistenceTails = new Map<string, Promise<void>>();
+  private readonly quickSavePersistenceTails = new Map<string, Promise<void>>();
   private readonly pressedButtons = {
     1: new Set<GameButton>(),
     2: new Set<GameButton>(),
@@ -109,6 +110,7 @@ export class EmulatorApplication {
     const previousBatterySave = previousActiveEmulation
       ? this.captureBatterySave(previousActiveEmulation.runtime)
       : undefined;
+    const previousQuickSaves = previousActiveEmulation ? new Map(this.quickSaves) : undefined;
     if (previousActiveEmulation) {
       void this.persistRuntime(previousActiveEmulation.runtime, previousActiveEmulation.rom.id);
     }
@@ -150,7 +152,20 @@ export class EmulatorApplication {
       this.activeEmulation = activeEmulation;
       this.persistedRevisions.set(runtime, runtime.captureBatterySave()?.revision ?? 0);
       this.session = this.session.romLoaded(toRomDetails(rom, runtime));
-      await this.hydrateQuickSaves(operation, activeEmulation);
+      if (
+        previousActiveEmulation?.rom.id === rom.id &&
+        previousActiveEmulation.runtime.cartridge.consoleRegion ===
+          runtime.cartridge.consoleRegion &&
+        previousQuickSaves
+      ) {
+        for (const [slot, quickSave] of previousQuickSaves) {
+          this.quickSaves.set(slot, quickSave);
+        }
+        this.session = this.session.quickSaveAvailabilityChanged([...this.quickSaves.keys()]);
+        this.emit();
+      } else {
+        await this.hydrateQuickSaves(operation, activeEmulation);
+      }
       if (!this.isCurrentEmulation(operation, activeEmulation)) return;
       await audioSuspension;
       if (!this.isCurrentEmulation(operation, activeEmulation)) return;
@@ -276,7 +291,9 @@ export class EmulatorApplication {
     this.quickSaves.set(quickSave.slot, quickSave);
     this.session = this.session.quickSaveCreated();
     this.emit();
-    void this.dependencies.quickSaveStorage.saveQuickSave(quickSave).catch(() => undefined);
+    void this.enqueueQuickSaveMutation(quickSave, () =>
+      this.dependencies.quickSaveStorage.saveQuickSave(quickSave),
+    ).catch(() => undefined);
   }
 
   selectQuickSaveSlot(slot: QuickSaveSlot): void {
@@ -305,10 +322,12 @@ export class EmulatorApplication {
 
     const operation = this.operationSequence;
     try {
-      await this.dependencies.quickSaveStorage.removeQuickSave(
-        quickSave.cartridgeId,
-        quickSave.executionRegion,
-        quickSave.slot,
+      await this.enqueueQuickSaveMutation(quickSave, () =>
+        this.dependencies.quickSaveStorage.removeQuickSave(
+          quickSave.cartridgeId,
+          quickSave.executionRegion,
+          quickSave.slot,
+        ),
       );
     } catch {
       return;
@@ -318,14 +337,7 @@ export class EmulatorApplication {
     }
     const currentQuickSave = this.quickSaves.get(quickSave.slot);
     if (currentQuickSave !== quickSave) {
-      if (
-        currentQuickSave?.cartridgeId === rom.id &&
-        currentQuickSave.executionRegion === runtime.cartridge.consoleRegion
-      ) {
-        await this.dependencies.quickSaveStorage
-          .saveQuickSave(currentQuickSave)
-          .catch(() => undefined);
-      }
+      await this.waitForQuickSavePersistence(quickSave);
       return;
     }
 
@@ -449,7 +461,12 @@ export class EmulatorApplication {
     this.resetFrameRateDiagnostics();
     this.session = this.session.stop();
     this.emit();
-    await Promise.all([audioSuspension, persistence, ...this.persistenceTails.values()]);
+    await Promise.all([
+      audioSuspension,
+      persistence,
+      ...this.persistenceTails.values(),
+      ...this.quickSavePersistenceTails.values(),
+    ]);
   }
 
   async dispose(): Promise<void> {
@@ -470,6 +487,7 @@ export class EmulatorApplication {
     await Promise.all([
       persistence,
       ...this.persistenceTails.values(),
+      ...this.quickSavePersistenceTails.values(),
       this.dependencies.audio.dispose(),
     ]);
   }
@@ -621,12 +639,16 @@ export class EmulatorApplication {
     const cartridgeId = rom.id;
     const executionRegion = runtime.cartridge.consoleRegion;
     const savedSlots = await Promise.all(
-      QUICK_SAVE_SLOTS.map(async (slot) => ({
-        slot,
-        quickSave: await this.dependencies.quickSaveStorage
-          .loadQuickSave(cartridgeId, executionRegion, slot)
-          .catch(() => undefined),
-      })),
+      QUICK_SAVE_SLOTS.map(async (slot) => {
+        const identity = { cartridgeId, executionRegion, slot } as const;
+        await this.waitForQuickSavePersistence(identity);
+        return {
+          slot,
+          quickSave: await this.dependencies.quickSaveStorage
+            .loadQuickSave(cartridgeId, executionRegion, slot)
+            .catch(() => undefined),
+        };
+      }),
     );
     if (!this.isCurrentEmulation(operation, activeEmulation)) return;
 
@@ -644,6 +666,33 @@ export class EmulatorApplication {
     }
     this.session = this.session.quickSaveAvailabilityChanged([...this.quickSaves.keys()]);
     this.emit();
+  }
+
+  private enqueueQuickSaveMutation(
+    identity: Pick<PersistedQuickSave, "cartridgeId" | "executionRegion" | "slot">,
+    mutation: () => Promise<void>,
+  ): Promise<void> {
+    const key = quickSavePersistenceKey(identity);
+    const previous = this.quickSavePersistenceTails.get(key) ?? Promise.resolve();
+    const operation = previous.then(mutation);
+    const tail = operation.catch(() => undefined);
+    this.quickSavePersistenceTails.set(key, tail);
+    const clearTail = () => {
+      if (this.quickSavePersistenceTails.get(key) === tail) {
+        this.quickSavePersistenceTails.delete(key);
+      }
+    };
+    void tail.then(clearTail, clearTail);
+    return operation;
+  }
+
+  private async waitForQuickSavePersistence(
+    identity: Pick<PersistedQuickSave, "cartridgeId" | "executionRegion" | "slot">,
+  ): Promise<void> {
+    const key = quickSavePersistenceKey(identity);
+    while (this.quickSavePersistenceTails.has(key)) {
+      await this.quickSavePersistenceTails.get(key);
+    }
   }
 
   private restoreControllerState(runtime: EmulatorRuntimePort): void {
@@ -705,4 +754,10 @@ function toRomDetails(rom: RomImage, runtime: EmulatorRuntimePort): RomDetails {
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unexpected emulator error";
+}
+
+function quickSavePersistenceKey(
+  identity: Pick<PersistedQuickSave, "cartridgeId" | "executionRegion" | "slot">,
+): string {
+  return `${identity.cartridgeId}:${identity.executionRegion}:${identity.slot}`;
 }

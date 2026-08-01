@@ -42,6 +42,11 @@ immediate reload of the same ROM restores the outgoing runtime's freshly capture
 instead of racing a pending write against a stale storage read. Stop and disposal also drain writes
 that were queued by an older cartridge during the same application lifetime.
 
+Quick-save mutations use the same rule at `(ROM identity, execution region, slot)` granularity.
+Overwrites and removals share one ordered queue, so deletion no longer needs a best-effort repair
+write when a newer save appears. Hydration waits for earlier mutations, while an immediate reload of
+the same ROM and region keeps the already-authoritative in-memory slots.
+
 ## Frame scheduling
 
 The application schedules through `FrameSchedulerPort`; the browser adapter uses

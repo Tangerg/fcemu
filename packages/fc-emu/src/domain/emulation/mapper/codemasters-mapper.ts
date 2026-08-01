@@ -16,6 +16,7 @@ const PRG_BANK_SIZE = 0x4000;
 export class CodemastersMapper implements Mapper {
   private readonly prgBankCount: number;
   private readonly fixedPrgBank: number;
+  private readonly fixedMirroring: NametableMirroring;
   private selectedPrgBank = 0;
 
   constructor(
@@ -24,12 +25,15 @@ export class CodemastersMapper implements Mapper {
   ) {
     this.prgBankCount = cartridge.prgRom.byteLength / PRG_BANK_SIZE;
     this.fixedPrgBank = this.prgBankCount - 1;
+    this.fixedMirroring = cartridge.mirroringMode;
   }
 
   powerOn(): void {
     this.selectedPrgBank = 0;
     if (this.hasMirroringControl) {
       this.cartridge.mirroringMode = NametableMirroring.SingleScreenLower;
+    } else {
+      this.cartridge.mirroringMode = this.fixedMirroring;
     }
   }
 
@@ -51,13 +55,11 @@ export class CodemastersMapper implements Mapper {
     ) {
       throw new RangeError("Codemasters save state contains an invalid PRG bank");
     }
-    if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
-      throw new RangeError("Codemasters save state contains invalid mirroring");
+    if (!this.acceptsMirroring(state.mirroring)) {
+      throw new RangeError("Codemasters save state contains invalid mirroring for this board");
     }
     this.selectedPrgBank = state.selectedPrgBank;
-    if (this.hasMirroringControl) {
-      this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
-    }
+    this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
   }
 
   read(address: number): number {
@@ -90,5 +92,12 @@ export class CodemastersMapper implements Mapper {
 
   private readPrg(bank: number, offset: number): number {
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + offset] ?? 0;
+  }
+
+  private acceptsMirroring(value: number): boolean {
+    return this.hasMirroringControl
+      ? value === NametableMirroring.SingleScreenLower ||
+          value === NametableMirroring.SingleScreenUpper
+      : value === this.fixedMirroring;
   }
 }

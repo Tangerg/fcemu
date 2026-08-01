@@ -102,7 +102,9 @@ counters against their bit width and all booleans by runtime type) and throws
 `RangeError`/`TypeError` rather than trust a snapshot. Common array/boolean guards live in
 `state-validation.ts`. Boards with nested IRQ, audio, banking or CHR-latch devices validate the
 complete state tree before mutating either owner or child, and IRQ-capable boards re-assert their
-line only after that validation succeeds.
+line only after that validation succeeds. Optional mirroring circuits are validated against the
+selected board: controlled variants accept only modes their register can drive, while hardwired
+variants require the exact fixed mode.
 
 ## Implemented boards
 

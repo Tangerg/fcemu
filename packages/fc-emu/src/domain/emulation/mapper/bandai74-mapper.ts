@@ -20,6 +20,7 @@ export class Bandai74Mapper implements Mapper {
   private readonly chrBankCount: number;
   private readonly fixedPrgBank: number;
   private readonly prgBankMask: number;
+  private readonly fixedMirroring: NametableMirroring;
   private selectedPrgBank = 0;
   private selectedChrBank = 0;
 
@@ -31,6 +32,7 @@ export class Bandai74Mapper implements Mapper {
     this.chrBankCount = Math.max(1, cartridge.chrMemoryBytes / CHR_BANK_SIZE);
     this.fixedPrgBank = this.prgBankCount - 1;
     this.prgBankMask = hasMirroringControl ? 0x07 : 0x0f;
+    this.fixedMirroring = cartridge.mirroringMode;
   }
 
   powerOn(): void {
@@ -38,6 +40,8 @@ export class Bandai74Mapper implements Mapper {
     this.selectedChrBank = 0;
     if (this.hasMirroringControl) {
       this.cartridge.mirroringMode = NametableMirroring.SingleScreenLower;
+    } else {
+      this.cartridge.mirroringMode = this.fixedMirroring;
     }
   }
 
@@ -55,14 +59,12 @@ export class Bandai74Mapper implements Mapper {
       throw new Error(`Cannot restore ${state.kind} state into Bandai 74xx`);
     requireBank(state.selectedPrgBank, this.prgBankCount, "PRG");
     requireBank(state.selectedChrBank, this.chrBankCount, "CHR");
-    if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
-      throw new RangeError("Bandai 74xx save state contains invalid mirroring");
+    if (!this.acceptsMirroring(state.mirroring)) {
+      throw new RangeError("Bandai 74xx save state contains invalid mirroring for this board");
     }
     this.selectedPrgBank = state.selectedPrgBank;
     this.selectedChrBank = state.selectedChrBank;
-    if (this.hasMirroringControl) {
-      this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
-    }
+    this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
   }
 
   read(address: number): number {
@@ -97,6 +99,13 @@ export class Bandai74Mapper implements Mapper {
 
   private readPrg(bank: number, offset: number): number {
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + offset] ?? 0;
+  }
+
+  private acceptsMirroring(value: number): boolean {
+    return this.hasMirroringControl
+      ? value === NametableMirroring.SingleScreenLower ||
+          value === NametableMirroring.SingleScreenUpper
+      : value === this.fixedMirroring;
   }
 }
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NametableMirroring } from "../../model/cartridge.js";
 import { createTestCartridge } from "../../../../test-support/rom.js";
+import type { MapperState } from "./mapper.js";
 import { Bandai74Mapper } from "./bandai74-mapper.js";
 
 function markedCartridge(mapper: number) {
@@ -59,5 +60,21 @@ describe("Bandai74Mapper", () => {
     mapper.powerOn();
     mapper.restoreState(state);
     expect(mapper.captureState()).toEqual(state);
+  });
+
+  it.each([
+    ["hardwired", false, NametableMirroring.SingleScreenUpper],
+    ["mapper 152", true, NametableMirroring.Vertical],
+  ] as const)("rejects mirroring impossible on the %s board", (_, controlled, mirroring) => {
+    const cartridge = markedCartridge(controlled ? 152 : 70);
+    cartridge.mirroringMode = NametableMirroring.Horizontal;
+    const mapper = new Bandai74Mapper(cartridge, controlled);
+    mapper.powerOn();
+    const before = mapper.captureState();
+
+    expect(() =>
+      mapper.restoreState({ ...before, selectedPrgBank: 3, mirroring } as MapperState),
+    ).toThrow(/mirroring for this board/i);
+    expect(mapper.captureState()).toEqual(before);
   });
 });

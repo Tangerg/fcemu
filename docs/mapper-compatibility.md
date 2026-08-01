@@ -342,7 +342,9 @@ and `$6000.D6` supplying PRG A18.
   CIRAM/ROM-nametable arrangements, byte-wide shared VRC IRQ, two descending 16-step pulse channels,
   the fourteen-step saw accumulator and `$9003` halt/16×/256× scaling. The linear six-bit DAC is
   sampled through the mapper audio capability and added before the console RC filters; oscillator,
-  divider, accumulator, IRQ and bank phase all participate in save state.
+  divider, accumulator, IRQ and bank phase all participate in save state. Clearing a pulse enable
+  bit resets and halts its duty generator at phase 0 without resetting the frequency divider;
+  physically unreachable disabled/nonzero-duty snapshots fail validation.
 - Mapper 85 owns three 8 KiB PRG registers, a fixed final bank, eight byte-wide 1 KiB CHR
   registers, four CIRAM arrangements, an optional gated 8 KiB WRAM/NVRAM window and the shared VRC
   IRQ. Legacy images accept either A3/A4 register-select route; submapper 1 fixes VRC7b's A3 route

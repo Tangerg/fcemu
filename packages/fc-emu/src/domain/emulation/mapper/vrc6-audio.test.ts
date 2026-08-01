@@ -56,6 +56,26 @@ describe("Vrc6Audio", () => {
     expect(audio.captureState().pulse1.divider).toBe(1);
   });
 
+  it("immediately resets and halts a disabled pulse duty generator without resetting its divider", () => {
+    const audio = new Vrc6Audio();
+    audio.writeRegister(0x9000, 0x05);
+    audio.writeRegister(0x9001, 2);
+    audio.writeRegister(0x9002, 0x80);
+    audio.tick();
+    expect(audio.captureState().pulse1).toMatchObject({ divider: 2, dutyStep: 15 });
+
+    audio.writeRegister(0x9002, 0);
+    expect(audio.captureState().pulse1).toMatchObject({ divider: 2, dutyStep: 0, enabled: false });
+    expect(audio.output()).toBe(0);
+    for (let cycle = 0; cycle < 3; cycle++) audio.tick();
+    expect(audio.captureState().pulse1).toMatchObject({ divider: 2, dutyStep: 0 });
+
+    audio.writeRegister(0x9002, 0x80);
+    expect(audio.output()).toBeLessThan(0);
+    for (let cycle = 0; cycle < 3; cycle++) audio.tick();
+    expect(audio.captureState().pulse1).toMatchObject({ divider: 2, dutyStep: 15 });
+  });
+
   it("round-trips oscillator state and rejects unreachable snapshots", () => {
     const audio = new Vrc6Audio();
     audio.writeRegister(0x9000, 0x75);
@@ -75,6 +95,12 @@ describe("Vrc6Audio", () => {
     expect(() => audio.restoreState({ ...state, frequencyControl: 8 })).toThrowError(RangeError);
     expect(() =>
       audio.restoreState({ ...state, pulse1: { ...state.pulse1, period: 0x1000 } }),
+    ).toThrowError(RangeError);
+    expect(() =>
+      audio.restoreState({
+        ...state,
+        pulse1: { ...state.pulse1, enabled: false, dutyStep: 1 },
+      }),
     ).toThrowError(RangeError);
     expect(() =>
       audio.restoreState({

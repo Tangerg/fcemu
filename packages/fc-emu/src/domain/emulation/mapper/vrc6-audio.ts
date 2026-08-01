@@ -67,6 +67,7 @@ export class Vrc6Audio {
       case 0x9002:
         this.pulse1.period = (this.pulse1.period & 0x00ff) | ((value & 0x0f) << 8);
         this.pulse1.enabled = (value & 0x80) !== 0;
+        if (!this.pulse1.enabled) this.pulse1.dutyStep = 0;
         break;
       case 0x9003:
         this.frequencyControl = value & 7;
@@ -80,6 +81,7 @@ export class Vrc6Audio {
       case 0xa002:
         this.pulse2.period = (this.pulse2.period & 0x00ff) | ((value & 0x0f) << 8);
         this.pulse2.enabled = (value & 0x80) !== 0;
+        if (!this.pulse2.enabled) this.pulse2.dutyStep = 0;
         break;
       case 0xb000:
         this.saw.rate = value & 0x3f;
@@ -135,7 +137,7 @@ export class Vrc6Audio {
   private clockPulse(pulse: MutablePulseState, shift: number): void {
     if (pulse.divider === 0) {
       pulse.divider = pulse.period >>> shift;
-      pulse.dutyStep = (pulse.dutyStep - 1) & 0x0f;
+      if (pulse.enabled) pulse.dutyStep = (pulse.dutyStep - 1) & 0x0f;
     } else {
       pulse.divider--;
     }
@@ -204,7 +206,8 @@ function isPulseState(state: Vrc6PulseState): boolean {
     Number.isInteger(state.dutyStep) &&
     state.dutyStep >= 0 &&
     state.dutyStep <= 15 &&
-    areBooleans(state.enabled)
+    areBooleans(state.enabled) &&
+    (state.enabled || state.dutyStep === 0)
   );
 }
 

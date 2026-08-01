@@ -608,8 +608,11 @@ three commercial games.
 The audio device owns two descending 16-step pulse generators and one fourteen-step saw sequence.
 `$9003` can halt all phases or right-shift periods by 4/8 bits; the linear six-bit sum is inverted
 and scaled so a maximum pulse matches the measured approximate amplitude of one maximum RP2A03
-pulse, then enters the console's shared RC filter chain. The byte-latch VRC IRQ reuses `VrcIrq`.
-Every divider, duty step, saw accumulator, bank and pending IRQ is serialized. See
+pulse, then enters the console's shared RC filter chain. Clearing a pulse's enable bit immediately
+returns its duty generator to step 0 and holds it there while the independent frequency divider
+continues; re-enabling therefore resumes from the documented first phase without fabricating a
+divider reset. The byte-latch VRC IRQ reuses `VrcIrq`. Every divider, duty step, saw accumulator,
+bank and pending IRQ is serialized, and disabled-pulse snapshots reject nonzero duty phases. See
 [NESdev VRC6](https://www.nesdev.org/wiki/VRC6),
 [VRC6 audio](https://www.nesdev.org/wiki/VRC6_audio) and
 [VRC6 pinout](https://www.nesdev.org/wiki/VRC6_pinout).

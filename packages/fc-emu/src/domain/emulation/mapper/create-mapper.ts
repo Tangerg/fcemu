@@ -70,7 +70,7 @@ import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3Mapper } from "./sunsoft3-mapper.js";
 import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
 import { Sunsoft4Mapper } from "./sunsoft4-mapper.js";
-import { SuperGame114Mapper } from "./supergame-114-mapper.js";
+import { SuperGame114Mapper, type SuperGame114Variant } from "./supergame-114-mapper.js";
 import {
   createInvertedUxromBoard,
   GENERIC_UXROM_BOARD,
@@ -494,12 +494,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       if (cartridge.submapperNumber !== 0 && cartridge.submapperNumber !== 1) {
         throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
       }
-      requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
-      requireMaximumRomSize(cartridge, 0x40_000, 0x80_000);
-      requireChrRom(cartridge, "SuperGame mapper 114");
-      requireNoBatteryPrgRam(cartridge, "SuperGame mapper 114");
-      requireTwoScreenNametables(cartridge, "SuperGame mapper 114");
-      return new SuperGame114Mapper(interruptPort, cartridge, cartridge.submapperNumber);
+      return createSuperGameMapper(cartridge, interruptPort, cartridge.submapperNumber);
     case 115:
       return createKashengMapper(cartridge, interruptPort);
     case 118:
@@ -539,6 +534,9 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
         cartridge,
         createInvertedUxromBoard(resolveBusConflicts(cartridge, true)),
       );
+    case 182:
+      requireBaseSubmapper(cartridge);
+      return createSuperGameMapper(cartridge, interruptPort, 0);
     case 184:
       requireBaseSubmapper(cartridge);
       requireSunsoft1Layout(cartridge);
@@ -580,6 +578,20 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
   }
+}
+
+function createSuperGameMapper(
+  cartridge: Cartridge,
+  interruptPort: MapperInterruptPort,
+  variant: SuperGame114Variant,
+): SuperGame114Mapper {
+  const boardName = `SuperGame mapper ${cartridge.mapperNumber}`;
+  requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
+  requireMaximumRomSize(cartridge, 0x40_000, 0x80_000);
+  requireChrRom(cartridge, boardName);
+  requireNoBatteryPrgRam(cartridge, boardName);
+  requireTwoScreenNametables(cartridge, boardName);
+  return new SuperGame114Mapper(interruptPort, cartridge, variant);
 }
 
 function createKashengMapper(

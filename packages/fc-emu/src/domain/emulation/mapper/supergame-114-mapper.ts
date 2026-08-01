@@ -11,7 +11,7 @@ const SUBMAPPER_1_INDEX = [0, 2, 5, 3, 6, 1, 7, 4] as const;
 
 export type SuperGame114Variant = 0 | 1;
 
-/** iNES mapper 114: SuperGame protection wiring around an MMC3A-compatible core. */
+/** SuperGame/Hosenkan board used by duplicate iNES mapper IDs 114 and 182. */
 export class SuperGame114Mapper implements Mapper {
   private readonly mmc3: Mmc3Mapper;
   private readonly prgBankCount: number;
@@ -47,14 +47,14 @@ export class SuperGame114Mapper implements Mapper {
 
   restoreState(state: MapperState): void {
     if (state.kind !== MapperKind.SuperGame114) {
-      throw new Error(`Cannot restore ${state.kind} state into SuperGame mapper 114`);
+      throw new Error(`Cannot restore ${state.kind} state into a SuperGame mapper`);
     }
     if (
       state.variant !== this.variant ||
       !isByte(state.prgOverride) ||
       !isBit(state.chrOuterBank)
     ) {
-      throw new RangeError("SuperGame mapper 114 save state contains invalid board registers");
+      throw new RangeError("SuperGame mapper save state contains invalid board registers");
     }
     this.mmc3.restoreState(state.mmc3);
     this.prgOverride = state.prgOverride;

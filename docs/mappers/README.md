@@ -184,6 +184,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
+| 182 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
 | 184 | Sunsoft-1      | `sunsoft-1`               | `sunsoft1-mapper.ts`         | no            | no   |
 | 185 | CNROM protect  | `cnrom-protection`        | `cnrom-protection-mapper.ts` | AND           | no   |
 | 189 | TXC MMC3       | `txc-mmc3-189`            | `txc-mmc3-189-mapper.ts`     | no            | A12  |
@@ -1008,12 +1009,13 @@ power-on clears both bank fields and selects horizontal mirroring. Unsupported s
 four-screen nametable memory, CHR RAM and ROM images beyond 256 KiB PRG or 128 KiB CHR fail closed.
 See [NESdev mapper 113](https://www.nesdev.org/wiki/INES_Mapper_113).
 
-## SuperGame MMC3 clone (114)
+## SuperGame MMC3 clone (114, 182)
 
-Mapper 114 wraps an MMC3A-compatible register core in the SuperGame protection wiring. Submapper 0
-scrambles both the eight register addresses and bank indexes used by _Aladdin_, _The Lion King_ and
-related boards. Submapper 1 uses Boogerman's distinct address and index permutations. Bits 6-7 of
-either translated command retain their normal MMC3 PRG/CHR mode meaning.
+Mapper 114 wraps an MMC3A-compatible register core in the SuperGame/Hosenkan protection wiring.
+Submapper 0 scrambles both the eight register addresses and bank indexes used by _Aladdin_, _The
+Lion King_, _Pocahontas_ and related boards. Mapper 182 is a duplicate identity fixed to that
+submapper-0 contract; mapper 114 submapper 1 alone uses Boogerman's distinct address and index
+permutations. Bits 6-7 of either translated command retain their normal MMC3 PRG/CHR mode meaning.
 
 The mirrored `$6000` register can override MMC3 PRG output with one 16 KiB bank repeated in both
 halves (NROM-128 mode) or adjacent A14-selected banks (NROM-256 mode). `$6001` supplies the ninth
@@ -1022,11 +1024,12 @@ writes work regardless of the nested core's `$A001` protection state, and batter
 rejected. Standard mode retains MMC3 PRG windows, horizontal/vertical mirroring and filtered A12,
 but uses the MMC3A rule that reloading a zero IRQ latch does not assert IRQ.
 
-The board accepts submappers 0/1, 128–256 KiB PRG ROM, 8–512 KiB CHR ROM and two-screen nametables.
-One local 256+256 KiB _The Lion King_ image advances through 800 frames, changes the MMC3 register
-set 27 times and reproduces an IRQ-active 100-frame save-state replay. It leaves both outer
-registers zero, so their NROM and CHR-A18 paths are covered by focused board tests rather than
-claimed as real-ROM evidence. See [NESdev mapper 114](https://www.nesdev.org/wiki/INES_Mapper_182).
+Mapper 114 accepts submappers 0/1; mapper 182 accepts only submapper 0. Both identities accept
+128–256 KiB PRG ROM, 8–512 KiB CHR ROM and two-screen nametables. One local 256+256 KiB _The Lion
+King_ image advances through 800 frames, changes the MMC3 register set 27 times and reproduces an
+IRQ-active 100-frame save-state replay. A same-sized mapper-182 _Pocahontas_ image also completes
+deterministic replay. Both leave the outer registers zero, so NROM and CHR-A18 paths remain focused
+board-test evidence. See [NESdev mapper 114/182](https://www.nesdev.org/wiki/INES_Mapper_182).
 
 ## Kasheng MMC3 clone (115, 248)
 

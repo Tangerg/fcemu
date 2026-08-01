@@ -79,6 +79,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
+| 182    | SuperGame MMC3 | Implemented | Mapper-114.0 duplicate board tests; one local replay smoke         |
 | 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM             |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
 | 189    | TXC MMC3       | Implemented | Outer-PRG/MMC3/IRQ/state tests; two local replay smokes            |
@@ -92,7 +93,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/184/189/206/245/248 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/182/184/189/206/245/248 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -151,9 +152,10 @@ socket tri-states the corresponding bus; it never mirrors an undersized image. N
 selects the RGB PPU and UniSystem protection hardware. DualSystem types fail closed because they
 require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 
-Mapper 114 accepts legacy/submapper 0 for the Aladdin/Lion King scrambling pattern and NES 2.0
-submapper 1 for Boogerman's distinct address and index permutation. Both variants use MMC3A IRQ
-behavior and the same `$6000/$6001` NROM override/outer-CHR registers; other variants fail closed.
+Mapper 114 accepts legacy/submapper 0 for the Aladdin/Lion King/Hosenkan scrambling pattern and NES
+2.0 submapper 1 for Boogerman's distinct address and index permutation. Mapper 182 is a duplicate
+identity fixed to mapper 114.0. Both physical variants use MMC3A IRQ behavior and the same
+`$6000/$6001` NROM override/outer-CHR registers; other variants fail closed.
 
 Mappers 115 and 248 accept only submapper 0. They retain their external header identities while
 resolving to the same Kasheng board contract: direct MMC3 register addresses, MMC3C IRQ behavior
@@ -177,7 +179,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/140/152/180/184/185/206/248 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/140/152/180/182/184/185/206/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -390,6 +392,10 @@ and `$6000.D6` supplying PRG A18.
   protection. One local _The Lion King_ image exercised 27 MMC3 register sets across 800 non-halted
   frames and an IRQ-active deterministic 100-frame save-state replay. It did not select the outer
   registers, so those remain board-test evidence and the overall status stays `Implemented`.
+- Mapper 182 preserves the historical header identity while resolving to mapper 114's submapper-0
+  Hosenkan board contract; it cannot select the submapper-1 Boogerman wiring. One local 256 KiB PRG
+  - 256 KiB CHR _Pocahontas_ image completed deterministic replay without halting. Its bytes remain
+    outside the repository, so the status remains `Implemented`.
 - Mapper 115 models the Kasheng SFC-02B/-03/-004 wiring without inheriting mapper 114's scrambling.
   `$6000` supplies PRG A18 and selects direct MMC3, mirrored NROM-128 or paired NROM-256 mode;
   `$6001` supplies CHR A18, while `$6002` drives only three solder-pad bits onto the CPU data bus.

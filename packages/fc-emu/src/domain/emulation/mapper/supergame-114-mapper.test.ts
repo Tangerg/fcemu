@@ -11,7 +11,7 @@ import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
 
 const noopInterrupt: MapperInterruptPort = { setMapperIrq() {} };
 
-describe("SuperGame mapper 114", () => {
+describe("SuperGame mappers 114 and 182", () => {
   it("decodes submapper 0's MMC3 register and index permutation", () => {
     const cartridge = createTestCartridge({ mapper: 114, prgBanks: 16, chrBanks: 32 });
     fillBanks(cartridge.prgRom, 0x2000);
@@ -55,6 +55,32 @@ describe("SuperGame mapper 114", () => {
 
     mapper.write(0xc000, 1); // Physical $C000 is MMC3 $A000.
     expect(cartridge.mirroringMode).toBe(NametableMirroring.Horizontal);
+  });
+
+  it("resolves duplicate ID 182 to mapper 114's submapper-0 board", () => {
+    const snapshots = [114, 182].map((mapperNumber) => {
+      const cartridge = createTestCartridge({ mapper: mapperNumber, prgBanks: 16, chrBanks: 32 });
+      fillBanks(cartridge.prgRom, 0x2000);
+      fillBanks(cartridge.chrRom, 0x0400);
+      const mapper = createMapper(cartridge, noopInterrupt);
+
+      mapper.write(0xa000, 0x04);
+      mapper.write(0xc000, 0x09);
+      mapper.write(0x8001, 1);
+      return {
+        mapperNumber: cartridge.mapperNumber,
+        reads: readAt(mapper, [0x8000, 0xa000, 0xc000, 0xe000]),
+        mirroring: cartridge.mirroringMode,
+        state: mapper.captureState(),
+      };
+    });
+
+    expect(snapshots.map(({ mapperNumber }) => mapperNumber)).toEqual([114, 182]);
+    expect(snapshots[1]).toMatchObject({
+      reads: snapshots[0]?.reads,
+      mirroring: snapshots[0]?.mirroring,
+      state: snapshots[0]?.state,
+    });
   });
 
   it("applies the NROM override and outer CHR line independently of MMC3", () => {
@@ -147,6 +173,18 @@ describe("SuperGame mapper 114", () => {
           mapper: 114,
           nes2: true,
           submapper: 2,
+          prgBanks: 16,
+          chrBanks: 32,
+        }),
+        noopInterrupt,
+      ),
+    ).toThrow(UnsupportedMapperVariantError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 182,
+          nes2: true,
+          submapper: 1,
           prgBanks: 16,
           chrBanks: 32,
         }),

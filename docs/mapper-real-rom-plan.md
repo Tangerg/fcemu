@@ -119,6 +119,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |    227 | 810449/FW-01       | _1992 Contra 120-in-1_                                                 | Waixing _Bio Hazard_ for battery WRAM; an identified mapper 227.2 multicart       | NROM/UNROM modes, CHR protection, solder pads and RPG WRAM       |
 |    228 | Active Enterprises | _Action 52_ (USA)                                                      | _Cheetahmen II_ (USA)                                                             | Non-power-of-two PRG chips, absent-chip open bus and CHR latch   |
 |    245 | Waixing F003       | _勇者斗恶龙 VII - Dragon Quest_ (Waixing translation)                  | A smaller PRG F003 dump for the TNROM-like fallback                               | Dynamic 512 KiB outer PRG line, direct CHR-RAM and grounded A12  |
+|    248 | Kasheng MMC3       | _Bao Qing Tian_                                                        | —                                                                                 | Duplicate-ID routing, outer banks, solder pads and MMC3C IRQ     |
 
 ## Selection cautions
 

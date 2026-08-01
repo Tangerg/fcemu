@@ -501,13 +501,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireTwoScreenNametables(cartridge, "SuperGame mapper 114");
       return new SuperGame114Mapper(interruptPort, cartridge, cartridge.submapperNumber);
     case 115:
-      requireBaseSubmapper(cartridge);
-      requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
-      requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
-      requireChrRom(cartridge, "Kasheng mapper 115");
-      requireNoBatteryPrgRam(cartridge, "Kasheng mapper 115");
-      requireTwoScreenNametables(cartridge, "Kasheng mapper 115");
-      return new Kasheng115Mapper(interruptPort, cartridge);
+      return createKashengMapper(cartridge, interruptPort);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
@@ -581,9 +575,25 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWaixingF003PrgNvRam(cartridge);
       requireTwoScreenNametables(cartridge, "Waixing F003");
       return new WaixingF003Mapper(interruptPort, cartridge);
+    case 248:
+      return createKashengMapper(cartridge, interruptPort);
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
   }
+}
+
+function createKashengMapper(
+  cartridge: Cartridge,
+  interruptPort: MapperInterruptPort,
+): Kasheng115Mapper {
+  const boardName = `Kasheng mapper ${cartridge.mapperNumber}`;
+  requireBaseSubmapper(cartridge);
+  requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
+  requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
+  requireChrRom(cartridge, boardName);
+  requireNoBatteryPrgRam(cartridge, boardName);
+  requireTwoScreenNametables(cartridge, boardName);
+  return new Kasheng115Mapper(interruptPort, cartridge);
 }
 
 function createAddressLatchMulticartMapper(cartridge: Cartridge): AddressLatchMulticartMapper {

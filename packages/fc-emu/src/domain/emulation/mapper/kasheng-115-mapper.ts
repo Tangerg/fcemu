@@ -8,7 +8,7 @@ const PRG_8K_BANK_SIZE = 0x2000;
 const PRG_16K_BANK_SIZE = 0x4000;
 const CHR_BANK_SIZE = 0x0400;
 
-/** iNES mapper 115: Kasheng SFC-02B/-03/-004 wiring around an MMC3-compatible core. */
+/** Kasheng SFC-02B/-03/-004 board used by duplicate iNES mapper IDs 115 and 248. */
 export class Kasheng115Mapper implements Mapper {
   private readonly mmc3: Mmc3Mapper;
   private readonly prg8kBankCount: number;

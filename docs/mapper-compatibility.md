@@ -87,11 +87,12 @@ describes evidence maturity rather than a runtime feature flag.
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
+| 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/184/189/206/245 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/184/189/206/245/248 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -154,8 +155,9 @@ Mapper 114 accepts legacy/submapper 0 for the Aladdin/Lion King scrambling patte
 submapper 1 for Boogerman's distinct address and index permutation. Both variants use MMC3A IRQ
 behavior and the same `$6000/$6001` NROM override/outer-CHR registers; other variants fail closed.
 
-Mapper 115 accepts only submapper 0. It retains direct MMC3 register addresses and MMC3C IRQ
-behavior while `$6000.D6` additionally supplies PRG A18; mapper 248 remains a separate duplicate ID.
+Mappers 115 and 248 accept only submapper 0. They retain their external header identities while
+resolving to the same Kasheng board contract: direct MMC3 register addresses, MMC3C IRQ behavior
+and `$6000.D6` supplying PRG A18.
 
 ## Legacy-header assumptions
 
@@ -175,7 +177,7 @@ behavior while `$6000.D6` additionally supplies PRG A18; mapper 248 remains a se
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/140/152/180/184/185/206 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/140/152/180/184/185/206/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -394,6 +396,11 @@ behavior while `$6000.D6` additionally supplies PRG A18; mapper 248 remains a se
   The 256 KiB and 512 KiB CHR local images each completed 700 non-halted frames and deterministic
   100-frame replay. The larger Chinese image actively toggled CHR A18; neither image selected NROM
   override, so that path remains board-test evidence and status stays `Implemented`.
+- Mapper 248 is NESdev's duplicate assignment for the same Kasheng hardware, not a second guessed
+  register model. The factory preserves mapper 248 in cartridge metadata while both IDs share one
+  board entity, validation policy and save-state shape. One local 256 KiB PRG + 256 KiB CHR
+  _Bao Qing Tian_ image completed a deterministic replay smoke; its bytes remain outside the
+  repository, so the status remains `Implemented`.
 - Mapper 80 (Taito X1-005) maps three switchable 8 KiB PRG windows, two 2 KiB plus four 1 KiB CHR
   windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
   `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so

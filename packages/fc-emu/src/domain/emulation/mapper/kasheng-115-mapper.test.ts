@@ -11,7 +11,7 @@ import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
 
 const noopInterrupt: MapperInterruptPort = { setMapperIrq() {} };
 
-describe("Kasheng mapper 115", () => {
+describe("Kasheng mappers 115 and 248", () => {
   it("combines the outer PRG line with standard MMC3 banking and mirroring", () => {
     const cartridge = createTestCartridge({ mapper: 115, prgBanks: 32, chrBanks: 32 });
     fillBanks(cartridge.prgRom, 0x2000);
@@ -39,6 +39,26 @@ describe("Kasheng mapper 115", () => {
 
     mapper.write(0x6000, 0xe6);
     expect(readAt(mapper, [0x8000, 0xa000, 0xc000, 0xe000])).toEqual([44, 45, 46, 47]);
+  });
+
+  it("resolves duplicate ID 248 to the same physical board state machine", () => {
+    const snapshots = [115, 248].map((mapperNumber) => {
+      const cartridge = createTestCartridge({ mapper: mapperNumber, prgBanks: 16, chrBanks: 32 });
+      fillBanks(cartridge.prgRom, 0x2000);
+      const mapper = createMapper(cartridge, noopInterrupt);
+
+      mapper.write(0x6000, 0xe6);
+      bank(mapper, 2, 4);
+      return {
+        mapperNumber: cartridge.mapperNumber,
+        reads: readAt(mapper, [0x8000, 0xa000, 0xc000, 0xe000]),
+        state: mapper.captureState(),
+      };
+    });
+
+    expect(snapshots.map(({ mapperNumber }) => mapperNumber)).toEqual([115, 248]);
+    expect(snapshots[1]?.reads).toEqual(snapshots[0]?.reads);
+    expect(snapshots[1]?.state).toEqual(snapshots[0]?.state);
   });
 
   it("routes CHR A18 and exposes only the three solder-pad data lines", () => {
@@ -102,6 +122,12 @@ describe("Kasheng mapper 115", () => {
     expect(() =>
       createMapper(
         createTestCartridge({ mapper: 115, nes2: true, submapper: 1, prgBanks: 8, chrBanks: 1 }),
+        noopInterrupt,
+      ),
+    ).toThrow(UnsupportedMapperVariantError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 248, nes2: true, submapper: 1, prgBanks: 8, chrBanks: 1 }),
         noopInterrupt,
       ),
     ).toThrow(UnsupportedMapperVariantError);

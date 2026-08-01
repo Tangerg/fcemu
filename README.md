@@ -53,7 +53,9 @@ loaded locally in the browser and are never part of this repository.
 
 Standard gamepads are assigned to stable player-one/player-two slots. When a game is loaded, the
 canvas owns gameplay keys; tabbing to a workbench control returns those keys to the browser until
-the action completes. A loaded VS UniSystem image adds a dedicated coin button to the workbench.
+the action completes. A loaded VS UniSystem image adds a dedicated coin button to the workbench;
+after inserting a coin, `Enter` drives the cabinet's Select-1/one-player line, while the ordinary NES
+Select key is not connected.
 
 For installation details, browser-storage behavior and troubleshooting, read
 [Getting started](./docs/getting-started.md).

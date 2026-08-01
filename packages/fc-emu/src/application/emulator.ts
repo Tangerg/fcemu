@@ -1,5 +1,5 @@
 import Bus, { type BusSnapshot } from "../domain/emulation/bus.js";
-import type { ControllerButton } from "../domain/emulation/controller.js";
+import { ControllerButton } from "../domain/emulation/controller.js";
 import Cartridge from "../domain/model/cartridge.js";
 import type {
   CartridgeConsoleType,
@@ -187,11 +187,50 @@ export class Emulator {
 
   setControllerState(player: 1 | 2, buttons: readonly boolean[]): void {
     const controller = this.controllerForPlayer(player);
-    controller.buttonsState = [...buttons];
+    if (this.bus.Cartridge.consoleType !== 1) {
+      controller.buttonsState = [...buttons];
+      return;
+    }
+    if (
+      !Array.isArray(buttons) ||
+      buttons.length !== 8 ||
+      buttons.some((pressed) => typeof pressed !== "boolean")
+    ) {
+      throw new RangeError("Controller input must contain exactly eight boolean button values");
+    }
+
+    for (const button of [
+      ControllerButton.A,
+      ControllerButton.B,
+      ControllerButton.Up,
+      ControllerButton.Down,
+      ControllerButton.Left,
+      ControllerButton.Right,
+    ]) {
+      controller.setButton(button, buttons[button] ?? false);
+    }
+    this.bus.Controller1.setButton(ControllerButton.Start, false);
+    this.bus.Controller2.setButton(ControllerButton.Start, false);
+    this.vsSelectControllerForPlayer(player).setButton(
+      ControllerButton.Select,
+      buttons[ControllerButton.Start] ?? false,
+    );
   }
 
   setControllerButton(player: 1 | 2, button: ControllerButton, pressed: boolean): void {
     const controller = this.controllerForPlayer(player);
+    if (this.bus.Cartridge.consoleType === 1) {
+      if (button === ControllerButton.Select) {
+        if (typeof pressed !== "boolean") {
+          throw new TypeError("Controller button state must be boolean");
+        }
+        return;
+      }
+      if (button === ControllerButton.Start) {
+        this.vsSelectControllerForPlayer(player).setButton(ControllerButton.Select, pressed);
+        return;
+      }
+    }
     controller.setButton(button, pressed);
   }
 
@@ -215,6 +254,10 @@ export class Emulator {
       this.bus.Cartridge.consoleType === 1 && this.bus.Cartridge.defaultExpansionDevice === 5;
     const usesPort1 = firstPlayerUsesPort2 ? player === 2 : player === 1;
     return usesPort1 ? this.bus.Controller1 : this.bus.Controller2;
+  }
+
+  private vsSelectControllerForPlayer(player: 1 | 2) {
+    return player === 1 ? this.bus.Controller1 : this.bus.Controller2;
   }
 }
 

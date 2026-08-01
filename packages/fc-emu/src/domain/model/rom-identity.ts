@@ -6,11 +6,16 @@ for (let byte = 0; byte < CRC32_TABLE.length; byte++) {
   CRC32_TABLE[byte] = value >>> 0;
 }
 
+/** Stable, non-security checksum for ROM identity and legacy metadata lookup. */
+export function calculateCrc32(bytes: Uint8Array): number {
+  let crc = 0xffffffff;
+  for (const byte of bytes) crc = (crc >>> 8) ^ (CRC32_TABLE[(crc ^ byte) & 0xff] ?? 0);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
 /** Stable, non-security identity used to reject save states from another ROM image. */
 export function createRomIdentity(image: ArrayBuffer): string {
   const bytes = new Uint8Array(image);
-  let crc = 0xffffffff;
-  for (const byte of bytes) crc = (crc >>> 8) ^ (CRC32_TABLE[(crc ^ byte) & 0xff] ?? 0);
-  const checksum = ((crc ^ 0xffffffff) >>> 0).toString(16).padStart(8, "0");
+  const checksum = calculateCrc32(bytes).toString(16).padStart(8, "0");
   return `crc32:${checksum}:${bytes.byteLength}`;
 }

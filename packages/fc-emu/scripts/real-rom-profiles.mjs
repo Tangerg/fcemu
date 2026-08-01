@@ -498,6 +498,89 @@ export const REAL_ROM_PROFILES = Object.freeze({
       cpuCycles: 3_573_660,
     },
   },
+  vssoccer: {
+    title: "Vs. Soccer (set SC4-3)",
+    fileName: "vs soccer.nes",
+    sha256: "4866b55763a7992b3f0469e10fe84a34aad6ef5c4b097501cf7e6879b0971c2f",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 99,
+      submapperNumber: 0,
+      timingMode: 0,
+      consoleType: 1,
+      vsPpuType: 4,
+      vsHardwareType: 0,
+      consoleRegion: "ntsc",
+      mirroringMode: 4,
+      hasBatteryBackup: false,
+      hasWritableChrMemory: false,
+      prgRomBytes: 32_768,
+      chrRomBytes: 16_384,
+      prgRamBytes: 2048,
+      prgNvRamBytes: 0,
+    },
+    baseline: {
+      frames: 600,
+      minimumDistinctFrames: 6,
+      finalFrameSha256: "4bdb082599cace5fe77e5cdeb160b68c601c551e779c14d9927a379ae45decb0",
+      frameSequenceSha256: "22edd4f4f85e822e290571f1acedac130b78c34ae0fc4f9f7a334319438face9",
+      cpuCycles: 17_841_007,
+    },
+    interactive: {
+      frames: 1800,
+      minimumDistinctFrames: 700,
+      events: [
+        { frame: 240, coin: 1 },
+        { frame: 420, button: "start", pressed: true },
+        { frame: 422, button: "start", pressed: false },
+        { frame: 600, button: "right", pressed: true },
+        { frame: 720, button: "a", pressed: true },
+        { frame: 726, button: "a", pressed: false },
+        { frame: 840, button: "b", pressed: true },
+        { frame: 846, button: "b", pressed: false },
+        { frame: 960, button: "right", pressed: false },
+        { frame: 1080, button: "left", pressed: true },
+        { frame: 1200, button: "left", pressed: false },
+        { frame: 1260, button: "up", pressed: true },
+        { frame: 1380, button: "up", pressed: false },
+        { frame: 1420, button: "a", pressed: true },
+        { frame: 1426, button: "a", pressed: false },
+        { frame: 1500, button: "down", pressed: true },
+        { frame: 1560, button: "b", pressed: true },
+        { frame: 1566, button: "b", pressed: false },
+        { frame: 1680, button: "down", pressed: false },
+      ],
+      checkpoints: {
+        120: "4bdb082599cace5fe77e5cdeb160b68c601c551e779c14d9927a379ae45decb0",
+        240: "4bdb082599cace5fe77e5cdeb160b68c601c551e779c14d9927a379ae45decb0",
+        360: "4c306e743cc3dda0e13977f79d569ec062021a204d4391cf7a66db159039a5a2",
+        480: "a121fa68c0fa8e0c7a20b28f9375621556e7a98772f215af03ffee4ab055834f",
+        600: "a121fa68c0fa8e0c7a20b28f9375621556e7a98772f215af03ffee4ab055834f",
+        720: "8853a65df113af3c298e9d9923ebf1506975de4abc8e5b37f831ca4c869f17a6",
+        840: "fd7115b365db02e515edfe1839a05d8ad9b2ff0f01ded7ce3da2d0dfbcc842d1",
+        960: "c7e1a3143dad39b9f9da10038fee5693290ef7375fe5fec99ebaba1b750b0266",
+        1080: "e10a3fff9bff46edbfc5e7981f8339394ddd6e08a235291652ed95cd97dcc73d",
+        1200: "32e0a79bfccd1df4f1b8cc712b5b2beb66bad8e91dbb524c84bd50c3448c2f6e",
+        1320: "d5ce67b926947b794e67ff8027dcb330f3065da83ed6038ef50fc0769b0b6cc9",
+        1440: "b457eeb3e6b3597dbe547011c1b8ba40742db9f54a38f76fbe6c25a4175174b9",
+        1560: "bd39c457b387730ca113ae2bbeb7af67add5dae572372b369af8b87fd43da417",
+        1800: "71f3c64502599e221d34b4359292ce0c442476e2968b39592b7b1456b869abc3",
+      },
+      finalFrameSha256: "71f3c64502599e221d34b4359292ce0c442476e2968b39592b7b1456b869abc3",
+      frameSequenceSha256: "fb8b52b75f0d6743dc77066d6fb464cc1393f8d814f151eeafeedbd63f098c91",
+      audioSamples: 1_320_156,
+      audioSha256: "4b566ee5a1994ca943a904c678cafdb9954e4b3188d95ba746c3ccfcb0b03480",
+      cpuCycles: 53_577_807,
+    },
+    replay: {
+      checkpointFrame: 1320,
+      frames: 120,
+      frameSequenceSha256: "2bea59c54e0cdf3cc2c031e8c34a863afaf0d5158b79852e3a60238b423cb91a",
+      audioSamples: 88_055,
+      audioSha256: "5ec83577aab7f083dfb2e02975dfcf31579eeb5bb0dc02781928bdc1c9a99e74",
+      cpuCycles: 3_573_680,
+    },
+  },
   sangofighter: {
     title: "Sango Fighter",
     fileName: "Sango Fighter (UNL).nes",
@@ -2361,9 +2444,28 @@ function validateEvents(id, scenario, validButtons) {
     if (event.frame > scenario.frames) fail(id, `${path}.frame exceeds the scenario`);
     if (event.frame < previousFrame) fail(id, "interactive.events must be sorted by frame");
     previousFrame = event.frame;
+
+    const isCoinEvent = Object.hasOwn(event, "coin");
+    const isControllerEvent = Object.hasOwn(event, "button") || Object.hasOwn(event, "pressed");
+    if (isCoinEvent === isControllerEvent) {
+      fail(id, `${path} must be exactly one controller or coin event`);
+    }
+    if (isCoinEvent) {
+      requireKnownFields(id, path, event, ["frame", "coin"]);
+      requireIntegerBetween(id, `${path}.coin`, event.coin, 1, 2);
+      continue;
+    }
+
+    requireKnownFields(id, path, event, ["frame", "button", "pressed"]);
     if (!validButtons.has(event.button)) fail(id, `${path}.button is unknown`);
     if (typeof event.pressed !== "boolean") fail(id, `${path}.pressed must be boolean`);
   }
+}
+
+function requireKnownFields(id, path, value, knownFields) {
+  const known = new Set(knownFields);
+  const unknown = Object.keys(value).find((field) => !known.has(field));
+  if (unknown) fail(id, `${path} contains unknown field ${unknown}`);
 }
 
 function validateReplay(id, replay, interactive) {

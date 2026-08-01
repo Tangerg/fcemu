@@ -1113,11 +1113,11 @@ frames plus deterministic visual/audio/cycle save-state replay. See the
 ## VS System mainboard (99)
 
 Mapper 99 models the populated sockets on the VS mainboard, not a modulo-wrapped CNROM cartridge.
-CPU `$8000-$9FFF` selects socket 0 or the fifth Gumshoe socket; `$A000-$FFFF` maps sockets 1–3.
-PPU `$0000-$1FFF` selects either 8 KiB CHR socket. CPU OUT2 (`$4016` bit 2) changes both selections
-when the controller latch commits. Missing fixed PRG sockets, the alternate PRG socket or the second
-CHR socket are electrically undriven. The 2 KiB `$6000-$7FFF` shared RAM repeats every `$800`
-bytes, and nametables are four-screen on VS hardware.
+CPU `$8000-$9FFF` normally maps socket 0; the fifth Gumshoe socket participates in OUT2 selection
+only on a five-socket/40 KiB image. `$A000-$FFFF` maps sockets 1–3. PPU `$0000-$1FFF` always selects
+one of two 8 KiB CHR sockets through CPU OUT2 (`$4016` bit 2) when the controller latch commits.
+Missing fixed PRG sockets or the selected CHR socket are electrically undriven. The 2 KiB
+`$6000-$7FFF` shared RAM repeats every `$800` bytes, and nametables are four-screen on VS hardware.
 
 The surrounding `VsSystem` console device owns coin/service/DIP inputs, the mirrored `$4020` coin
 counter output and NES 2.0 UniSystem protection types 1–4. `PpuVariant` owns the 2C03 palette, four
@@ -1129,6 +1129,14 @@ approximated with one CPU. See [NESdev mapper 99](https://www.nesdev.org/wiki/IN
 decoded Super Xevious phases follow the maintained
 [MAME VS driver](https://github.com/mamedev/mame/blob/master/src/mame/nintendo/vsnes.cpp); the
 device remains console-owned because those boards use mapper 206, not mapper 99.
+
+Legacy iNES cannot encode the RGB PPU or control wiring. The exact _Vs. Soccer_ SC4-3 PRG/CHR CRC
+pair `46914E3E`/`FEBB5370` therefore resolves through the content metadata registry to
+`RP2C04-0003` and player-one gameplay on the `$4017` left stick. The VS Select-1 cabinet line remains
+on `$4016` bit 2, so the public facade routes logical player-one Start separately from the gameplay
+stick. The pinned profile exercises that crossed wiring with a real coin pulse, reaches an active
+match, records 785 distinct frames across 1,800 frames, and proves deterministic visual/audio/cycle
+save-state replay. _Vs. Gumshoe_ remains required to verify fifth-PRG-socket software externally.
 
 ## NTDEC/Asder (112)
 

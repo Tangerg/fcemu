@@ -14,6 +14,7 @@ import {
   type CartridgeMemoryState,
   type CartridgeSaveSnapshot,
 } from "./cartridge-memory.js";
+import { enrichLegacyVsRomMetadata } from "./legacy-vs-rom-metadata.js";
 
 export { CartridgeFormatError } from "./cartridge-format-error.js";
 export type { CartridgeFormatErrorCode } from "./cartridge-format-error.js";
@@ -53,12 +54,12 @@ class Cartridge {
   readonly mapperNvRamBytes: number;
 
   static fromArrayBuffer(arrayBuffer: ArrayBuffer, sourceName = "ROM"): Cartridge {
-    const header = parseCartridgeHeader(arrayBuffer, sourceName);
-    Cartridge.validateSupportedHeader(header, sourceName);
+    const parsedHeader = parseCartridgeHeader(arrayBuffer, sourceName);
+    Cartridge.validateSupportedHeader(parsedHeader, sourceName);
 
     let offset = CARTRIDGE_HEADER_SIZE;
     let trainer: Uint8Array | undefined;
-    if (header.hasTrainer) {
+    if (parsedHeader.hasTrainer) {
       if (offset + CARTRIDGE_TRAINER_SIZE > arrayBuffer.byteLength) {
         throw new CartridgeFormatError("INCOMPLETE_TRAINER", sourceName, "incomplete trainer data");
       }
@@ -66,20 +67,22 @@ class Cartridge {
       offset += CARTRIDGE_TRAINER_SIZE;
     }
 
-    if (offset + header.prgRomSize > arrayBuffer.byteLength) {
+    if (offset + parsedHeader.prgRomSize > arrayBuffer.byteLength) {
       throw new CartridgeFormatError("INCOMPLETE_PRG_ROM", sourceName, "incomplete PRG ROM data");
     }
-    const prgRom = new Uint8Array(arrayBuffer.slice(offset, offset + header.prgRomSize));
-    offset += header.prgRomSize;
+    const prgRom = new Uint8Array(arrayBuffer.slice(offset, offset + parsedHeader.prgRomSize));
+    offset += parsedHeader.prgRomSize;
 
     let chrRom = new Uint8Array(0);
-    if (header.chrRomSize > 0) {
-      if (offset + header.chrRomSize > arrayBuffer.byteLength) {
+    if (parsedHeader.chrRomSize > 0) {
+      if (offset + parsedHeader.chrRomSize > arrayBuffer.byteLength) {
         throw new CartridgeFormatError("INCOMPLETE_CHR_ROM", sourceName, "incomplete CHR ROM data");
       }
-      chrRom = new Uint8Array(arrayBuffer.slice(offset, offset + header.chrRomSize));
+      chrRom = new Uint8Array(arrayBuffer.slice(offset, offset + parsedHeader.chrRomSize));
     }
 
+    const header = enrichLegacyVsRomMetadata(parsedHeader, prgRom, chrRom);
+    if (header !== parsedHeader) Cartridge.validateSupportedHeader(header, sourceName);
     return new Cartridge(header, prgRom, chrRom, trainer);
   }
 

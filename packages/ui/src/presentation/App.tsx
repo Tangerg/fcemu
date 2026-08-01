@@ -523,11 +523,13 @@ function ControllerGuide({ isVsSystem }: { readonly isVsSystem: boolean }) {
           <kbd>K</kbd> B
         </span>
         <span>
-          <kbd>Enter</kbd> 开始
+          <kbd>Enter</kbd> {isVsSystem ? "选择 1P" : "开始"}
         </span>
-        <span>
-          <kbd>Space</kbd> 选择
-        </span>
+        {!isVsSystem && (
+          <span>
+            <kbd>Space</kbd> 选择
+          </span>
+        )}
       </div>
       <div className="controller-player">
         <b>P2</b>
@@ -541,7 +543,7 @@ function ControllerGuide({ isVsSystem }: { readonly isVsSystem: boolean }) {
           <kbd>1</kbd> B
         </span>
       </div>
-      {isVsSystem && <p>VS 模式使用“投币”按钮添加游戏点数。</p>}
+      {isVsSystem && <p>先“投币”，再按 Enter 选择 1P；VS 柜体没有 NES Select 键。</p>}
     </section>
   );
 }

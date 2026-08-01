@@ -41,7 +41,10 @@ directional axes/D-pad and are assigned by stable connection slot. Keyboard and 
 composed, so releasing one device does not cancel a button still held on another.
 
 VS UniSystem images show a `投币` control that produces one physical-duration coin-contact pulse.
-Player identity follows NES 2.0's `$4016`/`$4017` VS controller routing when that metadata exists.
+After inserting a coin, `Enter` selects one-player mode through the cabinet's dedicated Select-1
+line; the ordinary NES `Select` function is not wired on a VS panel. Gameplay identity follows NES
+2.0's `$4016`/`$4017` stick-routing metadata when it exists, independently from those fixed cabinet
+selection lines.
 
 After a ROM loads, the canvas receives gameplay focus. `Tab` moves focus to workbench controls;
 activating a control with `Enter` or `Space` returns focus to the canvas when appropriate.

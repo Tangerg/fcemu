@@ -104,7 +104,8 @@ Bindings are documented in [Getting started](./getting-started.md#controls).
 
 When `RomDetails.consoleType === 1`, presentation adds a labeled `投币` button. The action crosses
 `EmulatorApplication.insertCoin` and the runtime port into the core cabinet device; React never
-mutates a mapper or controller directly. The button is absent for ordinary NES/Famicom images.
+mutates a mapper or controller directly. The button is absent for ordinary NES/Famicom images. The
+controller guide also labels `Enter` as Select-1 and hides the unwired NES Select binding in VS mode.
 
 ## ROM identity and persistence
 

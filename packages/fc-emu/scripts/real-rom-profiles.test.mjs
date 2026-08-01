@@ -61,6 +61,38 @@ describe("real-ROM profile validation", () => {
     expect(() => validateRealRomProfiles(unsorted, BUTTON_NAMES)).toThrowError(/sorted by frame/);
   });
 
+  it("accepts coin events and rejects ambiguous cabinet input", () => {
+    const coin = cloneOneProfile();
+    coin.fixture.interactive.events[0] = { frame: 1, coin: 1 };
+    expect(() => validateRealRomProfiles(coin, BUTTON_NAMES)).not.toThrow();
+
+    const invalidSlot = cloneOneProfile();
+    invalidSlot.fixture.interactive.events[0] = { frame: 1, coin: 3 };
+    expect(() => validateRealRomProfiles(invalidSlot, BUTTON_NAMES)).toThrowError(
+      /coin.*between 1 and 2/,
+    );
+
+    const hybrid = cloneOneProfile();
+    hybrid.fixture.interactive.events[0] = {
+      frame: 1,
+      coin: 1,
+      button: "start",
+      pressed: true,
+    };
+    expect(() => validateRealRomProfiles(hybrid, BUTTON_NAMES)).toThrowError(
+      /exactly one controller or coin event/,
+    );
+  });
+
+  it("rejects unknown input-event fields", () => {
+    const profiles = cloneOneProfile();
+    profiles.fixture.interactive.events[0].player = 2;
+
+    expect(() => validateRealRomProfiles(profiles, BUTTON_NAMES)).toThrowError(
+      /unknown field player/,
+    );
+  });
+
   it("rejects invalid checkpoints and mismatched final frames", () => {
     const outsideScenario = cloneOneProfile();
     outsideScenario.fixture.interactive.checkpoints[9999] = "0".repeat(64);

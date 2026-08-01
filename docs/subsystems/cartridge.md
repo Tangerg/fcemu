@@ -4,11 +4,12 @@ The Cartridge subsystem turns a raw ROM image (`ArrayBuffer`) into an immutable-
 that owns program/character ROM, the four physically distinct writable memory regions, and the
 board-identifying facts a mapper needs. Parsing, policy, and memory are deliberately separated:
 `parseCartridgeHeader` interprets iNES/NES 2.0 header bytes into a frozen `CartridgeHeader`, the
-`Cartridge` aggregate applies the core's supported-format policy (rejecting layouts it cannot
-represent with `CartridgeFormatError`), and `CartridgeMemory` owns all mutable RAM/NVRAM behind
-logical address spaces that never expose their backing arrays. Mapper selection consumes this
-aggregate but lives elsewhere (see [mapper docs](../mappers/README.md)); the accepted-format policy
-is stated in [cartridge format support](../cartridge-formats.md) and only summarized here.
+content-addressed legacy VS lookup fills hardware facts that iNES could not encode, the `Cartridge`
+aggregate applies the core's supported-format policy (rejecting layouts it cannot represent with
+`CartridgeFormatError`), and `CartridgeMemory` owns all mutable RAM/NVRAM behind logical address
+spaces that never expose their backing arrays. Mapper selection consumes this aggregate but lives
+elsewhere (see [mapper docs](../mappers/README.md)); the accepted-format policy is stated in
+[cartridge format support](../cartridge-formats.md) and only summarized here.
 
 ## From ROM image to aggregate
 
@@ -17,12 +18,16 @@ is stated in [cartridge format support](../cartridge-formats.md) and only summar
 constructor is private. It runs a fixed pipeline:
 
 1. `parseCartridgeHeader(arrayBuffer, sourceName)` decodes the 16-byte header.
-2. `Cartridge.validateSupportedHeader(header, sourceName)` enforces the supported-format policy.
+2. `Cartridge.validateSupportedHeader(header, sourceName)` rejects unsupported declared metadata
+   before body extraction.
 3. The image body is sliced by declared sizes at increasing offsets starting at
    `CARTRIDGE_HEADER_SIZE` (16): optional 512-byte trainer, then PRG ROM, then CHR ROM. Each slice
    is bounds-checked against `arrayBuffer.byteLength` and raises a distinct incompleteness error if
    the file is truncated.
-4. The private constructor allocates `CartridgeMemory` from the header's four RAM sizes, retains an
+4. `enrichLegacyVsRomMetadata` checks an exact mapper/size/PRG-CRC/CHR-CRC tuple when an iNES image
+   declares VS System hardware; unknown payloads and every NES 2.0 image remain untouched. A changed
+   header is validated again before construction.
+5. The private constructor allocates `CartridgeMemory` from the header's four RAM sizes, retains an
    immutable trainer copy, performs the default PRG-memory initialization when applicable, and
    freezes the derived board facts.
 
@@ -68,8 +73,8 @@ and 7; the remaining fields diverge by format.
 | `hasTrainer`             | `flags6 & 0x04`                                                         | same                                          |
 | `hasBatteryFlag`         | `flags6 & 0x02`                                                         | same                                          |
 | `consoleType`            | `flags7 & 0x03`                                                         | same                                          |
-| `vsPpuType`              | `0`                                                                     | VS only: `byte13 & 0x0F`                      |
-| `vsHardwareType`         | `0`                                                                     | VS only: `byte13 >> 4`                        |
+| `vsPpuType`              | `0` in header; exact VS content lookup may enrich after slicing         | VS only: `byte13 & 0x0F`                      |
+| `vsHardwareType`         | `0` in header; exact VS content lookup may enrich after slicing         | VS only: `byte13 >> 4`                        |
 | `prgRomSize` (bytes)     | `byte4 * 16384`                                                         | `decodeRomSize(byte4, byte9 & 0x0F, 16384)`   |
 | `chrRomSize` (bytes)     | `byte5 * 8192`                                                          | `decodeRomSize(byte5, byte9 >> 4, 8192)`      |
 | `prgRamSize` (bytes)     | `hasBatteryFlag ? 0 : legacy`                                           | `decodeRamSize(byte10 & 0x0F)`                |
@@ -78,7 +83,7 @@ and 7; the remaining fields diverge by format.
 | `chrNvRamSize` (bytes)   | `0`                                                                     | `decodeRamSize(byte11 >> 4)`                  |
 | `timingMode`             | `byte9 & 1` (NTSC/PAL)                                                  | `byte12 & 0x03` (NTSC/PAL/multi-region/Dendy) |
 | `miscellaneousRomCount`  | `0`                                                                     | `byte14 & 0x03`                               |
-| `defaultExpansionDevice` | `0`                                                                     | `byte15 & 0x3F`                               |
+| `defaultExpansionDevice` | `0` in header; exact VS content lookup may enrich after slicing         | `byte15 & 0x3F`                               |
 
 `legacy` for iNES is `(byte8 || 1) * 8192`, so a zero PRG-RAM byte still yields one 8 KiB unit, and
 the battery flag routes that entire legacy window to NVRAM rather than volatile RAM. iNES with no CHR
@@ -91,6 +96,19 @@ Mapper 77 adds 8 KiB of board-implied RAM beside CHR ROM, and mapper 119 similar
 `SingleScreenUpper`, `FourScreen`); the header only ever decodes Horizontal, Vertical, or FourScreen,
 and mappers select the single-screen variants at runtime. `timingMode` is a `CartridgeTimingMode`
 enum (`Ntsc`, `Pal`, `MultiRegion`, `Dendy`).
+
+### Legacy VS content metadata
+
+iNES can identify a VS image but cannot identify its RGB PPU permutation, protection hardware or
+controller-port convention. `legacy-vs-rom-metadata.ts` therefore performs the content lookup
+recommended for old VS dumps. A match requires the mapper number, both ROM lengths and independent
+CRC-32 values for the extracted PRG and CHR regions; filenames and headers alone never select an
+entry. The initial record is _Vs. Soccer_ set SC4-3: PRG CRC `46914E3E`, CHR CRC `FEBB5370`,
+`RP2C04-0003` (`vsPpuType = 4`), normal UniSystem hardware and player-one gameplay on `$4017`.
+
+The lookup completes metadata only; it never changes ROM bytes, mapper identity or geometry. An
+unknown legacy payload retains the conservative iNES defaults, while NES 2.0 byte 13 and byte 15
+remain authoritative even if their PRG/CHR bytes match a catalog entry.
 
 ### ROM size encoding
 
@@ -139,9 +157,10 @@ parser; the rationale and the exact accepted matrix live in
 The console/expansion checks accept standard NES/Famicom images (`consoleType === 0`) with
 unspecified or standard controllers (`0/1`) and VS UniSystem images (`consoleType === 1`) with
 unspecified or VS controller routing (`0/4/5`). NES 2.0 byte 13 supplies `vsPpuType` and
-`vsHardwareType`; legacy VS images default both to zero because iNES has no such fields. The RAM
-checks keep the battery flag and NVRAM nibbles mutually consistent. Mixed CHR is accepted only where
-mapper 19 or 119 supplies an explicit ROM/RAM chip-select circuit.
+`vsHardwareType`; an exact content record may supply the otherwise absent legacy VS facts. Unknown
+iNES payloads retain zero/default routing. The RAM checks keep the battery flag and NVRAM nibbles
+mutually consistent. Mixed CHR is accepted only where mapper 19 or 119 supplies an explicit ROM/RAM
+chip-select circuit.
 
 ## Writable memory regions
 

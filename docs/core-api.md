@@ -92,6 +92,12 @@ emulator.setDipSwitch(3, true);
 images. `emulator.cartridge.consoleType`, `vsPpuType` and `vsHardwareType` let a host present
 appropriate controls without inspecting ROM bytes.
 
+On VS hardware, logical `ControllerButton.Start` drives the fixed Select-1/Select-2 cabinet line;
+logical NES `Select` is ignored because that button is not wired. A player's A/B/directions follow
+the VS gameplay-stick routing metadata independently: Select-1 always enters through `$4016` bit 2,
+even when player one's gameplay stick is the left-hand `$4017` port. Both incremental and full-state
+controller APIs apply the same mapping.
+
 Runtime command validation is fail-closed for JavaScript callers as well as TypeScript consumers:
 controller players and coin slots must be `1` or `2`, full controller reports must contain exactly
 eight booleans, and service/DIP states must be booleans. Invalid values never fall through to player

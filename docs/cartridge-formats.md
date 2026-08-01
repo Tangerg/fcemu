@@ -17,7 +17,7 @@ execution.
 | CHR writable memory | Implicit 8 KiB; mapper 74/77/96/119 board-implied  | Explicit CHR RAM or CHR NVRAM            |
 | Trainer             | Default `$7000`; mapper-owned loader exceptions    | Default plus mapper/submapper exceptions |
 | Miscellaneous ROMs  | Not encoded                                        | None                                     |
-| Default expansion   | Legacy/default                                     | Standard or VS controller port identity  |
+| Default expansion   | Legacy/default; exact VS content fallback          | Standard or VS controller port identity  |
 
 The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes never enter a save
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
@@ -89,7 +89,9 @@ Mapper 99 normalizes legacy iNES RAM to the VS mainboard's exact 2 KiB capacity;
 still chooses volatile RAM or NVRAM. NES 2.0 must declare exactly 2 KiB in one of those classes.
 PRG ROM may contain one to five 8 KiB sockets and CHR ROM one or two 8 KiB sockets, including
 exponent-multiplier sizes that linear iNES cannot encode. The fifth PRG payload is Gumshoe's
-alternate `$8000-$9FFF` socket. Unpopulated sockets remain open bus instead of mirroring.
+alternate `$8000-$9FFF` socket and is selected only on a five-socket/40 KiB image; OUT2 changes only
+CHR on ordinary one-to-four-socket boards. Unpopulated fixed sockets remain open bus instead of
+mirroring.
 
 The address-latch multicarts use board-exact geometry rather than arbitrary modulo banking. Mapper
 15 is 1 MiB PRG plus 8 KiB volatile CHR RAM. Mapper 225 accepts matched 1 MiB/512 KiB or 2 MiB/1 MiB
@@ -122,6 +124,12 @@ hardware types 0–4 are supported, including the three Namco security devices a
 protection. DualSystem types 5–6 require two synchronized CPUs/PPUs, watchdog and shared-memory
 arbitration and therefore fail closed. Default expansion values 0, 4 and 5 are accepted; 4/5 state
 whether player one is reported through `$4016` or `$4017`.
+
+Legacy iNES has none of those PPU or input fields. The core may complete them only through an exact
+content record containing mapper, PRG/CHR lengths and independent PRG/CHR CRC-32 values. The pinned
+_Vs. Soccer_ SC4-3 payload resolves to `RP2C04-0003` and reversed gameplay-stick routing; unknown
+payloads keep the conservative 2C03/default-routing interpretation. Explicit NES 2.0 metadata always
+wins, and the lookup never repairs or rewrites a ROM image.
 
 ## Mapper variants and board shape
 

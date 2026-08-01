@@ -69,7 +69,11 @@ export class VsSystemMapper implements Mapper {
 
   private prgOffset(address: number): number | undefined {
     const socket =
-      address < 0xa000 ? (this.selectedBank === 0 ? 0 : 4) : 1 + ((address - 0xa000) >>> 13);
+      address < 0xa000
+        ? this.cartridge.prgRom.byteLength === 5 * BANK_SIZE && this.selectedBank === 1
+          ? 4
+          : 0
+        : 1 + ((address - 0xa000) >>> 13);
     const offset = socket * BANK_SIZE + (address & 0x1fff);
     return offset < this.cartridge.prgRom.byteLength ? offset : undefined;
   }

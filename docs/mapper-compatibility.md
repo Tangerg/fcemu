@@ -73,7 +73,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM              |
 | 96     | Oeka Kids      | Implemented | Address-edge/CHR-RAM/conflict/state tests; two local replay smokes |
 | 97     | Irem TAM-S1    | Verified    | Board tests; pinned _Kaiketsu Yanchamaru_ real-ROM runner          |
-| 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
+| 99     | VS mainboard   | Verified    | Board tests; pinned _Vs. Soccer_ cabinet/gameplay real-ROM runner  |
 | 112    | NTDEC/Asder    | Verified    | Banking/state tests; pinned _Sango Fighter_ real-ROM runner        |
 | 113    | HES NTD-8      | Implemented | Board/geometry/state tests; local single-game misheaders rejected  |
 | 114    | SuperGame MMC3 | Verified    | Scramble/MMC3A tests; pinned _The Lion King_ real-ROM runner       |
@@ -170,10 +170,18 @@ Mappers 24/26 are the exact VRC6a/VRC6b PCBs and accept only submapper 0. Both r
 second register model.
 
 Mapper 99 accepts only submapper 0. PRG is one to five physically ordered 8 KiB sockets, CHR is one
-or two 8 KiB sockets, and shared RAM is exactly 2 KiB. Selecting an absent fifth PRG or second CHR
-socket tri-states the corresponding bus; it never mirrors an undersized image. NES 2.0 VS metadata
-selects the RGB PPU and UniSystem protection hardware. DualSystem types fail closed because they
-require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
+or two 8 KiB sockets, and shared RAM is exactly 2 KiB. OUT2 always selects the CHR socket but selects
+the fifth `$8000-$9FFF` PRG socket only when a 40 KiB/five-socket image actually supplies it;
+ordinary boards retain socket 0. Missing fixed PRG or selected CHR sockets tri-state the bus rather
+than mirroring. NES 2.0 VS metadata selects the RGB PPU, controller routing and UniSystem protection
+hardware. DualSystem types fail closed because they require a second synchronized CPU/PPU and
+shared-RAM ownership arbitration.
+
+The legacy _Vs. Soccer_ SC4-3 profile matches exact PRG/CHR CRCs `46914E3E`/`FEBB5370`, completing
+its absent iNES metadata as `RP2C04-0003` and player-one gameplay on `$4017`. Its public-input
+timeline inserts a cabinet coin, drives the separately wired Select-1 line, enters active play for
+1,800 frames, and replays 120 saved frames with exact video, audio and CPU-cycle results. Unknown
+legacy VS payloads are not inferred from titles or geometry.
 
 Mapper 114 accepts legacy/submapper 0 for the Aladdin/Lion King/Hosenkan scrambling pattern and NES
 2.0 submapper 1 for Boogerman's distinct address and index permutation. Mapper 182 is a duplicate

@@ -4,7 +4,7 @@ import { createMapper } from "./create-mapper.js";
 import { VsSystemMapper } from "./vs-system-mapper.js";
 
 describe("VsSystemMapper", () => {
-  it("maps the five physical PRG sockets and switches PRG/CHR together through OUT2", () => {
+  it("maps the optional fifth PRG socket and switches it with CHR through OUT2", () => {
     const cartridge = createVsCartridge(0xa000, 0x4000);
     fillBanks(cartridge.prgRom, 0x2000);
     fillBanks(cartridge.chrRom, 0x2000);
@@ -30,7 +30,20 @@ describe("VsSystemMapper", () => {
     expect(mapper.read(0x0000)).toBe(1);
   });
 
-  it("tri-states unpopulated PRG and CHR sockets instead of mirroring them", () => {
+  it("switches only CHR on ordinary four-socket boards", () => {
+    const cartridge = createVsCartridge(0x8000, 0x4000);
+    fillBanks(cartridge.prgRom, 0x2000);
+    fillBanks(cartridge.chrRom, 0x2000);
+    const mapper = new VsSystemMapper(cartridge);
+    mapper.powerOn();
+
+    mapper.writeControllerLatch(0x04);
+
+    expect(mapper.read(0x8000)).toBe(0);
+    expect(mapper.read(0x0000)).toBe(1);
+  });
+
+  it("tri-states unpopulated fixed PRG and selected CHR sockets", () => {
     const cartridge = createVsCartridge(0x6000, 0x2000);
     const mapper = new VsSystemMapper(cartridge);
     mapper.powerOn();
@@ -42,7 +55,7 @@ describe("VsSystemMapper", () => {
 
     mapper.writeControllerLatch(0x04);
 
-    expect(mapper.cpuReadDriveMask(0x8000)).toBe(0);
+    expect(mapper.cpuReadDriveMask(0x8000)).toBe(0xff);
     expect(mapper.ppuReadDriveMask(0x0000)).toBe(0);
   });
 

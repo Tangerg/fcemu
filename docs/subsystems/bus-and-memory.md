@@ -141,9 +141,12 @@ NESdev [open bus behavior](https://www.nesdev.org/wiki/Open_bus_behavior).
 
 On VS UniSystem, `$4016/$4017` instead drive all eight bits. D0 is the corresponding controller
 serial line; `$4016` adds service, DIP 1–2 and two coin contacts, while `$4017` adds DIP 3–8.
-NES 2.0 default expansion value 4/5 decides whether application player one is wired to the right
-`$4016` or left `$4017` stick. Ice Climber protection forces the Start serial bit on both physical
-ports. A committed `$4016` write also presents OUT2 to mapper 99.
+NES 2.0 default expansion value 4/5 decides whether application player-one gameplay is wired to the
+right `$4016` or left `$4017` stick. Cabinet Select-1 and Select-2 remain fixed at serial bit 2 on
+`$4016` and `$4017` respectively, so the application facade routes logical Start separately from
+the gameplay stick; serial bit 3 has no ordinary panel button. Ice Climber protection can still
+force that otherwise-unused bit on both physical ports. A committed `$4016` write also presents
+OUT2 to mapper 99.
 
 `VsSystem` observes the mirrored `$4020-$5FFF` coin-counter address decode before mapper expansion
 ports. Reads write the current external open-bus D0 into that output, matching the cabinet circuit.

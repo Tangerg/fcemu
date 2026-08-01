@@ -26,6 +26,39 @@ describe("Emulator", () => {
     expect(state.controller2.buttons[ControllerButton.A]).toBe(true);
   });
 
+  it("maps logical Start to the VS cabinet select line", () => {
+    const emulator = Emulator.fromRom(
+      createTestRom({
+        mapper: 99,
+        nes2: true,
+        consoleType: 1,
+        defaultExpansionDevice: 5,
+        prgRomBytes: 0x8000,
+        chrRomBytes: 0x2000,
+        prgRamShift: 5,
+        chrRamShift: 0,
+      }),
+    );
+
+    emulator.setControllerButton(1, ControllerButton.Start, true);
+    emulator.setControllerButton(1, ControllerButton.Select, true);
+    emulator.setControllerButton(2, ControllerButton.Start, true);
+    let state = emulator.captureSaveState().state;
+    expect(state.controller1.buttons[ControllerButton.Select]).toBe(true);
+    expect(state.controller1.buttons[ControllerButton.Start]).toBe(false);
+    expect(state.controller2.buttons[ControllerButton.Select]).toBe(true);
+
+    const logical = Array<boolean>(8).fill(false);
+    logical[ControllerButton.A] = true;
+    emulator.setControllerState(1, logical);
+    state = emulator.captureSaveState().state;
+    expect(state.controller1.buttons[ControllerButton.Select]).toBe(false);
+    expect(state.controller1.buttons[ControllerButton.Start]).toBe(false);
+    expect(state.controller2.buttons[ControllerButton.Select]).toBe(true);
+    expect(state.controller2.buttons[ControllerButton.Start]).toBe(false);
+    expect(state.controller2.buttons[ControllerButton.A]).toBe(true);
+  });
+
   it("rejects invalid player numbers instead of silently routing them to player two", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const before = emulator.captureSaveState();

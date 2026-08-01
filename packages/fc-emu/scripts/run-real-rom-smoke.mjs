@@ -280,6 +280,10 @@ function runReplaySegment(emulator, events, replay, samples) {
 function applyInputEvents(emulator, events, frame) {
   for (const event of events) {
     if (event.frame !== frame) continue;
+    if (Object.hasOwn(event, "coin")) {
+      emulator.insertCoin(event.coin);
+      continue;
+    }
     emulator.setControllerButton(1, BUTTONS[event.button], event.pressed);
   }
 }

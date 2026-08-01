@@ -105,7 +105,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     95 | Namco 3425         | _Dragon Buster_ (Japan)                                                | —                                                                                 | CHR-bank-driven CIRAM selection                                  |
 |     96 | Bandai Oeka Kids   | _Oeka Kids: Anpanman to Oekaki Shiyou!!_                               | _Oeka Kids: Anpanman no Hiragana Daisuki_                                         | PPU address-edge CHR latch, 32 KiB RAM and conflicts             |
 |     97 | Irem TAM-S1        | _Kaiketsu Yanchamaru_ (Japan, pinned local profile)                    | —                                                                                 | Inverted fixed/switchable PRG placement and mirroring            |
-|     99 | VS mainboard       | _Vs. Gumshoe_ (VS UniSystem)                                           | _Vs. Super Mario Bros._ for the common socket layout                              | Fifth PRG socket, CHR socket, open bus, RGB PPU and cabinet I/O  |
+|     99 | VS mainboard       | _Vs. Soccer_ SC4-3 (pinned local profile)                              | _Vs. Gumshoe_ (fifth PRG); _Vs. Super Mario Bros._ (normal routing)               | CHR/fifth-PRG, RGB PPU, crossed controls and cabinet I/O         |
 |    112 | NTDEC/Asder        | _Sango Fighter_ (unlicensed, pinned local profile)                     | _Huang Di_                                                                        | Two-stage registers, split CHR outer lines and mirroring         |
 |    113 | HES NTD-8          | _HES 6-in-1_                                                           | _Total Funpak_                                                                    | Expansion decode, split-field PRG/CHR latch and mirroring        |
 |    114 | SuperGame MMC3     | _The Lion King_ (SuperGame, pinned local profile)                      | _Boogerman_ (submapper 1)                                                         | Both scrambling patterns, outer banks and MMC3A zero-latch IRQ   |
@@ -160,7 +160,10 @@ the same ID covers materially different hardware that the primary image cannot e
   and remains under review rather than becoming a pinned profile. Recorded speech also requires
   separate, identified µPD7756C sample data before audio can be verified.
 - Mapper 99 is not the whole VS platform. Some VS protection games use mapper 206; their VS console
-  metadata must remain present for cabinet inputs, RGB PPU selection and protection reads.
+  metadata must remain present for cabinet inputs, RGB PPU selection and protection reads. The
+  pinned legacy _Vs. Soccer_ SC4-3 image proves ordinary mapper-99 CHR switching, RP2C04-0003
+  colors, crossed gameplay/Select-1 wiring and coin I/O; it does not replace a 40 KiB _Vs. Gumshoe_
+  fixture for the fifth PRG socket.
 - Mapper 113 is the HES/AVE multicart extension of mapper 79. Reject 32 KiB single-game NINA-03/06
   images such as legacy-header _AV Soccer_ even when their iNES mapper field says 113: applying the
   multicart's D7 mirroring control corrupts their selection screen. Require _HES 6-in-1_,

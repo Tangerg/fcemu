@@ -11,6 +11,7 @@ import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
 import { Bmc226Mapper } from "./bmc-226-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { BxromWram241Mapper } from "./bxrom-wram-241-mapper.js";
+import { Caltron41Mapper } from "./caltron-41-mapper.js";
 import { CeDecathlonMapper } from "./ce-decathlon-mapper.js";
 import { CeFongShenBangMapper } from "./ce-fong-shen-bang-mapper.js";
 import { CeSupertoneMapper } from "./ce-supertone-mapper.js";
@@ -249,6 +250,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       const board = resolveMapper34Board(cartridge);
       return board === "nina-001" ? new Nina001Mapper(cartridge) : new BnromMapper(cartridge);
     }
+    case 41:
+      requireBaseSubmapper(cartridge);
+      requireCaltron41Layout(cartridge);
+      requireChrRom(cartridge, "Caltron 6-in-1");
+      requireNoBatteryPrgRam(cartridge, "Caltron 6-in-1");
+      requireTwoScreenNametables(cartridge, "Caltron 6-in-1");
+      return new Caltron41Mapper(cartridge);
     case 48:
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
@@ -1283,6 +1291,19 @@ function requireRomLayout(
   }
   if (cartridge.chrMemoryBytes !== requiredChrSize) {
     throw configurationError(cartridge, `CHR memory must be ${formatBytes(requiredChrSize)}`);
+  }
+}
+
+function requireCaltron41Layout(cartridge: Cartridge): void {
+  const validPrg = [0x8000, 0x1_0000, 0x2_0000, 0x4_0000].includes(cartridge.prgRom.byteLength);
+  const validChr = [0x2000, 0x4000, 0x8000, 0x1_0000, 0x2_0000].includes(
+    cartridge.chrRom.byteLength,
+  );
+  if (!validPrg || !validChr) {
+    throw configurationError(
+      cartridge,
+      "Caltron mapper 41 requires power-of-two PRG/CHR ROM no larger than 256/128 KiB",
+    );
   }
 }
 

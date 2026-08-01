@@ -50,6 +50,7 @@ export type MapperState =
       readonly selectedChrBank0: number;
       readonly selectedChrBank1: number;
     }
+  | { readonly kind: "caltron-41"; readonly outerLatch: number; readonly innerChrBank: number }
   | {
       readonly kind: "axrom";
       readonly selectedPrgBank: number;

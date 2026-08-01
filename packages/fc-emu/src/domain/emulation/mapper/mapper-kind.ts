@@ -12,6 +12,7 @@ export const MapperKind = {
   Bnrom: "bnrom",
   Bmc226: "bmc-226",
   Nina001: "nina-001",
+  Caltron41: "caltron-41",
   Axrom: "axrom",
   Gxrom: "gxrom",
   ColorDreams: "color-dreams",

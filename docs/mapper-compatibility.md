@@ -38,6 +38,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM         |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM          |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                     |
+| 41     | Caltron 6-in-1 | Implemented | Address/data/conflict/reset/state tests; local no-bank replay      |
 | 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM           |
 | 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM       |
 | 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM     |
@@ -103,7 +104,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -189,7 +190,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/152/180/182/184/185/206/244/248 because those
+  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/152/180/182/184/185/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -314,6 +315,19 @@ and `$6000.D6` supplying PRG A18.
   register values are offsets in 2 KiB units rather than MMC3-style even 1 KiB indexes. Four-screen
   headers are rejected because the modeled board only drives the two-screen CIRAM layout. Mapper
   48 dumps mislabeled as 33 remain out of scope because mapper 33 has no IRQ.
+- Mapper 41 models the Caltron 6-in-1 board as two distinct latches. Writes to `$6000-$67FF`
+  capture CPU address bits rather than data: A0-A2 choose a 32 KiB PRG bank, A3-A4 choose the outer
+  CHR block and A5 selects vertical/horizontal mirroring. Writes in `$8000-$FFFF` update the inner
+  two CHR bits only while outer bit 2 is set and are AND-masked by the selected PRG byte to model
+  the board's partial bus conflicts. Both latches clear on power-on and warm reset; `$6000-$7FFF`
+  remains open bus because the board has no PRG RAM. The factory accepts the fully populated
+  256 KiB PRG/128 KiB CHR board and smaller power-of-two ROMs whose absent high address lines
+  naturally mirror, while rejecting unaddressable capacities and invented writable memory.
+  Current NESdev, Mesen CE, MAME and puNES behavior agree on A5 mirroring, a data-driven inner latch
+  and reset clearing. Older FCEUX address-derived inner selection and Nestopia A4/hard-reset-only
+  behavior are conflicting approximations, not combined board variants. A local 32 KiB + 32 KiB
+  _Aladdin 3_ image completes a deterministic replay but never writes either latch, so it is only a
+  reduced-geometry compatibility smoke and not Caltron banking verification.
 - Mapper 48 (Taito TC0690) reuses TC0190's PRG/CHR banking circuit but moves mirroring to `$E000`
   and adds an MMC3-shaped filtered-A12 IRQ counter with inverted reload values. IRQ assertion is
   delayed after the counter event: submapper 0 uses the empirically compatible 22 CPU cycles, while

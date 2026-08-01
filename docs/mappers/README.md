@@ -143,6 +143,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 32  | Irem G-101     | `irem-g101`               | `irem-g101-mapper.ts`        | no            | no   |
 | 33  | Taito TC0190   | `taito-tc0190`            | `taito-tc0190-mapper.ts`     | no            | no   |
 | 34  | BNROM/NINA-001 | `bnrom`/`nina-001`        | `bnrom-`/`nina001-mapper.ts` | BNROM AND     | no   |
+| 41  | Caltron 6-in-1 | `caltron-41`              | `caltron-41-mapper.ts`       | inner AND     | no   |
 | 48  | Taito TC0690   | `taito-tc0690`            | `taito-tc0690-mapper.ts`     | no            | A12  |
 | 64  | Tengen RAMBO-1 | `rambo-1`                 | `rambo1-mapper.ts`           | no            | both |
 | 65  | Irem H3001     | `irem-h3001`              | `irem-h3001-mapper.ts`       | no            | cyc. |
@@ -614,6 +615,32 @@ register sets. BNROM switches a 32 KiB PRG bank with original-board AND conflict
 registers (`$7FFD` PRG, `$7FFE`/`$7FFF` two 4 KiB CHR banks) over an 8 KiB PRG-RAM window. Legacy CHR
 ROM above 8 KiB selects NINA-001; CHR RAM or ≤8 KiB CHR ROM selects BNROM; NES 2.0 submapper 1/2 name
 the board explicitly.
+
+## Caltron 6-in-1 (41)
+
+The outer register is decoded only on writes to `$6000-$67FF` and ignores CPU data. Address bits
+A0-A2 select one 32 KiB PRG bank, A3-A4 select one of four outer CHR groups, A5 selects
+vertical/horizontal mirroring, and A2 also enables the inner latch. While enabled, writes anywhere
+in `$8000-$FFFF` capture data bits D0-D1 after an AND bus conflict against the currently selected
+PRG byte. The outer and retained inner fields together select an 8 KiB CHR bank. `$6000-$7FFF`
+reads are open bus; the board owns no PRG RAM, CHR RAM or IRQ source.
+
+Both latches and mirroring reset on either power-on or the console reset signal. Save states retain
+the raw six-bit address latch and two-bit inner latch, then derive mirroring from the restored
+hardware state. The production board carries 256 KiB PRG ROM and 128 KiB CHR ROM; the factory also
+accepts smaller power-of-two images because unconnected high ROM address inputs naturally mirror,
+but rejects non-power-of-two or oversized payloads, writable cartridge memory, four-screen
+nametables and unknown submappers.
+
+Current [NESdev mapper 41](https://www.nesdev.org/wiki/INES_Mapper_041),
+[Mesen CE](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Ntdec/Caltron41.h)
+and
+[MAME](https://github.com/mamedev/mame/blob/dcc9f33c59815103994534a85d2f70d77b2ca862/src/devices/bus/nes/multigame.cpp#L1213)
+agree on A5 mirroring, the data-driven gated inner latch and reset clearing. Older FCEUX
+address-derived inner selection and Nestopia A4/hard-reset-only behavior conflict with that
+consensus and are not treated as hidden variants. The local 32 KiB PRG + 32 KiB CHR _Aladdin 3_
+image runs and replays deterministically but never writes either mapper register, so it validates
+only reduced-capacity loading—not the Caltron switching circuit.
 
 ## Taito TC0690 (48)
 

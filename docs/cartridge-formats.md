@@ -91,6 +91,11 @@ NES 2.0 declares either zero or exactly 8 KiB. Exact legacy content metadata ide
 _The Lord of King_ by PRG CRC `EFB1DF9E` and CHR CRC `7A2DCF20`, resolving its physical zero-WRAM
 layout instead of exposing the generic fallback.
 
+Mapper 65 follows the same optional-memory policy. Exact content metadata identifies IF-28
+_Kaiketsu Yanchamaru 3_ by PRG CRC `E30B7F64` and CHR CRC `AF5FD6B5`, removing the generic iNES
+allocation from its zero-WRAM FC-00-017B H3001 board. Unknown legacy images retain the fallback;
+NES 2.0 must declare either no PRG memory or one exact 8 KiB RAM/NVRAM region.
+
 Mapper 19 derives the Namco 163 ASIC's 128-byte shared RAM independently from header PRG/CHR
 fields. The battery flag makes those bytes persistent even when the NES 2.0 PRG NVRAM field is
 zero. Optional external memory is absent or exactly 8 KiB; NES 2.0 must declare it as volatile PRG

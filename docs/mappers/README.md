@@ -776,7 +776,14 @@ pinout testing disproved that older emulator behavior. `$B000-$B007` select eigh
 `$9001` bits 7-6 select vertical, horizontal or lower-one-screen mirroring. `$9005/$9006` write the
 high/low 16-bit IRQ reload, `$9004` copies it into the live counter, and `$9003` acknowledges and
 enables/disables counting. The counter decrements once per CPU cycle, asserts at zero and disables
-itself. A directly declared PRG-RAM/NVRAM window is mapped at `$6000-$7FFF`. See
+itself. A directly declared PRG-RAM/NVRAM window is mapped at `$6000-$7FFF`.
+
+Exact content metadata identifies _Kaiketsu Yanchamaru 3_ as the zero-WRAM IF-28/FC-00-017B board.
+Its pinned 3,100-frame route crosses the opening into Stage 1 gameplay with 896 distinct frames,
+visits both observed switchable PRG pairs and broad per-slot CHR changes, and locks visual/audio/CPU
+output plus an input-active save-state replay. The observed software path leaves PRG mode 0 and does
+not enable the preloaded IRQ counter; focused tests retain swapped-mode, alternate-mirroring, RAM and
+one-shot IRQ coverage. See
 [NESdev mapper 65](https://www.nesdev.org/wiki/INES_Mapper_065) and the
 [H3001 pinout findings](https://forums.nesdev.org/viewtopic.php?t=19778).
 

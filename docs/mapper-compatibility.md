@@ -42,7 +42,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 41     | Caltron 6-in-1 | Implemented | Address/data/conflict/reset/state tests; local no-bank replay      |
 | 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM           |
 | 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM       |
-| 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM     |
+| 65     | Irem H3001     | Verified    | Tests; pinned _Kaiketsu Yanchamaru 3_ gameplay runner              |
 | 66     | GxROM/MHROM    | Verified    | Tests; pinned _Dragon Power_ GNROM gameplay runner                 |
 | 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
 | 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM                |
@@ -439,7 +439,13 @@ and `$6000.D6` supplying PRG A18.
   1 KiB CHR banks, `$9001` selects vertical/horizontal/lower-one-screen nametables, and an optional
   directly declared 8 KiB PRG-RAM window occupies `$6000-$7FFF`. Its 16-bit one-shot IRQ counter
   decrements each CPU cycle and stops when it asserts at zero. The obsolete emulated `$C000` PRG
-  register is intentionally absent because hardware pinout testing found no such register.
+  register is intentionally absent because hardware pinout testing found no such register. Exact
+  content metadata identifies _Kaiketsu Yanchamaru 3_ as the zero-WRAM IF-28/FC-00-017B board. Its
+  pinned 3,100-frame route crosses the full opening into Stage 1 gameplay with 896 distinct frames,
+  exercises both observed switchable PRG pairs and broad per-slot CHR changes, then locks visual,
+  native-audio, CPU-cycle and input-active save-state output. This software keeps PRG mode 0 and
+  never enables the preloaded IRQ counter in the observed path; swapped PRG mode, alternate
+  mirroring, RAM and one-shot IRQ behavior remain focused-test evidence.
 - Mapper 71 (Codemasters/Camerica) switches a 16 KiB `$8000-$BFFF` bank from `$C000-$FFFF` with the
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
   single-screen mirroring and rejects four-screen layouts; submapper 0 keeps the header's fixed

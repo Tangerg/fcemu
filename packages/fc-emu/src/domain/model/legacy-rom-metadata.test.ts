@@ -108,6 +108,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Kaiketsu Yanchamaru 3 FC-00-017B memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 65,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xe30b7f64,
+        chrCrc32: 0xaf5fd6b5,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("does not guess metadata from mapper geometry or a near CRC match", () => {
     expect(
       findLegacyRomMetadata({

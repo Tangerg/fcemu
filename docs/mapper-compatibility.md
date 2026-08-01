@@ -86,7 +86,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 182    | SuperGame MMC3 | Implemented | Mapper-114.0 duplicate board tests; one local replay smoke         |
 | 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM             |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
-| 189    | TXC MMC3       | Implemented | Outer-PRG/MMC3/IRQ/state tests; two local replay smokes            |
+| 189    | TXC MMC3       | Verified    | Outer-PRG/MMC3/IRQ tests; pinned _Thunder Warrior_ real-ROM runner |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
 | 226    | BMC 42/63/76-1 | Verified    | Three-geometry tests; pinned _Super 42-in-1_ real-ROM runner       |
@@ -571,9 +571,11 @@ and `$6000.D6` supplying PRG A18.
   across the generalized `$4020-$7FFF` decode OR the data byte's upper and lower nibbles to select
   one of eight whole PRG banks; MMC3 R6/R7 and PRG mode cannot split that external window. The MMC3
   owner still controls 1/2 KiB CHR banks, horizontal/vertical mirroring and filtered-A12 IRQs, while
-  `$6000-$7FFF` remains a write-only latch instead of fabricated PRG RAM. Two clean user-local
-  images completed 720-frame input runs and deterministic 60-frame save-state replays; their bytes
-  and hashes remain outside the repository, so the status remains `Implemented`.
+  `$6000-$7FFF` remains a write-only latch instead of fabricated PRG RAM. The checksum-pinned
+  _Thunder Warrior_ profile verifies 2,520 input-driven frames, 800 distinct frames, exact visual,
+  audio and CPU-cycle results, and a deterministic 120-frame save-state replay. A separate mapper
+  trace over that scenario observed outer-bank values 0/1/2/3 and both asserted and cleared MMC3 IRQ
+  state. The secondary local _Street Fighter II_ image remains useful unpinned smoke evidence.
 - Mapper 206 (Namco 118 / DxROM) is the discrete predecessor to MMC3. It reuses the `$8000`/`$8001`
   bank-select and bank-data ports for two 2 KiB plus four 1 KiB CHR windows and two 8 KiB PRG banks
   with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring

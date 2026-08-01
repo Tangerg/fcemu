@@ -117,6 +117,7 @@ yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
 yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
 yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
+yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes
 yarn smoke:real-rom -- genke "/absolute/path/to/Gen Ke Le Zhuan (C).nes"
 yarn smoke:real-rom -- waixin "/absolute/path/to/Wai Xin Zhan Shi.nes"

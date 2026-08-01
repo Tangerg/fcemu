@@ -1253,7 +1253,11 @@ combines the data byte's upper and lower nibbles with bitwise OR and uses the lo
 the PRG bank. The range is write-only and never becomes PRG RAM, even though some board variants
 reach the latch through the MMC3 WRAM interface. `TxcMmc3189Mapper` owns that outer latch and
 delegates only the physically retained MMC3 behavior to `Mmc3Mapper`; save state keeps both owners
-as separate validated layers. See [NESdev mapper 189](https://www.nesdev.org/wiki/INES_Mapper_189).
+as separate validated layers. The checksum-pinned _Thunder Warrior_ profile verifies 2,520
+input-driven frames with 800 distinct frames, exact visual/audio/CPU-cycle results and a
+deterministic 120-frame save-state replay. A diagnostic trace of the same input path reaches all four
+outer-bank values present in its 128 KiB PRG image and observes both asserted and cleared MMC3 IRQ
+state. See [NESdev mapper 189](https://www.nesdev.org/wiki/INES_Mapper_189).
 
 ## Namco 118 / DxROM (206)
 

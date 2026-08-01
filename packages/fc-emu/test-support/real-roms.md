@@ -27,25 +27,26 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover fifteen files used during development:
+The current profiles cover sixteen files used during development:
 
-| Profile        | Expected file                | SHA-256                                                            | Mapper |
-| -------------- | ---------------------------- | ------------------------------------------------------------------ | ------ |
-| `mario`        | `MARIO.NES`                  | `e9d2cc78600d4b765eca41b87eaa2b8f593d5bad5d71d2f3d6b43c5092e5705b` | 0      |
-| `contra`       | `CONTRA.NES`                 | `26541a5550ee22deeb3d5484e4a96130219b58cff74d068fb1eb6567fa5e5519` | 2      |
-| `kage`         | `KAGE.NES`                   | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
-| `smb3`         | `SMB3-J.NES`                 | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
-| `punchout`     | `PUNCHOUT-J.NES`             | `137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0` | 9      |
-| `dbz5`         | `dbz5cn.nes`                 | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
-| `sango4`       | `sango4.nes`                 | `dee4d95f36a621b85cfba3e7ecba7a83cda3814bb0d96f76b6502f616f21c25f` | 117    |
-| `super42`      | `Super_42-in-1.nes`          | `927d2738e57ca5a6bd54c6eb1c2223c0332a9018249272779bcea968d5f4aabb` | 226    |
-| `genke`        | `Gen Ke Le Zhuan (C).nes`    | `3ea31a72b1f3ea26dfca4ed3b8642e51db81d551be384056da31c6d16ab8b966` | 240    |
-| `waixin`       | `Wai Xin Zhan Shi.nes`       | `efa36c857d4c46d522570437f18dbdb8c0f9675bd0d9dc9b6b1e63e566a87490` | 242    |
-| `decathlon`    | `Cecathlon (C).nes`          | `b51a894b0e478bc16f88fb1940dad05109ad1f23897b778506349dda26adae24` | 244    |
-| `dragonquest7` | `勇者斗恶龙7(中文).nes`      | `7075d99f763e8512c0d55f4e0d2761ffb035ba887be04e124579345e91ba346d` | 245    |
-| `fengshenbang` | `封神榜.nes`                 | `f3596ffda5c1b83821e58d15827a3a2fbc94c85352b7a5b834c1039e70509a25` | 246    |
-| `baoqingtian`  | `Bao Qing Tian (C).nes`      | `4a4f0fa02305ea403464ec8f3a009aa567e191d6069e2d1edd568d5bdff005f7` | 248    |
-| `timediver`    | `Time Diver Avenger (C).nes` | `36bec12c4caccc958a70634e56eb18f6ec1e92c5e6d1a88afcfd1cd52050b54e` | 250    |
+| Profile          | Expected file                | SHA-256                                                            | Mapper |
+| ---------------- | ---------------------------- | ------------------------------------------------------------------ | ------ |
+| `mario`          | `MARIO.NES`                  | `e9d2cc78600d4b765eca41b87eaa2b8f593d5bad5d71d2f3d6b43c5092e5705b` | 0      |
+| `contra`         | `CONTRA.NES`                 | `26541a5550ee22deeb3d5484e4a96130219b58cff74d068fb1eb6567fa5e5519` | 2      |
+| `kage`           | `KAGE.NES`                   | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
+| `smb3`           | `SMB3-J.NES`                 | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
+| `punchout`       | `PUNCHOUT-J.NES`             | `137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0` | 9      |
+| `dbz5`           | `dbz5cn.nes`                 | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
+| `sango4`         | `sango4.nes`                 | `dee4d95f36a621b85cfba3e7ecba7a83cda3814bb0d96f76b6502f616f21c25f` | 117    |
+| `thunderwarrior` | `ThunderWarrior.nes`         | `6eba6a209e0d60c63d73e2e02b858b9580fd40e719775ffe43ae940a61ba57a2` | 189    |
+| `super42`        | `Super_42-in-1.nes`          | `927d2738e57ca5a6bd54c6eb1c2223c0332a9018249272779bcea968d5f4aabb` | 226    |
+| `genke`          | `Gen Ke Le Zhuan (C).nes`    | `3ea31a72b1f3ea26dfca4ed3b8642e51db81d551be384056da31c6d16ab8b966` | 240    |
+| `waixin`         | `Wai Xin Zhan Shi.nes`       | `efa36c857d4c46d522570437f18dbdb8c0f9675bd0d9dc9b6b1e63e566a87490` | 242    |
+| `decathlon`      | `Cecathlon (C).nes`          | `b51a894b0e478bc16f88fb1940dad05109ad1f23897b778506349dda26adae24` | 244    |
+| `dragonquest7`   | `勇者斗恶龙7(中文).nes`      | `7075d99f763e8512c0d55f4e0d2761ffb035ba887be04e124579345e91ba346d` | 245    |
+| `fengshenbang`   | `封神榜.nes`                 | `f3596ffda5c1b83821e58d15827a3a2fbc94c85352b7a5b834c1039e70509a25` | 246    |
+| `baoqingtian`    | `Bao Qing Tian (C).nes`      | `4a4f0fa02305ea403464ec8f3a009aa567e191d6069e2d1edd568d5bdff005f7` | 248    |
+| `timediver`      | `Time Diver Avenger (C).nes` | `36bec12c4caccc958a70634e56eb18f6ec1e92c5e6d1a88afcfd1cd52050b54e` | 250    |
 
 Run one profile with an explicit file:
 
@@ -57,6 +58,7 @@ yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
 yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
 yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
+yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes
 yarn smoke:real-rom -- genke "/absolute/path/to/Gen Ke Le Zhuan (C).nes"
 yarn smoke:real-rom -- waixin "/absolute/path/to/Wai Xin Zhan Shi.nes"
@@ -99,8 +101,8 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 117, 226, 240, 242, 244, 245,
-246, 248 or 250
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 117, 189, 226, 240, 242, 244,
+245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.
 

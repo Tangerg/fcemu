@@ -188,6 +188,20 @@ export class Vrc7Audio {
   }
 
   restoreState(state: Vrc7AudioState): void {
+    this.validateState(state);
+    this.reset = state.reset;
+    this.selectedRegister = state.selectedRegister;
+    this.registers = [...state.registers];
+    this.divider = state.divider;
+    this.currentOutput = state.output;
+    this.pmPhase = state.pmPhase;
+    this.amPhase = state.amPhase;
+    this.envelopeCounter = state.envelopeCounter;
+    this.slots = state.slots.map((slot) => ({ ...slot })) as MutableVrc7Slot[];
+    this.customPatches = parsePatch(this.registers);
+  }
+
+  validateState(state: Vrc7AudioState): void {
     if (
       !areBooleans(state.reset) ||
       !isByte(state.selectedRegister) ||
@@ -204,16 +218,6 @@ export class Vrc7Audio {
     ) {
       throw new RangeError("VRC7 audio save state contains invalid FM state");
     }
-    this.reset = state.reset;
-    this.selectedRegister = state.selectedRegister;
-    this.registers = [...state.registers];
-    this.divider = state.divider;
-    this.currentOutput = state.output;
-    this.pmPhase = state.pmPhase;
-    this.amPhase = state.amPhase;
-    this.envelopeCounter = state.envelopeCounter;
-    this.slots = state.slots.map((slot) => ({ ...slot })) as MutableVrc7Slot[];
-    this.customPatches = parsePatch(this.registers);
   }
 
   private resetSynth(preserveReset: boolean): void {

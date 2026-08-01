@@ -96,6 +96,7 @@ export class Vrc2Vrc4Mapper implements Mapper {
     ) {
       throw new RangeError("VRC2/VRC4 save state contains invalid board or register state");
     }
+    if (state.irq !== null) this.irq?.validateState(state.irq);
     this.prgBanks = [...state.prgBanks];
     this.chrRegisters = [...state.chrRegisters];
     this.prgMode = state.prgMode;

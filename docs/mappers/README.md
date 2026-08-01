@@ -100,7 +100,9 @@ board's `captureState`/`restoreState` refer to the same named kind. `restoreStat
 untrusted field (bank indexes against the live bank count, mirroring against `NametableMirroring`,
 counters against their bit width and all booleans by runtime type) and throws
 `RangeError`/`TypeError` rather than trust a snapshot. Common array/boolean guards live in
-`state-validation.ts`; IRQ-capable boards re-assert their line from the restored state.
+`state-validation.ts`. Boards with nested IRQ or audio devices validate the complete state tree
+before mutating either owner or child, and IRQ-capable boards re-assert their line only after that
+validation succeeds.
 
 ## Implemented boards
 

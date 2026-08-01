@@ -113,6 +113,14 @@ export class Vrc6Audio {
   }
 
   restoreState(state: Vrc6AudioState): void {
+    this.validateState(state);
+    this.frequencyControl = state.frequencyControl;
+    this.pulse1 = { ...state.pulse1 };
+    this.pulse2 = { ...state.pulse2 };
+    this.saw = { ...state.saw };
+  }
+
+  validateState(state: Vrc6AudioState): void {
     if (
       !isFrequencyControl(state.frequencyControl) ||
       !isPulseState(state.pulse1) ||
@@ -122,10 +130,6 @@ export class Vrc6Audio {
     ) {
       throw new RangeError("VRC6 audio save state contains invalid oscillator state");
     }
-    this.frequencyControl = state.frequencyControl;
-    this.pulse1 = { ...state.pulse1 };
-    this.pulse2 = { ...state.pulse2 };
-    this.saw = { ...state.saw };
   }
 
   private clockPulse(pulse: MutablePulseState, shift: number): void {

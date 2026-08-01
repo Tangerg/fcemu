@@ -74,6 +74,8 @@ export class Vrc7Mapper implements Mapper {
     ) {
       throw new RangeError("VRC7 save state contains invalid board or banking state");
     }
+    if (this.audio && state.audio) this.audio.validateState(state.audio);
+    this.irq.validateState(state.irq);
     if (this.audio && state.audio) this.audio.restoreState(state.audio);
     this.irq.restoreState(state.irq);
     this.prgBanks = [...state.prgBanks];

@@ -55,6 +55,18 @@ export class VrcIrq {
   }
 
   restoreState(state: VrcIrqState): void {
+    this.validateState(state);
+    this.latch = state.latch;
+    this.counter = state.counter;
+    this.prescaler = state.prescaler;
+    this.enabled = state.enabled;
+    this.enabledAfterAcknowledge = state.enabledAfterAcknowledge;
+    this.cycleMode = state.cycleMode;
+    this.pending = state.pending;
+    this.interruptPort.setMapperIrq(this.pending);
+  }
+
+  validateState(state: VrcIrqState): void {
     if (
       !isByte(state.latch) ||
       !isByte(state.counter) ||
@@ -66,14 +78,6 @@ export class VrcIrq {
     ) {
       throw new RangeError("VRC IRQ save state contains invalid counter or control state");
     }
-    this.latch = state.latch;
-    this.counter = state.counter;
-    this.prescaler = state.prescaler;
-    this.enabled = state.enabled;
-    this.enabledAfterAcknowledge = state.enabledAfterAcknowledge;
-    this.cycleMode = state.cycleMode;
-    this.pending = state.pending;
-    this.interruptPort.setMapperIrq(this.pending);
   }
 
   tick(): void {

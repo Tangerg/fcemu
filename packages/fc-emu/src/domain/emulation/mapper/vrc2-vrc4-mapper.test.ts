@@ -212,6 +212,10 @@ describe("Konami VRC2/VRC4", () => {
     mapper.powerOn();
     mapper.restoreState(state);
     expect(mapper.captureState()).toEqual(state);
+    if (state.kind !== "vrc2-vrc4" || state.irq === null) {
+      throw new Error("expected VRC4 state");
+    }
+    const irqState = state.irq;
 
     expect(() => mapper.restoreState({ ...state, board: "vrc4b" } as MapperState)).toThrowError(
       RangeError,
@@ -219,6 +223,15 @@ describe("Konami VRC2/VRC4", () => {
     expect(() => mapper.restoreState({ ...state, irq: null } as MapperState)).toThrowError(
       RangeError,
     );
+    const beforeInvalidRestore = mapper.captureState();
+    expect(() =>
+      mapper.restoreState({
+        ...state,
+        prgBanks: [2, 3],
+        irq: { ...irqState, prescaler: 0 },
+      }),
+    ).toThrowError(RangeError);
+    expect(mapper.captureState()).toEqual(beforeInvalidRestore);
   });
 
   it.each([

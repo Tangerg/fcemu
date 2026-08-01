@@ -191,6 +191,15 @@ describe("Vrc6Mapper", () => {
         audio: { ...state.audio, frequencyControl: 8 },
       }),
     ).toThrowError(RangeError);
+    const beforeInvalidRestore = mapper.captureState();
+    expect(() =>
+      mapper.restoreState({
+        ...state,
+        audio: { ...state.audio, frequencyControl: 1 },
+        irq: { ...state.irq, prescaler: 0 },
+      }),
+    ).toThrowError(RangeError);
+    expect(mapper.captureState()).toEqual(beforeInvalidRestore);
   });
 
   it("accepts only the VRC6's reachable ROM, RAM and nametable geometry", () => {

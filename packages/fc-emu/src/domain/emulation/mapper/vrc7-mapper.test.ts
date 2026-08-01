@@ -208,6 +208,17 @@ describe("Vrc7Mapper", () => {
     expect(() => mapper.restoreState({ ...state, control: state.control | 0x40 })).toThrowError(
       RangeError,
     );
+    if (state.audio === null) throw new Error("expected VRC7 audio state");
+    const audioState = state.audio;
+    const beforeInvalidRestore = mapper.captureState();
+    expect(() =>
+      mapper.restoreState({
+        ...state,
+        audio: { ...audioState, selectedRegister: (audioState.selectedRegister + 1) & 0xff },
+        irq: { ...state.irq, prescaler: 0 },
+      }),
+    ).toThrowError(RangeError);
+    expect(mapper.captureState()).toEqual(beforeInvalidRestore);
   });
 
   it("accepts only allocated variants and reachable ROM, RAM and nametable geometry", () => {

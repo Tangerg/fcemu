@@ -18,6 +18,21 @@ describe("mapper IRQ output", () => {
     ["a VRC6 IRQ unit", mapperState({ kind: "vrc6", irq: { pending: true } }), true],
     ["a VRC7 IRQ unit", mapperState({ kind: "vrc7", irq: { pending: true } }), true],
     [
+      "a nested SuperGame MMC3 IRQ",
+      mapperState({ kind: "supergame-114", mmc3: { irqPending: true } }),
+      true,
+    ],
+    [
+      "a nested TXC MMC3 IRQ",
+      mapperState({ kind: "txc-mmc3-189", mmc3: { irqPending: true } }),
+      true,
+    ],
+    [
+      "a disconnected Waixing F003 MMC3 IRQ",
+      mapperState({ kind: "waixing-f003-245", mmc3: { irqPending: false } }),
+      false,
+    ],
+    [
       "a gated Taito X1-017 latch",
       mapperState({ kind: "taito-x1-017", irqPending: true, irqOutputEnabled: false }),
       false,

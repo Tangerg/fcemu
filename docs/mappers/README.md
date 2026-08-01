@@ -177,6 +177,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 99  | VS mainboard   | `vs-system`               | `vs-system-mapper.ts`        | no            | no   |
 | 112 | NTDEC/Asder    | `ntdec-asder`             | `ntdec-asder-mapper.ts`      | no            | no   |
 | 113 | HES NTD-8      | `hes-ntd8`                | `hes-ntd8-mapper.ts`         | no            | no   |
+| 114 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
@@ -1004,6 +1005,26 @@ Expansion reads remain open bus. The board has no PRG RAM, bus conflicts, IRQ or
 power-on clears both bank fields and selects horizontal mirroring. Unsupported submappers,
 four-screen nametable memory, CHR RAM and ROM images beyond 256 KiB PRG or 128 KiB CHR fail closed.
 See [NESdev mapper 113](https://www.nesdev.org/wiki/INES_Mapper_113).
+
+## SuperGame MMC3 clone (114)
+
+Mapper 114 wraps an MMC3A-compatible register core in the SuperGame protection wiring. Submapper 0
+scrambles both the eight register addresses and bank indexes used by _Aladdin_, _The Lion King_ and
+related boards. Submapper 1 uses Boogerman's distinct address and index permutations. Bits 6-7 of
+either translated command retain their normal MMC3 PRG/CHR mode meaning.
+
+The mirrored `$6000` register can override MMC3 PRG output with one 16 KiB bank repeated in both
+halves (NROM-128 mode) or adjacent A14-selected banks (NROM-256 mode). `$6001` supplies the ninth
+1 KiB CHR-ROM bank bit independently. Those addresses are not MMC3 WRAM: CPU reads remain open bus,
+writes work regardless of the nested core's `$A001` protection state, and battery-backed memory is
+rejected. Standard mode retains MMC3 PRG windows, horizontal/vertical mirroring and filtered A12,
+but uses the MMC3A rule that reloading a zero IRQ latch does not assert IRQ.
+
+The board accepts submappers 0/1, 128–256 KiB PRG ROM, 8–512 KiB CHR ROM and two-screen nametables.
+One local 256+256 KiB _The Lion King_ image advances through 800 frames, changes the MMC3 register
+set 27 times and reproduces an IRQ-active 100-frame save-state replay. It leaves both outer
+registers zero, so their NROM and CHR-A18 paths are covered by focused board tests rather than
+claimed as real-ROM evidence. See [NESdev mapper 114](https://www.nesdev.org/wiki/INES_Mapper_182).
 
 ## TxSROM and TQROM (118, 119)
 

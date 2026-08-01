@@ -50,6 +50,10 @@ Mapper 77's legacy image already carries CHR ROM, so iNES cannot declare its add
 volatile cartridge RAM. Format policy supplies that physical chip; NES 2.0 must declare it. Board
 creation also requires the singleton's 128 KiB PRG, 32 KiB CHR ROM and four-screen flag.
 
+Mapper 114 decodes `$6000-$7FFF` as mirrored outer-bank registers rather than writable memory.
+Legacy iNES's conventional implicit 8 KiB allocation remains parser metadata but is electrically
+undriven and unwritable; NES 2.0 must declare no PRG RAM/NVRAM, and battery headers fail closed.
+
 Mapper 6/8/17 images are extracted FFE copier-card memory, so their PRG/CHR payload initializes
 mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.
 Battery declarations are rejected. Their optional trainer is a loader entry rather than passive

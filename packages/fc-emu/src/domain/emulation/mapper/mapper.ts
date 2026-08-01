@@ -609,6 +609,13 @@ export type MapperState =
     }
   | Mmc3State
   | {
+      readonly kind: "supergame-114";
+      readonly variant: 0 | 1;
+      readonly prgOverride: number;
+      readonly chrOuterBank: number;
+      readonly mmc3: Mmc3State;
+    }
+  | {
       readonly kind: "txc-mmc3-189";
       readonly selectedPrgBank: number;
       readonly mmc3: Mmc3State;

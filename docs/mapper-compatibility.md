@@ -72,6 +72,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
 | 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
+| 114    | SuperGame MMC3 | Implemented | Two variants/outer banks/MMC3A/state tests; one local replay smoke |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
@@ -148,6 +149,10 @@ socket tri-states the corresponding bus; it never mirrors an undersized image. N
 selects the RGB PPU and UniSystem protection hardware. DualSystem types fail closed because they
 require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 
+Mapper 114 accepts legacy/submapper 0 for the Aladdin/Lion King scrambling pattern and NES 2.0
+submapper 1 for Boogerman's distinct address and index permutation. Both variants use MMC3A IRQ
+behavior and the same `$6000/$6001` NROM override/outer-CHR registers; other variants fail closed.
+
 ## Legacy-header assumptions
 
 - Mapper 3 uses no conflicts for ambiguous legacy/submapper-0 images, preserving compatible boards
@@ -166,7 +171,7 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/119/140/152/180/184/185/206 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/119/140/152/180/184/185/206 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -373,6 +378,12 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   expansion reads. Focused state and geometry tests pass, and four user-local images completed
   240-frame runs with deterministic 60-frame save-state replay; their bytes and hashes are not
   repository fixtures, so the status remains `Implemented` rather than `Verified`.
+- Mapper 114 models the SuperGame protection board around an MMC3A core. Submappers 0/1 retain their
+  different register-address and bank-index permutations. `$6000` selects mirrored NROM-128 or
+  paired NROM-256 override windows and `$6001` supplies CHR A18 without passing through MMC3 WRAM
+  protection. One local _The Lion King_ image exercised 27 MMC3 register sets across 800 non-halted
+  frames and an IRQ-active deterministic 100-frame save-state replay. It did not select the outer
+  registers, so those remain board-test evidence and the overall status stays `Implemented`.
 - Mapper 80 (Taito X1-005) maps three switchable 8 KiB PRG windows, two 2 KiB plus four 1 KiB CHR
   windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
   `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so

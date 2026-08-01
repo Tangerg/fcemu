@@ -45,6 +45,7 @@ export const MapperKind = {
   Nina0306: "nina-03-06",
   HesNtd8: "hes-ntd8",
   NtdecAsder: "ntdec-asder",
+  SuperGame114: "supergame-114",
   OekaKids: "oeka-kids",
   JalecoJf17: "jaleco-jf17",
   IremLrog017: "irem-lrog017",

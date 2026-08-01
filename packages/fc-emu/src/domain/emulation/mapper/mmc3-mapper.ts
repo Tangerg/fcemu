@@ -6,8 +6,9 @@ import type { Mapper, MapperInterruptPort, MapperState, Mmc3State } from "./mapp
 import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
 export type Mmc3Board = "standard" | "txsrom" | "tqrom" | "waixing-type-a";
+export type Mmc3IrqRevision = "a" | "b";
 
-/** Nintendo MMC3 register core with revision-B IRQ behavior and explicit board wiring. */
+/** Nintendo MMC3 register core with explicit chip revision and board wiring. */
 export class Mmc3Mapper implements Mapper {
   private static readonly A12_LOW_FILTER_PPU_CYCLES = 10;
 
@@ -33,6 +34,7 @@ export class Mmc3Mapper implements Mapper {
     private readonly interruptPort: MapperInterruptPort,
     private readonly cartridge: Cartridge,
     private readonly board: Mmc3Board = "standard",
+    private readonly irqRevision: Mmc3IrqRevision = "b",
   ) {
     this.powerOnMirroring = cartridge.mirroringMode;
     this.powerOn();
@@ -156,13 +158,14 @@ export class Mmc3Mapper implements Mapper {
   }
 
   private clockIRQCounter(): void {
+    const decremented = this.counter !== 0 && !this.reloadPending;
     if (this.counter === 0 || this.reloadPending) {
       this.counter = this.reload;
     } else {
       this.counter--;
     }
     this.reloadPending = false;
-    if (this.counter === 0 && this.irqEnable) {
+    if (this.counter === 0 && this.irqEnable && (this.irqRevision === "b" || decremented)) {
       this.irqPending = true;
       this.interruptPort.setMapperIrq(true);
     }

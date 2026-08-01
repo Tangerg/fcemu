@@ -69,6 +69,7 @@ import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3Mapper } from "./sunsoft3-mapper.js";
 import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
 import { Sunsoft4Mapper } from "./sunsoft4-mapper.js";
+import { SuperGame114Mapper } from "./supergame-114-mapper.js";
 import {
   createInvertedUxromBoard,
   GENERIC_UXROM_BOARD,
@@ -488,6 +489,16 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "HES NTD-8");
       return new HesNtd8Mapper(cartridge);
+    case 114:
+      if (cartridge.submapperNumber !== 0 && cartridge.submapperNumber !== 1) {
+        throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+      }
+      requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x80_000);
+      requireChrRom(cartridge, "SuperGame mapper 114");
+      requireNoBatteryPrgRam(cartridge, "SuperGame mapper 114");
+      requireTwoScreenNametables(cartridge, "SuperGame mapper 114");
+      return new SuperGame114Mapper(interruptPort, cartridge, cartridge.submapperNumber);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

@@ -649,13 +649,16 @@ titles: Gimmick!, Batman: Return of the Joker.
 One `$8000-$FFFF` latch with AND-type bus conflicts: a 16 KiB `$8000-$BFFF` bank (fixed last at
 `$C000-$FFFF`) and an 8 KiB CHR bank. Mapper 70 uses bits 7-4 for PRG and keeps mirroring hardwired.
 Mapper 152 spends bit 7 on single-screen mirroring (0 = screen A, 1 = screen B), leaving a 3-bit PRG
-field. Both are implemented by `Bandai74Mapper` with a `hasMirroringControl` flag.
+field. Its four-screen declarations are rejected because that output directly drives two-screen
+CIRAM; mapper 70's hardwired variant may retain externally declared four-screen memory. Both are
+implemented by `Bandai74Mapper` with a `hasMirroringControl` flag.
 
 ## Codemasters / Camerica (71)
 
 A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `$C000-$FFFF` is fixed
 to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire Hawk) adds single-screen
-mirroring from `$9000-$9FFF` bit 4; submapper 0 (BF9093) keeps the header's fixed mirroring.
+mirroring from `$9000-$9FFF` bit 4 and rejects four-screen layouts; submapper 0 (BF9093) keeps the
+header's fixed mirroring, including externally declared four-screen memory.
 
 ## Jaleco JF-17 (72)
 

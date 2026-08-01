@@ -591,6 +591,19 @@ describe("cartridge mappers", () => {
     expect(mapper.read(0x8000)).toBe(0x11);
   });
 
+  it.each([
+    ["Bandai mapper 70", { mapper: 70, prgBanks: 8, chrBanks: 8, fourScreen: true }],
+    ["Codemasters BF9093", { nes2: true, mapper: 71, submapper: 0, prgBanks: 8, fourScreen: true }],
+  ] as const)("preserves external four-screen memory on hardwired %s boards", (_name, options) => {
+    const cartridge = createTestCartridge(options);
+    const mapper = createMapper(cartridge, { setMapperIrq() {} });
+
+    mapper.powerOn();
+    mapper.write(0x9000, 0xff);
+
+    expect(cartridge.mirroringMode).toBe(NametableMirroring.FourScreen);
+  });
+
   it("rejects mapper subvariants whose hardware behavior is not modeled", () => {
     const cartridge = createTestCartridge({
       nes2: true,
@@ -648,6 +661,10 @@ describe("cartridge mappers", () => {
       { nes2: true, mapper: 152, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
     ],
     [
+      "Bandai mapper 152 with four-screen nametables",
+      { mapper: 152, prgBanks: 8, chrBanks: 8, fourScreen: true },
+    ],
+    [
       "Namco 118 with PRG RAM",
       { nes2: true, mapper: 206, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
     ],
@@ -701,6 +718,10 @@ describe("cartridge mappers", () => {
     [
       "Codemasters with an unmodeled submapper",
       { nes2: true, mapper: 71, submapper: 2, prgBanks: 4 },
+    ],
+    [
+      "Codemasters BF9097 with four-screen nametables",
+      { nes2: true, mapper: 71, submapper: 1, prgBanks: 4, fourScreen: true },
     ],
     ["FME-7 beyond its 512 KiB PRG capacity", { mapper: 69, prgBanks: 33, chrBanks: 1 }],
     [

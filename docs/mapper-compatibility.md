@@ -300,7 +300,8 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   register is intentionally absent because hardware pinout testing found no such register.
 - Mapper 71 (Codemasters/Camerica) switches a 16 KiB `$8000-$BFFF` bank from `$C000-$FFFF` with the
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
-  single-screen mirroring; submapper 0 keeps the header's fixed mirroring.
+  single-screen mirroring and rejects four-screen layouts; submapper 0 keeps the header's fixed
+  mirroring and may retain external four-screen memory.
 - Mapper 72 (Jaleco JF-17) applies ROM bus conflicts before treating D7 and D6 as independent
   rising-edge clocks for its 16 KiB PRG and 8 KiB CHR latches. Clock history is save-state data;
   geometry is fixed at 128 KiB PRG plus 128 KiB CHR ROM, and mirroring stays on solder pads. The
@@ -377,7 +378,8 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   expansion audio at `$C000-$FFFF` is not emulated, so the audio submapper stays out of scope.
 - Mappers 70 and 152 share the Bandai 74\*161/32 latch: a 16 KiB `$8000-$BFFF` bank with `$C000-$FFFF`
   fixed, an 8 KiB CHR bank and AND-type bus conflicts. Mapper 152 spends bit 7 on single-screen
-  mirroring, leaving a 3-bit PRG field; mapper 70 keeps mirroring hardwired and uses four PRG bits.
+  mirroring, leaving a 3-bit PRG field and making four-screen declarations invalid; mapper 70 keeps
+  mirroring hardwired, uses four PRG bits and may retain externally declared four-screen memory.
 - Mapper 87 (Jaleco/Konami) latches an 8 KiB CHR bank at `$6000-$7FFF` with its two select lines
   reversed (value bit 1 drives CHR line 0, value bit 0 drives CHR line 1); PRG ROM stays NROM-fixed
   and there are no bus conflicts.

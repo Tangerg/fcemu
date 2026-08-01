@@ -286,12 +286,15 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
       requireNoPrgRam(cartridge);
       return new Bandai74Mapper(cartridge, false);
-    case 71:
+    case 71: {
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x2000);
       requireWritableChrSize(cartridge, 0x2000);
       requireNoPrgRam(cartridge);
-      return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
+      const hasMirroringControl = requireCodemastersMirroring(cartridge);
+      if (hasMirroringControl) requireTwoScreenNametables(cartridge, "Codemasters BF9097");
+      return new CodemastersMapper(cartridge, hasMirroringControl);
+    }
     case 72:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x20_000], 0x20_000);
@@ -492,6 +495,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
       requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Bandai mapper 152");
       return new Bandai74Mapper(cartridge, true);
     case 180:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);

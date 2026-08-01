@@ -208,8 +208,8 @@ cross-checks the DMC reader request/address against the DMA arbiter. Version 16 
 optional VS UniSystem cabinet, timed coin contacts, counter output and protection-device position.
 Every executing aggregate exposes a typed snapshot with runtime validation. `Bus.restoreState()` is
 transactional: a nested failure rolls the entire machine back to the pre-restore snapshot. The CPU,
-PPU, APU, DMA and VRC mapper trees also validate every descendant before their first assignment, so
-their direct aggregate restorers cannot expose a partially applied child state.
+PPU, APU, DMA and composite mapper trees also validate every descendant before their first
+assignment, so their direct aggregate restorers cannot expose a partially applied child state.
 
 The UI runtime port deliberately carries save-state payloads as `unknown`. Its core adapter forwards
 that payload without asserting an internal type; `Emulator.restoreSaveState()` owns envelope

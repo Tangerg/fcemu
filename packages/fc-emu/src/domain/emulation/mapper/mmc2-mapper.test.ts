@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NametableMirroring } from "../../model/cartridge.js";
 import { createTestCartridge } from "../../../../test-support/rom.js";
+import type { MapperState } from "./mapper.js";
 import { Mmc2Mapper } from "./mmc2-mapper.js";
 
 function createMmc2Cartridge() {
@@ -83,5 +84,18 @@ describe("Mmc2Mapper", () => {
     mapper.powerOn();
     mapper.restoreState(state);
     expect(mapper.captureState()).toEqual(state);
+  });
+
+  it("rejects an invalid child latch before changing the mapper", () => {
+    const mapper = new Mmc2Mapper(createMmc2Cartridge());
+    mapper.write(0xa000, 0x02);
+    mapper.write(0xb000, 0x03);
+    mapper.observePpuRead(0x0fe8);
+    const before = mapper.captureState();
+
+    expect(() =>
+      mapper.restoreState({ ...before, prgBank: 6, chrBank0Fd: 0x40 } as MapperState),
+    ).toThrowError(/invalid bank register/i);
+    expect(mapper.captureState()).toEqual(before);
   });
 });

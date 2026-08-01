@@ -85,7 +85,7 @@ export class ChrLatchBanks {
     };
   }
 
-  restore(state: ChrLatchState): void {
+  validateState(state: ChrLatchState): void {
     for (const value of [state.chrBank0Fd, state.chrBank0Fe, state.chrBank1Fd, state.chrBank1Fe]) {
       if (!Number.isInteger(value) || value < 0 || value > CHR_BANK_MASK) {
         throw new RangeError("CHR latch save state contains an invalid bank register");
@@ -94,6 +94,10 @@ export class ChrLatchBanks {
     if (!areBooleans(state.latch0Fe, state.latch1Fe)) {
       throw new TypeError("CHR latch save state contains an invalid latch");
     }
+  }
+
+  restore(state: ChrLatchState): void {
+    this.validateState(state);
     this.chrBank0Fd = state.chrBank0Fd;
     this.chrBank0Fe = state.chrBank0Fe;
     this.chrBank1Fd = state.chrBank1Fd;

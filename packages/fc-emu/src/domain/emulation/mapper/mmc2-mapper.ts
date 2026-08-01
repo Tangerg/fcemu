@@ -52,6 +52,7 @@ export class Mmc2Mapper implements Mapper {
     if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
       throw new RangeError("MMC2 save state contains invalid mirroring");
     }
+    this.chr.validateState(state);
     this.prgBank = state.prgBank;
     this.chr.restore(state);
     this.cartridge.mirroringMode = state.mirroring as NametableMirroring;

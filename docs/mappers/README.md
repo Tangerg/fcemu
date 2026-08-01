@@ -831,6 +831,17 @@ bank at `$8000`, leaves the last bank fixed at `$C000`, and gates the direct 8 K
 When `$E000` bit 4 is set, the selected nametable pages no longer reach CIRAM: `$C000`/`$D000`
 choose 1 KiB banks from the final 128 KiB of CHR ROM and nametable writes are discarded. This uses
 the mapper's explicit nametable read/write capabilities rather than a CIRAM-index sentinel.
+
+Exact content metadata identifies USA _After Burner_ as the zero-WRAM
+[TGN-011-AB/800042-01 REV B board](https://nescartdb.com/profile/view/326/after-burner). Its pinned
+600-frame baseline and 2,400-frame input route cross the title and carrier launch into active air
+combat, producing 1,336 distinct frames. Visual, native-audio and CPU-cycle hashes plus a
+120-frame input-active save-state replay are fixed. Mapper checkpoints keep CHR-ROM nametables
+enabled while recording broad nametable/pattern-bank changes, both PRG banks used by the route and
+both observed mirroring modes. A separate trace found CHR-ROM nametables active on 2,395 of 2,400
+frames. The physical board has no WRAM, so the optional RAM-enable path remains focused-test
+evidence; a correctly identified _Maharaja_ image is the planned battery-WRAM supplement.
+
 Submapper 1's dual-cartridge licensing timer and external option ROM are rejected. See
 [NESdev mapper 68](https://www.nesdev.org/wiki/INES_Mapper_068).
 

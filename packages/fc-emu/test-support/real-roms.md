@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover forty-five files used during development:
+The current profiles cover forty-six files used during development:
 
 | Profile           | Expected file                                         | SHA-256                                                            | Mapper |
 | ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -41,6 +41,7 @@ The current profiles cover forty-five files used during development:
 | `skullcrossbones` | `Skull & Crossbones (U).nes`                          | `bbbeb7f12bf3e5afaed78008d817fdd1f1fd29622e0ada1a935946c9a656d120` | 64     |
 | `yanchamaru3`     | `Kaiketsu Yanchamaru 3 - Taiketsu! Zouringen (J).nes` | `462cec366e3bbbae173e317a658df9f28399a4f6bbf08a0b40c04467f113f2a4` | 65     |
 | `dragonpower`     | `Dragon Power (U).nes`                                | `1d7d68614efef2a71dccfa0e0bf66b674d84c740f1e94f1fbff90db9fff9f1d9` | 66     |
+| `afterburner`     | `After Burner (U).nes`                                | `c603a92e0895365d201e8aec7d4518f69e6edee1cd69d767d84160300da496a2` | 68     |
 | `batman`          | `Batman (J).nes`                                      | `39b3982742429e9226de6d1f3eb86adb94fa54e77f416a635fa58a8e7c832093` | 69     |
 | `esper-dream-2`   | `Esper Dream 2 - Aratanaru Tatakai (J).nes`           | `9dff8bc590cf73e9063575dd77707964c69f81573bb84ecd5c13aab874db1717` | 26     |
 | `shinchan`        | `Crayon Shin Chan (J).nes`                            | `4b33db75d9e755bb685695f7a07ce6bdd441c0901ee5c63301faa841ab90bfd5` | 16     |
@@ -90,6 +91,7 @@ yarn smoke:real-rom -- bible "/absolute/path/to/Bible Adventures (Ver 1_3) (U).n
 yarn smoke:real-rom -- skullcrossbones "/absolute/path/to/Skull & Crossbones (U).nes"
 yarn smoke:real-rom -- yanchamaru3 "/absolute/path/to/Kaiketsu Yanchamaru 3 - Taiketsu! Zouringen (J).nes"
 yarn smoke:real-rom -- dragonpower "/absolute/path/to/Dragon Power (U).nes"
+yarn smoke:real-rom -- afterburner "/absolute/path/to/After Burner (U).nes"
 yarn smoke:real-rom -- batman "/absolute/path/to/Batman (J).nes"
 yarn smoke:real-rom -- esper-dream-2 "/absolute/path/to/Esper Dream 2 - Aratanaru Tatakai (J).nes"
 yarn smoke:real-rom -- shinchan "/absolute/path/to/Crayon Shin Chan (J).nes"
@@ -165,7 +167,7 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 26, 64, 65, 66, 69, 85, 87, 97, 99, 112, 114, 115, 117,
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 26, 64, 65, 66, 68, 69, 85, 87, 97, 99, 112, 114, 115, 117,
 118, 119,
 133, 142, 163, 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M

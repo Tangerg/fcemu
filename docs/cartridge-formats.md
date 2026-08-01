@@ -101,6 +101,12 @@ _Kaiketsu Yanchamaru 3_ by PRG CRC `E30B7F64` and CHR CRC `AF5FD6B5`, removing t
 allocation from its zero-WRAM FC-00-017B H3001 board. Unknown legacy images retain the fallback;
 NES 2.0 must declare either no PRG memory or one exact 8 KiB RAM/NVRAM region.
 
+Mapper 68 also has an optional direct 8 KiB PRG RAM/NVRAM window. Exact content metadata identifies
+TGN-011-AB _After Burner_ by PRG CRC `B938B7E9` and CHR CRC `725A53DC`, removing iNES's generic
+allocation from its zero-WRAM 800042-01 REV B Sunsoft-4 board. Unknown legacy images retain the
+fallback; explicit NES 2.0 memory must fit the modeled 8 KiB window without mixing volatile and
+nonvolatile regions.
+
 Mapper 69 can expose an optional directly addressed PRG RAM/NVRAM region through command `$8`.
 Exact content metadata identifies Japanese _Batman_ by PRG CRC `094AFAB5` and CHR CRC `F3B41C18`,
 removing iNES's generic allocation from its zero-WRAM BAT-E301 Sunsoft-5A board. Unknown legacy

@@ -77,7 +77,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     65 | Irem H3001         | _Kaiketsu Yanchamaru 3_ (Japan, pinned IF-28 profile)                  | _Daiku no Gen-san 2_ for swapped PRG mode and active IRQ                          | PRG mode, RAM, mirroring and cycle IRQ                           |
 |     66 | GxROM/MHROM        | _Dragon Power_ (USA, pinned NES-GN-ROM-03 profile)                     | _Super Mario Bros. / Duck Hunt_ (USA, MHROM)                                      | Combined 32 KiB PRG and 8 KiB CHR selection                      |
 |     67 | Sunsoft-3          | _Mito Koumon II: Sekai Manyuu Ki_ (Japan)                              | _Fantasy Zone II_ (Japan)                                                         | 2 KiB CHR windows, four-way mirroring and one-shot cycle IRQ     |
-|     68 | Sunsoft-4          | _After Burner_ (USA)                                                   | _Nantettatte!! Baseball_ (Japan)                                                  | CHR-backed nametables, RAM and mirroring                         |
+|     68 | Sunsoft-4          | _After Burner_ (USA, pinned TGN-011-AB profile)                        | _Maharaja_ (Japan) for battery WRAM                                               | CHR-backed nametables, RAM and mirroring                         |
 |     69 | Sunsoft FME-7      | _Batman_ (Japan, pinned BAT-E301 profile)                              | _Batman: Return of the Joker_ (USA) for WRAM; _Gimmick!_ for future 5B audio      | Command/data banking, RAM window and decrementing IRQ            |
 |     70 | Bandai 74xx        | _Kamen Rider Club_ (Japan)                                             | —                                                                                 | Conflicted PRG/CHR latch with hard-wired mirroring               |
 |     71 | Codemasters        | _Fire Hawk_ (USA)                                                      | _Micro Machines_ for fixed-mirroring wiring                                       | Controlled one-screen submapper, PRG switching and timing        |
@@ -153,6 +153,11 @@ the same ID covers materially different hardware that the primary image cannot e
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,
   so its audio must not be accepted as a passing baseline yet.
+- Mapper 68 now has a pinned USA _After Burner_ TGN-011-AB profile. Its zero-WRAM 800042-01 REV B
+  board uses CHR-ROM nametables continuously across the title, carrier launch and active air combat;
+  retain a correctly identified _Maharaja_ image for the optional battery-WRAM path. _Nantettatte!!
+  Baseball_ is not a normal alternate: mapper 68.1 describes a dual-cartridge adapter with an
+  external option ROM and licensing timer that the accepted cartridge format cannot represent.
 - The local _Urusei Yatsura: Lum no Wedding Bell_ image is not Mapper 86 evidence. It declares an
   impossible 32 KiB PRG/32 KiB CHR JF-13 layout; the title is a JF-10/J87 board. Keep it rejected
   and obtain a canonical 128 KiB PRG/64 KiB CHR _Moero!! Pro Yakyuu_ image instead. The local

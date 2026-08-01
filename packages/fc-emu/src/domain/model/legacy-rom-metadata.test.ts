@@ -95,6 +95,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ mirroringMode: 1, prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact After Burner 800042 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 68,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x40_000,
+        prgCrc32: 0xb938b7e9,
+        chrCrc32: 0x725a53dc,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("identifies the exact The Lord of King JF-25 memory layout", () => {
     expect(
       findLegacyRomMetadata({

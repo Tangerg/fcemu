@@ -45,7 +45,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 65     | Irem H3001     | Verified    | Tests; pinned _Kaiketsu Yanchamaru 3_ gameplay runner              |
 | 66     | GxROM/MHROM    | Verified    | Tests; pinned _Dragon Power_ GNROM gameplay runner                 |
 | 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
-| 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM                |
+| 68     | Sunsoft-4      | Verified    | Tests; pinned _After Burner_ CHR-nametable gameplay runner         |
 | 69     | Sunsoft FME-7  | Verified    | Tests; pinned _Batman_ BAT-E301 gameplay/IRQ; no 5B audio          |
 | 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                       |
@@ -502,6 +502,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 68 (Sunsoft-4) exposes four 2 KiB CHR banks, one switchable and one fixed 16 KiB PRG bank,
   four-way mirroring and an enabled 8 KiB PRG-RAM window. It can replace either mirrored nametable
   page with one of the final 128 1 KiB CHR-ROM banks; writes to ROM-backed nametables are ignored.
+  Exact content metadata identifies USA _After Burner_ as the zero-WRAM TGN-011-AB/800042-01 REV B
+  board. Its pinned 600-frame baseline and 2,400-frame controller route enter active air combat,
+  produce 1,336 distinct frames and preserve exact visual, audio, CPU-cycle and save-state replay
+  results. Mapper checkpoints show CHR-ROM nametables active from the title through gameplay while
+  both nametable banks, all four pattern banks, the switchable PRG bank and mirroring change.
   The dual-cartridge/licensing-timer submapper remains rejected because its external option ROM
   cannot be represented by the accepted cartridge format.
 - Mapper 79 (AVE NINA-03/NINA-06) decodes its latch only at `$4100-$5FFF` addresses matching

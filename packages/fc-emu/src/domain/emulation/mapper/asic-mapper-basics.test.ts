@@ -99,6 +99,51 @@ describe("basic ASIC mappers", () => {
     expect(memory.read(0x2012)).toBe(0x52);
   });
 
+  it.each([
+    { register: 0, mirroring: NametableMirroring.Vertical, pages: [0, 1, 0, 1] },
+    { register: 1, mirroring: NametableMirroring.Horizontal, pages: [0, 0, 1, 1] },
+    { register: 2, mirroring: NametableMirroring.SingleScreenLower, pages: [0, 0, 0, 0] },
+    { register: 3, mirroring: NametableMirroring.SingleScreenUpper, pages: [1, 1, 1, 1] },
+  ])(
+    "maps Sunsoft-4 register $register to mirroring $mirroring",
+    ({ register, mirroring, pages }) => {
+      const cartridge = createTestCartridge({ mapper: 68, prgBanks: 8, chrBanks: 32 });
+      const mapper = createMapper(cartridge, interruptPort);
+      mapper.powerOn();
+
+      mapper.write(0xe000, register);
+
+      expect(cartridge.mirroringMode).toBe(mirroring);
+      expect(
+        [0x2000, 0x2400, 0x2800, 0x2c00].map((address) => mapper.mapNametableAddress?.(address)),
+      ).toEqual(pages.map((page) => page * 0x0400));
+    },
+  );
+
+  it("round-trips the complete Sunsoft-4 banking, nametable and RAM state", () => {
+    const cartridge = createTestCartridge({ mapper: 68, prgBanks: 8, chrBanks: 32 });
+    fillBanks(cartridge.prgRom, 0x4000);
+    fillBanks(cartridge.chrRom, 0x0800);
+    const mapper = createMapper(cartridge, interruptPort);
+    mapper.powerOn();
+
+    for (let slot = 0; slot < 4; slot++) mapper.write(0x8000 + slot * 0x1000, 0x21 + slot);
+    mapper.write(0xc000, 0x12);
+    mapper.write(0xd000, 0x34);
+    mapper.write(0xe000, 0x13);
+    mapper.write(0xf000, 0x15);
+    mapper.write(0x6000, 0xa5);
+    const state = mapper.captureState();
+
+    mapper.powerOn();
+    mapper.restoreState(state);
+
+    expect(mapper.captureState()).toEqual(state);
+    expect(readAt(mapper, [0x0000, 0x0800, 0x1000, 0x1800])).toEqual([0x21, 0x22, 0x23, 0x24]);
+    expect(readAt(mapper, [0x6000, 0x8000])).toEqual([0xa5, 5]);
+    expect(mapper.readNametable?.(0x2012)).toBe(cartridge.chrRom[(0x80 | 0x34) * 0x0400 + 0x12]);
+  });
+
   it("delivers Mapper 79 writes only through the decoded CPU expansion addresses", () => {
     const cartridge = createTestCartridge({ mapper: 79, prgBanks: 4, chrBanks: 8 });
     fillBanks(cartridge.prgRom, 0x8000);
@@ -572,12 +617,16 @@ describe("basic ASIC mappers", () => {
     const state = mapper.captureState();
     if (state.kind !== "sunsoft-4") throw new Error("Expected Sunsoft-4 state");
 
-    expect(() =>
-      mapper.restoreState({ ...state, nametableBanks: [0x80, 0] } as MapperState),
-    ).toThrowError(RangeError);
-    expect(() =>
-      mapper.restoreState({ ...state, useChrNametables: 1 } as unknown as MapperState),
-    ).toThrowError(RangeError);
+    const invalidStates = [
+      { ...state, nametableBanks: [0x80, 0] },
+      { ...state, useChrNametables: 1 },
+      { ...state, prgBank: 8 },
+      { ...state, mirroring: NametableMirroring.FourScreen },
+    ];
+    for (const invalidState of invalidStates) {
+      expect(() => mapper.restoreState(invalidState as MapperState)).toThrowError(RangeError);
+      expect(mapper.captureState()).toEqual(state);
+    }
 
     const majorLeague = createMapper(
       createTestCartridge({

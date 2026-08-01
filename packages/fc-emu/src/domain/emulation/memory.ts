@@ -280,15 +280,21 @@ export class PPUMemory {
       }
     } else if (address < 0x3f00) {
       // 0x2000-0x3EFF: nametables (VRAM).
-      const cartridgeValue = mapper.readNametable?.(address, context);
-      if (cartridgeValue !== undefined) {
-        value = cartridgeValue;
+      const cartridgeBus = mapper.readNametableBus?.(address, context);
+      if (cartridgeBus !== undefined) {
+        const drivenMask = cartridgeBus.drivenMask & 0xff;
+        value = (cartridgeBus.value & drivenMask & 0xff) | (address & 0xff & (~drivenMask & 0xff));
       } else {
-        const mode = this.bus.Cartridge.mirroringMode;
-        const mirroredAddr =
-          mapper.mapNametableAddress?.(address, context) ??
-          PPUMemory.mirrorAddress(mode, address) - 0x2000;
-        value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
+        const cartridgeValue = mapper.readNametable?.(address, context);
+        if (cartridgeValue !== undefined) {
+          value = cartridgeValue;
+        } else {
+          const mode = this.bus.Cartridge.mirroringMode;
+          const mirroredAddr =
+            mapper.mapNametableAddress?.(address, context) ??
+            PPUMemory.mirrorAddress(mode, address) - 0x2000;
+          value = this.bus.PPU.nameTableData[mirroredAddr] ?? 0;
+        }
       }
     } else {
       // 0x3F00-0x3FFF: palette RAM.

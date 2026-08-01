@@ -166,7 +166,10 @@ Before applying fixed header mirroring, nametable reads and writes ask the mappe
 CHR bank output to CIRAM A10: routing is selected per nametable slot and can change with CHR banking,
 so reducing it to one mutable horizontal/vertical enum would lose hardware state. Separate optional
 `readNametable`/`writeNametable` capabilities let Sunsoft-4 replace CIRAM with read-only CHR ROM
-without encoding memory ownership in an address sentinel.
+without encoding memory ownership in an address sentinel. `readNametableBus` additionally carries
+a value and drive mask when a cartridge owns the range or deliberately leaves it undriven. LROG017
+uses this to keep cartridge RAM at `$2000-$27FF`, CIRAM at `$2800-$2FFF` and open bus at
+`$3000-$3EFF` distinct instead of accepting the PPU memory map's ordinary mirror fallback.
 
 Before a pattern-table access reaches CHR, `mapPatternToCiramAddress` can instead route it to one
 of the console's two CIRAM pages. Namco 163 uses this narrow capability independently for each

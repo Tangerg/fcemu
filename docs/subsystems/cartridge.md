@@ -74,7 +74,7 @@ and 7; the remaining fields diverge by format.
 | `chrRomSize` (bytes)     | `byte5 * 8192`                                                          | `decodeRomSize(byte5, byte9 >> 4, 8192)`      |
 | `prgRamSize` (bytes)     | `hasBatteryFlag ? 0 : legacy`                                           | `decodeRamSize(byte10 & 0x0F)`                |
 | `prgNvRamSize` (bytes)   | `hasBatteryFlag ? legacy : 0`                                           | `decodeRamSize(byte10 >> 4)`                  |
-| `chrRamSize` (bytes)     | 8 KiB without CHR ROM or when mapper 119 implies TQROM RAM              | `decodeRamSize(byte11 & 0x0F)`                |
+| `chrRamSize` (bytes)     | 8 KiB default; mapper 77/96/119 board policy may replace or add memory  | `decodeRamSize(byte11 & 0x0F)`                |
 | `chrNvRamSize` (bytes)   | `0`                                                                     | `decodeRamSize(byte11 >> 4)`                  |
 | `timingMode`             | `byte9 & 1` (NTSC/PAL)                                                  | `byte12 & 0x03` (NTSC/PAL/multi-region/Dendy) |
 | `miscellaneousRomCount`  | `0`                                                                     | `byte14 & 0x03`                               |
@@ -82,7 +82,9 @@ and 7; the remaining fields diverge by format.
 
 `legacy` for iNES is `(byte8 || 1) * 8192`, so a zero PRG-RAM byte still yields one 8 KiB unit, and
 the battery flag routes that entire legacy window to NVRAM rather than volatile RAM. iNES with no CHR
-ROM implies exactly 8 KiB of volatile CHR RAM.
+ROM implies exactly 8 KiB of volatile CHR RAM unless mapper 96 supplies its physical 32 KiB chip.
+Mapper 77 adds 8 KiB of board-implied RAM beside CHR ROM, and mapper 119 similarly implies TQROM's
+8 KiB RAM.
 
 `mirroringMode` is a `NametableMirroring` enum (`Horizontal`, `Vertical`, `SingleScreenLower`,
 `SingleScreenUpper`, `FourScreen`); the header only ever decodes Horizontal, Vertical, or FourScreen,
@@ -130,7 +132,7 @@ parser; the rationale and the exact accepted matrix live in
 | Battery flag with no supported PRG/CHR or mapper-owned NVRAM              | `UNSUPPORTED_BATTERY_MEMORY`   | `validateSupportedHeader` |
 | No CHR ROM and no CHR RAM/NVRAM                                           | `MISSING_CHR_MEMORY`           | `validateSupportedHeader` |
 | Simultaneous CHR RAM and CHR NVRAM                                        | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
-| CHR ROM together with writable CHR outside mapper 19/119 policy           | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
+| CHR ROM together with writable CHR outside mapper 19/77/119 policy        | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 | Trainer present with < 8 KiB combined PRG RAM window                      | `UNSUPPORTED_RAM_LAYOUT`       | `validateSupportedHeader` |
 
 The console/expansion checks accept standard NES/Famicom images (`consoleType === 0`) with
@@ -178,7 +180,7 @@ address a single flat index per space; the memory object decides which physical 
   otherwise it reads the combined CHR RAM + CHR NVRAM space. `writeChr(index, value)` is a no-op when
   CHR ROM is present and otherwise writes the CHR memory space, so CHR ROM is never mutated.
 - `readWritableChr(index)` / `writeWritableChr(index, value)` explicitly address writable CHR when
-  a board such as Namco 163 or TQROM owns CHR ROM and RAM simultaneously.
+  a board such as Namco 163, LROG017 or TQROM owns CHR ROM and RAM simultaneously.
 - `readMapperRam(index)` / `writeMapperRam(index, value)` address mapper-owned memory without
   pretending that it lives in the CPU PRG window.
 - `prgWritableBytes` reports `prgAddressSpaceBytes` (PRG RAM + PRG NVRAM).

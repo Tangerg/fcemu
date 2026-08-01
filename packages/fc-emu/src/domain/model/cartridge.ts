@@ -286,7 +286,7 @@ class Cartridge {
     } else if (
       header.chrRamSize + header.chrNvRamSize > 0 &&
       !(
-        [19, 119].includes(header.mapperNumber) &&
+        [19, 77, 119].includes(header.mapperNumber) &&
         header.chrRamSize > 0 &&
         header.chrNvRamSize === 0
       )

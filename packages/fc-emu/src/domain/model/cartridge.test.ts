@@ -254,6 +254,23 @@ describe("Cartridge", () => {
     expect(cartridge.readWritableChr(0x10)).toBe(0x42);
   });
 
+  it("adds LROG017's board-implied 8 KiB CHR RAM to legacy CHR ROM", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 77, prgBanks: 8, chrBanks: 4, fourScreen: true }),
+    );
+    cartridge.chrRom[0x10] = 0x31;
+    cartridge.writeWritableChr(0x10, 0x42);
+
+    expect(cartridge).toMatchObject({
+      chrRom: expect.objectContaining({ length: 0x8000 }),
+      chrRamBytes: 0x2000,
+      chrWritableBytes: 0x2000,
+      hasWritableChrMemory: true,
+    });
+    expect(cartridge.readChr(0x10)).toBe(0x31);
+    expect(cartridge.readWritableChr(0x10)).toBe(0x42);
+  });
+
   it.each([
     { mapper: 16, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x100 },
     { mapper: 80, battery: false, prgRamBytes: 0x80, prgNvRamBytes: 0 },
@@ -339,7 +356,7 @@ describe("Cartridge", () => {
     expect(cartridge.readMapperRam(0x12)).toBe(0);
   });
 
-  it("keeps mixed CHR ROM/RAM fail-closed outside TQROM", () => {
+  it("keeps mixed CHR ROM/RAM fail-closed outside modeled board families", () => {
     expect(() =>
       Cartridge.fromArrayBuffer(
         createTestRom({ mapper: 4, nes2: true, chrBanks: 1, chrRamShift: 7 }),

@@ -29,6 +29,7 @@ to the rest of core.
 | `mapPatternToCiramAddress(a)`  | Optional per-access pattern-page routing into the console's 2 KiB CIRAM.                 |
 | `mapNametableAddress(addr)`    | Optional direct CIRAM/nametable-memory routing for cartridge-controlled wiring.          |
 | `readNametable(address)`       | Optional cartridge-driven nametable byte, such as Sunsoft-4 CHR ROM.                     |
+| `readNametableBus(address)`    | Optional value/drive mask for cartridge-owned or undriven nametable ranges.              |
 | `writeNametable(addr, v)`      | Optionally consumes a cartridge-owned nametable write.                                   |
 | `observePpuAddress(address)`   | Optional PPU address-line snoop for boards such as MMC3.                                 |
 | `observePpuRead(address)`      | Optional completed-read event for read-triggered MMC2/MMC4 CHR latches.                  |
@@ -55,8 +56,10 @@ current address low byte on undriven multiplexed PPU pins instead of asking a ma
 bus. `mapPatternToCiramAddress` models boards such as Namco 163 that replace a selected 1 KiB CHR
 page with CIRAM, while `mapNametableAddress` keeps per-access nametable wiring distinct from fixed
 header mirroring. `readNametable`/`writeNametable` separately model memory that replaces CIRAM
-entirely, so ROM ownership is not hidden in a magic address value. Expansion-range reads return
-their value and drive mask together; an absent result remains normal CPU open bus.
+entirely, so ROM ownership is not hidden in a magic address value. `readNametableBus` additionally
+keeps cartridge RAM, CIRAM and electrically undriven nametable ranges distinct on boards such as
+LROG017. Expansion-range reads return their value and drive mask together; an absent result remains
+normal CPU open bus.
 
 IRQ-generating boards depend only on the narrow `MapperInterruptPort` (`setMapperIrq(asserted)`), not
 on the full bus. The bus arbitrates the mapper's level-sensitive IRQ line alongside the APU frame IRQ,
@@ -142,6 +145,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 73  | Konami VRC3    | `vrc3`                    | `vrc3-mapper.ts`             | no            | cyc. |
 | 75  | Konami VRC1    | `vrc1`                    | `vrc1-mapper.ts`             | no            | no   |
 | 76  | Namco 3446     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
+| 77  | Irem LROG017   | `irem-lrog017`            | `irem-lrog017-mapper.ts`     | AND           | no   |
 | 78  | Irem 74HC161   | `irem-78`                 | `irem78-mapper.ts`           | AND           | no   |
 | 79  | NINA-03/06     | `nina-03-06`              | `nina0306-mapper.ts`         | no            | no   |
 | 80  | Taito X1-005   | `taito-x1-005`            | `taito-x1-005-mapper.ts`     | no            | no   |
@@ -682,6 +686,21 @@ CHR as four 2 KiB windows selected by R2-R5. R0/R1 are physically inaccessible f
 The board reaches 128 KiB CHR ROM with no IRQ, PRG RAM, mirroring register or bus conflicts. See the
 [Namco 108 family reference](https://www.nesdev.org/wiki/INES_Mapper_206) and
 [pinout](https://www.nesdev.org/wiki/Namcot_108_family_pinout).
+
+## Irem LROG017 (77)
+
+This singleton board for _Napoleon Senki_ maps one of four 32 KiB PRG banks at `$8000-$FFFF` and
+one of sixteen 2 KiB CHR-ROM banks at `$0000-$07FF`. An AND-conflicted latch uses D3-D0 for PRG and
+D7-D4 for CHR. The remaining pattern range `$0800-$1FFF` is three fixed 2 KiB windows into an 8 KiB
+cartridge RAM chip; the chip's fourth window owns nametable `$2000-$27FF`.
+
+The board's nametable circuit is not represented as generic four-screen mirroring. `$2800-$2FFF`
+routes to the console's two CIRAM pages, while `$3000-$3EFF` is electrically undriven and ignores
+writes. The mapper therefore reports a value/drive mask for cartridge-owned nametable reads and a
+direct CIRAM route for the remaining two pages. Legacy iNES implies the otherwise-unrepresentable
+8 KiB mixed CHR RAM; NES 2.0 must declare it explicitly. Geometry is fixed at 128 KiB PRG and
+32 KiB CHR ROM, with no PRG RAM or IRQ. See
+[NESdev mapper 77](https://www.nesdev.org/wiki/INES_Mapper_077).
 
 ## Irem 74HC161/32 (78)
 

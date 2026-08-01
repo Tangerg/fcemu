@@ -104,7 +104,8 @@ must name the chip, signal or bus phase it represents and cite evidence at the s
   Namco 3425 and TxSROM therefore select nametable memory per PPU address slot through current bank
   registers. Namco 163 can additionally replace individual pattern-table banks with either CIRAM
   page. Sunsoft-4 can instead disable CIRAM and drive nametable reads from CHR ROM. TQROM separately
-  uses CHR bank bit 6 as ROM/RAM chip select.
+  uses CHR bank bit 6 as ROM/RAM chip select. Irem LROG017 splits nametable ownership among
+  cartridge RAM, CIRAM and an undriven range, so its bus response includes an explicit drive mask.
 - MMC5 selects CHR and nametable data from the semantic owner of each physical PPU fetch: background
   nametable/attribute/pattern, sprite nametable/pattern, or unspecialized PPUDATA. The PPU therefore
   attaches a narrow fetch context to memory reads; it does not call mapper-specific scanline hooks.

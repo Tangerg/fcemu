@@ -14,7 +14,7 @@ execution.
 | Timing              | NTSC or PAL                                        | NTSC, PAL, multi-region or Dendy         |
 | Console             | Standard NES/Famicom; legacy mapper-99 VS identity | Standard NES/Famicom or VS UniSystem     |
 | PRG writable memory | Direct or board-implied internal memory            | Direct, MMC1-banked or board-implied     |
-| CHR writable memory | Implicit 8 KiB; mapper 96/119 sizes board-implied  | Explicit CHR RAM or CHR NVRAM            |
+| CHR writable memory | Implicit 8 KiB; mapper 77/96/119 board-implied     | Explicit CHR RAM or CHR NVRAM            |
 | Trainer             | Default `$7000`; mapper-owned loader exceptions    | Default plus mapper/submapper exceptions |
 | Miscellaneous ROMs  | Not encoded                                        | None                                     |
 | Default expansion   | Legacy/default                                     | Standard or VS controller port identity  |
@@ -23,11 +23,12 @@ The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes neve
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
 MMC1 SOROM/SZROM may combine one 8 KiB volatile PRG region with one 8 KiB battery region; SUROM,
 SOROM, SXROM and SZROM bank selection follows the board wiring rather than concatenating capacities
-into the direct `$6000-$7FFF` window. Two implemented ASICs define mixed CHR explicitly: mapper 119
-TQROM selects 16–64 KiB CHR ROM or 8 KiB volatile CHR RAM per 1 KiB bank, while mapper 19 Namco 163
-uses `$00-$DF` for ROM and `$E0-$FF` for up to 32 KiB RAM when CIRAM substitution is disabled.
+into the direct `$6000-$7FFF` window. Three implemented boards define mixed CHR explicitly: mapper
+119 TQROM selects 16–64 KiB CHR ROM or 8 KiB volatile CHR RAM per 1 KiB bank; mapper 19 Namco 163
+uses `$00-$DF` for ROM and `$E0-$FF` for up to 32 KiB RAM when CIRAM substitution is disabled; and
+mapper 77 LROG017 places fixed cartridge RAM beside one banked 2 KiB CHR-ROM window.
 Other simultaneous CHR RAM/NVRAM, CHR ROM plus writable CHR memory, and mapper-internal battery
-memory remain rejected unless an implemented ASIC defines the exact capacity and protection rules.
+memory remain rejected unless an implemented board defines the exact capacity and protection rules.
 
 Taito X1 memory is a deliberate board-derived exception to the header's power-of-two units.
 Mapper 80 normalizes legacy iNES's generic 8 KiB RAM implication to the X1-005's 128 internal bytes;
@@ -39,6 +40,10 @@ requires the battery flag.
 Mapper 96 similarly overrides legacy iNES's zero-CHR default with the Oeka Kids board's physical
 32 KiB volatile CHR RAM. NES 2.0 images must declare the same 32 KiB capacity explicitly; CHR ROM,
 CHR NVRAM and other writable sizes are rejected by board creation.
+
+Mapper 77's legacy image already carries CHR ROM, so iNES cannot declare its additional 8 KiB
+volatile cartridge RAM. Format policy supplies that physical chip; NES 2.0 must declare it. Board
+creation also requires the singleton's 128 KiB PRG, 32 KiB CHR ROM and four-screen flag.
 
 Mapper 6/8/17 images are extracted FFE copier-card memory, so their PRG/CHR payload initializes
 mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.

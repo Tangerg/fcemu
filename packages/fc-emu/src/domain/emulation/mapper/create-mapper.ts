@@ -25,6 +25,7 @@ import { HesNtd8Mapper } from "./hes-ntd8-mapper.js";
 import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
 import { IremG101Mapper, type IremG101Board } from "./irem-g101-mapper.js";
 import { IremH3001Mapper } from "./irem-h3001-mapper.js";
+import { IremLrog017Mapper } from "./irem-lrog017-mapper.js";
 import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
 import { JalecoJf17Mapper } from "./jaleco-jf17-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
@@ -314,6 +315,10 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Namco 3446");
       requireNoPrgRam(cartridge);
       return new Namco118Mapper(cartridge, MAPPER_76_BOARD);
+    case 77:
+      requireBaseSubmapper(cartridge);
+      requireIremLrog017Layout(cartridge);
+      return new IremLrog017Mapper(cartridge);
     case 78:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
@@ -861,6 +866,22 @@ function requireTqromLayout(cartridge: Cartridge): void {
   }
   if (cartridge.chrWritableBytes !== 0x2000 || cartridge.chrNvRamBytes !== 0) {
     throw configurationError(cartridge, "TQROM requires 8 KiB of volatile CHR RAM");
+  }
+}
+
+function requireIremLrog017Layout(cartridge: Cartridge): void {
+  if (cartridge.prgRom.byteLength !== 0x20_000) {
+    throw configurationError(cartridge, "Irem LROG017 PRG ROM must be 128 KiB");
+  }
+  if (cartridge.chrRom.byteLength !== 0x8000) {
+    throw configurationError(cartridge, "Irem LROG017 CHR ROM must be 32 KiB");
+  }
+  if (cartridge.chrRamBytes !== 0x2000 || cartridge.chrNvRamBytes !== 0) {
+    throw configurationError(cartridge, "Irem LROG017 requires 8 KiB of volatile CHR RAM");
+  }
+  requireNoBatteryPrgRam(cartridge, "Irem LROG017 mapper 77");
+  if (cartridge.mirroringMode !== NametableMirroring.FourScreen) {
+    throw configurationError(cartridge, "Irem LROG017 requires four-screen nametable wiring");
   }
 }
 

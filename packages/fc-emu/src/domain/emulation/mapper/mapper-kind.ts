@@ -46,6 +46,7 @@ export const MapperKind = {
   NtdecAsder: "ntdec-asder",
   OekaKids: "oeka-kids",
   JalecoJf17: "jaleco-jf17",
+  IremLrog017: "irem-lrog017",
   IremTamS1: "irem-tam-s1",
   Irem78: "irem-78",
   Vrc1: "vrc1",

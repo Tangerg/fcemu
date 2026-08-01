@@ -514,6 +514,11 @@ export type MapperState =
       readonly chrClockHigh: boolean;
     }
   | {
+      readonly kind: "irem-lrog017";
+      readonly prgBank: number;
+      readonly chrRomBank: number;
+    }
+  | {
       readonly kind: "irem-tam-s1";
       readonly prgBank: number;
       readonly mirroring: number;
@@ -701,6 +706,15 @@ export interface Mapper {
    * address sentinel.
    */
   readNametable?(address: number, context?: PpuFetchContext): number | undefined;
+
+  /**
+   * Optional cartridge-owned nametable bus response, including electrically
+   * undriven ranges that must not fall through to console CIRAM.
+   */
+  readNametableBus?(
+    address: number,
+    context?: PpuFetchContext,
+  ): { readonly value: number; readonly drivenMask: number } | undefined;
 
   /**
    * Optional cartridge-owned nametable write.

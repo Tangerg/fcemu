@@ -50,6 +50,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
 | 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM            |
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
+| 77     | Irem LROG017   | Implemented | Mixed-CHR/nametable/open-bus/state tests; one local replay smoke   |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
 | 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM        |
 | 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture           |
@@ -84,7 +85,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/72/73/75/76/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -315,6 +316,11 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 76 rewires the Namco 108 family to four 2 KiB CHR-ROM windows selected through R2-R5;
   R0/R1 are inaccessible. Its two switchable and two fixed 8 KiB PRG windows remain unchanged, with
   no IRQ, PRG RAM, mirroring register or bus conflicts.
+- Mapper 77 (Irem LROG017) keeps one banked 2 KiB CHR-ROM window beside three fixed cartridge-RAM
+  pattern windows. The RAM's fourth window owns `$2000-$27FF`, `$2800-$2FFF` reaches CIRAM, and
+  `$3000-$3EFF` remains open bus; those owners are modeled explicitly rather than flattened into a
+  four-screen array. Its joint PRG/CHR latch applies AND conflicts. The user-local _Napoleon Senki_
+  image completed 240 frames with deterministic 60-frame save-state replay.
 - Mapper 78 combines UNROM-style 16 KiB PRG and CNROM-style 8 KiB CHR switching with AND bus
   conflicts. Register bit 3 selects lower/upper one-screen mirroring on Cosmo Carrier hardware but
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical

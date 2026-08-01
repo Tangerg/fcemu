@@ -34,6 +34,7 @@ const TAITO_X1_017_RAM_SIZE = 0x1400;
 const BANDAI_24C02_NVRAM_SIZE = 0x100;
 const FFE_MAGIC_CARD_WRAM_SIZE = 0x8000;
 const OEKA_KIDS_CHR_RAM_SIZE = 0x8000;
+const LROG017_CHR_RAM_SIZE = 0x2000;
 const SIGNATURE = [0x4e, 0x45, 0x53, 0x1a] as const;
 
 /** Immutable interpretation of an iNES or NES 2.0 header. */
@@ -131,6 +132,13 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
  * supports it; capacity comes from the selected physical memory chip.
  */
 function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
+  if (header.mapperNumber === 77 && header.format === "ines" && header.chrRomSize > 0) {
+    return Object.freeze({
+      ...header,
+      chrRamSize: LROG017_CHR_RAM_SIZE,
+      chrNvRamSize: 0,
+    });
+  }
   if (header.mapperNumber === 96 && header.format === "ines" && header.chrRomSize === 0) {
     return Object.freeze({
       ...header,

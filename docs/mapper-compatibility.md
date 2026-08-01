@@ -76,7 +76,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
 | 114    | SuperGame MMC3 | Implemented | Two variants/outer banks/MMC3A/state tests; one local replay smoke |
 | 115    | Kasheng MMC3   | Implemented | Outer banks/pads/MMC3C/state tests; two local replay smokes        |
-| 117    | Future Media   | Implemented | Exact banks/filtered-A12/one-shot IRQ/state tests; local replay    |
+| 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
 | 133    | Sachen SA72008 | Implemented | Expansion decode/banking/open-bus/state tests; local legacy smoke  |
@@ -452,9 +452,10 @@ and `$6000.D6` supplying PRG A18.
   contract. Current puNES instead describes incompatible `$6000` ROM banking, fixed upper PRG and
   selectable CPU/A12 IRQ modes; no NES 2.0 submapper or published hardware trace distinguishes that
   variant, so the base mapper deliberately does not combine it with the independently corroborated
-  board. A user-local _San Guo Zhi IV_ image completed non-halted deterministic replay and exercised
-  every documented register family; its bytes remain outside the repository, so status stays
-  `Implemented`.
+  board. The pinned _San Guo Zhi IV_ profile checks 1,320 frames of visual, audio, CPU-cycle and input
+  output plus an identical 120-frame save-state replay. A separate register trace exercised the
+  first three PRG slots, all eight CHR slots, mirroring and the complete IRQ register family; the
+  fourth PRG slot remains focused-test evidence.
 - Mapper 248 is NESdev's duplicate assignment for the same Kasheng hardware, not a second guessed
   register model. The factory preserves mapper 248 in cartridge metadata while both IDs share one
   board entity, validation policy and save-state shape. One local 256 KiB PRG + 256 KiB CHR

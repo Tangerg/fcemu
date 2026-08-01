@@ -1201,10 +1201,10 @@ Three maintained implementations independently corroborate this contract:
 [Nestopia](https://github.com/0ldsk00l/nestopia/blob/a0079a045b6ad87410ed7c4192977314bb86e222/source/core/board/NstBoardFutureMedia.cpp).
 Current puNES describes a wider, incompatible register model, but no assigned submapper or published
 hardware evidence identifies it as the base board. The factory therefore accepts only the shared
-Future Media geometry and fails closed on variants instead of blending both behaviors. A user-local
-_San Guo Zhi IV: Chi Bi Feng Yun_ image exercises the three software-used PRG windows, all CHR
-registers, mirroring and both IRQ gates through deterministic replay; its bytes are not a repository
-fixture.
+Future Media geometry and fails closed on variants instead of blending both behaviors. The
+checksum-pinned _San Guo Zhi IV: Chi Bi Feng Yun_ profile exercises the three software-used PRG
+windows, all CHR registers, mirroring and both IRQ gates through 1,320 input-driven frames and a
+deterministic 120-frame save-state replay.
 
 ## TxSROM and TQROM (118, 119)
 
@@ -1212,7 +1212,11 @@ Both boards reuse the complete revision-B MMC3 banking and filtered-A12 IRQ stat
 
 TxSROM connects CHR A17 to CIRAM A10 instead of using MMC3's mirroring output. Depending on CHR mode,
 R0/R1 select nametables in two 2 KiB pairs or R2-R5 select all four 1 KiB slots independently;
-`$A000` mirroring writes have no effect. See
+`$A000` mirroring writes have no effect. The checksum-pinned 128 KiB PRG + 128 KiB CHR _Pro Sport
+Hockey_ profile runs 2,520 input-driven frames from title into active play with 661 distinct frames,
+exact visual/audio/CPU-cycle checkpoints and a deterministic 120-frame save-state replay. Its trace
+reaches 63 MMC3 register sets, both CHR modes, IRQ enable and both uniform CIRAM pages; mixed
+per-slot CIRAM layouts remain covered by focused board tests. See
 [NESdev mapper 118](https://www.nesdev.org/wiki/INES_Mapper_118).
 
 TQROM keeps standard MMC3 mirroring but connects CHR A16 to chip enable: bank values with bit 6 clear

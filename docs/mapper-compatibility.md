@@ -77,7 +77,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 114    | SuperGame MMC3 | Verified    | Scramble/MMC3A tests; pinned _The Lion King_ real-ROM runner       |
 | 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
-| 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
+| 118    | TxSROM         | Verified    | CIRAM/IRQ tests; pinned _Pro Sport Hockey_ real-ROM runner         |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
 | 133    | Sachen SA72008 | Implemented | Expansion decode/banking/open-bus/state tests; local legacy smoke  |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
@@ -557,7 +557,12 @@ and `$6000.D6` supplying PRG A18.
   upper one-screen mirroring. Its only known board carries 256 KiB PRG ROM and 8 KiB CHR RAM.
 - Mapper 118 (TxSROM) keeps full MMC3 banking and filtered-A12 IRQs but connects CHR A17 to CIRAM
   A10. R0/R1 or R2-R5 control nametable slots according to CHR mode, and `$A000` mirroring writes are
-  physically disconnected.
+  physically disconnected. The checksum-pinned 128 KiB PRG + 128 KiB CHR _Pro Sport Hockey_ profile
+  verifies 2,520 input-driven frames from title through mode, team and lineup selection into active
+  play, 661 distinct frames, exact visual/audio/CPU-cycle results and a deterministic 120-frame
+  save-state replay. Its trace reaches 63 MMC3 register sets, both CHR modes, IRQ enable and both
+  CIRAM pages. The game uses uniform lower/upper page patterns; mixed per-slot CIRAM layouts remain
+  focused-test evidence.
 - Mapper 119 (TQROM) keeps standard MMC3 mirroring and IRQs while CHR bank bit 6 selects between
   16–64 KiB CHR ROM and eight 1 KiB banks of volatile CHR RAM. Official boards have 128 KiB PRG ROM
   and no PRG RAM. Legacy iNES implies the otherwise-unrepresentable 8 KiB CHR RAM; NES 2.0 declares

@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover thirty-five files used during development:
+The current profiles cover thirty-six files used during development:
 
 | Profile          | Expected file                                | SHA-256                                                            | Mapper |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -40,6 +40,7 @@ The current profiles cover thirty-five files used during development:
 | `punchout`       | `PUNCHOUT-J.NES`                             | `137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0` | 9      |
 | `fire-emblem`    | `Fire Emblem (J).nes`                        | `718770a459c4c1140efcddaa78c2d44eefc32de373692d9fdfcc3a032e1f1731` | 10     |
 | `dbz5`           | `dbz5cn.nes`                                 | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
+| `tinytoon2-j`    | `Tiny Toon Adventures 2 (J).nes`             | `f41607b80904a2e1150a155121405dd1fed007ce98ff00a274a7891cafd7e32d` | 85     |
 | `goonies`        | `GOONIES-J.NES`                              | `30c9d00cd797899fdede35a3af50addc5f2d270b35cc2f60cbca361bf4a93d23` | 87     |
 | `yanchamaru`     | `KAIKETSU-YANCHAMARU-J.NES`                  | `238cb4c247187cf0ca1b77462a574b2495981307c9701725d8a111cb401d94d1` | 97     |
 | `vssoccer`       | `vs soccer.nes`                              | `4866b55763a7992b3f0469e10fe84a34aad6ef5c4b097501cf7e6879b0971c2f` | 99     |
@@ -79,6 +80,7 @@ yarn smoke:real-rom -- esper-dream-2 "/absolute/path/to/Esper Dream 2 - Aratanar
 yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
 yarn smoke:real-rom -- fire-emblem "/absolute/path/to/Fire Emblem (J).nes"
 yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
+yarn smoke:real-rom -- tinytoon2-j "/absolute/path/to/Tiny Toon Adventures 2 (J).nes"
 yarn smoke:real-rom -- goonies /absolute/path/to/GOONIES-J.NES
 yarn smoke:real-rom -- yanchamaru /absolute/path/to/KAIKETSU-YANCHAMARU-J.NES
 yarn smoke:real-rom -- vssoccer "/absolute/path/to/vs soccer.nes"
@@ -145,7 +147,7 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 9, 10, 12, 26, 87, 97, 99, 112, 114, 115, 117,
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 9, 10, 12, 26, 85, 87, 97, 99, 112, 114, 115, 117,
 118, 119,
 133, 142, 163, 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M

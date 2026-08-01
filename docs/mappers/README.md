@@ -649,6 +649,12 @@ repository's [third-party notices](../../THIRD_PARTY_NOTICES.md). Board behavior
 [NESdev VRC7](https://www.nesdev.org/wiki/INES_Mapper_085) and
 [VRC7 audio](https://www.nesdev.org/wiki/VRC7_audio).
 
+The exact Japanese _Tiny Toon Adventures 2_ profile reaches playable roller-coaster action and pins
+the legacy iNES VRC7b/A3 path with frame, native-APU audio, CPU-cycle and save-state replay hashes.
+Its FM register file remains untouched throughout, as expected for the 353429 PCB without the audio
+resonator or mixer. VRC7a's audible FM path remains focused-test evidence until a checksum-pinned
+_Lagrange Point_ profile exercises it.
+
 ## Irem G-101 (32)
 
 Two registers select 8 KiB PRG banks at `$8000`/`$A000`; the final two banks normally remain fixed

@@ -60,7 +60,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture           |
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM          |
 | 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture    |
-| 85     | Konami VRC7    | Implemented | Three PCBs/banking/IRQ/FM/reset/state tests; no conformance ROM    |
+| 85     | Konami VRC7    | Verified    | Tests; pinned _Tiny Toon Adventures 2_ VRC7b gameplay runner       |
 | 86     | Jaleco JF-13   | Implemented | Banking/mirror/state tests; µPD7756C and canonical fixture pending |
 | 87     | Jaleco J87     | Verified    | CHR-bit-swap tests; pinned _The Goonies_ real-ROM runner           |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                  |
@@ -358,6 +358,10 @@ and `$6000.D6` supplying PRG A18.
   patch, logarithmic envelope/phase generators, tremolo/vibrato, test register and 36-CPU-cycle
   native sample divider. `$E000` bit 6 clears and silences sound-register state while vibrato phase
   continues; complete operator feedback/envelope/phase state is serialized.
+  The checksum-pinned Japanese _Tiny Toon Adventures 2_ profile verifies the legacy iNES VRC7b/A3
+  route through a playable roller-coaster sequence with visual, native-APU audio, CPU-cycle and
+  save-state replay hashes. The ROM never writes the FM ports, matching the PCB's absent resonator
+  and mixer; commercial-ROM verification of VRC7a FM still requires _Lagrange Point_.
 - Mapper 86 models Jaleco's JF-13 discrete banking circuit with its exact 128 KiB PRG and 64 KiB
   CHR layout. `$6000-$6FFF` selects one 32 KiB PRG bank from D5-D4 and one 8 KiB CHR bank from
   D6/D1-D0; the board's incomplete `/ROMSEL` decode mirrors this latch at `$E000-$EFFF` without bus

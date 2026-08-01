@@ -7,6 +7,7 @@ import { SpriteEvaluator, type SpriteEvaluationState } from "./ppu/sprite-evalua
 import { resolveSpritePatternAddress } from "./ppu/sprite-pattern-address.js";
 import type { PpuFetchContext } from "./mapper/mapper.js";
 import type { PpuVariant } from "./ppu/ppu-variant.js";
+import { isBit, isByte, isIntegerInRange } from "./numeric-range.js";
 
 interface SpriteZeroHitState {
   readonly pending: boolean;
@@ -302,6 +303,7 @@ class PPU {
       oamAddress: state.oamAddress,
       bufferedData: state.bufferedData,
     });
+    this.bus.setPpuNmiLine(this.nmiLineAsserted);
   }
 
   /** Applies this emulator's deterministic cold-start policy to volatile PPU state. */
@@ -496,12 +498,7 @@ class PPU {
       this.bufferedData = this.read(this.v - 0x1000);
     }
     value = this.ioBus.drive(value, address < 0x3f00 ? 0xff : 0x3f);
-    // increment address
-    if (this.flagIncrement === 0) {
-      this.v += 1;
-    } else {
-      this.v += 32;
-    }
+    this.incrementVramAddress();
     this.observeCartridgeAddress(this.v);
     return value;
   }
@@ -551,12 +548,12 @@ class PPU {
 
   private writeData(value: number) {
     this.write(this.v, value);
-    if (this.flagIncrement === 0) {
-      this.v += 1;
-    } else {
-      this.v += 32;
-    }
+    this.incrementVramAddress();
     this.observeCartridgeAddress(this.v);
+  }
+
+  private incrementVramAddress(): void {
+    this.v = (this.v + (this.flagIncrement === 0 ? 1 : 32)) & 0x7fff;
   }
 
   private writeDMA(value: number) {
@@ -1057,6 +1054,7 @@ class PPU {
   }
 
   private validateSnapshot(state: PpuSnapshot): void {
+    if (!state) throw new RangeError("PPU save state is missing");
     PpuIoBusLatch.validateState(state.ioBus);
     if (!Number.isInteger(state.cycle) || state.cycle < 0 || state.cycle > 340) {
       throw new RangeError("PPU save state contains an invalid dot");
@@ -1086,6 +1084,61 @@ class PPU {
     if (!Number.isSafeInteger(state.frame) || state.frame < 0) {
       throw new RangeError("PPU save state contains an invalid frame number");
     }
+    if (
+      !isIntegerInRange(state.v, 0, 0x7fff) ||
+      !isIntegerInRange(state.t, 0, 0x7fff) ||
+      !isIntegerInRange(state.x, 0, 7) ||
+      !isBit(state.w) ||
+      !isBit(state.f)
+    ) {
+      throw new RangeError("PPU save state contains invalid scroll registers");
+    }
+    if (
+      ![state.nmiOccurred, state.nmiOutput, state.nmiLineAsserted, state.suppressVblank].every(
+        (value) => typeof value === "boolean",
+      ) ||
+      state.nmiLineAsserted !== (state.nmiOccurred && state.nmiOutput)
+    ) {
+      throw new RangeError("PPU save state contains invalid vblank/NMI state");
+    }
+    if (
+      !isByte(state.nameTableByte) ||
+      !isByte(state.attributeTableByte) ||
+      !isByte(state.lowTileByte) ||
+      !isByte(state.highTileByte) ||
+      !isIntegerInRange(state.tileDataLow, 0, 0xffff_ffff) ||
+      !isIntegerInRange(state.tileDataHigh, 0, 0xffff_ffff) ||
+      !isIntegerInRange(state.spriteCount, 0, 8)
+    ) {
+      throw new RangeError("PPU save state contains invalid rendering-pipeline latches");
+    }
+    if (
+      !isIntegerInRange(state.flagNameTable, 0, 3) ||
+      ![
+        state.flagIncrement,
+        state.flagSpriteTable,
+        state.flagBackgroundTable,
+        state.flagSpriteSize,
+        state.flagMasterSlave,
+        state.flagGrayscale,
+        state.flagShowLeftBackground,
+        state.flagShowLeftSprites,
+        state.flagShowBackground,
+        state.flagShowSprites,
+        state.flagRedTint,
+        state.flagGreenTint,
+        state.flagBlueTint,
+        state.flagSpriteOverflow,
+      ].every(isBit) ||
+      state.pendingRenderingMask !==
+        ((state.flagShowBackground << 3) | (state.flagShowSprites << 4)) ||
+      (state.renderingMaskDelay === 0 &&
+        state.effectiveRenderingMask !== state.pendingRenderingMask) ||
+      !isByte(state.oamAddress) ||
+      !isByte(state.bufferedData)
+    ) {
+      throw new RangeError("PPU save state contains invalid register state");
+    }
     const arrays = [
       [state.paletteData, Uint8Array, 32],
       [state.nameTableData, Uint8Array, 4096],
@@ -1105,6 +1158,12 @@ class PPU {
     }
     if (state.paletteData.some((value) => value > 0x3f)) {
       throw new RangeError("PPU save state contains non-six-bit palette data");
+    }
+    if (
+      state.spritePriorities.some((value) => !isBit(value)) ||
+      state.spriteIndexes.some((value) => value > 63 && value !== 0xff)
+    ) {
+      throw new RangeError("PPU save state contains invalid sprite metadata");
     }
     SpriteEvaluator.validateState(state.spriteEvaluation);
     PPU.validateSpriteZeroHitState(state.spriteZeroHit);

@@ -355,6 +355,50 @@ describe("PPU", () => {
     ppu.writeRegister(0x2003, 0);
     expect(ppu.readRegister(0x2004)).toBe(0x34);
   });
+
+  it("wraps PPUDATA increments within the 15-bit VRAM address register", () => {
+    const ppu = new Bus(createTestCartridge()).PPU;
+    const state = ppu.captureState();
+    ppu.restoreState({ ...state, v: 0x7fff });
+
+    ppu.readRegister(0x2007);
+
+    expect(ppu.captureState().v).toBe(0);
+  });
+
+  it("rejects an invalid scalar before changing PPU memory or NMI state", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.PPU.captureState();
+    const beforeInterrupts = bus.CPU.captureState().interrupts;
+    const changedPalette = before.paletteData.slice();
+    changedPalette[0] = 0x2a;
+
+    expect(() =>
+      bus.PPU.restoreState({
+        ...before,
+        paletteData: changedPalette,
+        bufferedData: 0x100,
+      }),
+    ).toThrow(/register state/i);
+    expect(bus.PPU.captureState()).toEqual(before);
+    expect(bus.CPU.captureState().interrupts).toEqual(beforeInterrupts);
+  });
+
+  it("reconciles the CPU NMI input after direct PPU restoration", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.PPU.captureState();
+
+    bus.PPU.restoreState({
+      ...before,
+      nmiOccurred: true,
+      nmiOutput: true,
+      nmiLineAsserted: true,
+    });
+    expect(bus.CPU.captureState().interrupts.nmiLineAsserted).toBe(true);
+
+    bus.PPU.restoreState(before);
+    expect(bus.CPU.captureState().interrupts.nmiLineAsserted).toBe(false);
+  });
 });
 
 function advanceToFrameStart(ppu: PPU): void {
@@ -432,6 +476,7 @@ function prepareOddFrameSkip(ppu: Bus["PPU"]): void {
     scanLine: 261,
     frame: 0,
     f: 1,
+    flagShowBackground: 1,
     effectiveRenderingMask: 0x08,
     pendingRenderingMask: 0x08,
     renderingMaskDelay: 0,

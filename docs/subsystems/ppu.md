@@ -351,10 +351,18 @@ after `validateSnapshot()`. The snapshot captures the full pipeline: timing (`cy
 nested `SpriteEvaluationState`, the in-flight low sprite-plane bytes, the nested `PpuIoBusState`,
 all PPUCTRL/PPUMASK flags, the
 `effectiveRenderingMask`/`pendingRenderingMask`/`renderingMaskDelay` pipeline, the sprite-zero
-`{pending, latched}` pair, `oamAddress` and `bufferedData`. `validateSnapshot` raises `RangeError` on
-any out-of-range dot (0-340), scanline, render-mask pipeline (`0x18`-masked, delay 0-2), frame,
-typed-array shape, non-6-bit palette byte, invalid sprite-evaluation counters or an impossible
-pending-and-latched sprite-zero pair.
+`{pending, latched}` pair, `oamAddress` and `bufferedData`. `validateSnapshot` walks this complete
+tree before the first assignment. Besides timing, typed-array shapes and six-bit palette entries, it
+checks the 15-bit `v`/`t` scroll registers, fine-X/write/odd-frame latches, NMI booleans and output
+coherence, byte/32-bit rendering latches, sprite counts and metadata (`0..63`, with `0xFF` for an
+unused slot), every single-bit PPUCTRL/PPUMASK/status flag, render-mask pipeline coherence, nested
+sprite evaluation/open-bus state and the sprite-zero pair. A successful direct restore also drives
+the CPU-facing NMI input to the restored PPU output; a rejected restore changes neither PPU memory
+nor that external signal.
+
+PPUDATA increments use the PPU's 15-bit internal VRAM address width: both the `+1` and `+32` modes
+wrap with `& 0x7FFF` before the next cartridge address is observed. This keeps every state produced
+by the running implementation inside the same invariant enforced by restoration.
 
 The public save-state envelope is version 16. Sprite pattern bytes are fetched at their real PPU
 dots, so no delayed mapper-observation queue exists or needs to be reconstructed after restore.

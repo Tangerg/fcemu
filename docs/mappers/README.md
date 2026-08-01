@@ -1129,9 +1129,12 @@ Mapper 114 accepts submappers 0/1; mapper 182 accepts only submapper 0. Both ide
 submapper-0 _The Lion King_ profile runs 1,680 input-driven frames from title into scrolling
 gameplay, produces 742 distinct frames, and verifies exact visual/audio/CPU-cycle results plus a
 deterministic 120-frame save-state replay. Its trace observes 104 MMC3 register sets, IRQ
-enable/disable and both pending states. A same-sized user-local mapper-182 _Pocahontas_ image also
-completes deterministic replay. Both leave the outer registers zero, so NROM and CHR-A18 paths
-remain focused board-test evidence; submapper 1 likewise remains focused-test evidence. See
+enable/disable and both pending states. The independently checksum-pinned, same-sized mapper-182
+_Pocahontas_ profile runs 3,000 input-driven frames through gameplay and an event-panel transition,
+produces 1,051 distinct frames, and verifies the same exact outputs plus 120-frame replay; its trace
+observes 213 MMC3 register sets and IRQ enable/disable. Both images leave the outer registers zero,
+so NROM and CHR-A18 paths remain focused board-test evidence; submapper 1 likewise remains
+focused-test evidence. See
 [NESdev mapper 114/182](https://www.nesdev.org/wiki/INES_Mapper_182).
 
 ## Kasheng MMC3 clone (115, 248)

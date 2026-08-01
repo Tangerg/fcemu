@@ -83,7 +83,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
-| 182    | SuperGame MMC3 | Implemented | Mapper-114.0 duplicate board tests; one local replay smoke         |
+| 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
 | 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM             |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
 | 189    | TXC MMC3       | Verified    | Outer-PRG/MMC3/IRQ tests; pinned _Thunder Warrior_ real-ROM runner |
@@ -438,9 +438,11 @@ and `$6000.D6` supplying PRG A18.
   MMC3 register sets, IRQ enable/disable and both pending states. It leaves the outer registers zero,
   so NROM/CHR-A18 paths and submapper 1 remain focused-test evidence.
 - Mapper 182 preserves the historical header identity while resolving to mapper 114's submapper-0
-  Hosenkan board contract; it cannot select the submapper-1 Boogerman wiring. One local 256 KiB PRG
-  - 256 KiB CHR _Pocahontas_ image completed deterministic replay without halting. Its bytes remain
-    outside the repository, so the status remains `Implemented`.
+  Hosenkan board contract; it cannot select the submapper-1 Boogerman wiring. The checksum-pinned
+  256 KiB PRG + 256 KiB CHR _Pocahontas_ profile verifies 3,000 input-driven frames from intro
+  through an event-panel transition and back to gameplay, 1,051 distinct frames, exact visual,
+  audio and CPU-cycle results, and a deterministic 120-frame save-state replay. A separate trace
+  observed 213 MMC3 register sets and IRQ enable/disable; the image leaves both outer registers zero.
 - Mapper 115 models the Kasheng SFC-02B/-03/-004 wiring without inheriting mapper 114's scrambling.
   `$6000` supplies PRG A18 and selects direct MMC3, mirrored NROM-128 or paired NROM-256 mode;
   `$6001` supplies CHR A18, while `$6002` drives only three solder-pad bits onto the CPU data bus.

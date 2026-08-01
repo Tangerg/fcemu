@@ -119,6 +119,7 @@ yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- lionking /absolute/path/to/TheLionKing.nes
 yarn smoke:real-rom -- yuuyuu /absolute/path/to/youyou_c.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
+yarn smoke:real-rom -- pocahontas /absolute/path/to/Pocahontas.nes
 yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes
 yarn smoke:real-rom -- genke "/absolute/path/to/Gen Ke Le Zhuan (C).nes"

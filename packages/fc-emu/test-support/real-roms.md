@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover eighteen files used during development:
+The current profiles cover nineteen files used during development:
 
 | Profile          | Expected file                | SHA-256                                                            | Mapper |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------ | ------ |
@@ -40,6 +40,7 @@ The current profiles cover eighteen files used during development:
 | `lionking`       | `TheLionKing.nes`            | `363580d8f91fc8ce3cf27edaf7a1064e2c39c42b928c82207c1807cc61ce4a69` | 114    |
 | `yuuyuu`         | `youyou_c.nes`               | `dd2a2a1123ac405bbb975ee1c1f8845e85fcd4c6f993ee7afc895b2022a5190c` | 115    |
 | `sango4`         | `sango4.nes`                 | `dee4d95f36a621b85cfba3e7ecba7a83cda3814bb0d96f76b6502f616f21c25f` | 117    |
+| `pocahontas`     | `Pocahontas.nes`             | `c41984e57d492149e6778b29b8cdc1bc733eda8fc8c1891d782384e019b46ede` | 182    |
 | `thunderwarrior` | `ThunderWarrior.nes`         | `6eba6a209e0d60c63d73e2e02b858b9580fd40e719775ffe43ae940a61ba57a2` | 189    |
 | `super42`        | `Super_42-in-1.nes`          | `927d2738e57ca5a6bd54c6eb1c2223c0332a9018249272779bcea968d5f4aabb` | 226    |
 | `genke`          | `Gen Ke Le Zhuan (C).nes`    | `3ea31a72b1f3ea26dfca4ed3b8642e51db81d551be384056da31c6d16ab8b966` | 240    |
@@ -62,6 +63,7 @@ yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- lionking /absolute/path/to/TheLionKing.nes
 yarn smoke:real-rom -- yuuyuu /absolute/path/to/youyou_c.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
+yarn smoke:real-rom -- pocahontas /absolute/path/to/Pocahontas.nes
 yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes
 yarn smoke:real-rom -- genke "/absolute/path/to/Gen Ke Le Zhuan (C).nes"
@@ -105,8 +107,8 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 114, 115, 117, 189, 226, 240,
-242, 244, 245, 246, 248 or 250
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 114, 115, 117, 182, 189, 226,
+240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.
 

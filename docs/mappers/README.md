@@ -178,6 +178,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 112 | NTDEC/Asder    | `ntdec-asder`             | `ntdec-asder-mapper.ts`      | no            | no   |
 | 113 | HES NTD-8      | `hes-ntd8`                | `hes-ntd8-mapper.ts`         | no            | no   |
 | 114 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
+| 115 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
@@ -1025,6 +1026,27 @@ One local 256+256 KiB _The Lion King_ image advances through 800 frames, changes
 set 27 times and reproduces an IRQ-active 100-frame save-state replay. It leaves both outer
 registers zero, so their NROM and CHR-A18 paths are covered by focused board tests rather than
 claimed as real-ROM evidence. See [NESdev mapper 114](https://www.nesdev.org/wiki/INES_Mapper_182).
+
+## Kasheng MMC3 clone (115)
+
+Mapper 115 represents the Kasheng SFC-02B/-03/-004 boards around an unscrambled MMC3-compatible
+core. `$6000.D6` supplies PRG A18 in every mode. With D7 clear, the remaining PRG lines come from
+MMC3 and preserve its normal four 8 KiB windows. With D7 set, bits 3-0 select a 16 KiB bank repeated
+in both CPU halves (NROM-128), or D5 replaces the low bank bit with CPU A14 to select an adjacent
+pair (NROM-256). `$6001.D0` independently supplies CHR A18 above the MMC3's eight CHR bank bits.
+
+The `$600x` decode is outside MMC3 WRAM protection and maps across `$6000-$7FFF`. Reads matching
+`$6002` drive only the three solder-pad bits; the project uses the unbridged value zero while the
+upper data lines remain CPU open bus. Other reads are fully open bus, writable memory and battery
+headers are rejected, and mapper 248's duplicate identity is not silently reclassified as 115.
+The nested core retains horizontal/vertical mirroring and revision-B/Sharp IRQ behavior, including
+an IRQ when a zero latch is reloaded on a qualified A12 rise.
+
+The board accepts 128–512 KiB PRG and 8–512 KiB CHR ROM with submapper 0 and two-screen nametables.
+Two local _Yuu Yuu Hakusho Final_ images complete 700 non-halted frames and deterministic 100-frame
+save-state replays. The 512 KiB Chinese image actively toggles CHR A18; neither image enables NROM
+override, so that path remains focused board-test evidence. See
+[NESdev mapper 115](https://www.nesdev.org/wiki/INES_Mapper_115).
 
 ## TxSROM and TQROM (118, 119)
 

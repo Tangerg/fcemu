@@ -19,6 +19,7 @@ export function mapperIrqAsserted(state: MapperState): boolean {
     case "taito-x1-017":
       return state.irqPending && state.irqOutputEnabled;
     case "supergame-114":
+    case "kasheng-115":
     case "txc-mmc3-189":
     case "waixing-f003-245":
       return state.mmc3.irqPending;

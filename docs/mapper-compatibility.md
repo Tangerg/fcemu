@@ -73,6 +73,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
 | 114    | SuperGame MMC3 | Implemented | Two variants/outer banks/MMC3A/state tests; one local replay smoke |
+| 115    | Kasheng MMC3   | Implemented | Outer banks/pads/MMC3C/state tests; two local replay smokes        |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
@@ -90,7 +91,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/189/206/245 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/140/152/184/189/206/245 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -153,6 +154,9 @@ Mapper 114 accepts legacy/submapper 0 for the Aladdin/Lion King scrambling patte
 submapper 1 for Boogerman's distinct address and index permutation. Both variants use MMC3A IRQ
 behavior and the same `$6000/$6001` NROM override/outer-CHR registers; other variants fail closed.
 
+Mapper 115 accepts only submapper 0. It retains direct MMC3 register addresses and MMC3C IRQ
+behavior while `$6000.D6` additionally supplies PRG A18; mapper 248 remains a separate duplicate ID.
+
 ## Legacy-header assumptions
 
 - Mapper 3 uses no conflicts for ambiguous legacy/submapper-0 images, preserving compatible boards
@@ -171,7 +175,7 @@ behavior and the same `$6000/$6001` NROM override/outer-CHR registers; other var
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/119/140/152/180/184/185/206 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/140/152/180/184/185/206 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -384,6 +388,12 @@ behavior and the same `$6000/$6001` NROM override/outer-CHR registers; other var
   protection. One local _The Lion King_ image exercised 27 MMC3 register sets across 800 non-halted
   frames and an IRQ-active deterministic 100-frame save-state replay. It did not select the outer
   registers, so those remain board-test evidence and the overall status stays `Implemented`.
+- Mapper 115 models the Kasheng SFC-02B/-03/-004 wiring without inheriting mapper 114's scrambling.
+  `$6000` supplies PRG A18 and selects direct MMC3, mirrored NROM-128 or paired NROM-256 mode;
+  `$6001` supplies CHR A18, while `$6002` drives only three solder-pad bits onto the CPU data bus.
+  The 256 KiB and 512 KiB CHR local images each completed 700 non-halted frames and deterministic
+  100-frame replay. The larger Chinese image actively toggled CHR A18; neither image selected NROM
+  override, so that path remains board-test evidence and status stays `Implemented`.
 - Mapper 80 (Taito X1-005) maps three switchable 8 KiB PRG windows, two 2 KiB plus four 1 KiB CHR
   windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
   `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so

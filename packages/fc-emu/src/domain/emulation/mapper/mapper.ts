@@ -616,6 +616,12 @@ export type MapperState =
       readonly mmc3: Mmc3State;
     }
   | {
+      readonly kind: "kasheng-115";
+      readonly prgModeRegister: number;
+      readonly chrOuterBank: number;
+      readonly mmc3: Mmc3State;
+    }
+  | {
       readonly kind: "txc-mmc3-189";
       readonly selectedPrgBank: number;
       readonly mmc3: Mmc3State;

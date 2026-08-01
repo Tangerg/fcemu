@@ -33,6 +33,7 @@ import { JalecoMapper } from "./jaleco-mapper.js";
 import { JalecoSs8806Mapper } from "./jaleco-ss8806-mapper.js";
 import { JyCompanyMapper } from "./jy-company-mapper.js";
 import { Jy830623cMapper } from "./jy-830623c-mapper.js";
+import { Kasheng115Mapper } from "./kasheng-115-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
 import { Mmc1Mapper } from "./mmc1-mapper.js";
@@ -499,6 +500,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoBatteryPrgRam(cartridge, "SuperGame mapper 114");
       requireTwoScreenNametables(cartridge, "SuperGame mapper 114");
       return new SuperGame114Mapper(interruptPort, cartridge, cartridge.submapperNumber);
+    case 115:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
+      requireChrRom(cartridge, "Kasheng mapper 115");
+      requireNoBatteryPrgRam(cartridge, "Kasheng mapper 115");
+      requireTwoScreenNametables(cartridge, "Kasheng mapper 115");
+      return new Kasheng115Mapper(interruptPort, cartridge);
     case 118:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

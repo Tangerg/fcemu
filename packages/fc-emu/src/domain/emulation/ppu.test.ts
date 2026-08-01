@@ -102,6 +102,20 @@ describe("PPU", () => {
     expect(bus.Mapper.captureState()).toMatchObject({ kind: "mmc2", latch1Fe: true });
   });
 
+  it("keeps fetched pattern latches byte-sized after packing background tile data", () => {
+    const cartridge = createTestCartridge({ chrBanks: 1 });
+    cartridge.chrRom.fill(0xff);
+    const ppu = new Bus(cartridge).PPU;
+    ppu.writeRegister(0x2001, 0x08);
+
+    advanceTo(ppu, 0, 0);
+    const state = ppu.captureState();
+
+    expect(state.lowTileByte).toBe(0xff);
+    expect(state.highTileByte).toBe(0xff);
+    expect(() => ppu.restoreState(state)).not.toThrow();
+  });
+
   it.each([
     [CartridgeTimingMode.Pal, 106_392],
     [CartridgeTimingMode.Dendy, 106_392],

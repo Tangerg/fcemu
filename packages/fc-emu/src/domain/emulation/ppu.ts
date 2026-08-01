@@ -643,12 +643,14 @@ class PPU {
 
   private storeTileData() {
     let data = 0;
+    let lowTileByte = this.lowTileByte;
+    let highTileByte = this.highTileByte;
     for (let i = 0; i < 8; i++) {
       const a = this.attributeTableByte;
-      const p1 = (this.lowTileByte & 0x80) >> 7;
-      const p2 = (this.highTileByte & 0x80) >> 6;
-      this.lowTileByte <<= 1;
-      this.highTileByte <<= 1;
+      const p1 = (lowTileByte & 0x80) >> 7;
+      const p2 = (highTileByte & 0x80) >> 6;
+      lowTileByte <<= 1;
+      highTileByte <<= 1;
       data <<= 4;
       data |= a | p1 | p2;
     }

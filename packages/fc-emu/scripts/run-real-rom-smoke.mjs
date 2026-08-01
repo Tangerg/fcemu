@@ -10,6 +10,7 @@ const BUTTONS = Object.freeze({
   b: ControllerButton.B,
   start: ControllerButton.Start,
   up: ControllerButton.Up,
+  left: ControllerButton.Left,
   right: ControllerButton.Right,
 });
 
@@ -240,6 +241,77 @@ const PROFILES = Object.freeze({
       frameSequenceSha256: "fca3632c911afd01980cd1390df469941347a8809c2cbf054b1d6f8ba304c0c5",
       audioSamples: 88_055,
       audioSha256: "52fcee6b2e6730cb3e6d96b18971282bd659a81d20ff24089b5f0387c95e5ad9",
+      cpuCycles: 3_573_660,
+    },
+  },
+  punchout: {
+    title: "Punch-Out!! (Japan)",
+    fileName: "PUNCHOUT-J.NES",
+    sha256: "137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 9,
+      submapperNumber: 0,
+      consoleRegion: "ntsc",
+      prgRomBytes: 131_072,
+      chrRomBytes: 131_072,
+      hasWritableChrMemory: false,
+    },
+    baseline: {
+      frames: 1200,
+      minimumDistinctFrames: 75,
+      finalFrameSha256: "f399d0be9a3a6122606771f667cadf45b47d9d94057c433777333d5b1b20738b",
+      frameSequenceSha256: "2de90b90a656052238ff2e485712e5b086e5ac4e633529a83832b88c3a56d011",
+      cpuCycles: 35_709_243,
+    },
+    interactive: {
+      frames: 2280,
+      minimumDistinctFrames: 550,
+      events: [
+        { frame: 240, button: "start", pressed: true },
+        { frame: 246, button: "start", pressed: false },
+        { frame: 720, button: "start", pressed: true },
+        { frame: 726, button: "start", pressed: false },
+        { frame: 1830, button: "a", pressed: true },
+        { frame: 1836, button: "a", pressed: false },
+        { frame: 1860, button: "b", pressed: true },
+        { frame: 1866, button: "b", pressed: false },
+        { frame: 1920, button: "up", pressed: true },
+        { frame: 1920, button: "a", pressed: true },
+        { frame: 1926, button: "a", pressed: false },
+        { frame: 1930, button: "up", pressed: false },
+        { frame: 1980, button: "left", pressed: true },
+        { frame: 1990, button: "left", pressed: false },
+        { frame: 2040, button: "right", pressed: true },
+        { frame: 2050, button: "right", pressed: false },
+      ],
+      checkpoints: {
+        240: "8d39127a04aaa209a1c4d476e70a59395559595aeb3b4020379a6831ff4bfb6e",
+        480: "2aaa133dc4eb9550ba83c578fa70160e7a7e1675d454660b9ff3c1ab2cb337a5",
+        720: "f44d0c2b88344c48cc525365f3cb7d00f0ea5f5a6ed10745d9bff5da02bcaeac",
+        840: "b7b9aa8715faf5e546e6628c69c5ee92aa0e660b45c704d6165afaaa8c674376",
+        960: "92cf78ed869f67b6317651d0b545f78a20f3b3f5073c6d2fd5934568b165bd9e",
+        1440: "ea2cf56631a4903dc0f8b35f9d1541223b37606fe1cb5dce884d5019c5a9fb9b",
+        1680: "51305e2ea5911067b4292fe6b78cbce7bae3ed7fe080a3fe86d8c9ca4e732f05",
+        1800: "d2e488d548dfab0ca3807b9fcab9841404b4a63ee1a72f7d7675fa33a395c647",
+        1860: "b62127eec7b024346e9b23e50e6af604363a9e1b3449893d2a2b55f05247e158",
+        1920: "d241e8d03f6c8fd923a8bb51c5a10348c95bac6b87cbabe5622b7e295a66be96",
+        1980: "dd3fdf307b8b3df6a8cc2e3a95725efa289b67e411c69a37345c5af641fe122c",
+        2160: "b3b945f78cae8a6f0cc5c39e4d79e0d499ae63ce5650bd221236d4e35d2431a9",
+        2280: "89d5ace8d74cf1549f1e1862e033f782a019d491e9c9387e257d73bfe5565428",
+      },
+      finalFrameSha256: "89d5ace8d74cf1549f1e1862e033f782a019d491e9c9387e257d73bfe5565428",
+      frameSequenceSha256: "0f66aa3a639da5921d187ed494d8f0ae8d1afe6bfb938ceeeabbbc0703e67225",
+      audioSamples: 1_672_370,
+      audioSha256: "0dbccc8cf17c07556954b5f50711c6a235a4016bea82c0afde68fbb52c08c1bc",
+      cpuCycles: 67_872_185,
+    },
+    replay: {
+      checkpointFrame: 1920,
+      frames: 120,
+      frameSequenceSha256: "a832fab61d28ff259121022fd2ed55b462fa1be5905f3d29219a74d877f59864",
+      audioSamples: 88_055,
+      audioSha256: "78b4d373565156ee6532e5bb2d99c716c3088fbf46c21d4e5daf8b29c3a4a24c",
       cpuCycles: 3_573_660,
     },
   },
@@ -547,7 +619,7 @@ function printResults(results) {
 
 function printUsage() {
   console.error(
-    "Usage: yarn smoke:real-rom -- <mario|contra|kage|smb3> /path/to/file.nes\n" +
+    "Usage: yarn smoke:real-rom -- <mario|contra|kage|smb3|punchout> /path/to/file.nes\n" +
       "       yarn smoke:real-rom -- all /path/to/rom-directory\n" +
       "       yarn smoke:real-rom -- --list",
   );

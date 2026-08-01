@@ -114,6 +114,7 @@ yarn smoke:real-rom -- mario /absolute/path/to/MARIO.NES
 yarn smoke:real-rom -- contra /absolute/path/to/CONTRA.NES
 yarn smoke:real-rom -- kage /absolute/path/to/KAGE.NES
 yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
+yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```
 

@@ -20,7 +20,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture              |
 | 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned          |
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture        |
-| 9      | MMC2/PxROM     | Implemented | Unit tests; full-address sprite/read-order integration tests       |
+| 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM                  |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
@@ -206,7 +206,9 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   two CHR latches drive four 4 KiB banks; the left latch flips only on the exact `$0FD8`/`$0FE8`
   fetches while the right latch flips across `$1FD8-$1FDF` and `$1FE8-$1FEF`. `$F000` bit 0 selects
   vertical/horizontal mirroring. PxROM has no PRG-RAM window. The PPU reports full background and
-  sprite fetch addresses, and the latch commits after the triggering byte is returned.
+  sprite fetch addresses, and the latch commits after the triggering byte is returned. The pinned
+  _Punch-Out!!_ profile crosses the title, opponent card, ring intro and active Glass Joe match,
+  then verifies visual/audio output, CPU cycles and an input-active save-state replay.
 - Mapper 10 (MMC4) shares the MMC2 CHR latch banks but flips both latches across the full
   `$xFD8-$xFDF`/`$xFE8-$xFEF` ranges, switches a 16 KiB `$8000-$BFFF` bank with `$C000-$FFFF` fixed,
   and adds an 8 KiB PRG-RAM window at `$6000-$7FFF`.

@@ -327,7 +327,9 @@ flips on the exact PPU fetches `$0FD8` (→ FD) and `$0FE8` (→ FE); the right 
 `$1FD8-$1FDF` and `$1FE8-$1FEF`. Rendering fetches preserve the full sprite/background address and
 call `observePpuRead` after returning the triggering byte, so a trigger changes only subsequent
 fetches. `$F000` bit 0 selects vertical/horizontal mirroring. PxROM has no PRG-RAM window. See the
-[NESdev MMC2 page](https://www.nesdev.org/wiki/MMC2). Representative title: Punch-Out!!.
+[NESdev MMC2 page](https://www.nesdev.org/wiki/MMC2). A pinned local _Punch-Out!!_ profile crosses
+the title, opponent card, ring intro and an active Glass Joe match while locking visual/audio,
+CPU-cycle and input-active save-state output.
 
 ## MMC4 / FxROM (10)
 

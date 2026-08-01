@@ -360,6 +360,11 @@ sprite evaluation/open-bus state and the sprite-zero pair. A successful direct r
 the CPU-facing NMI input to the restored PPU output; a rejected restore changes neither PPU memory
 nor that external signal.
 
+The background pattern fetch latches remain bytes after tile assembly. `storeTileData()` shifts
+local copies into the packed 32-bit tile value rather than mutating those latches into transient
+16-bit implementation values, so every snapshot produced at a public frame boundary satisfies the
+same byte invariant used by restoration.
+
 PPUDATA increments use the PPU's 15-bit internal VRAM address width: both the `+1` and `+32` modes
 wrap with `& 0x7FFF` before the next cartridge address is observed. This keeps every state produced
 by the running implementation inside the same invariant enforced by restoration.

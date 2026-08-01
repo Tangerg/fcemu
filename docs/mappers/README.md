@@ -392,7 +392,12 @@ and after its first FE transition; focused tests retain full FD/FE range and NVR
 ## Color Dreams (11)
 
 One `$8000-$FFFF` latch: bits 1-0 select a 32 KiB PRG bank, bits 7-4 an 8 KiB CHR bank, with documented
-AND-type bus conflicts. The no-conflict prototype board variant is out of scope.
+AND-type bus conflicts. The no-conflict prototype board variant is out of scope. Exact content
+metadata identifies _Bible Adventures_ 1.3 as the zero-WRAM, vertical-mirroring BC6
+`COLORDREAMS-74*377` board. Its pinned 1,800-frame route advances from the story into active Baby
+Moses gameplay, crosses both PRG banks and CHR banks 7/4, and locks visual/audio/CPU output plus an
+input-active save-state replay. Focused tests separately preserve the exact bitwise-AND conflict
+behavior.
 
 ## Rex Soft SL-5020B (12)
 

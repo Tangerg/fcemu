@@ -72,6 +72,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Bible Adventures 1.3, BC6: COLORDREAMS-74*377 without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 11,
+      prgRomBytes: 0x10_000,
+      chrRomBytes: 0x10_000,
+      prgCrc32: 0x9b8e02c0,
+      chrCrc32: 0xb0a8c32a,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Crayon Shin-chan: Ora to Poi Poi, DRAGON BALL Z-B: LZ93D50 without EEPROM/WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 16,

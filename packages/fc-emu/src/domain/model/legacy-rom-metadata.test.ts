@@ -69,6 +69,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Bible Adventures BC6 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 11,
+        prgRomBytes: 0x10_000,
+        chrRomBytes: 0x10_000,
+        prgCrc32: 0x9b8e02c0,
+        chrCrc32: 0xb0a8c32a,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("identifies the exact The Lord of King JF-25 memory layout", () => {
     expect(
       findLegacyRomMetadata({

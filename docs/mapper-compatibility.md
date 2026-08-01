@@ -22,7 +22,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture        |
 | 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
 | 10     | MMC4/FxROM     | Verified    | Tests; pinned _Fire Emblem_ FKROM real-ROM runner                  |
-| 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
+| 11     | Color Dreams   | Verified    | Tests; pinned _Bible Adventures_ BC6 gameplay runner               |
 | 12     | Rex/FFE 4M     | Verified    | MMC3A/card tests; pinned SL-5020B _DBZ5_ real-ROM runner           |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
 | 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
@@ -281,7 +281,12 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 11 (Color Dreams) and mapper 66 (GxROM/MHROM) each latch one register with documented
   AND-type bus conflicts. Color Dreams takes PRG from bits 1-0 and CHR from bits 7-4; GxROM takes
   PRG from bits 5-4 and CHR from bits 1-0. The no-conflict Color Dreams prototype board is out of
-  scope.
+  scope. Exact content metadata identifies _Bible Adventures_ 1.3 as the zero-WRAM, vertical-
+  mirroring BC6 `COLORDREAMS-74*377` board. Its pinned 1,800-frame route crosses the story into
+  active Baby Moses gameplay with 518 distinct frames; mapper checkpoints cover both 32 KiB PRG
+  banks and CHR banks 7/4, while visual, native-audio, CPU-cycle and input-active save-state hashes
+  lock the public execution path. Focused tests retain the bitwise-AND conflict proof independently
+  of the commercial scenario.
 - Mapper 12.0 models Rex Soft/Gouder SL-5020B as an MMC3A-compatible Huang-1 plus a separate GAL.
   Writes matching `$E100=$4100` immediately put D0 on CHR A18 for PPU `$0000-$0FFF` and D4 on CHR
   A18 for `$1000-$1FFF`, independent of the MMC3 CHR-mode swap. Reads through the same aliases drive

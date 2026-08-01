@@ -112,7 +112,9 @@ board's generic RAM. JF-25 _The Lord of King_ (PRG `EFB1DF9E`, CHR `7A2DCF20`) d
 absent external WRAM. NAM-KK-5900 _King of Kings_ (PRG `1DD6619B`, CHR `D3F4B947`) supplies Mapper
 19 submapper 5, preserving the board's measured 18.0–19.5 dB N163 mix instead of the conservative
 legacy fallback. NES-AOROM-03 _Battletoads_ (PRG `279710DC`, empty CHR) removes iNES's generic PRG
-RAM allocation from its zero-WRAM AxROM board while retaining the board-implied 8 KiB CHR RAM.
+RAM allocation from its zero-WRAM AxROM board while retaining the board-implied 8 KiB CHR RAM. BC6
+_Bible Adventures_ 1.3 (PRG `9B8E02C0`, CHR `B0A8C32A`) likewise removes the generic allocation
+from its zero-WRAM `COLORDREAMS-74*377` board.
 
 The lookup completes metadata only; it never changes ROM bytes, the mapper number or ROM geometry.
 It may supply an otherwise-unrepresentable submapper when exact board evidence exists. Unknown

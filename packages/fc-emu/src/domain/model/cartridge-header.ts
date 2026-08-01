@@ -144,6 +144,11 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
   if (header.mapperNumber === 77 && header.format === "ines" && header.chrRomSize > 0) {
     return Object.freeze({
       ...header,
+      // LROG017 is a singleton board with no CPU-visible writable memory. The
+      // iNES byte-8 zero fallback must not manufacture an unreachable 8 KiB
+      // PRG-RAM allocation for it.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
       chrRamSize: LROG017_CHR_RAM_SIZE,
       chrNvRamSize: 0,
     });

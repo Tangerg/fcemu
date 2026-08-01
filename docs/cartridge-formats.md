@@ -47,8 +47,10 @@ format policy supplies the board-implied chip. NES 2.0 must declare exactly 2 Ki
 a writable shadow of CHR ROM: only exact MMC3 CHR bank values `$08/$09` select its two 1 KiB pages.
 
 Mapper 77's legacy image already carries CHR ROM, so iNES cannot declare its additional 8 KiB
-volatile cartridge RAM. Format policy supplies that physical chip; NES 2.0 must declare it. Board
-creation also requires the singleton's 128 KiB PRG, 32 KiB CHR ROM and four-screen flag.
+volatile cartridge RAM. Format policy supplies that physical chip and suppresses iNES's generic
+implicit 8 KiB PRG RAM because LROG017 has no CPU-visible writable memory; NES 2.0 must explicitly
+declare the CHR RAM and no PRG RAM/NVRAM. Board creation also requires the singleton's 128 KiB PRG,
+32 KiB CHR ROM and four-screen flag.
 
 Mappers 114/115/182/248 decode `$6000-$7FFF` as mirrored outer-bank registers rather than writable
 memory.

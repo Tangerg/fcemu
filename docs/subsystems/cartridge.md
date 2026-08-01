@@ -89,8 +89,10 @@ and 7; the remaining fields diverge by format.
 the battery flag routes that entire legacy window to NVRAM rather than volatile RAM. iNES with no CHR
 ROM implies exactly 8 KiB of volatile CHR RAM unless mapper 96 supplies its physical 32 KiB chip.
 Mapper 77 adds 8 KiB of board-implied RAM beside CHR ROM, and mapper 119 similarly implies TQROM's
-8 KiB RAM. Mapper 164 is another explicit exception: its battery flag denotes a mapper-owned
-512-byte EEPROM, while format policy supplies 2 KiB of volatile CPU work RAM.
+8 KiB RAM. The Mapper 77 singleton also overrides the generic legacy PRG-RAM fallback to zero because
+its LROG017 board has no CPU-visible writable memory. Mapper 164 is another explicit exception: its
+battery flag denotes a mapper-owned 512-byte EEPROM, while format policy supplies 2 KiB of volatile
+CPU work RAM.
 
 `mirroringMode` is a `NametableMirroring` enum (`Horizontal`, `Vertical`, `SingleScreenLower`,
 `SingleScreenUpper`, `FourScreen`); the header only ever decodes Horizontal, Vertical, or FourScreen,

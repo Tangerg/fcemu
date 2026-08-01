@@ -54,7 +54,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
 | 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM            |
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
-| 77     | Irem LROG017   | Implemented | Mixed-CHR/nametable/open-bus/state tests; one local replay smoke   |
+| 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
 | 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM        |
 | 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture           |
@@ -496,8 +496,13 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 77 (Irem LROG017) keeps one banked 2 KiB CHR-ROM window beside three fixed cartridge-RAM
   pattern windows. The RAM's fourth window owns `$2000-$27FF`, `$2800-$2FFF` reaches CIRAM, and
   `$3000-$3EFF` remains open bus; those owners are modeled explicitly rather than flattened into a
-  four-screen array. Its joint PRG/CHR latch applies AND conflicts. The user-local _Napoleon Senki_
-  image completed 240 frames with deterministic 60-frame save-state replay.
+  four-screen array. Its joint PRG/CHR latch applies AND conflicts, and legacy format policy removes
+  iNES's fictitious implicit PRG RAM from this no-WRAM singleton. The checksum-pinned exact
+  _Napoleon Senki_ image matches LROG017-00 PRG CRC `ADB47286` and CHR CRC `F822DD8D`. Its 3,600-frame
+  input route enters the Italy campaign map with 1,293 distinct frames, exercises all four PRG banks
+  plus eight CHR-ROM banks, and preserves exact video, native audio, CPU cycles and input-active
+  save-state replay. Mixed CHR-RAM pattern/nametable ownership and the remaining CHR banks retain
+  focused-test evidence.
 - Mapper 78 combines UNROM-style 16 KiB PRG and CNROM-style 8 KiB CHR switching with AND bus
   conflicts. Register bit 3 selects lower/upper one-screen mirroring on Cosmo Carrier hardware but
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical

@@ -254,7 +254,7 @@ describe("Cartridge", () => {
     expect(cartridge.readWritableChr(0x10)).toBe(0x42);
   });
 
-  it("adds LROG017's board-implied 8 KiB CHR RAM to legacy CHR ROM", () => {
+  it("normalizes LROG017 to its board-implied CHR RAM and absent PRG RAM", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({ mapper: 77, prgBanks: 8, chrBanks: 4, fourScreen: true }),
     );
@@ -263,6 +263,8 @@ describe("Cartridge", () => {
 
     expect(cartridge).toMatchObject({
       chrRom: expect.objectContaining({ length: 0x8000 }),
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
       chrRamBytes: 0x2000,
       chrWritableBytes: 0x2000,
       hasWritableChrMemory: true,

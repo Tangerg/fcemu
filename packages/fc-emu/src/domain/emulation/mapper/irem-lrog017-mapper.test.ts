@@ -111,7 +111,9 @@ describe("IremLrog017Mapper", () => {
   });
 
   it("accepts only the singleton LROG017 hardware geometry", () => {
-    expect(() => createMapper(createLrog017Cartridge(), interruptPort)).not.toThrow();
+    const legacyCartridge = createLrog017Cartridge();
+    expect(legacyCartridge).toMatchObject({ prgRamBytes: 0, prgNvRamBytes: 0 });
+    expect(() => createMapper(legacyCartridge, interruptPort)).not.toThrow();
     expect(() =>
       createMapper(
         createTestCartridge({

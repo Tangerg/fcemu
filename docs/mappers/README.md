@@ -989,7 +989,16 @@ routes to the console's two CIRAM pages, while `$3000-$3EFF` is electrically und
 writes. The mapper therefore reports a value/drive mask for cartridge-owned nametable reads and a
 direct CIRAM route for the remaining two pages. Legacy iNES implies the otherwise-unrepresentable
 8 KiB mixed CHR RAM; NES 2.0 must declare it explicitly. Geometry is fixed at 128 KiB PRG and
-32 KiB CHR ROM, with no PRG RAM or IRQ. See
+32 KiB CHR ROM, with no PRG RAM or IRQ. Format policy therefore removes iNES's generic implicit
+8 KiB PRG-RAM allocation rather than exposing unreachable memory.
+
+The checksum-pinned exact _Napoleon Senki_ image matches the
+[LROG017-00 board record](https://nescartdb.com/profile/view/2260/napoleon-senki): combined payload
+CRC `06144B4A`, PRG `ADB47286` and CHR `F822DD8D`. A 540-frame baseline and 3,600-frame input route
+cross the title and scenario setup into the Italy campaign map, produce 1,293 distinct interactive
+frames, exercise all four PRG banks and eight CHR-ROM banks, and lock visual, native-audio,
+CPU-cycle and input-active save-state replay. The remaining CHR banks, bus-conflict masking and
+mixed CHR-RAM/nametable ownership stay covered by focused tests. See also
 [NESdev mapper 77](https://www.nesdev.org/wiki/INES_Mapper_077).
 
 ## Irem 74HC161/32 (78)

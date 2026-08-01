@@ -136,6 +136,7 @@ yarn smoke:real-rom -- baoqingtian "/absolute/path/to/Bao Qing Tian (C).nes"
 yarn smoke:real-rom -- timediver "/absolute/path/to/Time Diver Avenger (C).nes"
 yarn smoke:real-rom -- afterburner "/absolute/path/to/After Burner (U).nes"
 yarn smoke:real-rom -- goemon2 "/absolute/path/to/Ganbare Goemon 2 (J).nes"
+yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```
 

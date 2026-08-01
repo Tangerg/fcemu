@@ -186,6 +186,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 133 | Sachen SA72008 | `sachen-sa72008-133`      | `sachen-sa72008-mapper.ts`   | no            | no   |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
+| 150 | Sachen SA-015  | `sachen-sa015-150`        | `sachen-sa015-mapper.ts`     | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
 | 182 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
@@ -1260,6 +1261,29 @@ space, so writes have no bus conflicts and reads remain open bus. PRG and CHR ar
 128 KiB reachable by those physical select lines. See
 [NESdev mapper 140](https://www.nesdev.org/wiki/INES_Mapper_140).
 
+## Sachen SA-015 / SA-630 (150)
+
+Mapper 150 exposes Sachen's eight-register, `74LS374N`-marked ASIC through index and data ports whose
+`$C101` decode repeats from `$4100` through `$7FFF`. The data port is readable: the normal board
+drives D2-D0, and all eight registers retain all three bits even though R0-R3 have no bonded output.
+R5 D1-D0 select one 32 KiB PRG bank; R4 D0 drives CHR A15 and R6 D1-D0 drive CHR A14-A13, selecting
+one 8 KiB CHR bank. R2 is deliberately unused and does not inherit mapper 243's CHR A13 line.
+
+R7 D2-D1 maps nametable pages as `[0,0,0,1]`, `[0,0,1,1]`, `[0,1,0,1]` or `[1,1,1,1]`. The ASIC
+clears only on cold power and is preserved across warm reset. A board solder pad can connect ASIC pin
+14 to Vcc instead of CPU D2; in that setting every write is ORed with `$04` and read D2 is open bus.
+The mapper entity models both electrical settings, while the cartridge factory selects the normal
+CPU-D2 connection because neither iNES nor NES 2.0 records this pad and production code does not use
+title hashes.
+
+The factory accepts power-of-two PRG capacities from 32 to 128 KiB and CHR-ROM capacities from 8 to
+64 KiB, and rejects explicit PRG RAM, CHR RAM, four-screen memory and unknown submappers. A local
+_Poker III 5-in-1_ dump is incorrectly headed as mapper 243; diagnostic in-memory correction to 150
+ran 1,800 non-halted frames with coherent pattern banking. It remains rejection evidence rather than
+a pinned profile until a correctly headed fixture is available. See
+[NESdev mapper 150](https://www.nesdev.org/wiki/INES_Mapper_150) and the
+[Mesen CE board implementation](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Sachen/Sachen74LS374N.h).
+
 ## Sunsoft-1 (184)
 
 PRG ROM is a fixed 32 KiB window. The write-only `$6000-$7FFF` latch selects the lower 4 KiB CHR bank
@@ -1369,9 +1393,9 @@ reset. Save state captures the selected index and all eight validated register v
 
 The factory accepts power-of-two PRG capacities from 32 to 128 KiB and CHR-ROM capacities from 8
 to 128 KiB, rejects explicit PRG RAM, CHR RAM, four-screen memory and unknown submappers, and keeps
-ROM mirroring electrical rather than modulo-folding non-power-of-two images. A user-local legacy
-_Poker III 5-in-1_ image completed a deterministic smoke, but its historical CHR convention is not
-evidence for the SA-020A wiring and is not handled with a title hash. See
+ROM mirroring electrical rather than modulo-folding non-power-of-two images. A user-local
+_Poker III 5-in-1_ image was rejected as mapper-243 evidence because TC-020 belongs to mapper 150;
+the core neither rewrites its header nor adds a title hash. See
 [NESdev mapper 243](https://www.nesdev.org/wiki/INES_Mapper_243).
 
 ## C&E Decathlon (244)

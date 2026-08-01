@@ -81,6 +81,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 119    | TQROM          | Verified    | Mixed-CHR/IRQ tests; pinned _Pinbot_ real-ROM runner               |
 | 133    | Sachen SA72008 | Verified    | Board tests; pinned _Jovial Race_ real-ROM runner                  |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
+| 150    | Sachen SA-015  | Implemented | ASIC/pin-routing/solder-pad/nametable/state tests; no fixture      |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
 | 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
@@ -95,7 +96,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 240    | C&E/Supertone  | Verified    | Expansion-latch tests; pinned _Jing Ke Xin Zhuan_ real-ROM runner  |
 | 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
 | 242    | Waixing 43272  | Verified    | Latch/mode tests; pinned _Wai Xin Zhan Shi_ real-ROM runner        |
-| 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
+| 243    | Sachen SA-020A | Implemented | Wrong-header Poker III rejected; canonical fixture pending         |
 | 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
 | 245    | Waixing F003   | Verified    | Pin-routing tests; pinned _Dragon Quest VII_ real-ROM runner       |
 | 246    | C&E Fong Shen  | Verified    | Bank/alias tests; pinned _Feng Shen Bang_ real-ROM runner          |
@@ -105,7 +106,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/150/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -147,7 +148,7 @@ Mapper 12 legacy images and NES 2.0 submapper 0 select Rex Soft's SL-5020B MMC3A
 submapper 1 instead identifies an FFE Super Magic Card 4M extraction with fixed `$7000` trainer
 placement; other submappers fail closed.
 
-Mappers 15/133/225/226/228/240/242/243/244/246/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/133/150/225/226/228/240/242/243/244/246/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -195,7 +196,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/152/180/182/184/185/206/244/248 because those
+  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/150/152/180/182/184/185/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -584,6 +585,13 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB
   PRG bank and bits 3-0 select an 8 KiB CHR-ROM bank. The window has no bus conflicts and reads are
   open bus rather than a fabricated zero.
+- Mapper 150 models the eight-register ASIC on Sachen SA-015/SA-630 rather than aliasing the
+  differently bonded SA-020A board. Mirrored `$4100/$4101` index/data ports retain and read all three
+  bits; R5 selects one of four 32 KiB PRG banks, R4 supplies CHR A15, R6 supplies CHR A14-A13 and R7
+  owns flipped-L, horizontal, vertical and upper single-screen nametable routing. The normal board
+  connects ASIC pin 14 to CPU D2. Its Vcc solder-pad alternative ORs `$04` into writes and leaves D2
+  open on reads; that physical path is covered by board-level tests but cannot be selected by an
+  iNES/NES 2.0 header. The factory therefore uses the CPU-D2 connection without a title hash.
 - Mapper 180 uses the opposite UxROM window arrangement: the first 16 KiB PRG bank is fixed at
   `$8000-$BFFF`, while `$C000-$FFFF` is switchable. Legacy images use original UNROM AND conflicts;
   NES 2.0 submapper 1 disables them and submapper 2 makes them explicit.
@@ -665,11 +673,12 @@ and `$6000.D6` supplying PRG A18.
   all three bits even when it has no external output. R5 selects 32 KiB PRG, R2/R4/R6 independently
   drive the four 8 KiB CHR bank lines, and R7 selects flipped-L, horizontal, vertical or upper
   single-screen nametable routing. Cold power clears the ASIC while warm reset leaves it untouched.
-  A local legacy _Poker III 5-in-1_ image ran 700 frames without halting, exercised seven register
-  states, produced 310 distinct frames in the first 600 and completed deterministic 100-frame
-  replay. Its known historical header/CHR-order convention is not treated as physical SA-020A
-  validation and does not introduce a title-hash quirk; an accurate _Honey Peach_ image remains the
-  board-level validation target.
+  A local _Poker III 5-in-1_ image whose header declares mapper 243 was rejected as SA-020A evidence:
+  the game is a TC-020 mapper-150 title and the SA-020A wiring visibly selects the wrong pattern
+  banks. Changing only the diagnostic in-memory mapper identity to 150 produced coherent banking
+  through 1,800 non-halted frames, without changing production parsing or adding a checksum quirk.
+  A correctly headed mapper-150 image and an accurate _Honey Peach_ image remain the separate
+  board-level validation targets.
 - Mapper 244 models C&E's separate 32 KiB PRG and 8 KiB CHR outputs behind the board's documented
   permutation network. D3 chooses which output changes; D5-D4 plus D1-D0 select one of sixteen PRG
   results, while D6-D4 plus D2-D0 select one of 64 CHR results. The complete lookup network is

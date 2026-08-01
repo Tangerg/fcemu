@@ -129,7 +129,7 @@ submapper 0 chooses exactly one board from CHR geometry instead of exposing both
 Mapper 6 NES 2.0 submappers 0-7 select the initial Magic Card latch mode; legacy mapper 6 means mode
 1, while mapper 8 is its mode-4 synonym and accepts submapper 0. Mapper 17 accepts submappers 0-3
 solely for the trainer relocation described above. Mapper 12 legacy/submapper 0 is SL-5020B;
-NES 2.0 submapper 1 is the FFE 4M extraction. Mappers 15/133/225/226/228/240/242/243/244/246/250 accept
+NES 2.0 submapper 1 is the FFE 4M extraction. Mappers 15/133/150/225/226/228/240/242/243/244/246/250 accept
 submapper 0 only.
 Mapper 227 accepts submapper 0 (RPG/optional NVRAM), submapper 1 (protected multicart/solder-pad
 reads), and submapper 2 (protected multicart/outer-bank reset rule).

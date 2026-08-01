@@ -63,6 +63,7 @@ import { Nina001Mapper } from "./nina001-mapper.js";
 import { OekaKidsMapper } from "./oeka-kids-mapper.js";
 import { Rambo1Mapper } from "./rambo1-mapper.js";
 import { RexSoft12Mapper } from "./rex-soft-12-mapper.js";
+import { SachenSa015Mapper } from "./sachen-sa015-mapper.js";
 import { SachenSa020aMapper } from "./sachen-sa020a-mapper.js";
 import { SachenSa72008Mapper } from "./sachen-sa72008-mapper.js";
 import {
@@ -559,6 +560,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Jaleco JF-11/JF-14");
       requireNoPrgRam(cartridge);
       return new JalecoJfMapper(cartridge);
+    case 150:
+      requireBaseSubmapper(cartridge);
+      requireMapper150Layout(cartridge);
+      requireChrRom(cartridge, "Sachen SA-015/SA-630");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Sachen SA-015/SA-630");
+      return new SachenSa015Mapper(cartridge);
     case 152:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
@@ -1409,6 +1417,17 @@ function requireSunsoft1Layout(cartridge: Cartridge): void {
 function requireMapper243Layout(cartridge: Cartridge): void {
   const prgSizes = [0x8000, 0x10_000, 0x20_000];
   const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000, 0x20_000];
+  if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
+  }
+  if (!chrSizes.includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, `CHR ROM must be ${formatSizes(chrSizes)}`);
+  }
+}
+
+function requireMapper150Layout(cartridge: Cartridge): void {
+  const prgSizes = [0x8000, 0x10_000, 0x20_000];
+  const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000];
   if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
     throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
   }

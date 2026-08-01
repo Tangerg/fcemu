@@ -94,13 +94,14 @@ describes evidence maturity rather than a runtime feature flag.
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
 | 244    | C&E Decathlon  | Implemented | Full PRG/CHR permutation/state tests; local bank-switching smoke   |
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
+| 246    | C&E Fong Shen  | Implemented | Register/WRAM/alias/state tests; three local replay smokes         |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
 | 250    | MMC3 addr/data | Implemented | Address/data rewiring/MMC3/IRQ/state tests; one local replay smoke |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/133/140/152/182/184/189/206/226/240/242/243/244/245/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/133/140/152/182/184/189/206/226/240/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -138,7 +139,7 @@ mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
 
-Mappers 15/133/225/226/228/240/242/243/244/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/133/225/226/228/240/242/243/244/246/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -595,6 +596,14 @@ and `$6000.D6` supplying PRG A18.
   both outer halves during 800-frame input runs; a 512 KiB image exercised the TNROM-like fallback,
   and all three completed deterministic 120-frame save-state replays. ROM bytes remain outside the
   repository, so the status remains `Implemented`.
+- Mapper 246 models C&E's four independently banked 8 KiB PRG windows, four 2 KiB CHR windows and
+  the exact 2 KiB SRAM aperture at `$6800-$6FFF`. It also includes the hardware-traced sixteen
+  high-address reads that force PRG A17, including the reset/IRQ vector at `$FFFC-$FFFF`; this is
+  board wiring rather than a title-hash bootstrap fix. Cold power sets the 74LS670 register files
+  to all high and warm reset preserves them. A local original _Feng Shen Bang_ image ran 2200
+  frames without halting, exercised 15 bank states, produced 317 distinct frames through frame
+  2100 and completed deterministic 120-frame replay. Two modified images each completed 900-frame
+  smokes with 13/14 bank states and a running CPU.
 - Mapper 250 keeps the standard MMC3 memory, mirroring, PRG-RAM protection and filtered A12 IRQ
   paths but rewires CPU writes: A10 selects the odd/even register port, A7-A0 carry its value, and
   CPU D7-D0 are ignored. The mapper factory bounds the shared MMC3 core to 512 KiB PRG, 256 KiB CHR,

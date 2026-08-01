@@ -11,6 +11,7 @@ import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
 import { Bmc226Mapper } from "./bmc-226-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
 import { CeDecathlonMapper } from "./ce-decathlon-mapper.js";
+import { CeFongShenBangMapper } from "./ce-fong-shen-bang-mapper.js";
 import { CeSupertoneMapper } from "./ce-supertone-mapper.js";
 import { CnromProtectionMapper } from "./cnrom-protection-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
@@ -621,6 +622,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWaixingF003PrgNvRam(cartridge);
       requireTwoScreenNametables(cartridge, "Waixing F003");
       return new WaixingF003Mapper(interruptPort, cartridge);
+    case 246:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x80_000], 0x80_000);
+      requireChrRom(cartridge, "C&E Fong Shen Bang mapper 246");
+      requireMapper246PrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "C&E Fong Shen Bang mapper 246");
+      return new CeFongShenBangMapper(cartridge);
     case 248:
       return createKashengMapper(cartridge, interruptPort);
     case 250:
@@ -791,6 +799,31 @@ function requireMmc3PrgRam(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
   if (cartridge.prgWritableBytes !== 0 && cartridge.prgWritableBytes !== 0x2000) {
     throw configurationError(cartridge, "MMC3 PRG RAM must be 8 KiB when present");
+  }
+}
+
+function requireMapper246PrgRam(cartridge: Cartridge): void {
+  if (cartridge.format === "ines") {
+    if (cartridge.prgWritableBytes !== 0x2000) {
+      throw configurationError(
+        cartridge,
+        "legacy mapper 246 images require the implicit 8 KiB PRG RAM allocation",
+      );
+    }
+    return;
+  }
+
+  const hasVolatileRam =
+    cartridge.prgRamBytes === 0x0800 &&
+    cartridge.prgNvRamBytes === 0 &&
+    !cartridge.hasBatteryBackup;
+  const hasBatteryRam =
+    cartridge.prgRamBytes === 0 && cartridge.prgNvRamBytes === 0x0800 && cartridge.hasBatteryBackup;
+  if (!hasVolatileRam && !hasBatteryRam) {
+    throw configurationError(
+      cartridge,
+      "C&E Fong Shen Bang requires exactly 2 KiB of PRG RAM or battery-backed NVRAM",
+    );
   }
 }
 

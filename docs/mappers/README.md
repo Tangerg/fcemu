@@ -199,6 +199,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 243 | Sachen SA-020A | `sachen-sa020a-243`       | `sachen-sa020a-mapper.ts`    | no            | no   |
 | 244 | C&E Decathlon  | `ce-decathlon-244`        | `ce-decathlon-mapper.ts`     | no            | no   |
 | 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
+| 246 | C&E Fong Shen  | `ce-fong-shen-bang-246`   | Fong Shen board mapper       | no            | no   |
 | 248 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
 | 250 | MMC3 addr/data | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 
@@ -1244,6 +1245,37 @@ register behavior through `Mmc3Mapper`, with both layers validated in save state
 128 KiB through 1 MiB are accepted only at power-of-two board sizes; images declaring CHR-ROM fail
 closed rather than being mistaken for this board. See
 [NESdev mapper 245](https://www.nesdev.org/wiki/INES_Mapper_245).
+
+## C&E Fong Shen Bang (246)
+
+Mapper 246 exposes four 8 KiB PRG registers at `$6000-$6003` and four 2 KiB CHR registers at
+`$6004-$6007`; only A2-A0 are decoded, so that eight-byte register block repeats through `$67FF`.
+The board maps exactly 2 KiB of SRAM at `$6800-$6FFF`, while `$6000-$67FF` reads and
+`$7000-$7FFF` remain CPU open bus. Nametable mirroring is hardwired, register writes have no bus
+conflict and the board has no IRQ.
+
+The physical PRG output has a second read path: accesses to `$FFE4-$FFE7`, `$FFEC-$FFEF`,
+`$FFF4-$FFF7` and `$FFFC-$FFFF` force PRG A17 high while retaining the other bank-register outputs.
+This includes the reset vector and is part of the board's startup behavior, not a ROM-specific
+patch. `CeFongShenBangMapper` preserves raw byte-wide register contents so this forced line is
+applied before the 512 KiB PRG address space discards disconnected D7-D6. Cold power initializes
+the four 74LS670 register files to their observed all-high tendency; warm reset preserves them.
+
+The factory accepts only the original 512 KiB PRG + 512 KiB CHR-ROM geometry, submapper 0,
+two-screen nametables and 2 KiB of NES 2.0 PRG RAM/NVRAM. Legacy iNES can describe the SRAM only as
+its implicit 8 KiB allocation, of which the physical `$6800-$6FFF` window exposes the first 2 KiB.
+Tests exhaust the 16 high-address aliases and cover repeated register decoding, every bank window,
+WRAM/open bus, reset, state validation and format boundaries. A user-local original _Feng Shen
+Bang_ image ran 2200 frames without halting, exercised 15 bank-register states, produced 317
+distinct frames through frame 2100 and completed deterministic 120-frame replay. Two modified
+images each ran 900 frames, exercised 13/14 states and remained active. See
+[NESdev mapper 246](https://www.nesdev.org/wiki/INES_Mapper_246) and the
+[cartridge hardware trace](https://forums.nesdev.org/viewtopic.php?start=60&t=13969); the traced
+high-address path is also modeled by
+[puNES](https://github.com/punesemu/puNES/blob/master/src/core/mappers/mapper_246.c), while
+[MesenCE](https://github.com/nesdev-org/MesenCE/blob/master/Core/NES/Mappers/Unlicensed/Mapper246.h)
+and [FCEUX](https://github.com/TASEmulators/fceux/blob/master/src/boards/246.cpp) document the core
+bank and WRAM layout.
 
 ## Time Diver MMC3 (250)
 

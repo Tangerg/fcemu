@@ -75,6 +75,11 @@ export type MapperState =
       readonly selectedPrgBank: number;
       readonly selectedChrBank: number;
     }
+  | {
+      readonly kind: "ce-fong-shen-bang-246";
+      readonly prgBanks: readonly number[];
+      readonly chrBanks: readonly number[];
+    }
   | { readonly kind: "sachen-sa72008-133"; readonly register: number }
   | {
       readonly kind: "sachen-sa020a-243";

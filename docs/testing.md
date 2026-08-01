@@ -83,6 +83,9 @@ yarn fetch:test-roms
 | `yarn conformance:oam-bus -- ROM [frames]`                 | Exact Quietust `read2004` byte screen.                   |
 | `yarn conformance:pal-apu -- DIR`                          | Ten PAL APU visual hashes.                               |
 
+Absolute paths are accepted. Relative ROM and fixture paths are resolved from the monorepo root
+when these root-level Yarn commands are used.
+
 Do not copy an upstream fixture into the tracked repository merely to make CI convenient. If a
 fixture is redistributable but too large or awkward for Git—or its collection-level license is
 unclear—document a checksum-pinned acquisition process.

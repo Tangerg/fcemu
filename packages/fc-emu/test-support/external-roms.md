@@ -58,6 +58,9 @@ yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/ppu_vbl
 yarn conformance:rom -- packages/fc-emu/test-roms/external/nes-test-roms/apu_test/apu_test.nes 3600 ntsc blargg
 ```
 
+The root-level commands preserve the monorepo working directory, so these repository-relative paths
+resolve exactly as written. The equivalent `@fcemu/core` workspace scripts remain package-relative.
+
 Current recorded results are `nestest` 8,991/8,991, instruction behavior 16/16 in both official and
 all-instruction modes, PPU VBL/NMI 10/10, APU 8/8, both Sprite/DMC DMA collision fixtures `Passed`,
 and the CPU timing final screen `PASSED`. APU DMC basics test 19 specifically verifies that a

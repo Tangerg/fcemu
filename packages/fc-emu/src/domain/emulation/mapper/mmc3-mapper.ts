@@ -21,6 +21,7 @@ export class Mmc3Mapper implements Mapper {
   private counter = 0;
   private reloadPending = false;
   private irqEnable = false;
+  private irqPending = false;
   private prgRamEnabled = true;
   private prgRamWritable = true;
   private ppuClock = 0;
@@ -51,6 +52,7 @@ export class Mmc3Mapper implements Mapper {
     this.counter = 0;
     this.reloadPending = false;
     this.irqEnable = false;
+    this.irqPending = false;
     this.prgRamEnabled = true;
     this.prgRamWritable = true;
     this.ppuClock = 0;
@@ -71,6 +73,7 @@ export class Mmc3Mapper implements Mapper {
       counter: this.counter,
       reloadPending: this.reloadPending,
       irqEnable: this.irqEnable,
+      irqPending: this.irqPending,
       prgRamEnabled: this.prgRamEnabled,
       prgRamWritable: this.prgRamWritable,
       ppuClock: this.ppuClock,
@@ -102,10 +105,12 @@ export class Mmc3Mapper implements Mapper {
       !areBooleans(
         state.reloadPending,
         state.irqEnable,
+        state.irqPending,
         state.prgRamEnabled,
         state.prgRamWritable,
         state.a12High,
-      )
+      ) ||
+      (state.irqPending && !state.irqEnable)
     ) {
       throw new RangeError("MMC3 save state contains invalid timing or register state");
     }
@@ -120,6 +125,7 @@ export class Mmc3Mapper implements Mapper {
     this.counter = state.counter;
     this.reloadPending = state.reloadPending;
     this.irqEnable = state.irqEnable;
+    this.irqPending = state.irqPending;
     this.prgRamEnabled = state.prgRamEnabled;
     this.prgRamWritable = state.prgRamWritable;
     this.ppuClock = state.ppuClock;
@@ -127,6 +133,7 @@ export class Mmc3Mapper implements Mapper {
     this.a12LowSince = state.a12LowSince;
     this.cartridge.mirroringMode = state.mirroring as NametableMirroring;
     this.updateOffsets();
+    this.interruptPort.setMapperIrq(this.irqPending);
   }
 
   tickPpu(): void {
@@ -154,7 +161,10 @@ export class Mmc3Mapper implements Mapper {
       this.counter--;
     }
     this.reloadPending = false;
-    if (this.counter === 0 && this.irqEnable) this.interruptPort.setMapperIrq(true);
+    if (this.counter === 0 && this.irqEnable) {
+      this.irqPending = true;
+      this.interruptPort.setMapperIrq(true);
+    }
   }
 
   read(address: number): number {
@@ -270,6 +280,7 @@ export class Mmc3Mapper implements Mapper {
 
   private writeIRQDisable(_: number): void {
     this.irqEnable = false;
+    this.irqPending = false;
     this.interruptPort.setMapperIrq(false);
   }
 

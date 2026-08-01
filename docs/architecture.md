@@ -202,12 +202,14 @@ Three state categories have different owners and compatibility rules:
 | Emulator save state | Core           | Exact schema version + ROM identity + region + audio rate | Opaque to UI runtime port           |
 | Quick save          | UI application | Outer format + ROM identity + region + slot               | `QuickSaveStoragePort` / IndexedDB  |
 
-The core save-state envelope is version 16. This revision adds the optional VS UniSystem cabinet,
-timed coin contacts, counter output and protection-device position to the bus snapshot. Every
-executing aggregate exposes a typed snapshot with runtime validation. `Bus.restoreState()` is
-transactional: a nested failure rolls the entire machine back to the pre-restore snapshot.
-The CPU, PPU, APU, DMA and VRC mapper trees also validate every descendant before their first
-assignment, so their direct aggregate restorers cannot expose a partially applied child state.
+The core save-state envelope is version 17. This revision persists the asserted MMC3 IRQ output and
+requires every named bus IRQ source to agree with its owning APU channel or mapper snapshot. Version
+16 introduced the optional VS UniSystem cabinet, timed coin contacts, counter output and
+protection-device position. Every executing aggregate exposes a typed snapshot with runtime
+validation. `Bus.restoreState()` is transactional: a nested failure rolls the entire machine back
+to the pre-restore snapshot. The CPU, PPU, APU, DMA and VRC mapper trees also validate every
+descendant before their first assignment, so their direct aggregate restorers cannot expose a
+partially applied child state.
 
 The UI runtime port deliberately carries save-state payloads as `unknown`. Its core adapter forwards
 that payload without asserting an internal type; `Emulator.restoreSaveState()` owns envelope

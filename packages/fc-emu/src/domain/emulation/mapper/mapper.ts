@@ -588,6 +588,7 @@ export type MapperState =
       readonly counter: number;
       readonly reloadPending: boolean;
       readonly irqEnable: boolean;
+      readonly irqPending: boolean;
       readonly prgRamEnabled: boolean;
       readonly prgRamWritable: boolean;
       readonly ppuClock: number;

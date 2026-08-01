@@ -234,7 +234,9 @@ RAM is mirrored through the 8 KiB `$6000-$7FFF` window.
 it. CHR is two 2 KiB plus four 1 KiB banks; PRG is two switchable 8 KiB banks with two fixed banks,
 swappable between `$8000` and `$C000` by the PRG mode. `$A000`/`$A001` set mirroring and PRG-RAM
 enable/write-protect. The revision-B IRQ counter clocks on filtered PPU A12 rising edges (`tickPpu`
-counts low dots; `observePpuAddress` clocks a rise after ≥10 low dots). See the
+counts low dots; `observePpuAddress` clocks a rise after ≥10 low dots). Its asserted IRQ output is
+part of the mapper snapshot, so direct mapper restoration and the bus's named-source validation
+cannot reconstruct contradictory line levels. See the
 [NESdev MMC3 page](https://www.nesdev.org/wiki/MMC3).
 
 ## MMC5 / ExROM (5)

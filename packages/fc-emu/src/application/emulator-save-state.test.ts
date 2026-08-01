@@ -287,8 +287,8 @@ describe("Emulator save states", () => {
   it("rejects unknown state versions", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const snapshot = emulator.captureSaveState();
-    expect(snapshot.version).toBe(16);
-    const future = { ...snapshot, version: 17 } as unknown as EmulatorSaveState;
+    expect(snapshot.version).toBe(17);
+    const future = { ...snapshot, version: 18 } as unknown as EmulatorSaveState;
     expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
   });
 
@@ -300,10 +300,10 @@ describe("Emulator save states", () => {
     for (const invalid of [
       null,
       {},
-      { format: "fcemu-state", version: 16 },
+      { format: "fcemu-state", version: 17 },
       {
         format: "fcemu-state",
-        version: 16,
+        version: 17,
         romIdentity: before.romIdentity,
         consoleRegion: before.consoleRegion,
         state: null,

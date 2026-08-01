@@ -255,17 +255,55 @@ describe("cartridge mappers", () => {
     expect(bus.CPU.hasPendingIRQ).toBe(true);
   });
 
-  it.each(["reloadPending", "irqEnable", "prgRamEnabled", "prgRamWritable", "a12High"] as const)(
-    "rejects a non-boolean MMC3 %s save-state field",
-    (field) => {
-      const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {
-        setMapperIrq() {},
-      });
-      const corrupted = { ...mapper.captureState(), [field]: 1 } as unknown as MapperState;
+  it("round-trips an asserted MMC3 IRQ output", () => {
+    let irqAsserted = false;
+    const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {
+      setMapperIrq: (asserted) => (irqAsserted = asserted),
+    });
+    mapper.write(0xc000, 0);
+    mapper.write(0xc001, 0);
+    mapper.write(0xe001, 0);
+    clockMmc3A12(mapper, 10);
+    const snapshot = mapper.captureState();
 
-      expect(() => mapper.restoreState(corrupted)).toThrow(/invalid timing or register state/i);
-    },
-  );
+    expect(snapshot).toMatchObject({ kind: "mmc3", irqEnable: true, irqPending: true });
+    expect(irqAsserted).toBe(true);
+
+    mapper.write(0xe000, 0);
+    expect(irqAsserted).toBe(false);
+    mapper.restoreState(snapshot);
+
+    expect(irqAsserted).toBe(true);
+    expect(mapper.captureState()).toEqual(snapshot);
+  });
+
+  it.each([
+    "reloadPending",
+    "irqEnable",
+    "irqPending",
+    "prgRamEnabled",
+    "prgRamWritable",
+    "a12High",
+  ] as const)("rejects a non-boolean MMC3 %s save-state field", (field) => {
+    const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {
+      setMapperIrq() {},
+    });
+    const corrupted = { ...mapper.captureState(), [field]: 1 } as unknown as MapperState;
+
+    expect(() => mapper.restoreState(corrupted)).toThrow(/invalid timing or register state/i);
+  });
+
+  it("rejects an asserted MMC3 IRQ whose generator is disabled", () => {
+    const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {
+      setMapperIrq() {},
+    });
+    const corrupted = {
+      ...mapper.captureState(),
+      irqPending: true,
+    } as MapperState;
+
+    expect(() => mapper.restoreState(corrupted)).toThrow(/invalid timing or register state/i);
+  });
 
   it("honors MMC3 PRG-RAM enable and write-protect bits", () => {
     const mapper = createMapper(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }), {

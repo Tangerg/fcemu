@@ -268,7 +268,7 @@ Any violation throws `RangeError` and leaves the clock untouched, so `Bus` can r
 snapshot back. `reset` zeroes all five for power-on / soft reset.
 
 These watermarks are part of the public save-state envelope carried by `EmulatorSaveState`
-(current `SAVE_STATE_VERSION = 15`, guarded together with format, ROM identity and console region).
+(current `SAVE_STATE_VERSION = 17`, guarded together with format, ROM identity and console region).
 Older in-memory snapshots are rejected explicitly rather than restored with ambiguous state. The
 nested APU state separately checks the output sample rate.
 

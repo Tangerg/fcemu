@@ -4,6 +4,7 @@ import Controller, { type ControllerState } from "./controller.js";
 import APU, { type ApuSnapshot } from "./apu.js";
 import { createMapper } from "./mapper/index.js";
 import type { Mapper, MapperInterruptPort, MapperState } from "./mapper/index.js";
+import { mapperIrqAsserted } from "./mapper/mapper-irq-output.js";
 import type Cartridge from "../model/cartridge.js";
 import type { CartridgeMemoryState } from "../model/cartridge-memory.js";
 import { resolveConsoleTiming, type ConsoleRegion, type ConsoleTiming } from "./console-timing.js";
@@ -173,6 +174,9 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     const frameIrqAsserted = state.apu.frameIRQPending && state.apu.frameIrqClearDelay === 0;
     if (irqSources.includes(IRQSource.ApuFrame) !== frameIrqAsserted) {
       throw new Error("Bus save-state frame IRQ source disagrees with the APU sequencer");
+    }
+    if (irqSources.includes(IRQSource.Mapper) !== mapperIrqAsserted(state.mapper)) {
+      throw new Error("Bus save-state mapper IRQ source disagrees with the mapper output");
     }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);

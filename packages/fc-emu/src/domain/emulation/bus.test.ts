@@ -236,6 +236,46 @@ describe("Bus lifecycle", () => {
     expect(bus.captureState()).toEqual(before);
   });
 
+  it("rejects a spurious mapper IRQ source even when the CPU line level agrees", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      cpu: {
+        ...before.cpu,
+        interrupts: {
+          ...before.cpu.interrupts,
+          irqLineAsserted: true,
+        },
+      },
+      irqSources: ["mapper" as const],
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/mapper IRQ source disagrees/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("round-trips an asserted MMC3 IRQ with its named bus source", () => {
+    const bus = new Bus(createTestCartridge({ mapper: 4, prgBanks: 2, chrBanks: 1 }));
+    bus.Mapper.write(0xc000, 0);
+    bus.Mapper.write(0xc001, 0);
+    bus.Mapper.write(0xe001, 0);
+    bus.Mapper.observePpuAddress?.(0);
+    for (let cycle = 0; cycle < 10; cycle++) bus.Mapper.tickPpu?.();
+    bus.Mapper.observePpuAddress?.(0x1000);
+    const asserted = bus.captureState();
+
+    expect(asserted.irqSources).toContain("mapper");
+    expect(asserted.mapper).toMatchObject({ kind: "mmc3", irqPending: true });
+
+    bus.Mapper.write(0xe000, 0);
+    expect(bus.CPU.isIRQLineAsserted).toBe(false);
+    bus.restoreState(asserted);
+
+    expect(bus.CPU.isIRQLineAsserted).toBe(true);
+    expect(bus.captureState()).toEqual(asserted);
+  });
+
   it("commits only the latest $4016 write on a PUT cycle", () => {
     const bus = new Bus(createTestCartridge());
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;

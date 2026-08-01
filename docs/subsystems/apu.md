@@ -305,9 +305,10 @@ mismatched sample rate, non-finite filter history, invalid frame-IRQ state, and 
 out-of-order pending writes. Direct child restores run the same pure validation before assignment,
 so a rejected snapshot leaves both a standalone child and the complete APU unchanged. `sampleBuffer`
 and `lastClockCycle` are omitted from their snapshots when undefined. The APU state travels inside
-the console's current version 16 save-state envelope. Output-filter history first entered the schema
+the console's current version 17 save-state envelope. Output-filter history first entered the schema
 in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and version 15 added
-mapper-owned RAM/NVRAM for Namco 163; version 16 adds VS cabinet state.
+mapper-owned RAM/NVRAM for Namco 163; version 16 added VS cabinet state, and version 17 persists the
+MMC3 IRQ output and validates named mapper IRQ source identity.
 
 After a successful aggregate restore, the APU reconciles its two named external lines through the
 bus's restore-only IRQ port: DMC is asserted exactly when `irqPending` is set; frame IRQ is asserted

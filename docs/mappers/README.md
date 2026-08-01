@@ -138,6 +138,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 69  | Sunsoft FME-7  | `fme7`                    | `fme7-mapper.ts`             | no            | cyc. |
 | 70  | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 71  | Codemasters    | `codemasters`             | `codemasters-mapper.ts`      | no            | no   |
+| 72  | Jaleco JF-17   | `jaleco-jf17`             | `jaleco-jf17-mapper.ts`      | AND           | no   |
 | 73  | Konami VRC3    | `vrc3`                    | `vrc3-mapper.ts`             | no            | cyc. |
 | 75  | Konami VRC1    | `vrc1`                    | `vrc1-mapper.ts`             | no            | no   |
 | 76  | Namco 3446     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
@@ -635,6 +636,21 @@ field. Both are implemented by `Bandai74Mapper` with a `hasMirroringControl` fla
 A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `$C000-$FFFF` is fixed
 to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire Hawk) adds single-screen
 mirroring from `$9000-$9FFF` bit 4; submapper 0 (BF9093) keeps the header's fixed mirroring.
+
+## Jaleco JF-17 (72)
+
+JF-17 maps one switchable 16 KiB PRG bank at `$8000-$BFFF`, fixes the final bank at
+`$C000-$FFFF`, and switches one 8 KiB CHR-ROM bank. Its single AND-conflicted `$8000-$FFFF` port
+feeds two edge-triggered latches: a low-to-high transition on effective D7 captures D2-D0 for PRG,
+and a low-to-high transition on effective D6 captures D3-D0 for CHR. Continuous high writes do not
+re-latch; a low write rearms each clock independently. The edge-history bits are therefore part of
+save state rather than being reconstructed from the selected banks.
+
+The board carries exactly 128 KiB each of PRG and CHR ROM, no PRG RAM or IRQ, and uses solder-pad
+horizontal/vertical mirroring. JF-19 is mapper 92 and is not inferred from image size. The optional
+µPD7756C sample playback used by _Moero!! Pro Tennis_ is not emulated because its external sample
+payload is not present in ordinary iNES images. See
+[NESdev mapper 72](https://www.nesdev.org/wiki/INES_Mapper_072).
 
 ## Konami VRC3 (73)
 

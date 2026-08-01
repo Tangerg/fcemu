@@ -507,6 +507,13 @@ export type MapperState =
       readonly lastPpuAddress: number;
     }
   | {
+      readonly kind: "jaleco-jf17";
+      readonly prgBank: number;
+      readonly chrBank: number;
+      readonly prgClockHigh: boolean;
+      readonly chrClockHigh: boolean;
+    }
+  | {
       readonly kind: "irem-tam-s1";
       readonly prgBank: number;
       readonly mirroring: number;

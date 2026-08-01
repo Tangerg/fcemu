@@ -26,6 +26,7 @@ import { Irem78Mapper, type Irem78Mirroring } from "./irem78-mapper.js";
 import { IremG101Mapper, type IremG101Board } from "./irem-g101-mapper.js";
 import { IremH3001Mapper } from "./irem-h3001-mapper.js";
 import { IremTamS1Mapper } from "./irem-tam-s1-mapper.js";
+import { JalecoJf17Mapper } from "./jaleco-jf17-mapper.js";
 import { JalecoJfMapper } from "./jaleco-jf-mapper.js";
 import { JalecoMapper } from "./jaleco-mapper.js";
 import { JalecoSs8806Mapper } from "./jaleco-ss8806-mapper.js";
@@ -284,6 +285,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWritableChrSize(cartridge, 0x2000);
       requireNoPrgRam(cartridge);
       return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
+    case 72:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x20_000);
+      requireChrRom(cartridge, "Jaleco JF-17 mapper 72");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Jaleco JF-17 mapper 72");
+      return new JalecoJf17Mapper(cartridge);
     case 73:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);

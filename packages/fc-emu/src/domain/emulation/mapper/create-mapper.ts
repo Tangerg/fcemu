@@ -91,6 +91,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       return new NromMapper(cartridge);
     case 1:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x1000, 0x2000);
+      requireTwoScreenNametables(cartridge, "MMC1");
       return new Mmc1Mapper(cartridge, Mmc1Board.resolve(cartridge));
     case 2:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
@@ -137,6 +138,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       if (cartridge.format === "nes2" && cartridge.prgWritableBytes > 0) {
         throw configurationError(cartridge, "AxROM does not map PRG RAM");
       }
+      requireTwoScreenNametables(cartridge, "AxROM");
       return new AxromMapper(cartridge, resolveBusConflicts(cartridge, false));
     case 9:
       requireBaseSubmapper(cartridge);
@@ -328,6 +330,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
       requireChrRom(cartridge, "mapper 78");
       requireNoPrgRam(cartridge);
+      if (cartridge.format === "nes2") requireTwoScreenNametables(cartridge, "mapper 78");
       return new Irem78Mapper(cartridge, resolveIrem78Mirroring(cartridge));
     case 79:
       requireBaseSubmapper(cartridge);
@@ -382,6 +385,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
       requireChrRom(cartridge, "Sunsoft-2");
       requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Sunsoft-2");
       return new Sunsoft2Mapper(cartridge);
     case 90:
       requireBaseSubmapper(cartridge);

@@ -612,6 +612,8 @@ describe("cartridge mappers", () => {
     ["AxROM with PRG RAM", { nes2: true, mapper: 7, submapper: 1, prgBanks: 2, prgRamShift: 7 }],
     ["MMC2 with PRG RAM", { nes2: true, mapper: 9, prgBanks: 8, chrBanks: 8, prgRamShift: 7 }],
     ["MMC2 with four-screen nametables", { mapper: 9, prgBanks: 8, chrBanks: 8, fourScreen: true }],
+    ["MMC1 with four-screen nametables", { mapper: 1, prgBanks: 2, fourScreen: true }],
+    ["AxROM with four-screen nametables", { mapper: 7, prgBanks: 2, fourScreen: true }],
     [
       "MMC4 with four-screen nametables",
       { mapper: 10, prgBanks: 8, chrBanks: 8, fourScreen: true },
@@ -713,6 +715,14 @@ describe("cartridge mappers", () => {
       { mapper: 33, prgBanks: 8, chrBanks: 8, fourScreen: true },
     ],
     ["mapper 78 beyond its 128 KiB CHR capacity", { mapper: 78, prgBanks: 2, chrBanks: 17 }],
+    [
+      "NES 2.0 mapper 78 with four-screen nametables",
+      { nes2: true, mapper: 78, submapper: 1, prgBanks: 2, chrBanks: 1, fourScreen: true },
+    ],
+    [
+      "Sunsoft-2 with four-screen nametables",
+      { mapper: 89, prgBanks: 8, chrBanks: 8, fourScreen: true },
+    ],
     ["UN1ROM with the wrong PRG geometry", { mapper: 94, prgBanks: 4 }],
     ["inverted UxROM beyond its 128 KiB PRG capacity", { mapper: 180, prgBanks: 9 }],
   ] as const)("rejects %s instead of exposing unreachable memory", (_name, options) => {

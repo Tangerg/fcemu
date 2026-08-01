@@ -219,8 +219,9 @@ submapper constraints. It reinterprets the ASIC's generic CHR outputs as SUROM/S
 SOROM/SXROM/SZROM 8 KiB PRG-RAM banking and SNROM CHR-A16 WRAM protection, and hardwires the two
 16 KiB halves for SEROM/SHROM/SH1ROM (submapper 5). MMC1 observes the CPU R/W pin via
 `observeCpuBusCycle`: of consecutive writes it accepts only the first D0, so an RMW instruction's
-write-new cycle is invisible to the shift register while a D7 reset still applies. See the
-[NESdev MMC1 page](https://www.nesdev.org/wiki/MMC1).
+write-new cycle is invisible to the shift register while a D7 reset still applies. Four-screen
+headers are rejected because the modeled SxROM boards route the MMC1's two-screen CIRAM output.
+See the [NESdev MMC1 page](https://www.nesdev.org/wiki/MMC1).
 
 ## UxROM (2)
 
@@ -311,7 +312,8 @@ used to create an extraction are deliberately outside this execution format. See
 32 KiB switchable PRG bank over the whole `$8000-$FFFF` window with single-screen mirroring selected by
 register bit 4; CHR is 8 KiB RAM. The legacy default is no bus conflicts (ANROM); NES 2.0 submapper 2
 selects AMROM/AOROM AND conflicts. The 512 KiB bit-3 PRG extension is supported. PRG-RAM declarations
-are rejected because AxROM has no PRG-RAM window.
+are rejected because AxROM has no PRG-RAM window, and four-screen declarations are rejected because
+the board register directly selects one of the console's two CIRAM pages.
 
 ## MMC2 / PxROM (9)
 
@@ -723,7 +725,8 @@ One conflict-prone `$8000-$FFFF` latch combines a 16 KiB `$8000-$BFFF` PRG bank 
 mirroring and bits 7-4 select CHR. The physical mirroring wire differs: Cosmo Carrier selects
 one-screen lower/upper, while Holy Diver selects horizontal/vertical. NES 2.0 submapper 1 and 3 name
 those boards; submapper 0 is rejected. For legacy iNES, the historical alternative-nametable flag
-selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. See
+selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. That legacy flag is not a
+four-screen declaration; NES 2.0 four-screen layouts are rejected for both modeled boards. See
 [NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_078).
 
 ## AVE NINA-03/NINA-06 (79)
@@ -806,7 +809,7 @@ IRQ/RAM/mirroring registers match mapper 206. See
 One conflict-prone register across `$8000-$FFFF` selects the 16 KiB PRG bank at `$8000-$BFFF` from
 bits 6-4 while fixing the final bank at `$C000-$FFFF`. Bits 2-0 select the low CHR bank bits and bit
 7 supplies the high bit for one 8 KiB CHR-ROM window; bit 3 selects lower/upper one-screen
-mirroring. The board maps no PRG RAM. See
+mirroring. The board maps no PRG RAM and does not provide four-screen nametable memory. See
 [NESdev mapper 89](https://www.nesdev.org/wiki/INES_Mapper_089) and the
 [Sunsoft-2 pinout](https://www.nesdev.org/wiki/Sunsoft_2_pinout).
 

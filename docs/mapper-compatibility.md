@@ -155,7 +155,8 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 7 follows the default iNES no-conflict behavior required by ANROM software. AMROM/AOROM
   conflict behavior is selected with NES 2.0 submapper 2; the common emulator 512 KiB bit-3
   extension is implemented and covered by focused tests. NES 2.0 PRG-RAM declarations are rejected
-  because AxROM has no PRG-RAM window. Historical BNTest execution is not treated as current
+  because AxROM has no PRG-RAM window. Four-screen layouts are rejected because its latch drives
+  one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
   9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/119/140/152/180/184/185/206 because those
@@ -166,7 +167,8 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   NVRAM bytes. SNROM additionally wires CHR A16 as a redundant WRAM disable, while submapper 5
   hardwires the two 16 KiB PRG halves. Its serial port observes adjacent CPU R/W cycles, ignores an
   RMW instruction's second D0 write and still accepts a second-cycle D7 reset. MMC1A/mapper 155 and
-  2ME EEPROM remain explicit variants.
+  2ME EEPROM remain explicit variants. Four-screen headers fail closed because the modeled SxROM
+  boards expose MMC1-controlled one-screen/horizontal/vertical CIRAM wiring only.
 - Mapper 3 mirrors an explicitly declared 2 KiB PRG RAM through `$6000-$7FFF`. Mapper 185 copy
   protection remains a separate board implementation, and Family Trainer speech hardware remains
   out of scope.
@@ -325,7 +327,8 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 78 combines UNROM-style 16 KiB PRG and CNROM-style 8 KiB CHR switching with AND bus
   conflicts. Register bit 3 selects lower/upper one-screen mirroring on Cosmo Carrier hardware but
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical
-  alternative-nametable flag to distinguish those wirings; NES 2.0 uses submapper 1 or 3.
+  alternative-nametable flag to distinguish those wirings; NES 2.0 uses submapper 1 or 3 and rejects
+  an actual four-screen declaration.
 - Mapper 68 (Sunsoft-4) exposes four 2 KiB CHR banks, one switchable and one fixed 16 KiB PRG bank,
   four-way mirroring and an enabled 8 KiB PRG-RAM window. It can replace either mirrored nametable
   page with one of the final 128 1 KiB CHR-ROM banks; writes to ROM-backed nametables are ignored.
@@ -383,7 +386,7 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   the absent line.
 - Mapper 89 (Sunsoft-2 on Sunsoft-3) uses one AND-conflicted `$8000-$FFFF` latch for a switchable
   16 KiB PRG bank, split-field 8 KiB CHR bank and lower/upper one-screen mirroring. The final 16 KiB
-  PRG bank is fixed and no PRG RAM is decoded.
+  PRG bank is fixed, no PRG RAM is decoded, and four-screen layouts are rejected.
 - Mapper 90 models the EL861226C J.Y. Company PCB rather than combining the distinct mapper
   35/209/211 identities. Its four PRG and eight 16-bit CHR registers support 32/16/8 KiB PRG and
   8/4/2/1 KiB CHR modes inside independently selected 512/256 KiB outer regions; PRG mode 3

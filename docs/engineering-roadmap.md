@@ -15,9 +15,10 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - iNES plus a constrained, fail-closed NES 2.0 subset.
 - 70 implemented mapper IDs; six board families currently have reproducible external or pinned
   real-ROM verification.
-- Transactional version-16 save states and independent PRG, CHR and mapper-owned NVRAM.
+- Transactional version-17 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
 - Checksum-pinned external conformance runners and four local real-ROM smoke profiles.
+- A built-package consumer gate for public declarations, runtime exports and blocked deep imports.
 
 See [Mapper compatibility](./mapper-compatibility.md) and [Testing](./testing.md) for the precise
 evidence behind these statements.
@@ -90,8 +91,8 @@ Do not add speculative silicon-profile flags to preserve two incompatible approx
 
 - Add browser-level end-to-end coverage for ROM load, focus ownership, autoplay recovery, region
   rebuild, persistence and quick-save isolation using redistributable fixtures.
-- Stabilize and document the `@fcemu/core` public API; add compile-time consumer examples before an
-  npm release.
+- Define the `@fcemu/core` compatibility and deprecation policy before an npm release; its current
+  root-only surface is protected by compile-time and runtime consumer gates.
 - Define a supported save-state serialization/container format if states need to move across browser
   sessions or package versions. The current in-memory object is intentionally exact and opaque.
 - Establish semantic versioning, changelog and release automation when the first public release is

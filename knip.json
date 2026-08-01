@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "workspaces": {
+    ".": {
+      "entry": ["scripts/core-api-consumer.mts"]
+    },
     "packages/fc-emu": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]

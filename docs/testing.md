@@ -27,6 +27,14 @@ yarn build
 CI runs the same gate on pushes to `master`/`main` and on every pull request, then runs the
 production build.
 
+`yarn build` first emits `@fcemu/core`, compiles a separate NodeNext consumer against its public
+declarations, checks the exact runtime root exports, verifies that deep `dist` imports are blocked,
+and then builds the UI. Run the self-contained package contract alone with:
+
+```bash
+yarn check:core-package
+```
+
 ## Focused development tests
 
 Run the smallest owning suite while iterating:

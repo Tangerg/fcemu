@@ -23,6 +23,7 @@ From the repository root:
 yarn workspace @fcemu/core build
 yarn workspace @fcemu/core test
 yarn workspace @fcemu/core typecheck
+yarn check:core-package
 yarn benchmark:core
 ```
 

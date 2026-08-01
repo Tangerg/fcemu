@@ -171,3 +171,8 @@ program counter and CPU halt state. Diagnostics are observational and do not adv
 Only names exported from `packages/fc-emu/src/index.ts` are supported integration points. Importing
 from `@fcemu/core/dist/...` or workspace-internal source paths bypasses the domain boundary and may
 break without notice during pre-1.0 development.
+
+`yarn build` compiles a separate NodeNext consumer against the emitted package declarations, checks
+the exact runtime root exports and proves that unsupported `dist` subpaths remain blocked by the
+package `exports` map. The UI's development-time source alias is therefore not the only consumer
+contract exercised in CI.

@@ -25,7 +25,7 @@
   },
   "scripts": {
     "dev": "yarn workspace @fcemu/ui dev",
-    "build": "yarn workspace @fcemu/core build && yarn workspace @fcemu/ui build",
+    "build": "yarn check:core-package && yarn workspace @fcemu/ui build",
     "benchmark:core": "yarn workspace @fcemu/core benchmark",
     "catalog:roms": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/catalog-roms.mjs",
     "fetch:test-roms": "node packages/fc-emu/scripts/fetch-test-roms.mjs",
@@ -49,6 +49,7 @@
     "format:check": "prettier --check .",
     "knip": "knip",
     "check:docs": "node scripts/check-docs.mjs",
+    "check:core-package": "yarn workspace @fcemu/core build && tsc --noEmit -p scripts/tsconfig.core-api-consumer.json && node scripts/check-core-package.mjs",
     "check:layers": "node scripts/check-layers.mjs",
     "check:circular": "node scripts/check-circular.mjs",
     "quality": "yarn typecheck && yarn lint && yarn format:check && yarn check:docs && yarn test && yarn knip && yarn check:circular && yarn check:layers"

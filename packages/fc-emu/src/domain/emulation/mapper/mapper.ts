@@ -612,6 +612,11 @@ export type MapperState =
       readonly kind: "txc-mmc3-189";
       readonly selectedPrgBank: number;
       readonly mmc3: Mmc3State;
+    }
+  | {
+      readonly kind: "waixing-f003-245";
+      readonly ppuBankAddress: number;
+      readonly mmc3: Mmc3State;
     };
 
 /**

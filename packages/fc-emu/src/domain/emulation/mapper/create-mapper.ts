@@ -82,6 +82,7 @@ import { Vrc2Vrc4Mapper } from "./vrc2-vrc4-mapper.js";
 import { Vrc6Mapper } from "./vrc6-mapper.js";
 import { Vrc7Mapper, type Vrc7Board } from "./vrc7-mapper.js";
 import { VsSystemMapper } from "./vs-system-mapper.js";
+import { WaixingF003Mapper } from "./waixing-f003-mapper.js";
 
 /** Selects cartridge hardware from mapper/submapper identity and validates its bank layout. */
 export function createMapper(cartridge: Cartridge, interruptPort: MapperInterruptPort): Mapper {
@@ -545,6 +546,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
     case 227:
     case 228:
       return createAddressLatchMulticartMapper(cartridge);
+    case 245:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000, 0x40_000, 0x80_000, 0x100_000], 0x2000);
+      requireVolatileChrRam(cartridge, "Waixing F003");
+      requireWaixingF003PrgNvRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Waixing F003");
+      return new WaixingF003Mapper(interruptPort, cartridge);
     default:
       throw new UnsupportedMapperError(cartridge.mapperNumber);
   }
@@ -663,6 +671,16 @@ function requireMmc3PrgRam(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
   if (cartridge.prgWritableBytes !== 0 && cartridge.prgWritableBytes !== 0x2000) {
     throw configurationError(cartridge, "MMC3 PRG RAM must be 8 KiB when present");
+  }
+}
+
+function requireWaixingF003PrgNvRam(cartridge: Cartridge): void {
+  if (
+    !cartridge.hasBatteryBackup ||
+    cartridge.prgRamBytes !== 0 ||
+    cartridge.prgNvRamBytes !== 0x2000
+  ) {
+    throw configurationError(cartridge, "Waixing F003 requires 8 KiB of battery-backed PRG NVRAM");
   }
 }
 

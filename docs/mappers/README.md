@@ -188,6 +188,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
 
 The shared CHR-latch banks used by MMC2 and MMC4 live in `chr-latch-banks.ts`; the MMC1 board wiring
 lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.ts`. Namco
@@ -1049,6 +1050,24 @@ writes it: R0/R1 are 2 KiB CHR banks at PPU `$0000`/`$0800`, R2-R5 are 1 KiB CHR
 is no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the header. Writes
 to `$A000-$FFFF` are ignored. See
 [NESdev mapper 206](https://www.nesdev.org/wiki/INES_Mapper_206).
+
+## Waixing F003 (245)
+
+F003 reuses the MMC3 register decoder but changes its physical outputs. CPU PRG windows retain the
+standard R6/R7 and fixed-tail modes inside one 512 KiB region. The MMC3 CHR A11 output becomes PRG
+A19, so bit 1 of the CHR register selected by PPU A10/A11 chooses the lower or upper region for all
+four CPU windows. The board grounds the MMC3's PPU A12 input: CHR mode 0 therefore selects only R0/R1
+and CHR mode 1 selects only R2-R5. Games must program every register reachable in the selected mode
+to the same outer bit if they do not want PRG to change between PPU fetches.
+
+The cartridge's 8 KiB CHR-RAM is wired directly to PPU A10-A12 and is never banked. Grounded MMC3
+A12 also means its scanline IRQ cannot receive a clock. Horizontal/vertical mirroring, PRG banking
+and the protected `$6000-$7FFF` window remain MMC3-controlled; F003 requires exactly 8 KiB of
+battery-backed PRG NVRAM. `WaixingF003Mapper` owns the changed pin routing and composes the unchanged
+register behavior through `Mmc3Mapper`, with both layers validated in save state. PRG images from
+128 KiB through 1 MiB are accepted only at power-of-two board sizes; images declaring CHR-ROM fail
+closed rather than being mistaken for this board. See
+[NESdev mapper 245](https://www.nesdev.org/wiki/INES_Mapper_245).
 
 ## Adding a mapper
 

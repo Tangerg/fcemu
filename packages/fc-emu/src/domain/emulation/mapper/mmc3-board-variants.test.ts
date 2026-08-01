@@ -13,6 +13,22 @@ import type { Mapper, MapperState } from "./mapper.js";
 const interruptPort = { setMapperIrq() {} };
 
 describe("MMC3 board variants", () => {
+  it("keeps the power-on PRG map identical through a save-state round trip", () => {
+    const cartridge = createTestCartridge({ mapper: 4, prgBanks: 8, chrBanks: 8 });
+    fillBanks(cartridge.prgRom, 0x2000);
+    const mapper = createMapper(cartridge, interruptPort);
+    const state = mapper.captureState();
+    const before = readAt(mapper, [0x8000, 0xa000, 0xc000, 0xe000]);
+
+    mapper.write(0x8000, 0x07);
+    mapper.write(0x8001, 0x06);
+    mapper.restoreState(state);
+
+    expect(before).toEqual([0, 1, 14, 15]);
+    expect(readAt(mapper, [0x8000, 0xa000, 0xc000, 0xe000])).toEqual(before);
+    expect(mapper.captureState()).toEqual(state);
+  });
+
   it("routes TxSROM nametables through CHR A17 in both CHR banking modes", () => {
     const cartridge = createTestCartridge({ mapper: 118, prgBanks: 8, chrBanks: 16 });
     const bus = new Bus(cartridge);
@@ -240,4 +256,14 @@ function clockMmc3A12(mapper: Mapper, lowCycles: number): void {
   mapper.observePpuAddress?.(0x0000);
   for (let cycle = 0; cycle < lowCycles; cycle++) mapper.tickPpu?.();
   mapper.observePpuAddress?.(0x1000);
+}
+
+function fillBanks(bytes: Uint8Array, bankSize: number): void {
+  for (let bankIndex = 0; bankIndex < bytes.byteLength / bankSize; bankIndex++) {
+    bytes.fill(bankIndex, bankIndex * bankSize, (bankIndex + 1) * bankSize);
+  }
+}
+
+function readAt(mapper: Mapper, addresses: readonly number[]): number[] {
+  return addresses.map((address) => mapper.read(address));
 }

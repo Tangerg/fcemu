@@ -41,6 +41,7 @@ export class Mmc3Mapper implements Mapper {
   powerOn(): void {
     this.register = 0;
     this.registers.fill(0);
+    this.registers[7] = 1;
     this.prgMode = 0;
     this.chrMode = 0;
     this.prgOffsets[0] = this.prgBankOffset(0);
@@ -202,6 +203,26 @@ export class Mmc3Mapper implements Mapper {
     const nametableOffset = (address - 0x2000) & 0x0fff;
     const chrBank = this.chrBankValue(nametableOffset);
     return ((chrBank >>> 7) & 1) * 0x0400 + (nametableOffset & 0x03ff);
+  }
+
+  /**
+   * Reports the MMC3 PRG bank output selected for one CPU window before any
+   * board-specific outer address wiring is applied.
+   */
+  selectedPrgBank(address: number): number {
+    if (address < 0x8000 || address > 0xffff) {
+      throw new RangeError("MMC3 PRG bank selection requires a CPU ROM address");
+    }
+    return this.prgOffsets[(address - 0x8000) >>> 13] >>> 13;
+  }
+
+  /**
+   * Reports the MMC3 CHR bank output for one PPU address. Clone boards can
+   * route these output pins to memories other than CHR without duplicating the
+   * register decoder.
+   */
+  selectedChrBank(address: number): number {
+    return this.chrBankValue(address & 0x1fff);
   }
 
   write(address: number, value: number): void {

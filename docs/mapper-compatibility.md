@@ -83,11 +83,12 @@ describes evidence maturity rather than a runtime feature flag.
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
+| 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/189/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/189/206/245 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -491,6 +492,15 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   lines select paired or mirrored 16 KiB PRG, the high four CHR bits and mirroring; write data D1-D0
   supplies the low CHR bits. The rumored `$4020-$5FFF` nibble RAM is intentionally absent because
   hardware inspection says neither cartridge contains it.
+- Mapper 245 models the Waixing F003 pin routing rather than treating it as an MMC3 bank mask. PPU
+  A10/A11 select the active MMC3 CHR register while its A12 input is grounded; that register's CHR
+  A11 output becomes PRG A19, selecting one 512 KiB half for every CPU ROM window. CHR-RAM remains
+  directly wired and unbanked, so the MMC3 CHR registers never remap pattern memory, and the
+  disconnected A12 input cannot clock the scanline IRQ. The board retains MMC3 PRG banking,
+  mirroring, NVRAM protection and its 8 KiB battery-backed NVRAM. Two 1 MiB user-local images used
+  both outer halves during 800-frame input runs; a 512 KiB image exercised the TNROM-like fallback,
+  and all three completed deterministic 120-frame save-state replays. ROM bytes remain outside the
+  repository, so the status remains `Implemented`.
 
 The completed finite mapper track and the external-verification follow-up are recorded in
 [Engineering roadmap](./engineering-roadmap.md). Numbers outside that boundary remain unsupported

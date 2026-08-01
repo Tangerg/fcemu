@@ -69,6 +69,7 @@ export class EmulatorApplication {
   private disposed = false;
   private readonly unsubscribeControllerInput: () => void;
   private readonly quickSaves = new Map<QuickSaveSlot, PersistedQuickSave>();
+  private readonly persistenceTails = new Map<string, Promise<void>>();
   private readonly pressedButtons = {
     1: new Set<GameButton>(),
     2: new Set<GameButton>(),
@@ -105,6 +106,9 @@ export class EmulatorApplication {
     const shouldSuspendAudio =
       this.session.snapshot.status === "running" || this.session.snapshot.status === "paused";
     const previousActiveEmulation = this.activeEmulation;
+    const previousBatterySave = previousActiveEmulation
+      ? this.captureBatterySave(previousActiveEmulation.runtime)
+      : undefined;
     if (previousActiveEmulation) {
       void this.persistRuntime(previousActiveEmulation.runtime, previousActiveEmulation.rom.id);
     }
@@ -128,7 +132,10 @@ export class EmulatorApplication {
       );
       if (!this.isCurrent(operation)) return;
       if (runtime.cartridge.hasBatteryBackup) {
-        const save = await this.dependencies.saveRamStorage.load(rom.id).catch(() => undefined);
+        const save =
+          previousActiveEmulation?.rom.id === rom.id && previousBatterySave
+            ? previousBatterySave.data
+            : await this.dependencies.saveRamStorage.load(rom.id).catch(() => undefined);
         if (!this.isCurrent(operation)) return;
         if (save) {
           try {
@@ -442,7 +449,7 @@ export class EmulatorApplication {
     this.resetFrameRateDiagnostics();
     this.session = this.session.stop();
     this.emit();
-    await Promise.all([audioSuspension, persistence]);
+    await Promise.all([audioSuspension, persistence, ...this.persistenceTails.values()]);
   }
 
   async dispose(): Promise<void> {
@@ -451,16 +458,20 @@ export class EmulatorApplication {
     this.operationSequence += 1;
     this.cancelScheduledFrame();
     const activeEmulation = this.activeEmulation;
-    if (activeEmulation) {
-      await this.persistRuntime(activeEmulation.runtime, activeEmulation.rom.id);
-    }
+    const persistence = activeEmulation
+      ? this.persistRuntime(activeEmulation.runtime, activeEmulation.rom.id)
+      : Promise.resolve();
     this.activeEmulation = undefined;
     this.quickSaves.clear();
     this.resetFrameRateDiagnostics();
     this.session = this.session.stop();
     this.unsubscribeControllerInput();
     this.listeners.clear();
-    await this.dependencies.audio.dispose();
+    await Promise.all([
+      persistence,
+      ...this.persistenceTails.values(),
+      this.dependencies.audio.dispose(),
+    ]);
   }
 
   private scheduleNextFrame(): void {
@@ -565,7 +576,23 @@ export class EmulatorApplication {
     this.emit();
   }
 
-  private async persistRuntime(runtime: EmulatorRuntimePort, cartridgeId: string): Promise<void> {
+  private persistRuntime(runtime: EmulatorRuntimePort, cartridgeId: string): Promise<void> {
+    const previous = this.persistenceTails.get(cartridgeId) ?? Promise.resolve();
+    const current = previous.then(() => this.persistRuntimeNow(runtime, cartridgeId));
+    this.persistenceTails.set(cartridgeId, current);
+    const clearCurrent = () => {
+      if (this.persistenceTails.get(cartridgeId) === current) {
+        this.persistenceTails.delete(cartridgeId);
+      }
+    };
+    void current.then(clearCurrent, clearCurrent);
+    return current;
+  }
+
+  private async persistRuntimeNow(
+    runtime: EmulatorRuntimePort,
+    cartridgeId: string,
+  ): Promise<void> {
     try {
       const save = runtime.captureBatterySave();
       if (!save || this.persistedRevisions.get(runtime) === save.revision) return;
@@ -573,6 +600,16 @@ export class EmulatorApplication {
       this.persistedRevisions.set(runtime, save.revision);
     } catch {
       // Persistence is best-effort; emulation must remain available if storage is denied.
+    }
+  }
+
+  private captureBatterySave(
+    runtime: EmulatorRuntimePort,
+  ): ReturnType<EmulatorRuntimePort["captureBatterySave"]> {
+    try {
+      return runtime.captureBatterySave();
+    } catch {
+      return undefined;
     }
   }
 

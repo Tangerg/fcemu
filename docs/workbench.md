@@ -36,6 +36,12 @@ diagnostics. Battery persistence is best-effort and cannot later stop or replace
 The IndexedDB adapter rejects battery records that are not the `ArrayBuffer` shape it writes; it
 never coerces an unrelated structured-clone value into zero-filled NVRAM.
 
+Battery writes are serialized per cartridge identity at the application boundary. A later revision
+therefore cannot reach storage before an older write finishes and then be overwritten by it. An
+immediate reload of the same ROM restores the outgoing runtime's freshly captured in-memory snapshot
+instead of racing a pending write against a stale storage read. Stop and disposal also drain writes
+that were queued by an older cartridge during the same application lifetime.
+
 ## Frame scheduling
 
 The application schedules through `FrameSchedulerPort`; the browser adapter uses

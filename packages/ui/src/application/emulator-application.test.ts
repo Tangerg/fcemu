@@ -441,6 +441,52 @@ describe("EmulatorApplication", () => {
     });
   });
 
+  it("drains an older cartridge write when the application is disposed", async () => {
+    const persistence = deferred<void>();
+    let revision = 0;
+    const firstRuntime = {
+      ...createRuntime({
+        consoleRegion: "ntsc",
+        batterySave: { revision: 0, data: Uint8Array.of(0) },
+      }),
+      captureBatterySave: () => ({ revision, data: Uint8Array.of(revision) }),
+    };
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async (file) => ({ id: file.name, name: file.name, bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: (rom) =>
+          rom.name === "first.nes" ? firstRuntime : createRuntime({ consoleRegion: "ntsc" }),
+      },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: () => persistence.promise },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("first.nes"));
+    revision = 1;
+    await application.loadRom(testFile("second.nes"));
+    let disposed = false;
+    const disposal = application.dispose().then(() => {
+      disposed = true;
+    });
+    await Promise.resolve();
+
+    expect(disposed).toBe(false);
+    persistence.resolve();
+    await disposal;
+    expect(disposed).toBe(true);
+  });
+
   it("does not create a runtime when a pending load completes after disposal", async () => {
     const pending = deferred<RomImage>();
     const create = vi.fn<() => never>();
@@ -507,6 +553,95 @@ describe("EmulatorApplication", () => {
     revision = 1;
     await application.pause();
     expect(save).toHaveBeenCalledWith("sha256", Uint8Array.of(1));
+  });
+
+  it("serializes battery writes so an older revision cannot finish after a newer one", async () => {
+    const firstWrite = deferred<void>();
+    const save = vi
+      .fn<(id: string, data: Uint8Array) => Promise<void>>()
+      .mockImplementation((_id, data) => (data[0] === 1 ? firstWrite.promise : Promise.resolve()));
+    let revision = 0;
+    const runtime = {
+      ...createRuntime({
+        consoleRegion: "ntsc",
+        batterySave: { revision: 0, data: Uint8Array.of(0) },
+      }),
+      captureBatterySave: () => ({ revision, data: Uint8Array.of(revision) }),
+    };
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game-sha", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create: () => runtime },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    revision = 1;
+    const pausing = application.pause();
+    await Promise.resolve();
+    revision = 2;
+    const stopping = application.stop();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save).toHaveBeenNthCalledWith(1, "game-sha", Uint8Array.of(1));
+    firstWrite.resolve();
+    await Promise.all([pausing, stopping]);
+
+    expect(save.mock.calls.map(([, data]) => data[0])).toEqual([1, 2]);
+  });
+
+  it("carries the latest in-memory battery snapshot into an immediate same-ROM reload", async () => {
+    const staleStoredSave = Uint8Array.of(0x11);
+    const latestInMemorySave = Uint8Array.of(0x42);
+    const restoreReplacement = vi.fn<(data: Uint8Array) => void>();
+    const firstRuntime = createRuntime({
+      consoleRegion: "ntsc",
+      batterySave: { revision: 7, data: latestInMemorySave },
+    });
+    const replacementRuntime = createRuntime({
+      consoleRegion: "ntsc",
+      batterySave: { revision: 0, data: Uint8Array.of(0) },
+      restoreBatterySave: restoreReplacement,
+    });
+    const create = vi
+      .fn<() => ReturnType<typeof createRuntime>>()
+      .mockReturnValueOnce(firstRuntime)
+      .mockReturnValueOnce(replacementRuntime);
+    const load = vi.fn<() => Promise<Uint8Array | undefined>>().mockResolvedValue(staleStoredSave);
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "same-sha", name: "same.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("same.nes"));
+    await application.loadRom(testFile("same.nes"));
+
+    expect(load).toHaveBeenCalledOnce();
+    expect(restoreReplacement).toHaveBeenCalledWith(latestInMemorySave);
   });
 
   it("rebuilds a running runtime for an explicit region and carries save RAM across", async () => {

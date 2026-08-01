@@ -65,6 +65,7 @@ import { TaitoX1005Mapper } from "./taito-x1-005-mapper.js";
 import { TaitoX1017Mapper } from "./taito-x1-017-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
+import { Sunsoft3Mapper } from "./sunsoft3-mapper.js";
 import { Sunsoft3RMapper } from "./sunsoft3r-mapper.js";
 import { Sunsoft4Mapper } from "./sunsoft4-mapper.js";
 import {
@@ -265,6 +266,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x8000);
       requireNoPrgRam(cartridge);
       return new GxromMapper(cartridge);
+    case 67:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x0800, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
+      requireChrRom(cartridge, "Sunsoft-3");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Sunsoft-3");
+      return new Sunsoft3Mapper(interruptPort, cartridge);
     case 68:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x0800, 0x2000);

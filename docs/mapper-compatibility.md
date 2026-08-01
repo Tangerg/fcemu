@@ -42,6 +42,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM       |
 | 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM     |
 | 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
+| 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
 | 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM                |
 | 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                      |
 | 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
@@ -85,7 +86,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -337,6 +338,12 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical
   alternative-nametable flag to distinguish those wirings; NES 2.0 uses submapper 1 or 3 and rejects
   an actual four-screen declaration.
+- Mapper 67 (Sunsoft-3) maps one switchable and one fixed 16 KiB PRG window plus four independent
+  2 KiB CHR-ROM windows without bus conflicts or PRG RAM. The high half of each 4 KiB register
+  region owns CHR, IRQ, mirroring or PRG control; every low half is an IRQ-acknowledge mirror. The
+  IRQ port accepts a high-byte/low-byte counter pair, counts down once per CPU cycle, and asserts a
+  one-shot IRQ only on the `$0000` to `$FFFF` wrap. Four-way mapper-controlled mirroring, the
+  write-pair toggle and the pending IRQ line are preserved in validated save state.
 - Mapper 68 (Sunsoft-4) exposes four 2 KiB CHR banks, one switchable and one fixed 16 KiB PRG bank,
   four-way mirroring and an enabled 8 KiB PRG-RAM window. It can replace either mirrored nametable
   page with one of the final 128 1 KiB CHR-ROM banks; writes to ROM-backed nametables are ignored.

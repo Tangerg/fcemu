@@ -147,6 +147,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 64  | Tengen RAMBO-1 | `rambo-1`                 | `rambo1-mapper.ts`           | no            | both |
 | 65  | Irem H3001     | `irem-h3001`              | `irem-h3001-mapper.ts`       | no            | cyc. |
 | 66  | GxROM / MHROM  | `gxrom`                   | `gxrom-mapper.ts`            | AND           | no   |
+| 67  | Sunsoft-3      | `sunsoft-3`               | `sunsoft3-mapper.ts`         | no            | cyc. |
 | 68  | Sunsoft-4      | `sunsoft-4`               | `sunsoft4-mapper.ts`         | no            | no   |
 | 69  | Sunsoft FME-7  | `fme7`                    | `fme7-mapper.ts`             | no            | cyc. |
 | 70  | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
@@ -618,6 +619,21 @@ itself. A directly declared PRG-RAM/NVRAM window is mapped at `$6000-$7FFF`. See
 
 One `$8000-$FFFF` latch: bits 5-4 select a 32 KiB PRG bank, bits 1-0 an 8 KiB CHR bank, with AND-type
 bus conflicts. MHROM images simply never use the high PRG bit.
+
+## Sunsoft-3 (67)
+
+The high half of each 4 KiB CPU register region is decoded under mask `$F800`: `$8800-$B800`
+select four 2 KiB CHR-ROM windows, `$C800` alternately writes the high and low bytes of the live
+16-bit IRQ counter, `$D800` enables counting and resets that write toggle, `$E800` selects vertical,
+horizontal or either one-screen layout, and `$F800` selects the 16 KiB PRG bank at
+`$8000-$BFFF`. The final PRG bank remains fixed at `$C000-$FFFF`. Every corresponding low-half
+mirror acknowledges the IRQ under mask `$8800`.
+
+While enabled, the counter decrements once per CPU cycle. Its `$0000`→`$FFFF` wrap asserts the IRQ
+line and disables further counting; the enable write deliberately does not acknowledge an already
+pending IRQ. The board carries no PRG RAM and has no bus conflicts. See
+[NESdev mapper 67](https://www.nesdev.org/wiki/INES_Mapper_067) and the
+[Sunsoft-3 pinout](https://www.nesdev.org/wiki/Sunsoft_3_pinout).
 
 ## Sunsoft-4 (68)
 

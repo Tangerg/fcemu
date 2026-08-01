@@ -118,6 +118,16 @@ export type MapperState =
       readonly selectedChrBank1: number;
     }
   | { readonly kind: "sunsoft-2"; readonly register: number }
+  | {
+      readonly kind: "sunsoft-3";
+      readonly selectedPrgBank: number;
+      readonly chrBanks: readonly number[];
+      readonly irqCounter: number;
+      readonly irqHighByteNext: boolean;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+      readonly mirroring: number;
+    }
   | { readonly kind: "sunsoft-3r"; readonly register: number }
   | { readonly kind: "cnrom-protection"; readonly selectedChip: number }
   | {

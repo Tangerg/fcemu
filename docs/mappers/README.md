@@ -612,7 +612,20 @@ level-sensitive output. Cycle mode clocks its up-counter every CPU cycle. Scanli
 341-dot prescaler and subtracts three per CPU cycle, producing the repeating 114/114/113-cycle
 sequence; a `$FF` counter clock reloads the latch and asserts IRQ. `VrcIrq` is an independent
 domain component so later VRC6/VRC7 boards can reuse this actual circuit without importing VRC4
-banking. See [NESdev VRC2/VRC4](https://www.nesdev.org/wiki/VRC4),
+banking.
+
+Exact legacy content metadata separates three mapper-23 boards that iNES cannot distinguish:
+_Ganbare Goemon 2_ is zero-WRAM [350926 VRC2b](https://nescartdb.com/profile/view/1568/ganbare-goemon-2),
+_Getsufuu Maden_ is zero-WRAM [350636 VRC2b](https://nescartdb.com/profile/view/3306/getsufuu-maden),
+and _Crisis Force_ is 2 KiB-WRAM [352396 VRC4e](https://nescartdb.com/profile/view/2279/crisis-force).
+The pinned _Ganbare Goemon 2_ profile fixes a 600-frame baseline and 3,000-frame input route through
+title, mode selection, story and active gameplay with 1,671 distinct frames. Mapper checkpoints
+record 16 PRG bank values, changes in every CHR register, both mirroring states and the absence of
+VRC4-only IRQ/swap/RAM state; video, native audio, CPU cycles and a 120-frame input-active save-state
+replay are exact. The local file with payload CRC `88C83A1D` is a known _Crisis Force_ bad dump and
+is deliberately excluded; only the canonical `FCBF28B1` payload receives VRC4e/2 KiB metadata.
+
+See [NESdev VRC2/VRC4](https://www.nesdev.org/wiki/VRC4),
 [NES 2.0 submappers](https://www.nesdev.org/wiki/NES_2.0_submappers) and
 [VRC IRQ](https://www.nesdev.org/wiki/VRC_IRQ).
 

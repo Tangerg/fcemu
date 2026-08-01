@@ -130,6 +130,42 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Ganbare Goemon 2, KON-RC833/350926: VRC2b with its one-bit latch and no WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 23,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x112140a4,
+      chrCrc32: 0xb0c3ce2d,
+    }),
+    overrides: Object.freeze({ submapperNumber: 3, prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // Getsufuu Maden, KON-RC819/350636: VRC2b without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 23,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xc8859038,
+      chrCrc32: 0xdcfa8063,
+    }),
+    overrides: Object.freeze({ submapperNumber: 3, prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // Crisis Force, KON-RC856/352396: VRC4e with 2 KiB WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 23,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x99580334,
+      chrCrc32: 0xa709bcb8,
+    }),
+    overrides: Object.freeze({ submapperNumber: 2, prgRamSize: 0x0800, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // The Lord of King, JF-25: the production board has no external WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 18,

@@ -109,7 +109,10 @@ gameplay on `$4017`. HVC-ELROM-01 _Uchuu Keibitai SDF_ (PRG `D979C8B7`, CHR `873
 the generic 8 KiB fallback to its physical zero-WRAM layout. DRAGON BALL Z-B _Crayon Shin-chan_
 (PRG `B515E7D4`, CHR `A4B121A9`) supplies Mapper 16 submapper 5 and removes the no-memory LZ93D50
 board's generic RAM. JF-25 _The Lord of King_ (PRG `EFB1DF9E`, CHR `7A2DCF20`) does the same for its
-absent external WRAM. IF-28 _Kaiketsu Yanchamaru 3_ (PRG `E30B7F64`, CHR `AF5FD6B5`) removes it
+absent external WRAM. KON-RC833 _Ganbare Goemon 2_ (PRG `112140A4`, CHR `B0C3CE2D`) and KON-RC819
+_Getsufuu Maden_ (PRG `C8859038`, CHR `DCFA8063`) select exact VRC2b behavior and remove the generic
+WRAM; KON-RC856 _Crisis Force_ (PRG `99580334`, CHR `A709BCB8`) selects VRC4e and its physical
+2 KiB WRAM. IF-28 _Kaiketsu Yanchamaru 3_ (PRG `E30B7F64`, CHR `AF5FD6B5`) removes it
 from the zero-WRAM FC-00-017B H3001 board. TGN-020-SK _Skull & Crossbones_ (PRG `0857DF48`, CHR
 `D0BF8C50`) does the same for its zero-WRAM 800032 REV A RAMBO-1 board. TGN-011-AB _After Burner_
 (PRG `B938B7E9`, CHR `725A53DC`) removes it from the zero-WRAM 800042-01 REV B Sunsoft-4 board.

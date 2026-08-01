@@ -56,6 +56,54 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ submapperNumber: 5, prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it.each([
+    {
+      title: "Ganbare Goemon 2 350926",
+      prgCrc32: 0x112140a4,
+      chrCrc32: 0xb0c3ce2d,
+    },
+    {
+      title: "Getsufuu Maden 350636",
+      prgCrc32: 0xc8859038,
+      chrCrc32: 0xdcfa8063,
+    },
+  ])("identifies the exact $title VRC2b board", ({ prgCrc32, chrCrc32 }) => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 23,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32,
+        chrCrc32,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 3, prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
+  it("identifies the exact Crisis Force 352396 VRC4e board", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 23,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x99580334,
+        chrCrc32: 0xa709bcb8,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 2, prgRamSize: 0x0800, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 23,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xdaeb93ed,
+        chrCrc32: 0xa709bcb8,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Battletoads NES-AOROM-03 memory layout", () => {
     expect(
       findLegacyRomMetadata({

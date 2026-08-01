@@ -64,7 +64,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     19 | Namco 163          | _King of Kings_ (Japan, pinned NAM-KK-5900 profile)                    | _Digital Devil Story: Megami Tensei II_ for another mix/IRQ route                 | CIRAM/WRAM routing, shared RAM, IRQ, N163 audio and persistence  |
 |     21 | Konami VRC4a/c     | _Wai Wai World 2: SOS!! Paseri Jou_ (Japan)                            | Exact alternate pin route if available                                            | Pin routing, PRG/CHR banking and VRC IRQ                         |
 |     22 | Konami VRC2a       | _TwinBee 3: Poko Poko Daimaou_ (Japan)                                 | —                                                                                 | Swapped pins, shifted CHR banks and VRC2 latch behavior          |
-|     23 | VRC2b/VRC4e/f      | _Contra_ (Japan)                                                       | _Getsu Fuuma Den_ for an additional board route                                   | Exact/legacy pin routes, RAM/latch and IRQ                       |
+|     23 | VRC2b/VRC4e/f      | _Ganbare Goemon 2_ (Japan, pinned exact 350926 VRC2b)                  | Canonical _Crisis Force_ for VRC4e IRQ/2 KiB RAM                                  | Exact/legacy pin routes, RAM/latch and IRQ                       |
 |     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan)                                            | —                                                                                 | VRC6a banking, IRQ, two pulses, saw and mixer                    |
 |     25 | VRC2c/VRC4b/d      | _Gradius II_ (Japan)                                                   | _Ganbare Goemon Gaiden_ for another pin route                                     | Pin routing, PRG/CHR modes and VRC IRQ                           |
 |     26 | Konami VRC6b       | _Esper Dream 2_ (Japan, pinned local profile)                          | _Mouryou Senki Madara_ for an active VRC6-audio sequence                          | Swapped A0/A1, banking, CHR nametables and IRQ; audio supplement |
@@ -149,6 +149,10 @@ the same ID covers materially different hardware that the primary image cannot e
   repair a modern header.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'
   original retail cartridge boards. Preserve the conversion provenance and trainer metadata.
+- Mapper 23 now has a pinned exact _Ganbare Goemon 2_ 350926 VRC2b profile. It proves the VRC2-only
+  public path but does not replace VRC4e IRQ/RAM evidence. The local _Crisis Force_ payload CRC
+  `88C83A1D` is a known bad dump and must not become a profile; obtain the canonical `FCBF28B1`
+  payload before adding the 352396 VRC4e supplement.
 - Mapper 69 base banking and cycle IRQ now have a pinned Japanese _Batman_ BAT-E301 gameplay profile.
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,

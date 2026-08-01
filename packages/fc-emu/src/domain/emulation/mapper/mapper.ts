@@ -127,6 +127,16 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "vrc3";
+      readonly selectedPrgBank: number;
+      readonly irqLatch: number;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqEnableAfterAcknowledge: boolean;
+      readonly irqEightBitMode: boolean;
+      readonly irqPending: boolean;
+    }
+  | {
       readonly kind: "vrc2-vrc4";
       readonly board:
         | "vrc4-21-auto"

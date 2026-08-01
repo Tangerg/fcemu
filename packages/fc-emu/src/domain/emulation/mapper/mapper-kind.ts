@@ -46,6 +46,7 @@ export const MapperKind = {
   IremTamS1: "irem-tam-s1",
   Irem78: "irem-78",
   Vrc1: "vrc1",
+  Vrc3: "vrc3",
   Vrc2Vrc4: "vrc2-vrc4",
   Vrc6: "vrc6",
   Vrc7: "vrc7",

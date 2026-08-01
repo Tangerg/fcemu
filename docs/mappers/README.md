@@ -138,6 +138,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 69  | Sunsoft FME-7  | `fme7`                    | `fme7-mapper.ts`             | no            | cyc. |
 | 70  | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 71  | Codemasters    | `codemasters`             | `codemasters-mapper.ts`      | no            | no   |
+| 73  | Konami VRC3    | `vrc3`                    | `vrc3-mapper.ts`             | no            | cyc. |
 | 75  | Konami VRC1    | `vrc1`                    | `vrc1-mapper.ts`             | no            | no   |
 | 76  | Namco 3446     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 78  | Irem 74HC161   | `irem-78`                 | `irem78-mapper.ts`           | AND           | no   |
@@ -632,6 +633,20 @@ field. Both are implemented by `Bandai74Mapper` with a `hasMirroringControl` fla
 A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `$C000-$FFFF` is fixed
 to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire Hawk) adds single-screen
 mirroring from `$9000-$9FFF` bit 4; submapper 0 (BF9093) keeps the header's fixed mirroring.
+
+## Konami VRC3 (73)
+
+VRC3 maps an optional fixed 8 KiB PRG-RAM window at `$6000-$7FFF`, one switchable 16 KiB PRG-ROM
+bank at `$8000-$BFFF`, the final 16 KiB bank at `$C000-$FFFF`, and fixed 8 KiB CHR RAM. Four
+register ranges from `$8000` through `$BFFF` assemble a 16-bit IRQ latch from low nibbles; `$F000`
+bits 2-0 select the PRG bank. Mirroring stays fixed from the cartridge solder pads.
+
+The IRQ counter increments on every CPU cycle while enabled. In 16-bit mode, `$FFFF` overflow
+asserts IRQ and reloads the full latch. In 8-bit mode only the low byte counts and reloads, while the
+upper byte remains unchanged. `$C000` control writes acknowledge IRQ and optionally reload the full
+counter; `$D000` acknowledges and copies the saved A flag into the enable flag. The implementation
+keeps this counter separate from the scanline-capable VRC4/VRC6/VRC7 IRQ core. See
+[NESdev VRC3](https://www.nesdev.org/wiki/VRC3).
 
 ## Konami VRC1 (75)
 

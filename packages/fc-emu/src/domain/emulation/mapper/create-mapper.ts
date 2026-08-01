@@ -70,6 +70,7 @@ import {
   UxromMapper,
 } from "./uxrom-mapper.js";
 import { Vrc1Mapper } from "./vrc1-mapper.js";
+import { Vrc3Mapper } from "./vrc3-mapper.js";
 import { findVrc24Board, type Vrc24Board } from "./vrc2-vrc4-board.js";
 import { Vrc2Vrc4Mapper } from "./vrc2-vrc4-mapper.js";
 import { Vrc6Mapper } from "./vrc6-mapper.js";
@@ -281,6 +282,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireWritableChrSize(cartridge, 0x2000);
       requireNoPrgRam(cartridge);
       return new CodemastersMapper(cartridge, requireCodemastersMirroring(cartridge));
+    case 73:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x2000);
+      requireChrRam(cartridge, "Konami VRC3");
+      requireOptional8KiBPrgRam(cartridge, "Konami VRC3");
+      requireTwoScreenNametables(cartridge, "Konami VRC3");
+      return new Vrc3Mapper(interruptPort, cartridge);
     case 75:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x1000, 0x2000);

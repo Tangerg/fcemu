@@ -46,6 +46,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                      |
 | 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                       |
+| 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
 | 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM            |
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
@@ -80,7 +81,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/75/76/79/80/82/87/88/89/90/93/94/95/97/99/113/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/73/75/76/79/80/82/87/88/89/90/93/94/95/97/99/113/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -293,6 +294,12 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 71 (Codemasters/Camerica) switches a 16 KiB `$8000-$BFFF` bank from `$C000-$FFFF` with the
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
   single-screen mirroring; submapper 0 keeps the header's fixed mirroring.
+- Mapper 73 (Konami VRC3) keeps fixed CHR RAM and solder-pad mirroring around one switchable and one
+  fixed 16 KiB PRG window, with optional direct 8 KiB PRG RAM. Its four nibble registers feed a
+  16-bit CPU-cycle up-counter; 8-bit mode preserves the counter's upper byte, and the distinct
+  control/acknowledge path copies A to E exactly as hardware documents. Three user-local images
+  completed 240-frame runs with deterministic 60-frame save-state replay. Their bytes and hashes
+  remain outside the repository, so this is `Implemented` evidence rather than `Verified`.
 - Mapper 75 (Konami VRC1) exposes three switchable 8 KiB PRG banks followed by the fixed final bank,
   plus two 4 KiB CHR banks whose fifth select bits share the horizontal/vertical mirroring register.
   Four-screen cartridges ignore that mirroring output; the ASIC has no IRQ, PRG RAM or bus

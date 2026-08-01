@@ -443,9 +443,10 @@ UNROM-like versus NROM wiring, A0 selects mirrored 16 KiB versus paired 32 KiB N
 fixed upper UNROM bank, and A1 controls mirroring. On multicarts, A7 also protects unbanked 8 KiB
 CHR RAM and A8 can replace PRG A4-A0 with five menu solder pads; the modeled unbridged value is
 zero. The battery RPG variant maps exactly 8 KiB NVRAM, leaves CHR writable and hardwires the PRG
-path to NROM modes. The implemented scope is the standard 512 KiB single-ROM board; ET-113's 640 KiB
-two-chip power-on selection remains explicit future work. A local _Wai Xin Zhan Shi_ image observes
-five latch states across 700 frames and completes deterministic 100-frame replay. See
+path to NROM modes. The checksum-pinned _Wai Xin Zhan Shi_ profile verifies 1200 input-driven frames,
+424 distinct frames, exact visual/audio/cycle results and deterministic 120-frame save-state replay;
+a separate trace exercises five latch states. The implemented scope is the standard 512 KiB
+single-ROM board; ET-113's 640 KiB two-chip power-on selection remains explicit future work. See
 [NESdev mapper 242](https://www.nesdev.org/wiki/INES_Mapper_242).
 
 ## BMC 42/63/76-in-1 (226)

@@ -94,7 +94,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
 | 240    | C&E/Supertone  | Implemented | Expansion-latch/PRG/CHR/WRAM/state tests; two local replay smokes  |
 | 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
-| 242    | Waixing 43272  | Implemented | Six PRG modes/CHR protect/WRAM/state tests; one local replay smoke |
+| 242    | Waixing 43272  | Verified    | Latch/mode tests; pinned _Wai Xin Zhan Shi_ real-ROM runner        |
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
 | 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
 | 245    | Waixing F003   | Verified    | Pin-routing tests; pinned _Dragon Quest VII_ real-ROM runner       |
@@ -621,9 +621,10 @@ and `$6000.D6` supplying PRG A18.
   lines, UNROM/NROM-128/NROM-256 modes and address-selected mirroring. Multicart boards protect
   their unbanked 8 KiB CHR RAM in NROM modes and can replace PRG A4-A0 with the unbridged menu-pad
   value `0`. Battery-backed RPG boards expose 8 KiB NVRAM, keep CHR writable and hardwire away the
-  UNROM path. A local _Wai Xin Zhan Shi_ image exercised five latch values over 700 frames, produced
-  174 distinct frames and completed deterministic 100-frame replay without halting. The optional
-  640 KiB two-chip ET-113 variant remains unsupported until a matching corpus image is available.
+  UNROM path. The checksum-pinned _Wai Xin Zhan Shi_ profile verifies 1200 input-driven frames, 424
+  distinct frames, exact visual/audio/cycle results and deterministic 120-frame save-state replay;
+  a separate trace exercised five latch values. The optional 640 KiB two-chip ET-113 variant remains
+  unsupported until a matching corpus image is available.
 - Mapper 243 models the eight-register ASIC on Sachen's SA-020A board. The index/data ports use the
   full `$C101` decode through `$4100-$7FFF`; data reads drive only D2-D0, while every register retains
   all three bits even when it has no external output. R5 selects 32 KiB PRG, R2/R4/R6 independently

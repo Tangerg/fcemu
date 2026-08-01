@@ -14,7 +14,12 @@ type LegacyHeaderOverrides = Readonly<
   Partial<
     Pick<
       CartridgeHeader,
-      "prgRamSize" | "prgNvRamSize" | "vsPpuType" | "vsHardwareType" | "defaultExpansionDevice"
+      | "submapperNumber"
+      | "prgRamSize"
+      | "prgNvRamSize"
+      | "vsPpuType"
+      | "vsHardwareType"
+      | "defaultExpansionDevice"
     >
   >
 >;
@@ -52,6 +57,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
       chrCrc32: 0x8734d65d,
     }),
     overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // King of Kings, NAM-KK-5900: N163 mix measured in the submapper-5 range.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 19,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x1dd6619b,
+      chrCrc32: 0xd3f4b947,
+    }),
+    overrides: Object.freeze({ submapperNumber: 5 }),
   }),
 ]);
 

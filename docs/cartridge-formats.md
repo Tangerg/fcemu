@@ -69,7 +69,9 @@ zero. Optional external memory is absent or exactly 8 KiB; NES 2.0 must declare 
 RAM without a battery or PRG NVRAM with one. Legacy iNES retains the conventional implicit 8 KiB
 external allocation because it cannot describe absence. Submapper 1 requires battery-backed
 internal RAM and no external WRAM; submappers 1/2 omit audio mixing, while 3/4/5 name the published
-N163 mix levels.
+N163 mix levels. Exact legacy content metadata may supply that otherwise-unrepresentable submapper:
+NAM-KK-5900 _King of Kings_ (PRG `1DD6619B`, CHR `D3F4B947`) resolves to submapper 5 and its measured
+18.0–19.5 dB mix range.
 
 Mapper 164 likewise separates the Dongda board's 512-byte 93C66 EEPROM from CPU-visible PRG RAM.
 The battery flag denotes that mapper-owned NVRAM even when NES 2.0 declares no PRG/CHR NVRAM.

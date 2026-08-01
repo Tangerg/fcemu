@@ -552,7 +552,13 @@ it may be battery-backed even when external WRAM is absent.
 phase back to chip RAM, and holds its instantaneous 4-bit sample voltage until the next channel.
 No averaging removes the characteristic channel-switching output. NES 2.0 submappers 1/2 mute the
 cartridge audio path; 3/4/5 select the documented approximately 12/16.5/18.75 dB mix levels, while
-legacy submapper 0 uses the conservative 12 dB profile.
+legacy submapper 0 uses the conservative 12 dB profile. Because iNES cannot encode a submapper, the
+exact NAM-KK-5900 _King of Kings_ PRG/CHR payload has a content-addressed legacy metadata record
+that selects submapper 5; unknown legacy payloads retain the conservative fallback. Its pinned
+profile runs 1,800 input-driven frames from title through setup into the battle map, captures active
+N163 output plus PRG/CHR/CIRAM selector state, and pins visual, audio, CPU-cycle and save-state replay
+results. The captured route does not enable the mapper IRQ, whose timing claim remains covered by
+focused tests.
 
 `$F000` bits 6-7 are retained as the chip's pin-44 control state. Current primary documentation
 identifies a diagnostic CHR-output mode when PRG bank `$3F` is selected but does not publish the

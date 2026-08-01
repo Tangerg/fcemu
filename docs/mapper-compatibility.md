@@ -29,7 +29,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture          |
 | 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture              |
 | 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture           |
-| 19     | Namco 129/163  | Implemented | CIRAM/WRAM/IRQ/shared-RAM/audio/state tests; no fixture            |
+| 19     | Namco 129/163  | Verified    | Tests; pinned _King of Kings_ N163 audio/gameplay runner           |
 | 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture           |
 | 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture         |
 | 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture        |
@@ -327,7 +327,12 @@ and `$6000.D6` supplying PRG A18.
   the held multiplexed output instead of averaging channels. Submappers 1/2 mute audio, while
   3/4/5 select the documented board mix levels. Pin-44 diagnostic CHR data remains an explicit
   evidence gap because its output encoding is not published; raw control state is retained without
-  invented behavior.
+  invented behavior. Exact legacy content metadata identifies the NAM-KK-5900 _King of Kings_
+  payload by PRG/CHR CRC and supplies its otherwise-unrepresentable submapper 5 mix. The pinned
+  profile runs 1,800 input-driven frames from title through setup into the battle map, verifies
+  nonzero N163 output at the 18.75 dB model, PRG/CHR/CIRAM selector evolution, visual/audio/CPU-cycle
+  hashes and deterministic save-state replay. That route leaves the mapper IRQ disabled, so IRQ
+  timing remains focused-test evidence rather than a commercial-ROM claim.
 - Mappers 21/22/23/25 share one VRC2/VRC4 register and banking owner, but `Vrc24Board` keeps every
   PCB's two register-select address lines immutable. Submapper 0 for 21/23/25 ORs the two
   historically combined, non-overlapping address routes and deliberately behaves as the VRC4

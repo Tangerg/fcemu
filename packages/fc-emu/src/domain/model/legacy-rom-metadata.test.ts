@@ -43,6 +43,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ submapperNumber: 5 });
   });
 
+  it("identifies the exact Crayon Shin-chan LZ93D50 board", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 16,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xb515e7d4,
+        chrCrc32: 0xa4b121a9,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 5, prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("identifies the exact The Lord of King JF-25 memory layout", () => {
     expect(
       findLegacyRomMetadata({

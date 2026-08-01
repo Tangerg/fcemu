@@ -63,6 +63,13 @@ vector; mapper 12.1 uses the same `$7003` call but copies its header CHR payload
 `$40000` for the loader to transfer into 32 KiB CHR RAM; mapper 17 submappers 0-3 load and cold-jump
 to `$7000`, `$5D00`, `$5E00` or `$5F00`.
 
+Mapper 16's legacy battery flag is normalized from iNES's misleading 8 KiB PRG-NVRAM unit to the
+LZ93D50 board's exact 256-byte 24C02 capacity. With no battery, unknown legacy images retain the
+generic 8 KiB metadata only for compatibility; exact content metadata can replace it when the
+physical board is known. DRAGON BALL Z-B _Crayon Shin-chan_ (PRG `B515E7D4`, CHR `A4B121A9`)
+resolves to submapper 5 with no EEPROM or WRAM, matching its LZ93D50 production board. NES 2.0
+submapper 4 requires no writable PRG memory; submapper 5 accepts none or exactly 256 bytes of NVRAM.
+
 Mapper 18 optionally carries one exact 8 KiB external PRG RAM/NVRAM chip. Unknown legacy iNES
 images retain the conventional implicit allocation because the header cannot encode absence;
 NES 2.0 declares either zero or exactly 8 KiB. Exact legacy content metadata identifies JF-25

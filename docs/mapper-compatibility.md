@@ -26,7 +26,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 12     | Rex/FFE 4M     | Verified    | MMC3A/card tests; pinned SL-5020B _DBZ5_ real-ROM runner           |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
 | 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
-| 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture          |
+| 16     | Bandai FCG     | Verified    | Tests; pinned _Crayon Shin-chan_ LZ93D50 story runner              |
 | 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture              |
 | 18     | Jaleco SS8806  | Verified    | Tests; pinned JF-25 _The Lord of King_ gameplay/IRQ runner         |
 | 19     | Namco 129/163  | Verified    | Tests; pinned _King of Kings_ N163 audio/gameplay runner           |
@@ -305,6 +305,12 @@ and `$6000.D6` supplying PRG A18.
   All variants expose one switchable/final-fixed 16 KiB PRG pair, eight 1 KiB CHR-ROM windows and
   four-way mirroring. LZ93D50 may connect a 256-byte 24C02 through register D; the serial protocol
   state belongs to the mapper while its bytes use Cartridge NVRAM and normal battery persistence.
+  Exact legacy metadata identifies the DRAGON BALL Z-B _Crayon Shin-chan_ board by PRG/CHR CRC,
+  selects submapper 5 and removes the nonexistent EEPROM/WRAM. Its pinned profile advances 3,600
+  input-driven frames through the opening and story with 709 distinct frames, exact high-address
+  LZ93D50 PRG/CHR/mirroring state, visual/audio/CPU-cycle hashes and deterministic save-state replay.
+  This board and route keep IRQ and EEPROM absent/inactive, so those behaviors remain focused-test
+  evidence rather than part of the commercial-ROM claim.
 - Mapper 18 (Jaleco SS8806) exposes three switchable and one fixed 8 KiB PRG windows plus eight
   1 KiB CHR-ROM windows. Because the ASIC sees only CPU A12-A14/A0-A1 and data D0-D3, every bank and
   16-bit IRQ reload value is assembled from mirrored nibble writes under the `$F003` address mask.

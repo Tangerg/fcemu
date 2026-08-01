@@ -60,6 +60,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Crayon Shin-chan: Ora to Poi Poi, DRAGON BALL Z-B: LZ93D50 without EEPROM/WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 16,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xb515e7d4,
+      chrCrc32: 0xa4b121a9,
+    }),
+    overrides: Object.freeze({ submapperNumber: 5, prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // The Lord of King, JF-25: the production board has no external WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 18,

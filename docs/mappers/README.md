@@ -498,7 +498,9 @@ cycle after the counter reaches zero and remains level-sensitive until register 
 Submapper 0 is intentionally a compatibility owner, not a guessed title database: both address
 ranges decode, and each write uses the semantics of the ASIC that physically owns that range.
 Submappers 1/2/3 are rejected because their 24C01, Datach and WRAM boards now belong to mappers
-159/157/153.
+159/157/153. Exact content metadata identifies the DRAGON BALL Z-B _Crayon Shin-chan: Ora to Poi
+Poi_ payload as a no-memory LZ93D50 board, selecting submapper 5 instead of leaving it on the
+legacy compatibility route.
 
 LZ93D50 can connect a 256-byte 24C02. Register D drives SCL/SDA, while CPU reads at
 `$6000-$7FFF` drive only EEPROM D4 and leave the other data-bus bits open. `Eeprom24c02` owns the
@@ -506,7 +508,11 @@ I²C-like protocol state; the bytes remain in Cartridge's 256-byte PRG NVRAM so 
 revision tracking and transactional save states use the existing persistence boundary. Legacy
 battery headers are normalized from iNES's misleading 8 KiB unit to this physical capacity. See
 [NESdev mapper 16](https://www.nesdev.org/wiki/INES_Mapper_016) and the
-[submapper table](https://www.nesdev.org/wiki/INES_Mapper_016/Submapper_table).
+[submapper table](https://www.nesdev.org/wiki/INES_Mapper_016/Submapper_table). The pinned
+_Crayon Shin-chan_ profile advances 3,600 input-driven frames through its opening and story,
+pinning 709 distinct frames, LZ93D50 high-address PRG/CHR state, native audio, CPU cycles and
+save-state replay. Its mapper checkpoints retain zero IRQ state and `eeprom: null`; IRQ timing and
+24C02 protocol claims therefore remain focused-test evidence.
 
 ## Jaleco SS8806 (18)
 

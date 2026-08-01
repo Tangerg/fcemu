@@ -1,5 +1,5 @@
-import { IDBFactory as FakeIdbFactory } from "fake-indexeddb";
-import { describe, expect, it } from "vitest";
+import { forceCloseDatabase, IDBFactory as FakeIdbFactory } from "fake-indexeddb";
+import { describe, expect, it, vi } from "vitest";
 import type { PersistedQuickSave } from "../../application/ports.js";
 import { IndexedDbEmulatorStorage } from "./indexed-db-emulator-storage.js";
 
@@ -97,6 +97,48 @@ describe("IndexedDbEmulatorStorage", () => {
     database.close();
 
     await expect(storage.load("rom-a")).resolves.toBeUndefined();
+  });
+
+  it("retries opening after the factory throws synchronously", async () => {
+    const factory = new FakeIdbFactory();
+    const openDatabase = factory.open.bind(factory);
+    const open = vi
+      .spyOn(factory, "open")
+      .mockImplementationOnce(() => {
+        throw new Error("storage permission probe failed");
+      })
+      .mockImplementation((name, version) => openDatabase(name, version));
+    const storage = new IndexedDbEmulatorStorage(factory);
+
+    await expect(storage.load("rom-a")).rejects.toThrow("storage permission probe failed");
+    await expect(storage.load("rom-a")).resolves.toBeUndefined();
+
+    expect(open).toHaveBeenCalledTimes(2);
+  });
+
+  it("reopens after the browser forcibly closes the cached connection", async () => {
+    const factory = new FakeIdbFactory();
+    const openDatabase = factory.open.bind(factory);
+    let database: IDBDatabase | undefined;
+    const open = vi.spyOn(factory, "open").mockImplementation((name, version) => {
+      const openRequest = openDatabase(name, version);
+      openRequest.addEventListener(
+        "success",
+        () => {
+          database = openRequest.result;
+        },
+        { once: true },
+      );
+      return openRequest;
+    });
+    const storage = new IndexedDbEmulatorStorage(factory);
+    await storage.save("rom-a", Uint8Array.of(0x42));
+    expect(database).toBeDefined();
+
+    forceCloseDatabase(database as unknown as Parameters<typeof forceCloseDatabase>[0]);
+
+    await expect(storage.load("rom-a")).resolves.toEqual(Uint8Array.of(0x42));
+    expect(open).toHaveBeenCalledTimes(2);
   });
 });
 

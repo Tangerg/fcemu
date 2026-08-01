@@ -35,10 +35,12 @@ Eject, disposal and terminal application failures cancel scheduled frames, clear
 reset runtime diagnostics. A runtime or scheduler failure also suspends audio and checkpoints battery
 state on the best-effort persistence queue before exposing the error. Audio-resume rejection is
 recoverable only while the same session is still running; an older rejection cannot overwrite a
-later pause or stop. Battery persistence is
-best-effort and cannot later stop or replace a newer session.
+later pause or stop. Battery persistence is best-effort and cannot later stop or replace a newer
+session.
 The IndexedDB adapter rejects battery records that are not the `ArrayBuffer` shape it writes; it
-never coerces an unrelated structured-clone value into zero-filled NVRAM.
+never coerces an unrelated structured-clone value into zero-filled NVRAM. Failed open attempts and
+abnormally closed browser connections are evicted from the connection cache, so a later operation
+can recover without reloading the page.
 
 Battery writes are serialized per cartridge identity at the application boundary. A later revision
 therefore cannot reach storage before an older write finishes and then be overwritten by it. An

@@ -77,13 +77,14 @@ export class IndexedDbEmulatorStorage implements SaveRamStoragePort, QuickSaveSt
   }
 
   private open(): Promise<IDBDatabase> {
-    this.databasePromise ??= new Promise((resolve, reject) => {
+    if (this.databasePromise) return this.databasePromise;
+
+    const opening = new Promise<IDBDatabase>((resolve, reject) => {
       let settled = false;
       const openRequest = this.factory.open(DATABASE_NAME, DATABASE_VERSION);
       const fail = (error: Error) => {
         if (settled) return;
         settled = true;
-        this.databasePromise = undefined;
         reject(error);
       };
       openRequest.onupgradeneeded = () => {
@@ -97,16 +98,22 @@ export class IndexedDbEmulatorStorage implements SaveRamStoragePort, QuickSaveSt
           return;
         }
         settled = true;
-        database.onversionchange = () => {
+        const invalidate = () => {
           database.close();
-          this.databasePromise = undefined;
+          if (this.databasePromise === opening) this.databasePromise = undefined;
         };
+        database.onversionchange = invalidate;
+        database.onclose = invalidate;
         resolve(database);
       };
       openRequest.onerror = () => fail(openRequest.error ?? new Error("Failed to open IndexedDB"));
       openRequest.onblocked = () => fail(new Error("IndexedDB upgrade was blocked"));
     });
-    return this.databasePromise;
+    this.databasePromise = opening;
+    void opening.catch(() => {
+      if (this.databasePromise === opening) this.databasePromise = undefined;
+    });
+    return opening;
   }
 }
 

@@ -117,6 +117,7 @@ yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
 yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
 yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
+yarn smoke:real-rom -- decathlon "/absolute/path/to/Cecathlon (C).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```
 

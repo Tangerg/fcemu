@@ -96,7 +96,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
 | 242    | Waixing 43272  | Implemented | Six PRG modes/CHR protect/WRAM/state tests; one local replay smoke |
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
-| 244    | C&E Decathlon  | Implemented | Full PRG/CHR permutation/state tests; local bank-switching smoke   |
+| 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
 | 246    | C&E Fong Shen  | Implemented | Register/WRAM/alias/state tests; three local replay smokes         |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
@@ -637,10 +637,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 244 models C&E's separate 32 KiB PRG and 8 KiB CHR outputs behind the board's documented
   permutation network. D3 chooses which output changes; D5-D4 plus D1-D0 select one of sixteen PRG
   results, while D6-D4 plus D2-D0 select one of 64 CHR results. The complete lookup network is
-  covered exhaustively rather than approximated as bit swaps. A local _Decathlon_ image
-  ran 2200 frames without halting, exercised eight effective bank pairs spanning PRG 0/1/3 and CHR
-  0/1/2/4, produced 154 distinct frames through frame 2100 and completed deterministic 100-frame
-  replay across a later CHR-bank change.
+  covered exhaustively rather than approximated as bit swaps. The pinned _Decathlon_ profile runs
+  2,200 input-driven frames with 235 distinct frames, exact visual/audio/CPU-cycle checkpoints and
+  a deterministic 100-frame save-state replay. A separate register trace exercised eight effective
+  bank pairs spanning PRG 0/1/3 and CHR 0/1/2/4; the exhaustive permutation test covers the remaining
+  electrical combinations.
 - Mapper 245 models the Waixing F003 pin routing rather than treating it as an MMC3 bank mask. PPU
   A10/A11 select the active MMC3 CHR register while its A12 input is grounded; that register's CHR
   A11 output becomes PRG A19, selecting one 512 KiB half for every CPU ROM window. CHR-RAM remains

@@ -89,7 +89,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 189    | TXC MMC3       | Implemented | Outer-PRG/MMC3/IRQ/state tests; two local replay smokes            |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
-| 226    | BMC 42/63/76-1 | Implemented | Three geometries/PRG/CHR-protect/reset/state tests; local smoke    |
+| 226    | BMC 42/63/76-1 | Verified    | Three-geometry tests; pinned _Super 42-in-1_ real-ROM runner       |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
 | 240    | C&E/Supertone  | Verified    | Expansion-latch tests; pinned _Jing Ke Xin Zhuan_ real-ROM runner  |
@@ -587,9 +587,10 @@ and `$6000.D6` supplying PRG A18.
   lines, one outer line, mirrored-16 KiB versus paired-32 KiB mode and mirroring; register 1
   supplies the final outer line and CHR-RAM write protection. Both registers clear on warm reset.
   The accepted 1/1.5/2 MiB layouts retain their physical outer-chip wiring, including the 63-in-1
-  selector order `0/0/1/2`, rather than modulo-folding the three-chip image. A local 1 MiB _Super
-  42-in-1_ image exercised the paired bank-30/31 menu path, produced a nonblank seven-color frame,
-  ran 900 frames without halting and completed deterministic 100-frame replay.
+  selector order `0/0/1/2`, rather than modulo-folding the three-chip image. The checksum-pinned
+  1 MiB _Super 42-in-1_ profile uses Select to enter the second menu page, launches _1942_ and
+  verifies 1800 input-driven frames, 354 distinct frames, exact visual/audio/cycle results and
+  deterministic 120-frame save-state replay. The 1.5/2 MiB layouts remain focused-test evidence.
 - Mapper 227 separates three published variants. Submapper 0 leaves its 8 KiB CHR RAM writable and
   maps an explicitly battery-backed 8 KiB RPG WRAM window; its missing UNROM circuit hardwires the
   PRG path to the NROM-128/NROM-256 modes. Submapper 1 protects CHR RAM in NROM modes and substitutes

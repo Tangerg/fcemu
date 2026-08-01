@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { REAL_ROM_PROFILES, validateRealRomProfiles } from "./real-rom-profiles.mjs";
 
-const BUTTON_NAMES = ["a", "b", "start", "up", "down", "left", "right"];
+const BUTTON_NAMES = ["a", "b", "select", "start", "up", "down", "left", "right"];
 
 describe("real-ROM profile validation", () => {
   it("accepts the committed profile catalog", () => {

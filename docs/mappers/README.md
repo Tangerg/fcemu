@@ -461,9 +461,10 @@ Both latches clear on cold power and warm reset. `Bmc226Mapper` accepts the know
 1.5 MiB 63-in-1 and 2 MiB 76-in-1 PRG layouts. The three-chip image decodes its two outer selector
 bits as physical blocks `0/0/1/2`; it is not treated as a flat 96-bank modulo array. State stores
 the two physical latch bytes, derives mirroring from them on restore and keeps CHR memory in the
-cartridge memory owner. A user-local 1 MiB _Super 42-in-1_ image selected the paired bank-30/31 menu
-path, rendered a nonblank seven-color frame, ran for 900 frames and completed an identical 100-frame
-replay without halting. Its bytes remain outside the repository. See
+cartridge memory owner. The checksum-pinned 1 MiB _Super 42-in-1_ profile uses Select to enter the
+second menu page, launches _1942_ and verifies 1800 input-driven frames, 354 distinct frames, exact
+visual/audio/cycle results and deterministic 120-frame save-state replay. The 1.5/2 MiB layouts
+remain focused-test evidence, and the copyrighted fixture bytes remain outside the repository. See
 [NESdev mapper 226](https://www.nesdev.org/wiki/INES_Mapper_226).
 
 ## Bandai FCG / LZ93D50 (16)

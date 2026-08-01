@@ -9,6 +9,7 @@ const AUDIO_SAMPLE_RATE = 44_100;
 const BUTTONS = Object.freeze({
   a: ControllerButton.A,
   b: ControllerButton.B,
+  select: ControllerButton.Select,
   start: ControllerButton.Start,
   up: ControllerButton.Up,
   down: ControllerButton.Down,

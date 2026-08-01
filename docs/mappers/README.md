@@ -1379,10 +1379,11 @@ The factory accepts only the original 512 KiB PRG + 512 KiB CHR-ROM geometry, su
 two-screen nametables and 2 KiB of NES 2.0 PRG RAM/NVRAM. Legacy iNES can describe the SRAM only as
 its implicit 8 KiB allocation, of which the physical `$6800-$6FFF` window exposes the first 2 KiB.
 Tests exhaust the 16 high-address aliases and cover repeated register decoding, every bank window,
-WRAM/open bus, reset, state validation and format boundaries. A user-local original _Feng Shen
-Bang_ image ran 2200 frames without halting, exercised 15 bank-register states, produced 317
-distinct frames through frame 2100 and completed deterministic 120-frame replay. Two modified
-images each ran 900 frames, exercised 13/14 states and remained active. See
+WRAM/open bus, reset, state validation and format boundaries. The pinned original _Feng Shen Bang_
+profile runs 2,200 input-driven frames with 391 distinct frames plus exact visual, audio and CPU-cycle
+checkpoints, then completes a deterministic 120-frame save-state replay. A separate trace exercised
+15 bank-register states. Two modified images each ran 900 frames, exercised 13/14 states and
+remained active as supplemental smoke evidence. See
 [NESdev mapper 246](https://www.nesdev.org/wiki/INES_Mapper_246) and the
 [cartridge hardware trace](https://forums.nesdev.org/viewtopic.php?start=60&t=13969); the traced
 high-address path is also modeled by

@@ -98,7 +98,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
 | 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
-| 246    | C&E Fong Shen  | Implemented | Register/WRAM/alias/state tests; three local replay smokes         |
+| 246    | C&E Fong Shen  | Verified    | Bank/alias tests; pinned _Feng Shen Bang_ real-ROM runner          |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
 | 250    | MMC3 addr/data | Verified    | Rewiring/IRQ tests; pinned _Time Diver_ real-ROM runner            |
 
@@ -655,10 +655,10 @@ and `$6000.D6` supplying PRG A18.
   the exact 2 KiB SRAM aperture at `$6800-$6FFF`. It also includes the hardware-traced sixteen
   high-address reads that force PRG A17, including the reset/IRQ vector at `$FFFC-$FFFF`; this is
   board wiring rather than a title-hash bootstrap fix. Cold power sets the 74LS670 register files
-  to all high and warm reset preserves them. A local original _Feng Shen Bang_ image ran 2200
-  frames without halting, exercised 15 bank states, produced 317 distinct frames through frame
-  2100 and completed deterministic 120-frame replay. Two modified images each completed 900-frame
-  smokes with 13/14 bank states and a running CPU.
+  to all high and warm reset preserves them. The pinned original _Feng Shen Bang_ profile runs 2,200
+  input-driven frames with 391 distinct frames plus exact visual/audio/CPU-cycle checkpoints, then
+  completes a deterministic 120-frame save-state replay. A separate trace exercised 15 bank states;
+  two modified images retain 900-frame smoke evidence with 13/14 states but are not primary profiles.
 - Mapper 250 keeps the standard MMC3 memory, mirroring, PRG-RAM protection and filtered A12 IRQ
   paths but rewires CPU writes: A10 selects the odd/even register port, A7-A0 carry its value, and
   CPU D7-D0 are ignored. The mapper factory bounds the shared MMC3 core to 512 KiB PRG, 256 KiB CHR,

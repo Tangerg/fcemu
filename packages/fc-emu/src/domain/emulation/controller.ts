@@ -117,7 +117,11 @@ class Controller {
   }
 
   private static validateButtons(buttons: readonly boolean[], label: string): void {
-    if (buttons.length !== 8 || buttons.some((button) => typeof button !== "boolean")) {
+    if (
+      !Array.isArray(buttons) ||
+      buttons.length !== 8 ||
+      buttons.some((button) => typeof button !== "boolean")
+    ) {
       throw new RangeError(`${label} must contain exactly eight boolean button values`);
     }
   }

@@ -56,4 +56,15 @@ describe("VsSystem", () => {
     expect(restored.captureState()).toEqual(state);
     expect(() => restored.restoreState({ ...state, coin1CyclesRemaining: 51 })).toThrow(RangeError);
   });
+
+  it("rejects malformed cabinet commands without changing cabinet state", () => {
+    const system = new VsSystem(0, 1000);
+    system.powerOn();
+    const before = system.captureState();
+
+    expect(() => system.insertCoin(3 as 1 | 2)).toThrow(/slot must be 1 or 2/i);
+    expect(() => system.setServiceButton(1 as unknown as boolean)).toThrow(/must be boolean/i);
+    expect(() => system.setDipSwitch(1, "yes" as unknown as boolean)).toThrow(/must be boolean/i);
+    expect(system.captureState()).toEqual(before);
+  });
 });

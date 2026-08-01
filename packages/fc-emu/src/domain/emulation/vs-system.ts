@@ -73,17 +73,26 @@ export class VsSystem {
   }
 
   insertCoin(slot: 1 | 2): void {
+    if (slot !== 1 && slot !== 2) {
+      throw new RangeError("Vs. coin slot must be 1 or 2");
+    }
     if (slot === 1) this.coin1CyclesRemaining = this.coinPulseCycles;
     else this.coin2CyclesRemaining = this.coinPulseCycles;
   }
 
   setServiceButton(pressed: boolean): void {
+    if (typeof pressed !== "boolean") {
+      throw new TypeError("Vs. service-button state must be boolean");
+    }
     this.serviceButton = pressed;
   }
 
   setDipSwitch(index: number, enabled: boolean): void {
     if (!Number.isInteger(index) || index < 1 || index > 8) {
       throw new RangeError("Vs. DIP switch index must be between 1 and 8");
+    }
+    if (typeof enabled !== "boolean") {
+      throw new TypeError("Vs. DIP switch state must be boolean");
     }
     const mask = 1 << (index - 1);
     this.dipSwitches = enabled ? this.dipSwitches | mask : this.dipSwitches & ~mask;

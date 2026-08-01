@@ -26,6 +26,19 @@ describe("Emulator", () => {
     expect(state.controller2.buttons[ControllerButton.A]).toBe(true);
   });
 
+  it("rejects invalid player numbers instead of silently routing them to player two", () => {
+    const emulator = Emulator.fromRom(createTestRom());
+    const before = emulator.captureSaveState();
+
+    expect(() => emulator.setControllerButton(3 as 1 | 2, ControllerButton.A, true)).toThrow(
+      /player must be 1 or 2/i,
+    );
+    expect(() => emulator.setControllerState(0 as 1 | 2, Array<boolean>(8).fill(false))).toThrow(
+      /player must be 1 or 2/i,
+    );
+    expect(emulator.captureSaveState()).toEqual(before);
+  });
+
   it("boots from the cartridge reset vector before the first frame", () => {
     const emulator = Emulator.fromRom(
       createTestRom({ program: [0x4c, 0x00, 0x80], resetVector: 0x8000 }),
@@ -128,6 +141,19 @@ describe("Emulator", () => {
       timingMode: CartridgeTimingMode.Ntsc,
       consoleRegion: "pal",
     });
+  });
+
+  it("rejects an unknown execution-region override at the public facade", () => {
+    expect(() =>
+      Emulator.fromRom(
+        createTestRom(),
+        "invalid-region.nes",
+        {},
+        {
+          consoleRegion: "secam" as "ntsc",
+        },
+      ),
+    ).toThrow(/unsupported console region/i);
   });
 
   it.each([

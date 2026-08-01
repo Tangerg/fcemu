@@ -43,6 +43,9 @@ describe("Controller", () => {
     expect(() => {
       controller.buttonsState = [true];
     }).toThrow(/eight/);
+    expect(() => {
+      controller.buttonsState = "12345678" as unknown as readonly boolean[];
+    }).toThrow(/eight/);
     expect(() => controller.setButton(8 as ControllerButton, true)).toThrow(RangeError);
   });
 

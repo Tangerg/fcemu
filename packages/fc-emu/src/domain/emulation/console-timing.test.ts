@@ -94,6 +94,13 @@ describe("ConsoleTiming", () => {
     expect(resolveConsoleTiming(CartridgeTimingMode.Ntsc, "pal").region).toBe("pal");
   });
 
+  it("rejects runtime values outside the timing and region contracts", () => {
+    expect(() => resolveConsoleTiming(CartridgeTimingMode.Ntsc, "secam" as "ntsc")).toThrow(
+      /console region/i,
+    );
+    expect(() => resolveConsoleTiming(4 as CartridgeTimingMode)).toThrow(/timing mode/i);
+  });
+
   it("owns the PAL-specific frame, noise and DMC periods", () => {
     expect(PAL_APU_TIMING).toMatchObject({
       firstQuarterCycle: 8313,

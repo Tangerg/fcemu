@@ -208,6 +208,9 @@ export class Emulator {
   }
 
   private controllerForPlayer(player: 1 | 2) {
+    if (player !== 1 && player !== 2) {
+      throw new RangeError("Controller player must be 1 or 2");
+    }
     const firstPlayerUsesPort2 =
       this.bus.Cartridge.consoleType === 1 && this.bus.Cartridge.defaultExpansionDevice === 5;
     const usesPort1 = firstPlayerUsesPort2 ? player === 2 : player === 1;

@@ -92,6 +92,11 @@ emulator.setDipSwitch(3, true);
 images. `emulator.cartridge.consoleType`, `vsPpuType` and `vsHardwareType` let a host present
 appropriate controls without inspecting ROM bytes.
 
+Runtime command validation is fail-closed for JavaScript callers as well as TypeScript consumers:
+controller players and coin slots must be `1` or `2`, full controller reports must contain exactly
+eight booleans, and service/DIP states must be booleans. Invalid values never fall through to player
+two, coin slot two or a truthy cabinet input.
+
 ## Region selection
 
 ```ts
@@ -100,8 +105,8 @@ const pal = Emulator.fromRom(rom, "homebrew.nes", outputs, {
 });
 ```
 
-The override accepts `"ntsc"`, `"pal"` or `"dendy"`. Without an override, the header chooses the
-region; multi-region images resolve deterministically to NTSC. Region is part of save-state
+The override accepts only `"ntsc"`, `"pal"` or `"dendy"` at runtime. Without an override, the header
+chooses the region; multi-region images resolve deterministically to NTSC. Region is part of save-state
 compatibility and cannot be changed on an existing instance—construct a new runtime instead. VS
 hardware is NTSC-only and rejects PAL/Dendy overrides.
 

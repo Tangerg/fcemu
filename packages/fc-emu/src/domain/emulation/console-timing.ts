@@ -112,7 +112,12 @@ export function resolveConsoleTiming(
   mode: CartridgeTimingMode,
   regionOverride?: ConsoleRegion,
 ): ConsoleTiming {
-  if (regionOverride) return CONSOLE_TIMINGS[regionOverride];
+  if (regionOverride !== undefined) {
+    if (regionOverride !== "ntsc" && regionOverride !== "pal" && regionOverride !== "dendy") {
+      throw new RangeError(`Unsupported console region: ${String(regionOverride)}`);
+    }
+    return CONSOLE_TIMINGS[regionOverride];
+  }
   switch (mode) {
     case CartridgeTimingMode.Pal:
       return CONSOLE_TIMINGS.pal;
@@ -121,6 +126,8 @@ export function resolveConsoleTiming(
     case CartridgeTimingMode.Ntsc:
     case CartridgeTimingMode.MultiRegion:
       return CONSOLE_TIMINGS.ntsc;
+    default:
+      throw new RangeError(`Unsupported cartridge timing mode: ${String(mode)}`);
   }
 }
 

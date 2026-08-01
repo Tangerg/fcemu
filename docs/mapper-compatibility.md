@@ -78,6 +78,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
 | 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM             |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
+| 189    | TXC MMC3       | Implemented | Outer-PRG/MMC3/IRQ/state tests; two local replay smokes            |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
@@ -86,7 +87,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/189/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -461,6 +462,13 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 185 keeps CNROM's fixed 16/32 KiB PRG and AND-conflicted two-bit latch but uses the latch as
   CHR-ROM chip select. NES 2.0 submappers 4-7 name enable values 0-3. Any other value tri-states the
   PPU data pins, whose undriven read follows the address low byte; unknown legacy wiring is rejected.
+- Mapper 189 composes a standard MMC3 clone with TXC's independent 32 KiB PRG outer latch. Writes
+  across the generalized `$4020-$7FFF` decode OR the data byte's upper and lower nibbles to select
+  one of eight whole PRG banks; MMC3 R6/R7 and PRG mode cannot split that external window. The MMC3
+  owner still controls 1/2 KiB CHR banks, horizontal/vertical mirroring and filtered-A12 IRQs, while
+  `$6000-$7FFF` remains a write-only latch instead of fabricated PRG RAM. Two clean user-local
+  images completed 720-frame input runs and deterministic 60-frame save-state replays; their bytes
+  and hashes remain outside the repository, so the status remains `Implemented`.
 - Mapper 206 (Namco 118 / DxROM) is the discrete predecessor to MMC3. It reuses the `$8000`/`$8001`
   bank-select and bank-data ports for two 2 KiB plus four 1 KiB CHR windows and two 8 KiB PRG banks
   with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring

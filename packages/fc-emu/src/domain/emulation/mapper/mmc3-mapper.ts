@@ -2,7 +2,7 @@ import { NametableMirroring } from "../../model/cartridge.js";
 import type Cartridge from "../../model/cartridge.js";
 import { isBit, isByte } from "../numeric-range.js";
 import { MapperKind } from "./mapper-kind.js";
-import type { Mapper, MapperInterruptPort, MapperState } from "./mapper.js";
+import type { Mapper, MapperInterruptPort, MapperState, Mmc3State } from "./mapper.js";
 import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
 export type Mmc3Board = "standard" | "txsrom" | "tqrom";
@@ -62,7 +62,7 @@ export class Mmc3Mapper implements Mapper {
     this.interruptPort.setMapperIrq(false);
   }
 
-  captureState(): MapperState {
+  captureState(): Mmc3State {
     return {
       kind: MapperKind.Mmc3,
       register: this.register,

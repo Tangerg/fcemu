@@ -1,3 +1,22 @@
+export interface Mmc3State {
+  readonly kind: "mmc3";
+  readonly register: number;
+  readonly registers: readonly number[];
+  readonly prgMode: number;
+  readonly chrMode: number;
+  readonly reload: number;
+  readonly counter: number;
+  readonly reloadPending: boolean;
+  readonly irqEnable: boolean;
+  readonly irqPending: boolean;
+  readonly prgRamEnabled: boolean;
+  readonly prgRamWritable: boolean;
+  readonly ppuClock: number;
+  readonly a12High: boolean;
+  readonly a12LowSince: number;
+  readonly mirroring: number;
+}
+
 /**
  * Cartridge address-space policy owned by the Emulation domain.
  *
@@ -588,23 +607,11 @@ export type MapperState =
       readonly activeChrRegister: 0 | 1;
       readonly previousCpuCycleWasWrite: boolean;
     }
+  | Mmc3State
   | {
-      readonly kind: "mmc3";
-      readonly register: number;
-      readonly registers: readonly number[];
-      readonly prgMode: number;
-      readonly chrMode: number;
-      readonly reload: number;
-      readonly counter: number;
-      readonly reloadPending: boolean;
-      readonly irqEnable: boolean;
-      readonly irqPending: boolean;
-      readonly prgRamEnabled: boolean;
-      readonly prgRamWritable: boolean;
-      readonly ppuClock: number;
-      readonly a12High: boolean;
-      readonly a12LowSince: number;
-      readonly mirroring: number;
+      readonly kind: "txc-mmc3-189";
+      readonly selectedPrgBank: number;
+      readonly mmc3: Mmc3State;
     };
 
 /**

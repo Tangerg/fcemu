@@ -183,6 +183,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
 | 184 | Sunsoft-1      | `sunsoft-1`               | `sunsoft1-mapper.ts`         | no            | no   |
 | 185 | CNROM protect  | `cnrom-protection`        | `cnrom-protection-mapper.ts` | AND           | no   |
+| 189 | TXC MMC3       | `txc-mmc3-189`            | `txc-mmc3-189-mapper.ts`     | no            | A12  |
 | 206 | Namco 118      | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
@@ -1025,6 +1026,20 @@ board's enable wiring, the cartridge tri-states PPU pattern reads. NES 2.0 subma
 identify enable values 0-3 and are supported; legacy/submapper 0 does not identify that value and
 fails closed. PRG stays fixed as a 16 KiB mirrored or 32 KiB image, and PRG RAM is absent. See
 [NESdev mapper 185](https://www.nesdev.org/wiki/INES_Mapper_185).
+
+## TXC MMC3 (189)
+
+Mapper 189 is two concrete board layers rather than an MMC3 bank-mask special case. The inner MMC3
+retains its standard 1/2 KiB CHR-ROM registers, horizontal/vertical mirroring and filtered-A12 IRQ
+counter. An external TXC latch replaces all four CPU PRG windows with one consecutive 32 KiB bank,
+so MMC3 R6/R7 and PRG mode do not affect CPU ROM mapping.
+
+For compatibility across the original and rewired pirate boards, every write in `$4020-$7FFF`
+combines the data byte's upper and lower nibbles with bitwise OR and uses the low three result bits as
+the PRG bank. The range is write-only and never becomes PRG RAM, even though some board variants
+reach the latch through the MMC3 WRAM interface. `TxcMmc3189Mapper` owns that outer latch and
+delegates only the physically retained MMC3 behavior to `Mmc3Mapper`; save state keeps both owners
+as separate validated layers. See [NESdev mapper 189](https://www.nesdev.org/wiki/INES_Mapper_189).
 
 ## Namco 118 / DxROM (206)
 

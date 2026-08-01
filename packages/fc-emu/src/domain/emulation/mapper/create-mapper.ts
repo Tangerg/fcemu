@@ -63,6 +63,7 @@ import { TaitoTc0190Mapper } from "./taito-tc0190-mapper.js";
 import { TaitoTc0690Mapper, type TaitoTc0690IrqRevision } from "./taito-tc0690-mapper.js";
 import { TaitoX1005Mapper } from "./taito-x1-005-mapper.js";
 import { TaitoX1017Mapper } from "./taito-x1-017-mapper.js";
+import { TxcMmc3189Mapper } from "./txc-mmc3-189-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3Mapper } from "./sunsoft3-mapper.js";
@@ -526,6 +527,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "CNROM protection");
       requireNoPrgRam(cartridge);
       return new CnromProtectionMapper(cartridge, resolveCnromProtectionChip(cartridge));
+    case 189:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x8000, 0x20_000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
+      requireChrRom(cartridge, "TXC mapper 189");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "TXC mapper 189");
+      return new TxcMmc3189Mapper(interruptPort, cartridge);
     case 206:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);

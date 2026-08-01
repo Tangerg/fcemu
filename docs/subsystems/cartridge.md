@@ -114,12 +114,15 @@ absent external WRAM. NAM-KK-5900 _King of Kings_ (PRG `1DD6619B`, CHR `D3F4B947
 legacy fallback. NES-AOROM-03 _Battletoads_ (PRG `279710DC`, empty CHR) removes iNES's generic PRG
 RAM allocation from its zero-WRAM AxROM board while retaining the board-implied 8 KiB CHR RAM. BC6
 _Bible Adventures_ 1.3 (PRG `9B8E02C0`, CHR `B0A8C32A`) likewise removes the generic allocation
-from its zero-WRAM `COLORDREAMS-74*377` board.
+from its zero-WRAM `COLORDREAMS-74*377` board. NES-GN-ROM-03 _Dragon Power_ (PRG `ECE525DD`, CHR
+`59F0FBAA`) removes the same allocation and corrects the matching circulating iNES image's
+horizontal flag to the physical board's hardwired vertical mirroring.
 
-The lookup completes metadata only; it never changes ROM bytes, the mapper number or ROM geometry.
-It may supply an otherwise-unrepresentable submapper when exact board evidence exists. Unknown
-legacy payloads retain conservative iNES defaults, while all explicit NES 2.0 fields remain
-authoritative even if their PRG/CHR bytes match a catalog entry.
+The lookup completes or corrects metadata only; it never changes ROM bytes, the mapper number or ROM
+geometry. It may supply an otherwise-unrepresentable submapper or correct a known inaccurate legacy
+field when exact board evidence exists. Unknown legacy payloads retain conservative iNES defaults,
+while all explicit NES 2.0 fields remain authoritative even if their PRG/CHR bytes match a catalog
+entry.
 
 ### ROM size encoding
 

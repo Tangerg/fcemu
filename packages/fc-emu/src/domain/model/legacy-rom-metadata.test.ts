@@ -82,6 +82,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Dragon Power NES-GN-ROM-03 board facts", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 66,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x8000,
+        prgCrc32: 0xece525dd,
+        chrCrc32: 0x59f0fbaa,
+      })?.overrides,
+    ).toEqual({ mirroringMode: 1, prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("identifies the exact The Lord of King JF-25 memory layout", () => {
     expect(
       findLegacyRomMetadata({

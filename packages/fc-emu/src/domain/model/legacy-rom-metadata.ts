@@ -1,4 +1,8 @@
-import { CartridgeConsoleType, type CartridgeHeader } from "./cartridge-header.js";
+import {
+  CartridgeConsoleType,
+  NametableMirroring,
+  type CartridgeHeader,
+} from "./cartridge-header.js";
 import { calculateCrc32 } from "./rom-identity.js";
 
 export interface LegacyRomIdentity {
@@ -14,6 +18,7 @@ type LegacyHeaderOverrides = Readonly<
   Partial<
     Pick<
       CartridgeHeader,
+      | "mirroringMode"
       | "submapperNumber"
       | "prgRamSize"
       | "prgNvRamSize"
@@ -84,6 +89,23 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Dragon Power, NES-GN-ROM-03: vertical GNROM without WRAM. The
+      // circulating iNES image identified below incorrectly declares H.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 66,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x8000,
+      prgCrc32: 0xece525dd,
+      chrCrc32: 0x59f0fbaa,
+    }),
+    overrides: Object.freeze({
+      mirroringMode: NametableMirroring.Vertical,
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Crayon Shin-chan: Ora to Poi Poi, DRAGON BALL Z-B: LZ93D50 without EEPROM/WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 16,
@@ -121,7 +143,7 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
 ]);
 
 /**
- * Completes hardware facts that legacy iNES cannot encode reliably.
+ * Completes or corrects hardware facts that legacy iNES cannot encode reliably.
  *
  * The lookup is deliberately content-addressed and exact: console type,
  * mapper, independent region lengths and independent PRG/CHR CRCs must all

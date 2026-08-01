@@ -43,7 +43,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM           |
 | 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM       |
 | 65     | Irem H3001     | Implemented | PRG-mode/CHR/RAM/mirroring/cycle-IRQ tests; no conformance ROM     |
-| 66     | GxROM/MHROM    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
+| 66     | GxROM/MHROM    | Verified    | Tests; pinned _Dragon Power_ GNROM gameplay runner                 |
 | 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
 | 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM                |
 | 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                      |
@@ -286,7 +286,11 @@ and `$6000.D6` supplying PRG A18.
   active Baby Moses gameplay with 518 distinct frames; mapper checkpoints cover both 32 KiB PRG
   banks and CHR banks 7/4, while visual, native-audio, CPU-cycle and input-active save-state hashes
   lock the public execution path. Focused tests retain the bitwise-AND conflict proof independently
-  of the commercial scenario.
+  of the commercial scenario. Exact content metadata also identifies _Dragon Power_ as the vertical-
+  mirroring, zero-WRAM NES-GN-ROM-03 board and corrects its circulating legacy header's horizontal
+  declaration. Its pinned 2,400-frame route reaches active gameplay with 839 distinct frames; mapper
+  checkpoints cover all four 32 KiB PRG banks and both observed CHR banks, while visual, native-audio,
+  CPU-cycle and input-active save-state hashes lock the same public path.
 - Mapper 12.0 models Rex Soft/Gouder SL-5020B as an MMC3A-compatible Huang-1 plus a separate GAL.
   Writes matching `$E100=$4100` immediately put D0 on CHR A18 for PPU `$0000-$0FFF` and D4 on CHR
   A18 for `$1000-$1FFF`, independent of the MMC3 CHR-mode swap. Reads through the same aliases drive

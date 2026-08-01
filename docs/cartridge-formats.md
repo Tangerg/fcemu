@@ -65,6 +65,11 @@ metadata resolves BC6 _Bible Adventures_ 1.3 (PRG `9B8E02C0`, CHR `B0A8C32A`) to
 board's zero-WRAM layout instead of retaining iNES's generic 8 KiB parser allocation. Its 64 KiB
 CHR payload remains ROM; no writable CHR memory is synthesized.
 
+Mapper 66 GxROM likewise has no writable CPU memory. Exact content metadata resolves _Dragon Power_
+(PRG `ECE525DD`, CHR `59F0FBAA`) to its NES-GN-ROM-03 board: zero WRAM and hardwired vertical
+mirroring. This deliberately corrects the matching circulating iNES image's inaccurate horizontal
+flag; unknown Mapper 66 payloads keep their own header mirroring and conservative legacy metadata.
+
 Mapper 6/8/17 and NES 2.0 mapper 12.1 images are extracted FFE copier-card memory, so their payload initializes
 mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.
 Battery declarations are rejected. Their optional trainer is a loader entry rather than passive

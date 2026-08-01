@@ -783,7 +783,15 @@ itself. A directly declared PRG-RAM/NVRAM window is mapped at `$6000-$7FFF`. See
 ## GxROM / MHROM (66)
 
 One `$8000-$FFFF` latch: bits 5-4 select a 32 KiB PRG bank, bits 1-0 an 8 KiB CHR bank, with AND-type
-bus conflicts. MHROM images simply never use the high PRG bit.
+bus conflicts. MHROM images simply never use the high PRG bit. GxROM has no PRG-RAM window and its
+nametable wiring is fixed by the board solder pads.
+
+Exact content metadata identifies _Dragon Power_ as the vertical-mirroring, zero-WRAM
+NES-GN-ROM-03 board and corrects the circulating legacy header's horizontal declaration. Its pinned
+2,400-frame route crosses the title and story into active gameplay with 839 distinct frames, visits
+all four 32 KiB PRG banks and both observed CHR banks, and locks visual/audio/CPU output plus an
+input-active save-state replay. Focused tests separately preserve the exact bitwise-AND conflict
+behavior. See [NESdev GxROM](https://www.nesdev.org/wiki/GxROM).
 
 ## Sunsoft-3 (67)
 

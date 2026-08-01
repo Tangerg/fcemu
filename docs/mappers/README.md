@@ -1273,9 +1273,10 @@ starts at bank zero on cold power and is not connected to the console's warm-res
 The known board carries exactly 128 KiB each of PRG and CHR ROM, a directly mapped 8 KiB PRG RAM
 or battery-backed NVRAM window at `$6000-$7FFF`, and hardwired horizontal or vertical mirroring.
 `CeSupertoneMapper` owns those signals and validates effective bank outputs transactionally in save
-state. Two user-local _Jing Ke Xin Zhuan_ images exercised five bank states across 700 frames,
-produced 182/153 distinct frames in their first 600 and completed identical 100-frame replay
-segments without halting. Their copyrighted bytes remain outside the repository. See
+state. The checksum-pinned non-HACK _Jing Ke Xin Zhuan_ profile verifies 1800 input-driven frames,
+341 distinct frames, exact visual/audio/cycle results and deterministic 120-frame save-state replay.
+A separate trace across it and a local HACK image exercised five effective latch states. Their
+copyrighted bytes remain outside the repository. See
 [NESdev mapper 240](https://www.nesdev.org/wiki/INES_Mapper_240).
 
 ## BxROM with WRAM (241)

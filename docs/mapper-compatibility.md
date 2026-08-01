@@ -92,7 +92,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 226    | BMC 42/63/76-1 | Implemented | Three geometries/PRG/CHR-protect/reset/state tests; local smoke    |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
-| 240    | C&E/Supertone  | Implemented | Expansion-latch/PRG/CHR/WRAM/state tests; two local replay smokes  |
+| 240    | C&E/Supertone  | Verified    | Expansion-latch tests; pinned _Jing Ke Xin Zhuan_ real-ROM runner  |
 | 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
 | 242    | Waixing 43272  | Verified    | Latch/mode tests; pinned _Wai Xin Zhan Shi_ real-ROM runner        |
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
@@ -607,9 +607,9 @@ and `$6000.D6` supplying PRG A18.
   alias. Writes throughout `$4020-$5FFF` select one 32 KiB PRG bank with D5-D4 and one 8 KiB CHR
   bank with D3-D0; `$8000-$FFFF` remains ROM-only, and header mirroring stays hardwired. The known
   board geometry is exactly 128 KiB each of PRG and CHR ROM plus directly mapped 8 KiB PRG RAM or
-  NVRAM. Two local _Jing Ke Xin Zhuan_ images exercised five effective latch states across 700
-  frames, produced 182/153 distinct frames in their first 600, completed deterministic 100-frame
-  replays and retained a running CPU.
+  NVRAM. The checksum-pinned non-HACK _Jing Ke Xin Zhuan_ profile verifies 1800 input-driven frames,
+  341 distinct frames, exact visual/audio/cycle results and deterministic 120-frame save-state
+  replay. A separate trace across it and a local HACK image exercised five effective latch states.
 - Mapper 241 models the conflict-free BxROM-with-WRAM contract rather than FCEUX's incorrect-dump
   exception. Any `$8000-$FFFF` write latches one 32 KiB PRG bank; 8 KiB WRAM or battery NVRAM is
   direct at `$6000-$7FFF`, 8 KiB CHR RAM is unbanked and mirroring stays hardwired. One local 512 KiB

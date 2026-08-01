@@ -35,7 +35,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 23     | VRC2b/VRC4e/f  | Implemented | Exact/dual pin routes/latch/RAM/IRQ/state tests; no fixture        |
 | 24     | Konami VRC6a   | Implemented | Full PPU modes/IRQ/pulse/saw/mixer/state tests; no fixture         |
 | 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture          |
-| 26     | Konami VRC6b   | Implemented | Swapped A0/A1/banking/IRQ/audio/state tests; no fixture            |
+| 26     | Konami VRC6b   | Verified    | Tests; pinned _Esper Dream 2_ banking/nametable/IRQ runner         |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM         |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM          |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                     |
@@ -345,6 +345,11 @@ and `$6000.D6` supplying PRG A18.
   divider, accumulator, IRQ and bank phase all participate in save state. Clearing a pulse enable
   bit resets and halts its duty generator at phase 0 without resetting the frequency divider;
   physically unreachable disabled/nonzero-duty snapshots fail validation.
+  The checksum-pinned _Esper Dream 2_ profile now verifies VRC6b PRG/CHR switching, CHR-backed
+  nametables, scanline IRQ phase, audio output, frame output and save-state replay through the public
+  emulator. Its recorded opening sequence leaves the three VRC6 oscillators disabled, so the
+  expansion-audio behavior remains cycle-level focused-test evidence rather than part of that
+  commercial-ROM claim.
 - Mapper 85 owns three 8 KiB PRG registers, a fixed final bank, eight byte-wide 1 KiB CHR
   registers, four CIRAM arrangements, an optional gated 8 KiB WRAM/NVRAM window and the shared VRC
   IRQ. Legacy images accept either A3/A4 register-select route; submapper 1 fixes VRC7b's A3 route

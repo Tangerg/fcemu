@@ -617,6 +617,12 @@ bank and pending IRQ is serialized, and disabled-pulse snapshots reject nonzero 
 [VRC6 audio](https://www.nesdev.org/wiki/VRC6_audio) and
 [VRC6 pinout](https://www.nesdev.org/wiki/VRC6_pinout).
 
+The exact _Esper Dream 2_ Mapper 26 profile reaches the opening library while pinning VRC6b PRG/CHR
+banks, CHR-backed nametable mode, active scanline IRQ phase, filtered audio, rendered frames and a
+save-state replay. That deterministic opening does not enable the two expansion pulses or saw, so
+their timing and mixer claims remain backed by the focused VRC6 audio and bus tests; the profile is
+not described as commercial-ROM verification of those oscillators.
+
 ## Konami VRC7 (85)
 
 `Vrc7Mapper` maps three independently selected 8 KiB PRG windows followed by the fixed final bank,

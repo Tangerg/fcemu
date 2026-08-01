@@ -45,13 +45,15 @@ can recover without reloading the page.
 Battery writes are serialized per cartridge identity at the application boundary. A later revision
 therefore cannot reach storage before an older write finishes and then be overwritten by it. An
 immediate reload of the same ROM restores the outgoing runtime's freshly captured in-memory snapshot
-instead of racing a pending write against a stale storage read. Stop and disposal also drain writes
-that were queued by an older cartridge during the same application lifetime.
+instead of racing a pending write against a stale storage read. Returning to that cartridge after an
+intervening ROM waits for its per-identity write tail before reading IndexedDB. Stop and disposal
+also drain writes that were queued by an older cartridge during the same application lifetime.
 
 Quick-save mutations use the same rule at `(ROM identity, execution region, slot)` granularity.
 Overwrites and removals share one ordered queue, so deletion no longer needs a best-effort repair
 write when a newer save appears. Hydration waits for earlier mutations, while an immediate reload of
-the same ROM and region keeps the already-authoritative in-memory slots.
+the same ROM and region keeps the already-authoritative in-memory slots. If the core rejects a
+quick-load, cleanup removal joins that same queue and cannot run ahead of the save it invalidates.
 
 ## Frame scheduling
 

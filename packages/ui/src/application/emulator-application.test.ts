@@ -757,6 +757,74 @@ describe("EmulatorApplication", () => {
     expect(restoreReplacement).toHaveBeenCalledWith(latestInMemorySave);
   });
 
+  it("waits for an older ROM write before reloading that cartridge from storage", async () => {
+    const pendingWrite = deferred<void>();
+    let stored = Uint8Array.of(0x11);
+    let revision = 0;
+    let batteryData = Uint8Array.of(0);
+    let cartridgeCreates = 0;
+    const restoreReturning = vi.fn<(data: Uint8Array) => void>();
+    const load = vi.fn<() => Promise<Uint8Array>>(async () => stored.slice());
+    const save = vi.fn<(cartridgeId: string, data: Uint8Array) => Promise<void>>(
+      async (_cartridgeId, data) => {
+        await pendingWrite.promise;
+        stored = data.slice();
+      },
+    );
+    const firstRuntime = {
+      ...createRuntime({
+        consoleRegion: "ntsc",
+        batterySave: { revision: 0, data: batteryData },
+      }),
+      captureBatterySave: () => ({ revision, data: batteryData.slice() }),
+    };
+    const returningRuntime = createRuntime({
+      consoleRegion: "ntsc",
+      batterySave: { revision: 0, data: Uint8Array.of(0) },
+      restoreBatterySave: restoreReturning,
+    });
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async (file) => ({ id: file.name, name: file.name, bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: (rom) => {
+          if (rom.id !== "battery.nes") return createRuntime({ consoleRegion: "ntsc" });
+          return cartridgeCreates++ === 0 ? firstRuntime : returningRuntime;
+        },
+      },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load, save },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("battery.nes"));
+    revision = 1;
+    batteryData = Uint8Array.of(0x42);
+    await application.loadRom(testFile("other.nes"));
+    await vi.waitFor(() => expect(save).toHaveBeenCalledWith("battery.nes", Uint8Array.of(0x42)));
+    load.mockClear();
+
+    const returning = application.loadRom(testFile("battery.nes"));
+    await vi.waitFor(() => expect(cartridgeCreates).toBe(2));
+    expect(load).not.toHaveBeenCalled();
+    expect(restoreReturning).not.toHaveBeenCalled();
+
+    pendingWrite.resolve();
+    await returning;
+
+    expect(load).toHaveBeenCalledOnce();
+    expect(restoreReturning).toHaveBeenCalledWith(Uint8Array.of(0x42));
+  });
+
   it("rebuilds a running runtime for an explicit region and carries save RAM across", async () => {
     const scheduler = new TestScheduler();
     const restoreReplacement = vi.fn<(data: Uint8Array) => void>();
@@ -1365,6 +1433,70 @@ describe("EmulatorApplication", () => {
       status: "running",
       quickSaveSlots: [],
     });
+  });
+
+  it("queues failed quick-load cleanup behind an in-flight slot save", async () => {
+    const pendingSave = deferred<void>();
+    const events: string[] = [];
+    const removeQuickSave = vi.fn<
+      (
+        cartridgeId: string,
+        executionRegion: "ntsc" | "pal" | "dendy",
+        slot: 1 | 2 | 3,
+      ) => Promise<void>
+    >(async () => {
+      events.push("remove");
+    });
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game-sha", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: () =>
+          createRuntime({
+            consoleRegion: "ntsc",
+            captureSaveState: () => ({ data: "incompatible" }),
+            restoreSaveState: () => {
+              throw new Error("unsupported save-state version");
+            },
+          }),
+      },
+      scheduler: new TestScheduler(),
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: {
+        loadQuickSave: async () => undefined,
+        saveQuickSave: async () => {
+          events.push("save:start");
+          await pendingSave.promise;
+          events.push("save:end");
+        },
+        removeQuickSave,
+      },
+    });
+
+    await application.loadRom(testFile("game.nes"));
+    await application.pause();
+    application.quickSaveCurrentState();
+    await vi.waitFor(() => expect(events).toEqual(["save:start"]));
+
+    await application.quickLoadCurrentState();
+
+    expect(application.getSnapshot().quickSaveSlots).toEqual([]);
+    expect(removeQuickSave).not.toHaveBeenCalled();
+
+    pendingSave.resolve();
+    await application.stop();
+
+    expect(events).toEqual(["save:start", "save:end", "remove"]);
+    expect(removeQuickSave).toHaveBeenCalledWith("game-sha", "ntsc", 1);
   });
 
   it("does not let stale quick-save hydration overwrite the latest ROM", async () => {

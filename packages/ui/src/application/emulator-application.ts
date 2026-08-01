@@ -134,10 +134,14 @@ export class EmulatorApplication {
       );
       if (!this.isCurrent(operation)) return;
       if (runtime.cartridge.hasBatteryBackup) {
-        const save =
-          previousActiveEmulation?.rom.id === rom.id && previousBatterySave
-            ? previousBatterySave.data
-            : await this.dependencies.saveRamStorage.load(rom.id).catch(() => undefined);
+        let save: Uint8Array | undefined;
+        if (previousActiveEmulation?.rom.id === rom.id && previousBatterySave) {
+          save = previousBatterySave.data;
+        } else {
+          await this.waitForRuntimePersistence(rom.id);
+          if (!this.isCurrent(operation)) return;
+          save = await this.dependencies.saveRamStorage.load(rom.id).catch(() => undefined);
+        }
         if (!this.isCurrent(operation)) return;
         if (save) {
           try {
@@ -387,9 +391,13 @@ export class EmulatorApplication {
       this.quickSaves.delete(quickSave.slot);
       this.session = this.session.quickSaveRemoved(quickSave.slot);
       this.emit();
-      void this.dependencies.quickSaveStorage
-        .removeQuickSave(quickSave.cartridgeId, quickSave.executionRegion, quickSave.slot)
-        .catch(() => undefined);
+      void this.enqueueQuickSaveMutation(quickSave, () =>
+        this.dependencies.quickSaveStorage.removeQuickSave(
+          quickSave.cartridgeId,
+          quickSave.executionRegion,
+          quickSave.slot,
+        ),
+      ).catch(() => undefined);
       if (wasRunning && this.isCurrentEmulation(operation, activeEmulation)) {
         this.scheduleNextFrame();
         void this.dependencies.audio.resume().catch(() => undefined);
@@ -633,6 +641,12 @@ export class EmulatorApplication {
       this.persistedRevisions.set(runtime, save.revision);
     } catch {
       // Persistence is best-effort; emulation must remain available if storage is denied.
+    }
+  }
+
+  private async waitForRuntimePersistence(cartridgeId: string): Promise<void> {
+    while (this.persistenceTails.has(cartridgeId)) {
+      await this.persistenceTails.get(cartridgeId);
     }
   }
 

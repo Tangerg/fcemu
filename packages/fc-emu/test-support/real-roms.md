@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover thirty-nine files used during development:
+The current profiles cover forty files used during development:
 
 | Profile          | Expected file                                | SHA-256                                                            | Mapper |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -36,6 +36,7 @@ The current profiles cover thirty-nine files used during development:
 | `kage`           | `KAGE.NES`                                   | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
 | `smb3`           | `SMB3-J.NES`                                 | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
 | `uchuu-sdf`      | `Uchuu Keibitai SDF (J).nes`                 | `adf88f4a42fe17284daece3a419a25d74340b0c063e3f94e70a2de30b9e91fbd` | 5      |
+| `battletoads`    | `0039忍者蛙1战斗蛙.nes`                      | `677330f45a1249d24d003792a4674c93f836be57fd18b57125306efe82f3cda8` | 7      |
 | `esper-dream-2`  | `Esper Dream 2 - Aratanaru Tatakai (J).nes`  | `9dff8bc590cf73e9063575dd77707964c69f81573bb84ecd5c13aab874db1717` | 26     |
 | `shinchan`       | `Crayon Shin Chan (J).nes`                   | `4b33db75d9e755bb685695f7a07ce6bdd441c0901ee5c63301faa841ab90bfd5` | 16     |
 | `lord-of-king`   | `Lord of King, The (J).nes`                  | `2cdf03ba31916f76dc9af62f2ab969cd7e9a055a7788b8b65740e4ef400947bb` | 18     |
@@ -79,6 +80,7 @@ yarn smoke:real-rom -- contra /absolute/path/to/CONTRA.NES
 yarn smoke:real-rom -- kage /absolute/path/to/KAGE.NES
 yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
 yarn smoke:real-rom -- uchuu-sdf "/absolute/path/to/Uchuu Keibitai SDF (J).nes"
+yarn smoke:real-rom -- battletoads /absolute/path/to/0039忍者蛙1战斗蛙.nes
 yarn smoke:real-rom -- esper-dream-2 "/absolute/path/to/Esper Dream 2 - Aratanaru Tatakai (J).nes"
 yarn smoke:real-rom -- shinchan "/absolute/path/to/Crayon Shin Chan (J).nes"
 yarn smoke:real-rom -- lord-of-king "/absolute/path/to/Lord of King, The (J).nes"
@@ -153,7 +155,7 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 9, 10, 12, 16, 18, 19, 26, 85, 87, 97, 99, 112, 114, 115, 117,
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 12, 16, 18, 19, 26, 85, 87, 97, 99, 112, 114, 115, 117,
 118, 119,
 133, 142, 163, 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M

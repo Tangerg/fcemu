@@ -18,7 +18,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 4      | MMC3           | Verified    | A12/IRQ tests; pinned _Super Mario Bros. 3_ real-ROM runner        |
 | 5      | MMC5/ExROM     | Verified    | Tests; pinned _Uchuu Keibitai SDF_ ELROM real-ROM runner           |
 | 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture              |
-| 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned          |
+| 7      | AxROM          | Verified    | Tests; pinned _Battletoads_ NES-AOROM-03 opening runner            |
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture        |
 | 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
 | 10     | MMC4/FxROM     | Verified    | Tests; pinned _Fire Emblem_ FKROM real-ROM runner                  |
@@ -207,8 +207,12 @@ and `$6000.D6` supplying PRG A18.
   conflict behavior is selected with NES 2.0 submapper 2; the common emulator 512 KiB bit-3
   extension is implemented and covered by focused tests. NES 2.0 PRG-RAM declarations are rejected
   because AxROM has no PRG-RAM window. Four-screen layouts are rejected because its latch drives
-  one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
-  `Verified` evidence until its fixture identity and runner are pinned.
+  one of the console's two CIRAM pages. The pinned NES-AOROM-03 _Battletoads_ profile resolves the
+  legacy header's generic RAM fallback to the physical zero-WRAM layout. Its deterministic
+  1,200-frame opening crosses PRG banks 6, 7 and 0, exercises both single-screen CIRAM pages and
+  locks CHR-RAM rendering, native audio, CPU cycles and input-active save-state replay. This is
+  opening/title evidence, not a claim that the runner reaches first-stage gameplay. Historical
+  BNTest execution remains unpinned and does not contribute separate evidence.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
   9/11/13/32/33/41/64/66/70/71/75/76/78/79/86/87/88/89/91/93/94/95/97/114/115/117/119/133/140/142/150/152/180/182/184/185/187/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB

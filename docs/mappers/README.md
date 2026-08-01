@@ -361,7 +361,11 @@ used to create an extraction are deliberately outside this execution format. See
 register bit 4; CHR is 8 KiB RAM. The legacy default is no bus conflicts (ANROM); NES 2.0 submapper 2
 selects AMROM/AOROM AND conflicts. The 512 KiB bit-3 PRG extension is supported. PRG-RAM declarations
 are rejected because AxROM has no PRG-RAM window, and four-screen declarations are rejected because
-the board register directly selects one of the console's two CIRAM pages.
+the board register directly selects one of the console's two CIRAM pages. Exact legacy content
+metadata identifies the NES-AOROM-03 _Battletoads_ board as zero-WRAM. Its pinned opening profile
+crosses PRG banks 6, 7 and 0, both single-screen pages, CHR-RAM rendering, native audio and
+input-active save-state replay. The bounded route verifies the opening/title sequence rather than
+first-stage gameplay.
 
 ## MMC2 / PxROM (9)
 

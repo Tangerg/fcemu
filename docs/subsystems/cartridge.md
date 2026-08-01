@@ -111,7 +111,8 @@ the generic 8 KiB fallback to its physical zero-WRAM layout. DRAGON BALL Z-B _Cr
 board's generic RAM. JF-25 _The Lord of King_ (PRG `EFB1DF9E`, CHR `7A2DCF20`) does the same for its
 absent external WRAM. NAM-KK-5900 _King of Kings_ (PRG `1DD6619B`, CHR `D3F4B947`) supplies Mapper
 19 submapper 5, preserving the board's measured 18.0–19.5 dB N163 mix instead of the conservative
-legacy fallback.
+legacy fallback. NES-AOROM-03 _Battletoads_ (PRG `279710DC`, empty CHR) removes iNES's generic PRG
+RAM allocation from its zero-WRAM AxROM board while retaining the board-implied 8 KiB CHR RAM.
 
 The lookup completes metadata only; it never changes ROM bytes, the mapper number or ROM geometry.
 It may supply an otherwise-unrepresentable submapper when exact board evidence exists. Unknown

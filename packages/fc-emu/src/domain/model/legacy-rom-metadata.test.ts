@@ -56,6 +56,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ submapperNumber: 5, prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Battletoads NES-AOROM-03 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 7,
+        prgRomBytes: 0x40_000,
+        chrRomBytes: 0,
+        prgCrc32: 0x279710dc,
+        chrCrc32: 0,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("identifies the exact The Lord of King JF-25 memory layout", () => {
     expect(
       findLegacyRomMetadata({

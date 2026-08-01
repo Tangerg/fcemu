@@ -60,6 +60,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Battletoads, NES-AOROM-03: 8 KiB CHR RAM and no external PRG RAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 7,
+      prgRomBytes: 0x40_000,
+      chrRomBytes: 0,
+      prgCrc32: 0x279710dc,
+      chrCrc32: 0,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Crayon Shin-chan: Ora to Poi Poi, DRAGON BALL Z-B: LZ93D50 without EEPROM/WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 16,

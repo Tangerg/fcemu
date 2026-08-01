@@ -55,6 +55,11 @@ memory.
 Legacy iNES's conventional implicit 8 KiB allocation remains parser metadata but is electrically
 undriven and unwritable; NES 2.0 must declare no PRG RAM/NVRAM, and battery headers fail closed.
 
+Mapper 7 has the same header-versus-board distinction: AxROM never decodes a PRG-RAM window, while
+legacy iNES still implies a generic 8 KiB parser allocation when byte 8 is zero. Exact content
+metadata resolves NES-AOROM-03 _Battletoads_ (PRG `279710DC`, empty CHR) to zero WRAM and the
+board-implied 8 KiB volatile CHR RAM. NES 2.0 Mapper 7 images must declare no PRG RAM/NVRAM.
+
 Mapper 6/8/17 and NES 2.0 mapper 12.1 images are extracted FFE copier-card memory, so their payload initializes
 mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.
 Battery declarations are rejected. Their optional trainer is a loader entry rather than passive

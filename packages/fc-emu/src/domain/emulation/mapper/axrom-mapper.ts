@@ -9,9 +9,10 @@ const PRG_BANK_SIZE = 0x8000;
  * iNES mapper 7: generic AxROM-compatible 32 KiB PRG banking with switchable
  * single-screen nametable memory.
  *
- * Legacy mapper 7 defaults to no bus conflicts because ANROM games rely on
- * conflict-prevention circuitry. Exact AMROM/AOROM behavior needs a NES 2.0
- * submapper, which is rejected explicitly by the cartridge parser.
+ * Legacy mapper 7 defaults to no bus conflicts because ANROM software relies
+ * on conflict-prevention circuitry and AOROM's positive chip-enable wiring is
+ * not described by iNES. NES 2.0 submapper 1 makes the no-conflict behavior
+ * explicit; submapper 2 selects bitwise-AND bus conflicts.
  */
 export class AxromMapper implements Mapper {
   private readonly prgBankCount: number;

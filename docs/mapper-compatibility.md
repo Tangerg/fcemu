@@ -72,7 +72,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM        |
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM              |
 | 96     | Oeka Kids      | Implemented | Address-edge/CHR-RAM/conflict/state tests; two local replay smokes |
-| 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM           |
+| 97     | Irem TAM-S1    | Verified    | Board tests; pinned _Kaiketsu Yanchamaru_ real-ROM runner          |
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
 | 112    | NTDEC/Asder    | Verified    | Banking/state tests; pinned _Sango Fighter_ real-ROM runner        |
 | 113    | HES NTD-8      | Implemented | Board/geometry/state tests; local single-game misheaders rejected  |
@@ -578,7 +578,11 @@ and `$6000.D6` supplying PRG A18.
   replay. Their bytes and hashes remain outside the repository, and tablet input is not yet modeled.
 - Mapper 97 (Irem TAM-S1) fixes the final 16 KiB PRG bank at `$8000-$BFFF`, selects one of sixteen
   banks at `$C000-$FFFF` through D3-D0, and uses D7-D6 for lower one-screen, horizontal, vertical or
-  upper one-screen mirroring. Its only known board carries 256 KiB PRG ROM and 8 KiB CHR RAM.
+  upper one-screen mirroring. Its only known board carries 256 KiB PRG ROM and 8 KiB CHR RAM. The
+  checksum-pinned _Kaiketsu Yanchamaru_ profile matches the board's published PRG CRC, observes the
+  game move the upper window from bank 14 to bank 0 and select vertical mirroring, verifies 360
+  no-input frames plus 1,500 input-driven frames with 1,098 distinct results, and reproduces visual,
+  audio and CPU-cycle output across a 120-frame save-state replay.
 - Mapper 118 (TxSROM) keeps full MMC3 banking and filtered-A12 IRQs but connects CHR A17 to CIRAM
   A10. R0/R1 or R2-R5 control nametable slots according to CHR mode, and `$A000` mirroring writes are
   physically disconnected. The checksum-pinned 128 KiB PRG + 128 KiB CHR _Pro Sport Hockey_ profile

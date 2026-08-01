@@ -1104,8 +1104,11 @@ device remains outside this mapper implementation. See
 The final 16 KiB PRG bank is fixed at `$8000-$BFFF`; D3-D0 select the 16 KiB bank at
 `$C000-$FFFF`. D7-D6 select lower one-screen, horizontal, vertical or upper one-screen mirroring.
 The known board carries 256 KiB PRG ROM and fixed 8 KiB CHR RAM, with no PRG RAM, IRQ or bus
-conflict. See the
-[TAM-S1 hardware analysis](https://forums.nesdev.org/viewtopic.php?t=19769).
+conflict. The checksum-pinned _Kaiketsu Yanchamaru_ profile has the cataloged PRG CRC `D1397940`,
+observes bank 14 followed by bank 0 and a vertical-mirroring write, and completes 1,500 input-driven
+frames plus deterministic visual/audio/cycle save-state replay. See the
+[TAM-S1 hardware analysis](https://forums.nesdev.org/viewtopic.php?t=19769) and
+[NESCartDB board record](https://nescartdb.com/profile/view/3801/kaiketsu-yanchamaru).
 
 ## VS System mainboard (99)
 

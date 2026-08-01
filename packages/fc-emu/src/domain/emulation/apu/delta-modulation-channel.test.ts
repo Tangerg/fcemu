@@ -116,6 +116,15 @@ describe("DeltaModulationChannel", () => {
     );
   });
 
+  it("rejects invalid state without changing the channel", () => {
+    const channel = createChannel(createPort(0));
+    channel.value = 63;
+    const before = channel.captureState();
+
+    expect(() => channel.restoreState({ ...before, bitsRemaining: 9 })).toThrow(/DMC channel/i);
+    expect(channel.captureState()).toEqual(before);
+  });
+
   it("repeats a one-byte sample completed on the output-counter reset boundary", () => {
     const port = createPort(0);
     const channel = createChannel(port, RP2A03H_DMC_PROFILE);

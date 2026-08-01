@@ -110,6 +110,30 @@ describe("2A03 APU", () => {
     expect(() => new Bus(createTestCartridge(), Number.NaN)).toThrow(/sample rate/i);
   });
 
+  it("rejects an invalid nested channel before changing any APU state", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.APU.writeRegister(0x4015, 1);
+    bus.APU.writeRegister(0x4000, 0x1a);
+    bus.APU.writeRegister(0x4003, 0x28);
+    bus.APU.commitRegisterWrites();
+    const before = bus.APU.captureState();
+
+    const invalid = {
+      ...before,
+      pulseChannel1: {
+        ...before.pulseChannel1,
+        timerPeriod: before.pulseChannel1.timerPeriod ^ 1,
+      },
+      noiseChannel: {
+        ...before.noiseChannel,
+        envelope: { ...before.noiseChannel.envelope, decay: 16 },
+      },
+    };
+
+    expect(() => bus.APU.restoreState(invalid)).toThrow(/envelope/i);
+    expect(bus.APU.captureState()).toEqual(before);
+  });
+
   it("recreates channel state on power-on", () => {
     const bus = new Bus(createTestCartridge());
     bus.APU.writeRegister(0x4015, 1);

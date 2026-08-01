@@ -1,3 +1,5 @@
+import { isIntegerInRange } from "../numeric-range.js";
+
 export interface EnvelopeState {
   readonly loop: boolean;
   readonly constant: boolean;
@@ -59,11 +61,26 @@ export class Envelope {
   }
 
   restoreState(state: EnvelopeState): void {
+    Envelope.validateState(state);
     this.loop = state.loop;
     this.constant = state.constant;
     this.period = state.period;
     this.start = state.start;
     this.divider = state.divider;
     this.decay = state.decay;
+  }
+
+  static validateState(state: EnvelopeState): void {
+    if (
+      !state ||
+      typeof state.loop !== "boolean" ||
+      typeof state.constant !== "boolean" ||
+      typeof state.start !== "boolean" ||
+      !isIntegerInRange(state.period, 0, 15) ||
+      !isIntegerInRange(state.divider, 0, 15) ||
+      !isIntegerInRange(state.decay, 0, 15)
+    ) {
+      throw new RangeError("APU save state contains an invalid envelope");
+    }
   }
 }

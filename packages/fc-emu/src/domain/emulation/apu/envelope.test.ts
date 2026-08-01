@@ -29,4 +29,15 @@ describe("APU envelope", () => {
     envelope.configure(0x1b);
     expect(envelope.output).toBe(11);
   });
+
+  it("rejects invalid state without changing the envelope", () => {
+    const envelope = new Envelope();
+    envelope.configure(0x2a);
+    envelope.restart();
+    envelope.clock();
+    const before = envelope.captureState();
+
+    expect(() => envelope.restoreState({ ...before, period: 16 })).toThrow(/envelope/i);
+    expect(envelope.captureState()).toEqual(before);
+  });
 });

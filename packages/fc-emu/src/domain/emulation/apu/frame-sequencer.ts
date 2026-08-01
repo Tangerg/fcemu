@@ -1,3 +1,6 @@
+import { NTSC_APU_TIMING, type ApuTiming } from "../console-timing.js";
+import { isByte, isIntegerInRange } from "../numeric-range.js";
+
 export interface FrameSequencerSink {
   quarterFrame(): void;
   halfFrame(): void;
@@ -49,12 +52,27 @@ export class FrameSequencer {
   }
 
   restoreState(state: FrameSequencerState): void {
+    this.validateState(state);
     this.cycle = state.cycle;
     this.period = state.period;
     this.pendingPeriod = state.pendingPeriod;
     this.resetDelay = state.resetDelay;
     this.irqEnabled = state.irqEnabled;
     this.lastRegisterValue = state.lastRegisterValue;
+  }
+
+  validateState(state: FrameSequencerState): void {
+    if (
+      !state ||
+      !isIntegerInRange(state.cycle, 0, this.timing.fiveStepEndCycle) ||
+      (state.period !== 4 && state.period !== 5) ||
+      (state.pendingPeriod !== 4 && state.pendingPeriod !== 5) ||
+      !isIntegerInRange(state.resetDelay, 0, 4) ||
+      typeof state.irqEnabled !== "boolean" ||
+      !isByte(state.lastRegisterValue)
+    ) {
+      throw new RangeError("APU save state contains an invalid frame sequencer");
+    }
   }
 
   write(value: number, cpuCycle: number): void {
@@ -131,4 +149,3 @@ export class FrameSequencer {
     if (this.irqEnabled) this.sink.requestIRQ();
   }
 }
-import { NTSC_APU_TIMING, type ApuTiming } from "../console-timing.js";

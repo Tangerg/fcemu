@@ -1,3 +1,5 @@
+import { isIntegerInRange } from "../numeric-range.js";
+
 const LENGTH_TABLE: readonly number[] = [
   10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48, 20, 96, 22, 192,
   24, 72, 26, 16, 28, 32, 30,
@@ -84,6 +86,7 @@ export class LengthCounter {
   }
 
   restoreState(state: LengthCounterState): void {
+    LengthCounter.validateState(state);
     this.channelEnabled = state.channelEnabled;
     this.halted = state.halted;
     this.pendingHalt = state.pendingHalt;
@@ -92,5 +95,22 @@ export class LengthCounter {
     this.valueBeforeReload = state.valueBeforeReload;
     this.valueBeforeClock = state.valueBeforeClock;
     this.lastClockCycle = state.lastClockCycle;
+  }
+
+  static validateState(state: LengthCounterState): void {
+    if (
+      !state ||
+      typeof state.channelEnabled !== "boolean" ||
+      typeof state.halted !== "boolean" ||
+      typeof state.pendingHalt !== "boolean" ||
+      !isIntegerInRange(state.counter, 0, 254) ||
+      !isIntegerInRange(state.pendingReload, 0, 254) ||
+      !isIntegerInRange(state.valueBeforeReload, 0, 254) ||
+      !isIntegerInRange(state.valueBeforeClock, 0, 254) ||
+      (state.lastClockCycle !== undefined &&
+        (!Number.isSafeInteger(state.lastClockCycle) || state.lastClockCycle < 0))
+    ) {
+      throw new RangeError("APU save state contains an invalid length counter");
+    }
   }
 }

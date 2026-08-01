@@ -10,6 +10,7 @@ import {
   RP2A03H_DMC_PROFILE,
   type DeltaModulationChannelState,
 } from "./apu/delta-modulation-channel.js";
+import { isByte, isIntegerInRange } from "./numeric-range.js";
 
 interface ApuBusPort {
   cancelDmcDma(): void;
@@ -283,6 +284,7 @@ class PulseChannel {
   }
 
   restoreState(state: PulseChannelState): void {
+    PulseChannel.validateState(state);
     this.lengthCounter.restoreState(state.lengthCounter);
     this.timerPeriod = state.timerPeriod;
     this.timerValue = state.timerValue;
@@ -295,6 +297,26 @@ class PulseChannel {
     this.sweepPeriod = state.sweepPeriod;
     this.sweepValue = state.sweepValue;
     this.envelope.restoreState(state.envelope);
+  }
+
+  static validateState(state: PulseChannelState): void {
+    if (!state) throw new RangeError("APU save state contains an invalid pulse channel");
+    LengthCounter.validateState(state.lengthCounter);
+    Envelope.validateState(state.envelope);
+    if (
+      !isIntegerInRange(state.timerPeriod, 0, 0x7ff) ||
+      !isIntegerInRange(state.timerValue, 0, 0x7ff) ||
+      !isIntegerInRange(state.dutyCycleIndex, 0, 3) ||
+      !isIntegerInRange(state.dutyStep, 0, 7) ||
+      typeof state.sweepReload !== "boolean" ||
+      typeof state.sweepEnabled !== "boolean" ||
+      typeof state.sweepNegative !== "boolean" ||
+      !isIntegerInRange(state.sweepShift, 0, 7) ||
+      !isIntegerInRange(state.sweepPeriod, 0, 7) ||
+      !isIntegerInRange(state.sweepValue, 0, 7)
+    ) {
+      throw new RangeError("APU save state contains an invalid pulse channel");
+    }
   }
 }
 
@@ -442,6 +464,7 @@ class TriangleChannel {
   }
 
   restoreState(state: TriangleChannelState): void {
+    TriangleChannel.validateState(state);
     this.lengthCounter.restoreState(state.lengthCounter);
     this.timerPeriod = state.timerPeriod;
     this.timerValue = state.timerValue;
@@ -450,6 +473,22 @@ class TriangleChannel {
     this.counterPeriod = state.counterPeriod;
     this.counterValue = state.counterValue;
     this.isLengthHalted = state.isLengthHalted;
+  }
+
+  static validateState(state: TriangleChannelState): void {
+    if (!state) throw new RangeError("APU save state contains an invalid triangle channel");
+    LengthCounter.validateState(state.lengthCounter);
+    if (
+      !isIntegerInRange(state.timerPeriod, 0, 0x7ff) ||
+      !isIntegerInRange(state.timerValue, 0, 0x7ff) ||
+      !isIntegerInRange(state.dutyIndex, 0, 31) ||
+      typeof state.counterReload !== "boolean" ||
+      !isIntegerInRange(state.counterPeriod, 0, 0x7f) ||
+      !isIntegerInRange(state.counterValue, 0, 0x7f) ||
+      typeof state.isLengthHalted !== "boolean"
+    ) {
+      throw new RangeError("APU save state contains an invalid triangle channel");
+    }
   }
 }
 
@@ -576,12 +615,27 @@ class NoiseChannel {
   }
 
   restoreState(state: NoiseChannelState): void {
+    this.validateState(state);
     this.lengthCounter.restoreState(state.lengthCounter);
     this.mode = state.mode;
     this.shiftRegister = state.shiftRegister;
     this.timerPeriod = state.timerPeriod;
     this.timerValue = state.timerValue;
     this.envelope.restoreState(state.envelope);
+  }
+
+  validateState(state: NoiseChannelState): void {
+    if (!state) throw new RangeError("APU save state contains an invalid noise channel");
+    LengthCounter.validateState(state.lengthCounter);
+    Envelope.validateState(state.envelope);
+    if (
+      typeof state.mode !== "boolean" ||
+      !isIntegerInRange(state.shiftRegister, 1, 0x7fff) ||
+      (state.timerPeriod !== 0 && !this.timerPeriods.includes(state.timerPeriod)) ||
+      !isIntegerInRange(state.timerValue, 0, Math.max(...this.timerPeriods))
+    ) {
+      throw new RangeError("APU save state contains an invalid noise channel");
+    }
   }
 }
 
@@ -1217,39 +1271,40 @@ class APU {
   }
 
   private validateSnapshot(state: ApuSnapshot): void {
-    const { audioFilter, ...integerState } = state;
-    APU.validateNonNegativeIntegers(integerState);
-    NesAudioFilterChain.validateState(audioFilter);
+    if (!state) throw new RangeError("APU save state is missing");
     if (state.sampleRate !== this.sampleRate) {
       throw new Error("APU save state was created for another audio sample rate");
     }
-    if (
-      (state.frameSequencer.period !== 4 && state.frameSequencer.period !== 5) ||
-      (state.frameSequencer.pendingPeriod !== 4 && state.frameSequencer.pendingPeriod !== 5)
-    ) {
-      throw new RangeError("APU save state contains an invalid frame-sequencer period");
+    PulseChannel.validateState(state.pulseChannel1);
+    PulseChannel.validateState(state.pulseChannel2);
+    TriangleChannel.validateState(state.triangleChannel);
+    this.noiseChannel.validateState(state.noiseChannel);
+    this.deltaModulationChannel.validateState(state.deltaModulationChannel);
+    this.frameSequencer.validateState(state.frameSequencer);
+    NesAudioFilterChain.validateState(state.audioFilter);
+    if (!Number.isSafeInteger(state.cycle) || state.cycle < 0) {
+      throw new RangeError("APU save state contains an invalid cycle");
     }
-    if (state.frameIrqClearDelay > 2) {
+    if (typeof state.frameIRQPending !== "boolean") {
+      throw new RangeError("APU save state contains an invalid frame-IRQ flag");
+    }
+    if (!isIntegerInRange(state.frameIrqClearDelay, 0, 2)) {
       throw new RangeError("APU save state contains an invalid frame-IRQ clear delay");
     }
     if (
-      state.pendingRegisterWrites.some(
-        (write) => write.address < 0x4000 || write.address > 0x4017 || write.value > 0xff,
+      !Array.isArray(state.pendingRegisterWrites) ||
+      !state.pendingRegisterWrites.every(
+        (write, index, writes) =>
+          !!write &&
+          isIntegerInRange(write.address, 0x4000, 0x4017) &&
+          isByte(write.value) &&
+          Number.isSafeInteger(write.cycle) &&
+          write.cycle >= 0 &&
+          (index === 0 || (writes[index - 1]?.cycle ?? -1) <= write.cycle),
       )
     ) {
       throw new RangeError("APU save state contains an invalid pending register write");
     }
-  }
-
-  private static validateNonNegativeIntegers(value: unknown): void {
-    if (typeof value === "number") {
-      if (!Number.isSafeInteger(value) || value < 0) {
-        throw new RangeError("APU save state contains an invalid numeric value");
-      }
-      return;
-    }
-    if (!value || typeof value !== "object") return;
-    for (const nested of Object.values(value)) APU.validateNonNegativeIntegers(nested);
   }
 }
 

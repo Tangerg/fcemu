@@ -1,4 +1,5 @@
 import { DmaBusPhase } from "../dma/dma-bus-phase.js";
+import { isByte, isIntegerInRange, isWord } from "../numeric-range.js";
 
 export interface DmcChannelPort {
   requestDma(address: number, haltPhase: DmaBusPhase): void;
@@ -265,6 +266,7 @@ export class DeltaModulationChannel {
   }
 
   restoreState(state: DeltaModulationChannelState): void {
+    this.validateState(state);
     this.outputLevel = state.outputLevel;
     this.sampleAddress = state.sampleAddress;
     this.sampleLength = state.sampleLength;
@@ -282,5 +284,35 @@ export class DeltaModulationChannel {
     this.dmaRequested = state.dmaRequested;
     this.transferStartDelay = state.transferStartDelay;
     this.disableDelay = state.disableDelay;
+  }
+
+  validateState(state: DeltaModulationChannelState): void {
+    const maximumTimerPeriod = Math.max(...this.timerPeriods);
+    if (
+      !state ||
+      !isIntegerInRange(state.outputLevel, 0, 0x7f) ||
+      !isWord(state.sampleAddress) ||
+      state.sampleAddress < 0xc000 ||
+      (state.sampleAddress & 0x3f) !== 0 ||
+      !isIntegerInRange(state.sampleLength, 1, 0xff1) ||
+      state.sampleLength % 16 !== 1 ||
+      !isWord(state.currentAddress) ||
+      (state.currentAddress !== 0 && state.currentAddress < 0x8000) ||
+      !isIntegerInRange(state.currentLength, 0, 0xff1) ||
+      !isByte(state.shiftRegister) ||
+      (state.sampleBuffer !== undefined && !isByte(state.sampleBuffer)) ||
+      !isIntegerInRange(state.bitsRemaining, 1, 8) ||
+      typeof state.silence !== "boolean" ||
+      !this.timerPeriods.includes(state.tickPeriod) ||
+      !isIntegerInRange(state.tickValue, 0, maximumTimerPeriod) ||
+      typeof state.loop !== "boolean" ||
+      typeof state.irqEnabled !== "boolean" ||
+      typeof state.irqPending !== "boolean" ||
+      typeof state.dmaRequested !== "boolean" ||
+      !isIntegerInRange(state.transferStartDelay, 0, 4) ||
+      !isIntegerInRange(state.disableDelay, 0, 3)
+    ) {
+      throw new RangeError("APU save state contains an invalid DMC channel");
+    }
   }
 }

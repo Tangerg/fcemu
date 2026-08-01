@@ -63,4 +63,15 @@ describe("APU length counter", () => {
     active.commitRegisterWrites();
     expect(active.value).toBe(5);
   });
+
+  it("rejects invalid state without changing the counter", () => {
+    const counter = new LengthCounter();
+    counter.enabled = true;
+    counter.load(7);
+    counter.commitRegisterWrites();
+    const before = counter.captureState();
+
+    expect(() => counter.restoreState({ ...before, counter: 255 })).toThrow(/length counter/i);
+    expect(counter.captureState()).toEqual(before);
+  });
 });

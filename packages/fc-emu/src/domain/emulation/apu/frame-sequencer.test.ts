@@ -47,6 +47,16 @@ describe("APU frame sequencer", () => {
     tick(sequencer, 16_627);
     expect(sink.requestIRQ).toHaveBeenCalledTimes(3);
   });
+
+  it("rejects invalid state without changing the sequencer", () => {
+    const sequencer = new FrameSequencer(createSink());
+    sequencer.write(0x80, 0);
+    sequencer.tick();
+    const before = sequencer.captureState();
+
+    expect(() => sequencer.restoreState({ ...before, resetDelay: 5 })).toThrow(/frame sequencer/i);
+    expect(sequencer.captureState()).toEqual(before);
+  });
 });
 
 function createSink() {

@@ -296,13 +296,18 @@ cycle counts because the two clock domains differ.
 (`PulseChannelState` ×2, `TriangleChannelState`, `NoiseChannelState`, `DeltaModulationChannelState`),
 `FrameSequencerState`, the CPU `cycle`, `frameIRQPending`, `frameIrqClearDelay`, the
 `NesAudioFilterState` history, the pending register-write queue, and the `sampleRate`. `restoreState`
-runs `validateSnapshot` first: it rejects non-integer or negative scalars, non-finite filter values,
-a mismatched sample rate, a frame-sequencer `period`/`pendingPeriod` outside `{4, 5}`, a
-`frameIrqClearDelay > 2`, and any queued write outside `$4000`–`$4017` or with a value above `0xFF`.
-`sampleBuffer` and `lastClockCycle` are omitted from their snapshots when undefined. The APU state
-travels inside the console's current version 16 save-state envelope. Output-filter history first
-entered the schema in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and
-version 15 added mapper-owned RAM/NVRAM for Namco 163; version 16 adds VS cabinet state.
+runs `validateSnapshot` across the **entire state tree before mutating any channel**. Each child owns
+its hardware constraints: booleans remain booleans; length, envelope, timer, duty, sweep and linear
+counters stay within their register widths; noise periods belong to the active region; DMC
+addresses, lengths, buffers, timer periods and DMA delays remain representable; and the frame
+sequencer stays within the active region's cycle range. The aggregate additionally rejects a
+mismatched sample rate, non-finite filter history, invalid frame-IRQ state, and malformed or
+out-of-order pending writes. Direct child restores run the same pure validation before assignment,
+so a rejected snapshot leaves both a standalone child and the complete APU unchanged. `sampleBuffer`
+and `lastClockCycle` are omitted from their snapshots when undefined. The APU state travels inside
+the console's current version 16 save-state envelope. Output-filter history first entered the schema
+in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and version 15 added
+mapper-owned RAM/NVRAM for Namco 163; version 16 adds VS cabinet state.
 
 ## Audio output boundary
 

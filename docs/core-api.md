@@ -147,7 +147,9 @@ emulator.restoreSaveState(state);
 ```
 
 A save state contains typed arrays and internal aggregate snapshots. Treat it as an opaque object;
-plain `JSON.stringify`/`JSON.parse` is not a supported serializer. The core validates:
+plain `JSON.stringify`/`JSON.parse` is not a supported serializer. Capture and restore are accepted
+only at a stable public-call boundary; re-entering either operation from an audio output callback is
+rejected instead of returning a snapshot from the middle of a clock transaction. The core validates:
 
 - format and exact schema version;
 - the outer envelope shape even when the caller supplies untyped persisted data;

@@ -109,6 +109,31 @@ describe("Emulator save states", () => {
     expect(samples).toEqual(expectedSamples);
   });
 
+  it("rejects reentrant capture from an in-flight audio output callback", () => {
+    let emulator: Emulator;
+    let captureError: unknown;
+    emulator = Emulator.fromRom(createTestRom(), "reentrant-capture.nes", {
+      audio: {
+        sampleRate: 44_100,
+        writeSample: () => {
+          if (captureError !== undefined) return;
+          try {
+            emulator.captureSaveState();
+          } catch (error) {
+            captureError = error;
+          }
+        },
+      },
+    });
+
+    emulator.runFrame();
+
+    expect(captureError).toEqual(
+      new Error("Cannot capture or restore save state during an active bus transaction"),
+    );
+    expect(() => emulator.restoreSaveState(emulator.captureSaveState())).not.toThrow();
+  });
+
   it("restores a snapshot into another instance of the same ROM and retains mapper mirroring", () => {
     const rom = createTestRom({
       mapper: 7,

@@ -119,6 +119,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
   }
 
   captureState(): BusSnapshot {
+    this.assertStableSnapshotBoundary();
     const pendingControllerWrite = this.pendingControllerWrite;
     return {
       ram: this.ram.slice(),
@@ -156,8 +157,10 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (state.pendingControllerWrite !== undefined && !isByte(state.pendingControllerWrite)) {
       throw new RangeError("Bus save state contains an invalid pending controller write");
     }
-    if (typeof state.performingDmaMemoryAccess !== "boolean") {
-      throw new RangeError("Bus save state contains an invalid DMA-access flag");
+    if (state.performingDmaMemoryAccess !== false) {
+      throw new RangeError(
+        "Bus save-state DMA-access flag cannot be set outside a DMA memory access",
+      );
     }
     if (state.ppu.nmiLineAsserted !== state.cpu.interrupts.nmiLineAsserted) {
       throw new Error("Bus save-state PPU /NMI output disagrees with the CPU input line");
@@ -537,6 +540,12 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
       throw new RangeError("Bus save state contains invalid IRQ sources");
     }
     return sources;
+  }
+
+  private assertStableSnapshotBoundary(): void {
+    if (this.cpuUpdateActive || this.performingDmaMemoryAccess) {
+      throw new Error("Cannot capture or restore save state during an active bus transaction");
+    }
   }
 }
 

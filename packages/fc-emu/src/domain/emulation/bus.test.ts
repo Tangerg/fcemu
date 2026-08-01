@@ -201,6 +201,19 @@ describe("Bus lifecycle", () => {
     expect(bus.captureState()).toEqual(before);
   });
 
+  it("rejects a snapshot captured during a DMA memory access", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+
+    expect(() =>
+      bus.restoreState({
+        ...before,
+        performingDmaMemoryAccess: true,
+      }),
+    ).toThrow(/DMA memory access/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
   it("rejects IRQ-source disagreement before changing internal RAM", () => {
     const bus = new Bus(createTestCartridge());
     const before = bus.captureState();

@@ -224,12 +224,14 @@ source. Devices and the bus refer to these named members instead of bare string 
 `captureState()` returns a `BusSnapshot` owning the internal RAM (copied), the CPU, PPU, APU,
 cartridge-memory, mapper, both controller and DMA snapshots, the machine-clock state, the array of
 asserted `irqSources`, the `performingDmaMemoryAccess` flag, and `pendingControllerWrite` only when
-one is pending. `restoreState()` is transactional: it captures the current state, attempts an
-unchecked restore, and rolls back on any thrown error. The unchecked restore validates the RAM type
-and length, validates the IRQ-source array (only the three known sources, no duplicates), validates
-`pendingControllerWrite` as a byte, requires a boolean DMA-access flag, and distinguishes an omitted
-VS snapshot from any supplied value. Before changing RAM or a device it cross-checks the shared
-signals and transactions that no child can validate alone:
+one is pending. Public capture/restore is rejected while a CPU update or DMA memory access is active;
+the serialized DMA-access flag is consequently required to be `false`, preventing a transient guard
+from becoming permanent after restore. `restoreState()` is transactional: it captures the current
+state, attempts an unchecked restore, and rolls back on any thrown error. The unchecked restore
+validates the RAM type and length, validates the IRQ-source array (only the three known sources, no
+duplicates), validates `pendingControllerWrite` as a byte, and distinguishes an omitted VS snapshot
+from any supplied value. Before changing RAM or a device it cross-checks the shared signals and
+transactions that no child can validate alone:
 
 - the PPU `/NMI` output equals the CPU `/NMI` input;
 - the OR of the named IRQ sources equals the CPU IRQ input, and each APU/mapper source agrees with

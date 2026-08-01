@@ -10,6 +10,7 @@ import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
 import { Bmc226Mapper } from "./bmc-226-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
+import { CeDecathlonMapper } from "./ce-decathlon-mapper.js";
 import { CeSupertoneMapper } from "./ce-supertone-mapper.js";
 import { CnromProtectionMapper } from "./cnrom-protection-mapper.js";
 import { CnromMapper } from "./cnrom-mapper.js";
@@ -606,6 +607,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Sachen SA-020A");
       return new SachenSa020aMapper(cartridge);
+    case 244:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x10_000);
+      requireChrRom(cartridge, "C&E Decathlon mapper 244");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "C&E Decathlon mapper 244");
+      return new CeDecathlonMapper(cartridge);
     case 245:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x20_000, 0x40_000, 0x80_000, 0x100_000], 0x2000);

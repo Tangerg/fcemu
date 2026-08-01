@@ -92,13 +92,14 @@ describes evidence maturity rather than a runtime feature flag.
 | 240    | C&E/Supertone  | Implemented | Expansion-latch/PRG/CHR/WRAM/state tests; two local replay smokes  |
 | 242    | Waixing 43272  | Implemented | Six PRG modes/CHR protect/WRAM/state tests; one local replay smoke |
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
+| 244    | C&E Decathlon  | Implemented | Full PRG/CHR permutation/state tests; local bank-switching smoke   |
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/133/140/152/182/184/189/206/226/240/242/243/245/248 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/118/119/133/140/152/182/184/189/206/226/240/242/243/244/245/248 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -136,7 +137,7 @@ mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
 
-Mappers 15/133/225/226/228/240/242/243 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/133/225/226/228/240/242/243/244 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -184,7 +185,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/133/140/152/180/182/184/185/206/248 because those
+  9/11/13/32/33/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/119/133/140/152/180/182/184/185/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -577,6 +578,13 @@ and `$6000.D6` supplying PRG A18.
   replay. Its known historical header/CHR-order convention is not treated as physical SA-020A
   validation and does not introduce a title-hash quirk; an accurate _Honey Peach_ image remains the
   board-level validation target.
+- Mapper 244 models C&E's separate 32 KiB PRG and 8 KiB CHR outputs behind the board's documented
+  permutation network. D3 chooses which output changes; D5-D4 plus D1-D0 select one of sixteen PRG
+  results, while D6-D4 plus D2-D0 select one of 64 CHR results. The complete lookup network is
+  covered exhaustively rather than approximated as bit swaps. A local _Decathlon_ image
+  ran 2200 frames without halting, exercised eight effective bank pairs spanning PRG 0/1/3 and CHR
+  0/1/2/4, produced 154 distinct frames through frame 2100 and completed deterministic 100-frame
+  replay across a later CHR-bank change.
 - Mapper 245 models the Waixing F003 pin routing rather than treating it as an MMC3 bank mask. PPU
   A10/A11 select the active MMC3 CHR register while its A12 input is grounded; that register's CHR
   A11 output becomes PRG A19, selecting one 512 KiB half for every CPU ROM window. CHR-RAM remains

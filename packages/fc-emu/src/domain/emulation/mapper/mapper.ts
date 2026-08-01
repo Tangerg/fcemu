@@ -70,6 +70,11 @@ export type MapperState =
       readonly selectedPrgBank: number;
       readonly selectedChrBank: number;
     }
+  | {
+      readonly kind: "ce-decathlon-244";
+      readonly selectedPrgBank: number;
+      readonly selectedChrBank: number;
+    }
   | { readonly kind: "sachen-sa72008-133"; readonly register: number }
   | {
       readonly kind: "sachen-sa020a-243";

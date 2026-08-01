@@ -197,6 +197,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 240 | C&E/Supertone  | `ce-supertone-240`        | `ce-supertone-mapper.ts`     | no            | no   |
 | 242 | Waixing 43272  | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 243 | Sachen SA-020A | `sachen-sa020a-243`       | `sachen-sa020a-mapper.ts`    | no            | no   |
+| 244 | C&E Decathlon  | `ce-decathlon-244`        | `ce-decathlon-mapper.ts`     | no            | no   |
 | 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
 | 248 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
 
@@ -1204,6 +1205,25 @@ ROM mirroring electrical rather than modulo-folding non-power-of-two images. A u
 _Poker III 5-in-1_ image completed a deterministic smoke, but its historical CHR convention is not
 evidence for the SA-020A wiring and is not handled with a title hash. See
 [NESdev mapper 243](https://www.nesdev.org/wiki/INES_Mapper_243).
+
+## C&E Decathlon (244)
+
+Mapper 244 writes one byte-wide permutation network throughout `$8000-$FFFF`. D3 chooses the
+destination without disturbing the other output. For PRG writes, D5-D4 select one of four rows and
+D1-D0 select one entry, producing a 32 KiB bank in the sequences `0123`, `3210`, `0213` or `3120`.
+For CHR writes, D6-D4 select one of eight rows and D2-D0 select an entry. Those rows are `01234567`,
+`02134657`, `01452367`, `04152637`, `04261537`, `02461357` and two copies of `76543210`. D7 is
+unconnected and no CPU write creates a PRG-RAM window or changes hardwired nametable mirroring.
+
+`CeDecathlonMapper` stores the two effective output latches independently, clears them on cold
+power, preserves them across warm reset and validates both before save-state mutation. The factory
+accepts only the known 128 KiB PRG plus 64 KiB CHR-ROM board with two-screen nametables and
+submapper 0. A user-local _Decathlon_ image ran 2200 frames, exercised eight bank pairs and
+completed deterministic replay across a CHR-bank transition. The current NESdev catalog has no
+dedicated mapper-244 page; the permutation tables agree in
+[MesenCE](https://github.com/nesdev-org/MesenCE/blob/master/Core/NES/Mappers/Unlicensed/Mapper244.h),
+[puNES](https://github.com/punesemu/puNES/blob/master/src/core/mappers/mapper_244.c) and
+[FCEUX](https://github.com/TASEmulators/fceux/blob/master/src/boards/244.cpp).
 
 ## Waixing F003 (245)
 

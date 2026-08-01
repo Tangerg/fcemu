@@ -57,6 +57,7 @@ import {
   Namco118Mapper,
 } from "./namco118-mapper.js";
 import { Namco163Mapper, type Namco163AudioLevel } from "./namco163-mapper.js";
+import { NanjingFc001Mapper } from "./nanjing-fc001-mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
 import { NtdecAsderMapper } from "./ntdec-asder-mapper.js";
 import { Nina0306Mapper } from "./nina0306-mapper.js";
@@ -582,6 +583,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Bandai mapper 152");
       return new Bandai74Mapper(cartridge, true);
+    case 163:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x100_000, 0x200_000], 0x2000);
+      requireVolatileChrRam(cartridge, "Nanjing FC-001");
+      requireNanjingFc001PrgNvRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Nanjing FC-001");
+      return new NanjingFc001Mapper(cartridge);
     case 180:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x2000);
@@ -896,6 +904,19 @@ function requireWaixingF003PrgNvRam(cartridge: Cartridge): void {
     cartridge.prgNvRamBytes !== 0x2000
   ) {
     throw configurationError(cartridge, "Waixing F003 requires 8 KiB of battery-backed PRG NVRAM");
+  }
+}
+
+function requireNanjingFc001PrgNvRam(cartridge: Cartridge): void {
+  if (
+    !cartridge.hasBatteryBackup ||
+    cartridge.prgRamBytes !== 0 ||
+    cartridge.prgNvRamBytes !== 0x2000
+  ) {
+    throw configurationError(
+      cartridge,
+      "Nanjing FC-001 requires exactly 8 KiB of battery-backed PRG NVRAM",
+    );
   }
 }
 

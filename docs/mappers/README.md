@@ -189,6 +189,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 142 | Kaiser KS7032  | `kaiser-ks202-142`        | `kaiser-ks202-mapper.ts`     | no            | cyc. |
 | 150 | Sachen SA-015  | `sachen-sa015-150`        | `sachen-sa015-mapper.ts`     | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
+| 163 | Nanjing FC-001 | `nanjing-fc001-163`       | `nanjing-fc001-mapper.ts`    | no            | no   |
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
 | 182 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
 | 184 | Sunsoft-1      | `sunsoft-1`               | `sunsoft1-mapper.ts`         | no            | no   |
@@ -1308,6 +1309,34 @@ ran 1,800 non-halted frames with coherent pattern banking. It remains rejection 
 a pinned profile until a correctly headed fixture is available. See
 [NESdev mapper 150](https://www.nesdev.org/wiki/INES_Mapper_150) and the
 [Mesen CE board implementation](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Sachen/Sachen74LS374N.h).
+
+## Nanjing FC-001 (163)
+
+Mapper 163 models the Nanjing FC-001 ASIC as its own board rather than aliasing the related mapper
+162/164 families. CPU `$8000-$FFFF` is one switchable 32 KiB PRG-ROM window and `$6000-$7FFF` is an
+unbanked 8 KiB battery-backed PRG-NVRAM window. PPU `$0000-$1FFF` uses 8 KiB volatile CHR RAM, while
+nametable mirroring remains hardwired from the cartridge header.
+
+Writes in the mirrored `$5000`, `$5100/$5101`, `$5200` and `$5300` pages own the low PRG bank,
+feedback latch, high PRG bank and mode register respectively. Mode bit 0 swaps CPU D0/D1 before the
+first three register inputs see them; mode bit 2 either exposes the low bank bits or forces PRG
+A15/A16 high, which makes cold power start in bank 3. The 2 MiB layout exposes all six 32 KiB bank
+lines. On 1 MiB cartridges the ASIC's A19/A20 outputs share the ROM's single high address input, so
+high-register values 1 and 2 select the same 512 KiB half and remain equivalent after D0/D1 swapping.
+
+The feedback latch captures enable on D0 and value on D2 during even `$5100` writes. An odd write
+flips the retained value only while enabled. Mirrored feedback reads drive only D2, with the retained
+value inverted; the CPU bus supplies the other seven open-bus bits. Automatic CHR mode replaces CHR
+A12 with PPU A9 captured on the most recent PPU A13 rising edge. It therefore follows actual address
+line transitions instead of approximating the behavior with scanline 127/239 callbacks.
+
+The factory accepts only 1 or 2 MiB PRG ROM, 8 KiB volatile CHR RAM, exactly 8 KiB battery-backed
+PRG NVRAM, hardwired two-screen nametables and submapper 0. Submapper 1 remains rejected because the
+NJ-YUYIN0106 board adds an ADPCM device that is not yet modeled. The checksum-pinned 2 MiB
+_Xian Jian Qi Xia Zhuan_ profile runs a 600-frame title baseline and 2,400 input-driven frames through
+both title stages into the opening dialogue. It produces 69 distinct interactive frames, exact
+visual/audio/CPU-cycle checkpoints and a deterministic 120-frame save-state replay. See
+[NESdev mapper 163](https://www.nesdev.org/wiki/INES_Mapper_163).
 
 ## Sunsoft-1 (184)
 

@@ -84,6 +84,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 142    | Kaiser KS7032  | Verified    | KS202/IRQ tests; pinned Kaiser _Super Mario Bros. 2_ runner        |
 | 150    | Sachen SA-015  | Implemented | ASIC/pin-routing/solder-pad/nametable/state tests; no fixture      |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
+| 163    | Nanjing FC-001 | Verified    | FC-001 register/CHR/state tests; pinned _Chinese Paladin_ runner   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
 | 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
 | 184    | Sunsoft-1      | Verified    | Board tests; pinned _The Wing of Madoola_ real-ROM runner          |
@@ -107,7 +108,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -600,6 +601,13 @@ and `$6000.D6` supplying PRG A18.
   connects ASIC pin 14 to CPU D2. Its Vcc solder-pad alternative ORs `$04` into writes and leaves D2
   open on reads; that physical path is covered by board-level tests but cannot be selected by an
   iNES/NES 2.0 header. The factory therefore uses the CPU-D2 connection without a title hash.
+- Mapper 163 models Nanjing's FC-001 ASIC independently of the related mapper 162/164 boards. It
+  combines a 32 KiB PRG bank, unbanked battery NVRAM and CHR RAM with mode-controlled D0/D1 input
+  swapping, an inverted one-bit feedback port and automatic CHR A12 selection from PPU A9 captured
+  on the latest A13 rise. The checksum-pinned 2 MiB _Xian Jian Qi Xia Zhuan_ profile verifies a
+  600-frame baseline, 2,400 input-driven frames into the opening dialogue, 69 distinct interactive
+  frames, exact visual/audio/CPU-cycle results and deterministic 120-frame save-state replay.
+  Submapper 1 remains rejected until its separate ADPCM hardware is modeled.
 - Mapper 180 uses the opposite UxROM window arrangement: the first 16 KiB PRG bank is fixed at
   `$8000-$BFFF`, while `$C000-$FFFF` is switchable. Legacy images use original UNROM AND conflicts;
   NES 2.0 submapper 1 disables them and submapper 2 makes them explicit.

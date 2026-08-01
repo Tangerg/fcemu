@@ -93,6 +93,16 @@ export type MapperState =
       readonly irqPending: boolean;
     }
   | {
+      readonly kind: "nanjing-fc001-163";
+      readonly prgBankLow: number;
+      readonly prgBankHigh: number;
+      readonly mode: number;
+      readonly feedbackEnabled: boolean;
+      readonly feedbackBit: boolean;
+      readonly automaticChrHalf: number;
+      readonly lastPpuAddress: number;
+    }
+  | {
       readonly kind: "sachen-sa015-150";
       readonly selectedRegister: number;
       readonly registers: readonly number[];

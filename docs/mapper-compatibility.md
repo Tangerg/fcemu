@@ -97,7 +97,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 242    | Waixing 43272  | Implemented | Six PRG modes/CHR protect/WRAM/state tests; one local replay smoke |
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
 | 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
-| 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
+| 245    | Waixing F003   | Verified    | Pin-routing tests; pinned _Dragon Quest VII_ real-ROM runner       |
 | 246    | C&E Fong Shen  | Verified    | Bank/alias tests; pinned _Feng Shen Bang_ real-ROM runner          |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
 | 250    | MMC3 addr/data | Verified    | Rewiring/IRQ tests; pinned _Time Diver_ real-ROM runner            |
@@ -647,10 +647,10 @@ and `$6000.D6` supplying PRG A18.
   A11 output becomes PRG A19, selecting one 512 KiB half for every CPU ROM window. CHR-RAM remains
   directly wired and unbanked, so the MMC3 CHR registers never remap pattern memory, and the
   disconnected A12 input cannot clock the scanline IRQ. The board retains MMC3 PRG banking,
-  mirroring, NVRAM protection and its 8 KiB battery-backed NVRAM. Two 1 MiB user-local images used
-  both outer halves during 800-frame input runs; a 512 KiB image exercised the TNROM-like fallback,
-  and all three completed deterministic 120-frame save-state replays. ROM bytes remain outside the
-  repository, so the status remains `Implemented`.
+  mirroring, NVRAM protection and its 8 KiB battery-backed NVRAM. The pinned 1 MiB _Dragon Quest VII_
+  profile runs 1,600 input-driven frames with exact visual/audio/CPU-cycle checkpoints, uses both
+  outer PRG halves and completes a deterministic 120-frame save-state replay. A second 1 MiB image
+  also used both halves, while a 512 KiB image remains supplemental TNROM-like fallback evidence.
 - Mapper 246 models C&E's four independently banked 8 KiB PRG windows, four 2 KiB CHR windows and
   the exact 2 KiB SRAM aperture at `$6800-$6FFF`. It also includes the hardware-traced sixteen
   high-address reads that force PRG A17, including the reset/IRQ vector at `$FFFC-$FFFF`; this is

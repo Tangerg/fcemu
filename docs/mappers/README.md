@@ -1355,9 +1355,12 @@ The cartridge's 8 KiB CHR-RAM is wired directly to PPU A10-A12 and is never bank
 A12 also means its scanline IRQ cannot receive a clock. Horizontal/vertical mirroring, PRG banking
 and the protected `$6000-$7FFF` window remain MMC3-controlled; F003 requires exactly 8 KiB of
 battery-backed PRG NVRAM. `WaixingF003Mapper` owns the changed pin routing and composes the unchanged
-register behavior through `Mmc3Mapper`, with both layers validated in save state. PRG images from
-128 KiB through 1 MiB are accepted only at power-of-two board sizes; images declaring CHR-ROM fail
-closed rather than being mistaken for this board. See
+register behavior through `Mmc3Mapper`, with both layers validated in save state. The pinned 1 MiB
+_Dragon Quest VII_ profile runs 1,600 input-driven frames with exact visual/audio/CPU-cycle
+checkpoints, uses both outer PRG halves and completes a deterministic 120-frame save-state replay.
+A second 1 MiB image also uses both halves; a 512 KiB image exercises the TNROM-like fallback. PRG
+images from 128 KiB through 1 MiB are accepted only at power-of-two board sizes; images declaring
+CHR-ROM fail closed rather than being mistaken for this board. See
 [NESdev mapper 245](https://www.nesdev.org/wiki/INES_Mapper_245).
 
 ## C&E Fong Shen Bang (246)

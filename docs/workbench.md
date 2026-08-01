@@ -89,7 +89,9 @@ dropped samples. They are read-only observations, not session-domain state.
 
 Keyboard and gamepad adapters emit the same domain-level `{player, button, pressed}` event.
 `CompositeControllerInput` tracks pressed intent by source, preventing a keyboard release from
-canceling a gamepad button still held.
+canceling a gamepad button still held. Source subscription is transactional and teardown is
+idempotent across adapters. A disconnected controller or transient browser Gamepad API failure
+releases its projected buttons before polling continues, preventing stuck input.
 
 The canvas is focusable only while a cartridge session can run. It receives focus after a successful
 load and after workbench actions; focused buttons and inputs retain normal browser keyboard

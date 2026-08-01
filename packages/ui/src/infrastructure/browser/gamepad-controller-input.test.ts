@@ -5,8 +5,14 @@ import { GamepadControllerInput } from "./gamepad-controller-input.js";
 class TestGamepadEnvironment {
   gamepads: Array<Gamepad | null> = [];
   private callback: FrameRequestCallback | undefined;
+  private nextError: Error | undefined;
 
   getGamepads(): readonly (Gamepad | null)[] {
+    if (this.nextError) {
+      const error = this.nextError;
+      this.nextError = undefined;
+      throw error;
+    }
     return this.gamepads;
   }
 
@@ -23,6 +29,10 @@ class TestGamepadEnvironment {
     const callback = this.callback;
     this.callback = undefined;
     callback?.(0);
+  }
+
+  failNextPoll(error: Error): void {
+    this.nextError = error;
   }
 }
 
@@ -45,6 +55,25 @@ describe("GamepadControllerInput", () => {
     expect(listener).toHaveBeenCalledWith({ player: 1, button: "left", pressed: false });
     expect(listener).toHaveBeenCalledWith({ player: 2, button: "start", pressed: true });
 
+    unsubscribe();
+  });
+
+  it("releases held buttons and keeps polling after a transient browser failure", () => {
+    const environment = new TestGamepadEnvironment();
+    const listener = vi.fn<(event: ControllerInputEvent) => void>();
+    const input = new GamepadControllerInput(environment);
+    const unsubscribe = input.subscribe(listener);
+    environment.gamepads = [gamepad(3, { buttons: [0] })];
+    environment.poll();
+    expect(listener).toHaveBeenLastCalledWith({ player: 1, button: "a", pressed: true });
+
+    environment.failNextPoll(new Error("gamepad permission changed"));
+    environment.poll();
+    expect(listener).toHaveBeenLastCalledWith({ player: 1, button: "a", pressed: false });
+
+    environment.poll();
+    expect(listener).toHaveBeenLastCalledWith({ player: 1, button: "a", pressed: true });
+    expect(listener).toHaveBeenCalledTimes(3);
     unsubscribe();
   });
 });

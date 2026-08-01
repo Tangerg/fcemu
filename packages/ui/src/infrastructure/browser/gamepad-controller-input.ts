@@ -42,12 +42,31 @@ export class GamepadControllerInput implements ControllerInputPort {
 
   private readonly poll = () => {
     this.frame = undefined;
-    const connected = this.environment
-      .getGamepads()
-      .filter((gamepad): gamepad is Gamepad => gamepad !== null && gamepad.connected)
-      .sort((left, right) => left.index - right.index);
-    const connectedIndexes = new Set(connected.map((gamepad) => gamepad.index));
+    try {
+      const connected = this.readConnectedGamepads();
+      if (!connected) {
+        this.releaseAllSlots();
+        return;
+      }
+      this.reconcileSlots(connected);
+    } finally {
+      this.schedule();
+    }
+  };
 
+  private readConnectedGamepads(): readonly Gamepad[] | undefined {
+    try {
+      return this.environment
+        .getGamepads()
+        .filter((gamepad): gamepad is Gamepad => gamepad !== null && gamepad.connected)
+        .sort((left, right) => left.index - right.index);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private reconcileSlots(connected: readonly Gamepad[]): void {
+    const connectedIndexes = new Set(connected.map((gamepad) => gamepad.index));
     this.slots.forEach((gamepadIndex, slot) => {
       if (gamepadIndex !== undefined && !connectedIndexes.has(gamepadIndex)) {
         this.releaseSlot(slot);
@@ -59,13 +78,11 @@ export class GamepadControllerInput implements ControllerInputPort {
       const slot = this.slots.indexOf(undefined);
       if (slot !== -1) this.slots[slot] = gamepad.index;
     });
-
     this.slots.forEach((gamepadIndex, slot) => {
       const gamepad = connected.find((candidate) => candidate.index === gamepadIndex);
       if (gamepad) this.projectGamepad(slot, gamepad);
     });
-    this.schedule();
-  };
+  }
 
   private projectGamepad(slot: number, gamepad: Gamepad): void {
     const next = new Set<GameButton>();
@@ -95,6 +112,11 @@ export class GamepadControllerInput implements ControllerInputPort {
     this.pressed[slot]?.clear();
   }
 
+  private releaseAllSlots(): void {
+    this.slots.forEach((_, slot) => this.releaseSlot(slot));
+    this.slots.fill(undefined);
+  }
+
   private emit(slot: number, button: GameButton, pressed: boolean): void {
     const event: ControllerInputEvent = { player: slot === 0 ? 1 : 2, button, pressed };
     this.listeners.forEach((listener) => listener(event));
@@ -109,8 +131,7 @@ export class GamepadControllerInput implements ControllerInputPort {
   private stop(): void {
     if (this.frame !== undefined) this.environment.cancelFrame(this.frame);
     this.frame = undefined;
-    this.slots.forEach((_, slot) => this.releaseSlot(slot));
-    this.slots.fill(undefined);
+    this.releaseAllSlots();
   }
 }
 

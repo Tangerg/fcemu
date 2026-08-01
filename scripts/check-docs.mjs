@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const markdownFiles = collectMarkdownFiles(root);
@@ -15,6 +16,7 @@ for (const file of markdownFiles) {
 }
 
 validateDocumentationIndex();
+validateMapperCatalog();
 
 if (failures.length > 0) {
   console.error(`[check-docs] Found ${failures.length} documentation problem(s):`);
@@ -22,7 +24,7 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `[check-docs] OK — ${markdownFiles.length} Markdown files have valid structure and local links.`,
+    `[check-docs] OK — ${markdownFiles.length} Markdown files and the mapper catalog are consistent.`,
   );
 }
 
@@ -189,6 +191,84 @@ function validateDocumentationIndex() {
     if (!documented.has(relative)) {
       fail(file, "is not linked from docs/README.md");
     }
+  }
+}
+
+function validateMapperCatalog() {
+  const factoryFile = path.join(
+    root,
+    "packages",
+    "fc-emu",
+    "src",
+    "domain",
+    "emulation",
+    "mapper",
+    "create-mapper.ts",
+  );
+  const compatibilityFile = path.join(root, "docs", "mapper-compatibility.md");
+  const referenceFile = path.join(root, "docs", "mappers", "README.md");
+  const factoryMappers = mapperCases(factoryFile);
+  const compatibilitySource = fs.readFileSync(compatibilityFile, "utf8");
+  const tableMappers = [
+    ...compatibilitySource.matchAll(/^\|\s*(\d+)\s*\|\s*[^|]+\|\s*(?:Implemented|Verified)\s*\|/gm),
+  ].map((match) => Number(match[1]));
+  const referenceMappers = [
+    ...fs.readFileSync(referenceFile, "utf8").matchAll(/^## .+\(([\d,\s]+)\)\s*$/gm),
+  ].flatMap((match) =>
+    (match[1] ?? "")
+      .split(",")
+      .map((value) => Number(value.trim()))
+      .filter(Number.isInteger),
+  );
+
+  compareMapperSets(factoryMappers, tableMappers, compatibilityFile, "compatibility table");
+  compareMapperSets(factoryMappers, referenceMappers, referenceFile, "board reference headings");
+  validateMapperList(factoryMappers, factoryFile, "factory mapper switch", false);
+  validateMapperList(tableMappers, compatibilityFile, "compatibility table", true);
+  validateMapperList(referenceMappers, referenceFile, "board reference headings", false);
+}
+
+function mapperCases(file) {
+  const source = fs.readFileSync(file, "utf8");
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  const factory = sourceFile.statements.find(
+    (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === "createMapper",
+  );
+  const selection = factory?.body?.statements.find(
+    (statement) =>
+      ts.isSwitchStatement(statement) &&
+      statement.expression.getText(sourceFile) === "cartridge.mapperNumber",
+  );
+  if (!selection) {
+    fail(file, "cannot locate createMapper's mapper-number switch");
+    return [];
+  }
+  return selection.caseBlock.clauses.flatMap((clause) =>
+    ts.isCaseClause(clause) && ts.isNumericLiteral(clause.expression)
+      ? [Number(clause.expression.text)]
+      : [],
+  );
+}
+
+function compareMapperSets(expected, actual, file, label) {
+  const expectedSet = new Set(expected);
+  const actualSet = new Set(actual);
+  const missing = [...expectedSet].filter((mapper) => !actualSet.has(mapper));
+  const extra = [...actualSet].filter((mapper) => !expectedSet.has(mapper));
+  if (missing.length > 0) fail(file, `${label} is missing mapper(s): ${missing.join(", ")}`);
+  if (extra.length > 0) fail(file, `${label} lists unregistered mapper(s): ${extra.join(", ")}`);
+}
+
+function validateMapperList(values, file, label, requireAscendingOrder) {
+  const duplicates = values.filter((value, index) => values.indexOf(value) !== index);
+  if (duplicates.length > 0) {
+    fail(file, `${label} repeats mapper(s): ${[...new Set(duplicates)].join(", ")}`);
+  }
+  if (
+    requireAscendingOrder &&
+    values.some((value, index) => index > 0 && value < values[index - 1])
+  ) {
+    fail(file, `${label} must be ordered by mapper number`);
   }
 }
 

@@ -13,16 +13,16 @@ yarn build
 
 `yarn quality` runs, in order:
 
-| Gate                  | Purpose                                                      |
-| --------------------- | ------------------------------------------------------------ |
-| `yarn typecheck`      | Type-check both workspaces without emitting output.          |
-| `yarn lint`           | Reject Oxlint warnings in production and test code.          |
-| `yarn format:check`   | Enforce one Prettier representation.                         |
-| `yarn check:docs`     | Validate Markdown structure and repository-local links.      |
-| `yarn test`           | Run all core and UI Vitest suites.                           |
-| `yarn knip`           | Detect unused files, exports and dependencies.               |
-| `yarn check:circular` | Reject runtime import cycles.                                |
-| `yarn check:layers`   | Enforce package and clean-architecture dependency direction. |
+| Gate                  | Purpose                                                        |
+| --------------------- | -------------------------------------------------------------- |
+| `yarn typecheck`      | Type-check both workspaces without emitting output.            |
+| `yarn lint`           | Reject Oxlint warnings in production and test code.            |
+| `yarn format:check`   | Enforce one Prettier representation.                           |
+| `yarn check:docs`     | Validate Markdown, local links and mapper-catalog consistency. |
+| `yarn test`           | Run all core and UI Vitest suites.                             |
+| `yarn knip`           | Detect unused files, exports and dependencies.                 |
+| `yarn check:circular` | Reject runtime import cycles.                                  |
+| `yarn check:layers`   | Enforce package and clean-architecture dependency direction.   |
 
 CI runs the same gate on pushes to `master`/`main` and on every pull request, then runs the
 production build.
@@ -175,6 +175,8 @@ performance justification.
 - no heading-level jumps;
 - valid repository-local link targets;
 - no machine-specific absolute file links.
+- exact mapper-number parity between `createMapper`, the compatibility table and detailed board
+  headings, including duplicate and compatibility-table order detection.
 
 External URLs are intentionally not fetched in CI. When adding one, prefer stable upstream project,
 hardware-documentation or source-revision URLs over search results and mirrors.

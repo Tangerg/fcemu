@@ -78,7 +78,7 @@ yarn dev              # start the browser workbench
 yarn build            # build the core and production UI
 yarn quality          # complete required local/CI quality gate
 yarn test             # core and UI unit/integration tests
-yarn check:docs       # Markdown structure and local-link validation
+yarn check:docs       # Markdown/link validation and mapper-catalog consistency
 yarn benchmark:core   # frame-buffer, full-frame and save-state benchmarks
 yarn fetch:test-roms  # fetch and verify the ignored local conformance set
 ```

@@ -23,6 +23,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM                  |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
+| 12     | Rex/FFE 4M     | Implemented | MMC3A/outer-CHR/card/state tests; local DBZ5 replay                |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
 | 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture          |
@@ -142,6 +143,10 @@ mapper 6 means mode 1. Mapper 8 is the mode-4 synonym and accepts only submapper
 submappers 0-3, which relocate an optional Super Magic Card trainer to `$7000`, `$5D00`, `$5E00` or
 `$5F00`.
 
+Mapper 12 legacy images and NES 2.0 submapper 0 select Rex Soft's SL-5020B MMC3A board. NES 2.0
+submapper 1 instead identifies an FFE Super Magic Card 4M extraction with fixed `$7000` trainer
+placement; other submappers fail closed.
+
 Mappers 15/133/225/226/228/240/242/243/244/246/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
@@ -216,7 +221,7 @@ and `$6000.D6` supplying PRG A18.
   share one level-sensitive IRQ output, while the two pulse channels and PCM DAC enter the normal
   expansion-audio path. Unknown diagnostic pins and `$5207/$5208` behavior remain open bus instead
   of fabricated registers.
-- Mappers 6/8/17 follow their current NESdev disk-extraction definitions rather than the obsolete
+- Mappers 6/8/12.1/17 follow their current NESdev disk-extraction definitions rather than the obsolete
   FFE ASIC approximations found in older emulator tables. The iNES PRG/CHR payload initializes
   mutable card RAM, and each board owns exactly 32 KiB of volatile work RAM with no battery-backed
   storage. Magic Card supports its latch modes, PRG write protection, mirroring and FDS-compatible
@@ -225,7 +230,9 @@ and `$6000.D6` supplying PRG A18.
   trainer is a hardware loader entry: mapper 6 calls `$7003` and returns to the reset vector, while
   mapper 17 cold-starts directly at its submapper-selected address. This support executes extracted
   play-mode images; the external BIOS/FDC, parallel transfer interface, copier GUI and cartridge
-  pass-through used to create those images are not modeled.
+  pass-through used to create those images are not modeled. Mapper 12.1 starts in protected 4M mode,
+  stores the header CHR payload at PRG-card offset `$40000`, exposes only 32 KiB of live CHR RAM and
+  calls a `$7003` trainer before returning to the reset vector.
 - Mapper 34 never combines its unrelated register sets. Legacy CHR ROM above 8 KiB selects
   NINA-001; CHR RAM or at most 8 KiB CHR ROM selects BNROM. NINA-001 maps its `$7FFD-$7FFF`
   registers over 8 KiB PRG RAM. BNROM applies original-board AND bus conflicts; NES 2.0 submapper 2
@@ -244,6 +251,16 @@ and `$6000.D6` supplying PRG A18.
   AND-type bus conflicts. Color Dreams takes PRG from bits 1-0 and CHR from bits 7-4; GxROM takes
   PRG from bits 5-4 and CHR from bits 1-0. The no-conflict Color Dreams prototype board is out of
   scope.
+- Mapper 12.0 models Rex Soft/Gouder SL-5020B as an MMC3A-compatible Huang-1 plus a separate GAL.
+  Writes matching `$E100=$4100` immediately put D0 on CHR A18 for PPU `$0000-$0FFF` and D4 on CHR
+  A18 for `$1000-$1FFF`, independent of the MMC3 CHR-mode swap. Reads through the same aliases drive
+  only hard-wired language bit D0; all known boards select Chinese. The MMC3 core retains its
+  optional 8 KiB WRAM window and revision-A zero-latch IRQ behavior. The older FCEUX deferred-outer
+  latch and reset-toggled language choice are compatibility inventions and are not hidden variants.
+  A local 256 KiB PRG + 512 KiB CHR _Dragon Ball Z 5_ image ran 1,200 frames without halting and
+  replayed frames 601-720 identically. It read `$4132` once and wrote `$02` there 1,400 times, so it
+  validates the language/decode path but never drives the two connected outer-CHR bits; those remain
+  unit-tested hardware evidence.
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.

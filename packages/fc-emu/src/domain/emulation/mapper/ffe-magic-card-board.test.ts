@@ -36,4 +36,18 @@ describe("FFE Magic Card board selection", () => {
       trainerReturnsToResetVector: false,
     });
   });
+
+  it("identifies only NES 2.0 mapper 12.1 as the 4M RAM-card extraction", () => {
+    expect(findFfeMagicCardBoard(12, "nes2", 1)).toMatchObject({
+      id: "super-magic-card-4m",
+      initialSuperMode: 0x42,
+      chrMemoryBytes: 0x8000,
+      chrRomPrgOffset: 0x40_000,
+      trainerLoadAddress: 0x7000,
+      trainerReturnsToResetVector: true,
+    });
+    expect(findFfeMagicCardBoard(12, "ines", 0)).toBeUndefined();
+    expect(findFfeMagicCardBoard(12, "nes2", 0)).toBeUndefined();
+    expect(findFfeMagicCardBoard(12, "nes2", 2)).toBeUndefined();
+  });
 });

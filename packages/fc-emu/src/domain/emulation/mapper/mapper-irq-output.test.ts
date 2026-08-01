@@ -28,6 +28,11 @@ describe("mapper IRQ output", () => {
       true,
     ],
     [
+      "a nested Rex Soft MMC3 IRQ",
+      mapperState({ kind: "rex-soft-12", mmc3: { irqPending: true } }),
+      true,
+    ],
+    [
       "a nested TXC MMC3 IRQ",
       mapperState({ kind: "txc-mmc3-189", mmc3: { irqPending: true } }),
       true,

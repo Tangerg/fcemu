@@ -128,6 +128,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 9   | MMC2 / PxROM   | `mmc2`                    | `mmc2-mapper.ts`             | no            | no   |
 | 10  | MMC4 / FxROM   | `mmc4`                    | `mmc4-mapper.ts`             | no            | no   |
 | 11  | Color Dreams   | `color-dreams`            | `color-dreams-mapper.ts`     | AND           | no   |
+| 12  | Rex/FFE 4M     | board-specific            | Rex Soft or FFE card mapper  | no            | both |
 | 13  | CPROM          | `cprom`                   | `cprom-mapper.ts`            | AND           | no   |
 | 15  | K-1029/K-1030P | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 16  | Bandai FCG     | `bandai-fcg`              | `bandai-fcg-mapper.ts`       | no            | cyc. |
@@ -211,6 +212,8 @@ lives in `mmc1-board.ts`; the mapper 34 board decision lives in `mapper34-board.
 76/88/95/206 select immutable pin-wiring values around one register core, while
 MMC3/TxSROM/TQROM/mapper-250 select only the board behavior that differs around the shared MMC3
 state machine.
+Mapper 12.0 composes that MMC3 state machine with one Rex Soft GAL; mapper 12.1 resolves to the
+existing FFE RAM-card owner instead of merging the two unrelated boards.
 Taito TC0190/TC0690 similarly share `TaitoTc0x90Banking`; their mirroring and IRQ pins remain in
 their board-specific owners.
 X1-005/X1-017 share only `TaitoX1Banking`, the three-PRG/eight-CHR data path actually common to both
@@ -322,12 +325,18 @@ nametable. Its mode register can instead select common 8 KiB CHR banking or MMC4
 read-triggered CHR latches. A 16-bit up-counter IRQ clocks from CPU M2 or unfiltered PPU-A12 rises.
 All mutable PRG/CHR/scratch bytes and in-flight IRQ/latch state are captured transactionally.
 
+NES 2.0 mapper 12.1 is a 4M Super Magic Card extraction, not the Rex Soft board described below.
+It powers up with `$4500=$42`, protected 4M banking and the final four header PRG banks visible.
+Because this card has only 32 KiB CHR RAM, the header's CHR payload is copied into mutable PRG-card
+memory beginning at `$40000`; the loader explicitly transfers the pages it needs into CHR RAM.
+
 An optional 512-byte trainer represents the copier loader, not generic `$7000` initialization.
-Mapper 6 loads it at `$7000`, cold-calls `$7003`, then returns to the ROM reset vector. Mapper 17
+Mapper 6 and mapper 12.1 load it at `$7000`, cold-call `$7003`, then return to the ROM reset vector. Mapper 17
 submappers 0-3 cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`; warm reset always uses the normal
 reset vector. The external FDS/BIOS, copier GUI, transfer port and pass-through cartridge hardware
 used to create an extraction are deliberately outside this execution format. See
 [NESdev mapper 6](https://www.nesdev.org/wiki/INES_Mapper_006),
+[mapper 12](https://www.nesdev.org/wiki/INES_Mapper_012),
 [mapper 17](https://www.nesdev.org/wiki/INES_Mapper_017), and
 [Super Magic Card](https://www.nesdev.org/wiki/Super_Magic_Card).
 
@@ -362,6 +371,30 @@ Famicom Wars.
 
 One `$8000-$FFFF` latch: bits 1-0 select a 32 KiB PRG bank, bits 7-4 an 8 KiB CHR bank, with documented
 AND-type bus conflicts. The no-conflict prototype board variant is out of scope.
+
+## Rex Soft SL-5020B (12)
+
+Legacy mapper 12 and NES 2.0 submapper 0 select the 256 KiB PRG + 512 KiB CHR SL-5020B board. Its
+Huang-1 ASIC runs exclusively in MMC3 mode with revision-A IRQ behavior and an optional direct
+8 KiB WRAM/NVRAM window. A separate GAL decodes every expansion write matching `$E100=$4100`:
+D0 supplies CHR A18 for PPU `$0000-$0FFF`, while D4 supplies it for `$1000-$1FFF`. The choice follows
+physical PPU A12 rather than MMC3 `$8000` bit 7, and changes the visible CHR page immediately.
+
+Reads at the same aliases drive only D0 and leave D7-D1 open. Current board evidence finds no jumper
+and all known copies hard-wire D0 to 1 for Chinese text. Power-on clears the two connected outer
+bits; save state retains them beside the complete nested MMC3 state. Unknown submappers, different
+ROM capacities and four-screen wiring fail before execution.
+
+[NESdev mapper 12](https://www.nesdev.org/wiki/INES_Mapper_012) and pinned
+[Mesen CE](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Mmc3Variants/MMC3_12.h)
+agree on immediate, PPU-half-selected CHR A18 and MMC3A IRQs. Older
+[FCEUX behavior](https://github.com/TASEmulators/fceux/blob/a62b868e9247c4aafd66f597cdfa8d2609704087/src/boards/mmc3.cpp#L377-L411)
+deferred the outer value until another MMC3 bank write and toggled a virtual language switch on
+reset; neither behavior is a second physical board. The local SHA-256
+`4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` _Dragon Ball Z 5_ ran
+1,200 frames without halting and replayed frames 601-720 byte-identically. It read `$4132` once and
+wrote `$02` 1,400 times, never asserting the connected D0/D4 outer bits; therefore the ROM is useful
+execution evidence but not a real-ROM proof of upper-half CHR switching.
 
 ## CPROM (13)
 

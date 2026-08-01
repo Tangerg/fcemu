@@ -168,7 +168,10 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       prgNvRamSize: BANDAI_24C02_NVRAM_SIZE,
     });
   }
-  if ([6, 8, 17].includes(header.mapperNumber)) {
+  const isFfeRamCartridge =
+    [6, 8, 17].includes(header.mapperNumber) ||
+    (header.mapperNumber === 12 && header.format === "nes2" && header.submapperNumber === 1);
+  if (isFfeRamCartridge) {
     return Object.freeze({
       ...header,
       prgRamSize: FFE_MAGIC_CARD_WRAM_SIZE,

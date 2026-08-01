@@ -62,6 +62,7 @@ import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
 import { OekaKidsMapper } from "./oeka-kids-mapper.js";
 import { Rambo1Mapper } from "./rambo1-mapper.js";
+import { RexSoft12Mapper } from "./rex-soft-12-mapper.js";
 import { SachenSa020aMapper } from "./sachen-sa020a-mapper.js";
 import { SachenSa72008Mapper } from "./sachen-sa72008-mapper.js";
 import {
@@ -174,6 +175,17 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
       requireNoPrgRam(cartridge);
       return new ColorDreamsMapper(cartridge);
+    case 12:
+      if (cartridge.submapperNumber === 0) {
+        requireRomLayout(cartridge, [0x40_000], 0x80_000);
+        requireChrRom(cartridge, "Rex Soft SL-5020B");
+        requireMmc3PrgRam(cartridge);
+        requireTwoScreenNametables(cartridge, "Rex Soft SL-5020B");
+        return new RexSoft12Mapper(interruptPort, cartridge);
+      }
+      const board = resolveFfeMagicCardBoard(cartridge);
+      requireFfeMagicCardLayout(cartridge, board);
+      return new FfeMagicCardMapper(interruptPort, cartridge, board);
     case 13:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x8000], 0x4000);
@@ -949,19 +961,28 @@ function requireFfeMagicCardLayout(cartridge: Cartridge, board: FfeMagicCardBoar
     : board.initialLatchMode === 2 || board.initialLatchMode === 3
       ? 0x40_000
       : 0x20_000;
+  const maximumPrgBytes = board.chrRomPrgOffset ?? board.prgMemoryBytes;
   if (
     cartridge.prgRom.byteLength < minimumPrgBytes ||
-    cartridge.prgRom.byteLength > board.prgMemoryBytes
+    cartridge.prgRom.byteLength > maximumPrgBytes
   ) {
     throw configurationError(
       cartridge,
-      `FFE ${board.id} PRG image must be ${formatBytes(minimumPrgBytes)}-${formatBytes(board.prgMemoryBytes)}`,
+      `FFE ${board.id} PRG image must be ${formatBytes(minimumPrgBytes)}-${formatBytes(maximumPrgBytes)}`,
     );
   }
-  if (cartridge.chrMemoryBytes > board.chrMemoryBytes) {
+  const packedChrImage = board.chrRomPrgOffset !== null;
+  const maximumChrImageBytes =
+    board.chrRomPrgOffset === null
+      ? board.chrMemoryBytes
+      : board.prgMemoryBytes - board.chrRomPrgOffset;
+  const chrImageBytes = packedChrImage ? cartridge.chrRom.byteLength : cartridge.chrMemoryBytes;
+  if ((packedChrImage && chrImageBytes === 0) || chrImageBytes > maximumChrImageBytes) {
     throw configurationError(
       cartridge,
-      `FFE ${board.id} CHR initialization cannot exceed ${formatBytes(board.chrMemoryBytes)}`,
+      packedChrImage
+        ? `FFE ${board.id} CHR initialization must be 1-${formatBytes(maximumChrImageBytes)}`
+        : `FFE ${board.id} CHR initialization cannot exceed ${formatBytes(maximumChrImageBytes)}`,
     );
   }
   if (cartridge.prgRamBytes !== 0x8000 || cartridge.prgNvRamBytes !== 0) {

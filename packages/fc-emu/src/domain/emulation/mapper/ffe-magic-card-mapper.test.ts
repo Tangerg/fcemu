@@ -73,6 +73,33 @@ describe("FFE Magic Card RAM cartridges", () => {
     expect(readAt(mapper, [0x8000, 0x0000])).toEqual([3, 9]);
   });
 
+  it("initializes mapper 12.1 as a protected 4M card with CHR payload in PRG memory", () => {
+    const cartridge = createTestCartridge({
+      mapper: 12,
+      nes2: true,
+      submapper: 1,
+      prgBanks: 16,
+      chrBanks: 4,
+    });
+    fillBanks(cartridge.prgRom, 0x2000);
+    cartridge.chrRom.fill(0xa5);
+    const mapper = createMapper(cartridge, silentInterruptPort);
+
+    expect(readAt(mapper, [0x8000, 0xa000, 0xc000, 0xe000])).toEqual([28, 29, 30, 31]);
+    expect(mapper.read(0x0000)).toBe(0);
+    expect(mapper.captureState()).toMatchObject({
+      board: "super-magic-card-4m",
+      superMode: 0x42,
+      bankingMode: "4m",
+      prgWriteProtected: true,
+    });
+
+    mapper.writeCpuExpansion?.(0x4504, 32);
+    expect(mapper.read(0x8000)).toBe(0xa5);
+    mapper.write(0x0000, 0x5a);
+    expect(mapper.read(0x0000)).toBe(0x5a);
+  });
+
   it("banks all four Super Magic Card WRAM windows independently", () => {
     const mapper = createMapper(
       createTestCartridge({ mapper: 17, nes2: true, prgBanks: 2, chrBanks: 1 }),
@@ -230,6 +257,25 @@ describe("FFE Magic Card RAM cartridges", () => {
     expect(bus.captureState().cpu.registers).toMatchObject({ PC: 0x8000, SP: 0xfd });
   });
 
+  it("calls mapper 12.1's trainer at $7003 and returns to its reset vector", () => {
+    const trainer = [0, 0, 0, 0x60];
+    const bus = new Bus(
+      createTestCartridge({
+        mapper: 12,
+        nes2: true,
+        submapper: 1,
+        prgBanks: 16,
+        chrBanks: 1,
+        trainer,
+        resetVector: 0x8000,
+      }),
+    );
+
+    expect(bus.captureState().cpu.registers).toMatchObject({ PC: 0x7003, SP: 0xfb });
+    bus.CPU.update();
+    expect(bus.captureState().cpu.registers).toMatchObject({ PC: 0x8000, SP: 0xfd });
+  });
+
   it("round-trips mutable PRG/CHR/scratch memory and all active IRQ state", () => {
     const mapper = createMapper(
       createTestCartridge({ mapper: 17, nes2: true, prgBanks: 4, chrBanks: 2 }),
@@ -267,6 +313,7 @@ describe("FFE Magic Card RAM cartridges", () => {
     { mapper: 17, nes2: true, submapper: 1, prgBanks: 2, chrBanks: 1 },
     { mapper: 17, nes2: true, submapper: 2, prgBanks: 2, chrBanks: 1 },
     { mapper: 17, nes2: true, submapper: 3, prgBanks: 2, chrBanks: 1 },
+    { mapper: 12, nes2: true, submapper: 1, prgBanks: 16, chrBanks: 1 },
   ])("constructs $mapper/$submapper allocated RAM-card shapes", (options) => {
     expect(() => createMapper(createTestCartridge(options), silentInterruptPort)).not.toThrow();
   });
@@ -275,6 +322,7 @@ describe("FFE Magic Card RAM cartridges", () => {
     { mapper: 6, nes2: true, submapper: 8, prgBanks: 8, chrBanks: 1 },
     { mapper: 8, nes2: true, submapper: 1, prgBanks: 8, chrBanks: 1 },
     { mapper: 17, nes2: true, submapper: 4, prgBanks: 2, chrBanks: 1 },
+    { mapper: 12, nes2: true, submapper: 2, prgBanks: 16, chrBanks: 1 },
   ])("rejects mapper $mapper unallocated submapper $submapper", (options) => {
     expect(() => createMapper(createTestCartridge(options), silentInterruptPort)).toThrowError(
       UnsupportedMapperVariantError,
@@ -302,6 +350,18 @@ describe("FFE Magic Card RAM cartridges", () => {
       name: "four-screen header",
       options: { mapper: 17, nes2: true, prgBanks: 2, chrBanks: 1, fourScreen: true },
     },
+    {
+      name: "mapper 12.1 PRG image crossing the packed CHR boundary",
+      options: { mapper: 12, nes2: true, submapper: 1, prgBanks: 17, chrBanks: 1 },
+    },
+    {
+      name: "mapper 12.1 CHR payload over 256 KiB",
+      options: { mapper: 12, nes2: true, submapper: 1, prgBanks: 16, chrBanks: 33 },
+    },
+    {
+      name: "mapper 12.1 without a CHR payload",
+      options: { mapper: 12, nes2: true, submapper: 1, prgBanks: 16 },
+    },
   ] satisfies readonly { readonly name: string; readonly options: TestRomOptions }[])(
     "rejects $name",
     ({ options }) => {
@@ -324,9 +384,29 @@ describe("FFE Magic Card RAM cartridges", () => {
     });
   });
 
+  it("normalizes NES 2.0 mapper 12.1 to 32 KiB volatile WRAM", () => {
+    expect(
+      createTestCartridge({ mapper: 12, nes2: true, submapper: 1, prgBanks: 16, chrBanks: 1 }),
+    ).toMatchObject({
+      prgRamBytes: 0x8000,
+      prgNvRamBytes: 0,
+      hasBatteryBackup: false,
+    });
+  });
+
   it("rejects battery persistence that the physical RAM cards did not provide", () => {
     expect(() =>
       createTestCartridge({ mapper: 6, prgBanks: 8, chrBanks: 4, battery: true }),
+    ).toThrow(/battery/i);
+    expect(() =>
+      createTestCartridge({
+        mapper: 12,
+        nes2: true,
+        submapper: 1,
+        prgBanks: 16,
+        chrBanks: 1,
+        battery: true,
+      }),
     ).toThrow(/battery/i);
   });
 });

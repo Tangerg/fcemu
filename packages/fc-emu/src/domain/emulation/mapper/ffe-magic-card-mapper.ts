@@ -19,8 +19,9 @@ type BankingMode = (typeof BANKING_MODES)[number];
 /**
  * Front Fareast Magic Card / Super Magic Card play-mode RAM cartridge.
  *
- * iNES 6/8/17 images are preloaded RAM-card disk extractions. PRG and CHR data
- * therefore initialize mutable board memory instead of pretending to be ROM.
+ * iNES 6/8/17 and NES 2.0 mapper 12.1 images are preloaded RAM-card disk
+ * extractions. PRG and CHR data therefore initialize mutable board memory
+ * instead of pretending to be ROM.
  */
 export class FfeMagicCardMapper implements Mapper {
   private readonly prgMemory: Uint8Array;
@@ -66,7 +67,11 @@ export class FfeMagicCardMapper implements Mapper {
     this.prgMemory.fill(0);
     this.prgMemory.set(this.cartridge.prgRom);
     this.chrMemory.fill(0);
-    this.chrMemory.set(this.cartridge.chrRom.subarray(0, this.chrMemory.byteLength));
+    if (this.board.chrRomPrgOffset === null) {
+      this.chrMemory.set(this.cartridge.chrRom.subarray(0, this.chrMemory.byteLength));
+    } else {
+      this.prgMemory.set(this.cartridge.chrRom, this.board.chrRomPrgOffset);
+    }
     this.scratchRam.fill(0);
     this.prgBanks = this.board.hasSuperMagicCardFeatures
       ? [
@@ -85,7 +90,7 @@ export class FfeMagicCardMapper implements Mapper {
     this.bankingMode = this.board.hasSuperMagicCardFeatures ? "4m" : "latch";
     this.bankingModeAddressBits = this.board.hasSuperMagicCardFeatures ? 0 : 3;
     this.chr8kBank = 0;
-    this.superMode = this.board.hasSuperMagicCardFeatures ? 0x47 : 0;
+    this.superMode = this.board.initialSuperMode;
     this.latch0Fe = false;
     this.latch1Fe = false;
     this.irqCounter = 0;

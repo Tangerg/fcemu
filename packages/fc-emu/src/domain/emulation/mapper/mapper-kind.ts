@@ -69,6 +69,7 @@ export const MapperKind = {
   Mmc1: "mmc1",
   Mmc2: "mmc2",
   Mmc3: "mmc3",
+  RexSoft12: "rex-soft-12",
   TxcMmc3189: "txc-mmc3-189",
   WaixingF003: "waixing-f003-245",
   Mmc4: "mmc4",

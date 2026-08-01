@@ -112,7 +112,10 @@ class Cartridge {
       mapperRamBytes: this.mapperRamBytes,
       mapperNvRamBytes: this.mapperNvRamBytes,
     });
-    if (trainer && ![6, 8, 17].includes(header.mapperNumber)) {
+    const mapperLoadsTrainer =
+      [6, 8, 17].includes(header.mapperNumber) ||
+      (header.mapperNumber === 12 && header.format === "nes2" && header.submapperNumber === 1);
+    if (trainer && !mapperLoadsTrainer) {
       this.memory.initializePrg(TRAINER_RAM_OFFSET, trainer);
     }
 

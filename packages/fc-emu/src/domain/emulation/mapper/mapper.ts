@@ -124,7 +124,7 @@ export type MapperState =
     }
   | {
       readonly kind: "ffe-magic-card";
-      readonly board: "magic-card-6" | "magic-card-8" | "super-magic-card";
+      readonly board: "magic-card-6" | "magic-card-8" | "super-magic-card" | "super-magic-card-4m";
       readonly prgBanks: readonly number[];
       readonly chrRegisters: readonly number[];
       readonly latchMode: number;
@@ -633,6 +633,11 @@ export type MapperState =
       readonly previousCpuCycleWasWrite: boolean;
     }
   | Mmc3State
+  | {
+      readonly kind: "rex-soft-12";
+      readonly chrOuterBits: number;
+      readonly mmc3: Mmc3State;
+    }
   | {
       readonly kind: "supergame-114";
       readonly variant: 0 | 1;

@@ -55,11 +55,13 @@ memory.
 Legacy iNES's conventional implicit 8 KiB allocation remains parser metadata but is electrically
 undriven and unwritable; NES 2.0 must declare no PRG RAM/NVRAM, and battery headers fail closed.
 
-Mapper 6/8/17 images are extracted FFE copier-card memory, so their PRG/CHR payload initializes
+Mapper 6/8/17 and NES 2.0 mapper 12.1 images are extracted FFE copier-card memory, so their payload initializes
 mutable board RAM and their work RAM is normalized to the physical 32 KiB volatile capacity.
 Battery declarations are rejected. Their optional trainer is a loader entry rather than passive
 generic initialization: mapper 6/8 loads `$7000-$71FF`, cold-calls `$7003` and returns to the reset
-vector; mapper 17 submappers 0-3 load and cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`.
+vector; mapper 12.1 uses the same `$7003` call but copies its header CHR payload into PRG-card offset
+`$40000` for the loader to transfer into 32 KiB CHR RAM; mapper 17 submappers 0-3 load and cold-jump
+to `$7000`, `$5D00`, `$5E00` or `$5F00`.
 
 Mapper 19 derives the Namco 163 ASIC's 128-byte shared RAM independently from header PRG/CHR
 fields. The battery flag makes those bytes persistent even when the NES 2.0 PRG NVRAM field is
@@ -126,7 +128,8 @@ submapper 0. Mapper 34 submapper 1 selects NINA-001 and submapper 2 selects BNRO
 submapper 0 chooses exactly one board from CHR geometry instead of exposing both register sets.
 Mapper 6 NES 2.0 submappers 0-7 select the initial Magic Card latch mode; legacy mapper 6 means mode
 1, while mapper 8 is its mode-4 synonym and accepts submapper 0. Mapper 17 accepts submappers 0-3
-solely for the trainer relocation described above. Mappers 15/133/225/226/228/240/242/243/244/246/250 accept
+solely for the trainer relocation described above. Mapper 12 legacy/submapper 0 is SL-5020B;
+NES 2.0 submapper 1 is the FFE 4M extraction. Mappers 15/133/225/226/228/240/242/243/244/246/250 accept
 submapper 0 only.
 Mapper 227 accepts submapper 0 (RPG/optional NVRAM), submapper 1 (protected multicart/solder-pad
 reads), and submapper 2 (protected multicart/outer-bank reset rule).

@@ -62,7 +62,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture    |
 | 85     | Konami VRC7    | Implemented | Three PCBs/banking/IRQ/FM/reset/state tests; no conformance ROM    |
 | 86     | Jaleco JF-13   | Implemented | Banking/mirror/state tests; µPD7756C and canonical fixture pending |
-| 87     | Jaleco CHR     | Implemented | CHR-bit-swap unit tests; no conformance ROM                        |
+| 87     | Jaleco J87     | Verified    | CHR-bit-swap tests; pinned _The Goonies_ real-ROM runner           |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                  |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM               |
 | 90     | J.Y. EL861226C | Implemented | PRG/CHR/multiplier/latch/four-source-IRQ/state tests; no fixture   |
@@ -530,7 +530,10 @@ and `$6000.D6` supplying PRG A18.
   mirroring hardwired, uses four PRG bits and may retain externally declared four-screen memory.
 - Mapper 87 (Jaleco/Konami) latches an 8 KiB CHR bank at `$6000-$7FFF` with its two select lines
   reversed (value bit 1 drives CHR line 0, value bit 0 drives CHR line 1); PRG ROM stays NROM-fixed
-  and there are no bus conflicts.
+  and there are no bus conflicts. The checksum-pinned 32 KiB PRG + 16 KiB CHR _The Goonies_
+  profile observes the game selecting CHR bank 1, verifies 360 no-input frames and 1,500
+  input-driven frames with 1,089 distinct results, and reproduces visual, audio and CPU-cycle
+  output across a 120-frame save-state replay.
 - Mapper 88 retains Namco 108 banking but connects PPU A12 directly to CHR A16, forcing the left and
   right pattern tables into separate 64 KiB halves of 128 KiB CHR ROM. Smaller ROM naturally mirrors
   the absent line.

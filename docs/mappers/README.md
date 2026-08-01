@@ -985,7 +985,10 @@ relaxed-geometry exception exists in the mapper factory. See
 
 A latch at `$6000-$7FFF` selects the 8 KiB CHR bank with its two select lines reversed (value bit 1 →
 CHR line 0, value bit 0 → CHR line 1). PRG ROM stays NROM-fixed; no bus conflicts because the latch
-occupies the otherwise-unmapped `$6000-$7FFF` space.
+occupies the otherwise-unmapped `$6000-$7FFF` space. The checksum-pinned 32 KiB PRG + 16 KiB CHR
+_The Goonies_ profile selects CHR bank 1 and completes 1,500 input-driven frames plus deterministic
+visual/audio/cycle save-state replay. See
+[NESdev mapper 87](https://www.nesdev.org/wiki/INES_Mapper_087).
 
 ## Namco 3433/3443 (88)
 

@@ -12,7 +12,7 @@ const NIBBLE_RAM_SIZE = 4;
 const UNBRIDGED_SOLDER_PAD_VALUE = 0;
 
 /**
- * Address-latch multicarts 15/225/227/228.
+ * Address-latch multicarts and RPG boards 15/225/227/228/242.
  *
  * The shared owner is intentionally narrow: one CPU-address latch, the write
  * data needed by 15/228, optional 74x670 nibble RAM, and board-specific pin
@@ -148,6 +148,14 @@ export class AddressLatchMulticartMapper implements Mapper {
           (address & 0x3fff);
         return offset < this.cartridge.prgRom.byteLength ? offset : undefined;
       }
+      case 242: {
+        const bank = this.mapper242PrgBank(address);
+        const innerOffset =
+          (this.addressLatch & 0x0100) !== 0
+            ? (address & 0x3fe0) | UNBRIDGED_SOLDER_PAD_VALUE
+            : address & 0x3fff;
+        return bank * PRG_BANK_SIZE + innerOffset;
+      }
     }
   }
 
@@ -201,6 +209,18 @@ export class AddressLatchMulticartMapper implements Mapper {
     return (this.addressLatch & 0x0020) === 0 ? (selected & 0x1e) | cpuHalf : selected;
   }
 
+  private mapper242PrgBank(address: number): number {
+    const outer = (this.addressLatch & 0x0060) >>> 2;
+    const selected = outer | ((this.addressLatch & 0x001c) >>> 2);
+    const nromMode = this.hasBatteryWram() || (this.addressLatch & 0x0080) !== 0;
+    const paired = (this.addressLatch & 1) !== 0;
+    const lower = selected & ~(paired ? 1 : 0);
+    if (address < 0xc000) return lower % this.prgBankCount;
+    if (nromMode) return (paired ? lower | 1 : lower) % this.prgBankCount;
+    const fixedInner = (this.addressLatch & 0x0200) !== 0 ? 7 : 0;
+    return (outer | fixedInner) % this.prgBankCount;
+  }
+
   private chrOffset(address: number): number {
     switch (this.board.mapperNumber) {
       case 15:
@@ -215,6 +235,8 @@ export class AddressLatchMulticartMapper implements Mapper {
         const selected = ((this.addressLatch & 0x0f) << 2) | (this.dataLatch & 3);
         return selected * CHR_BANK_SIZE + address;
       }
+      case 242:
+        return address;
     }
   }
 
@@ -223,6 +245,9 @@ export class AddressLatchMulticartMapper implements Mapper {
     if (this.board.chrWriteProtection === "mapper-15") {
       const mode = this.addressLatch & 3;
       return mode === 1 || mode === 2;
+    }
+    if (this.board.chrWriteProtection === "mapper-242") {
+      return this.hasBatteryWram() || (this.addressLatch & 0x0080) === 0;
     }
     return (this.addressLatch & 0x0080) === 0;
   }
@@ -249,6 +274,8 @@ export class AddressLatchMulticartMapper implements Mapper {
         return 0x8000 | (address & 0x07ff);
       case 228:
         return 0x8000 | (address & 0x3fef);
+      case 242:
+        return 0x8000 | (address & 0x07ff);
     }
   }
 
@@ -258,6 +285,8 @@ export class AddressLatchMulticartMapper implements Mapper {
         case 15:
           return (this.dataLatch & 0x40) !== 0;
         case 227:
+          return (this.addressLatch & 0x0002) !== 0;
+        case 242:
           return (this.addressLatch & 0x0002) !== 0;
         case 225:
         case 228:

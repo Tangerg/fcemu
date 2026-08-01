@@ -86,7 +86,8 @@ The address-latch multicarts use board-exact geometry rather than arbitrary modu
 15 is 1 MiB PRG plus 8 KiB volatile CHR RAM. Mapper 225 accepts matched 1 MiB/512 KiB or 2 MiB/1 MiB
 PRG/CHR ROM pairs. Mapper 227 is 1 MiB PRG plus 8 KiB volatile CHR RAM; only submapper 0 may also
 declare 8 KiB PRG NVRAM. Mapper 228 accepts 512 KiB or the NES 2.0/iNES-representable 1.5 MiB PRG
-layout plus exactly 512 KiB CHR ROM.
+layout plus exactly 512 KiB CHR ROM. Mapper 242 accepts 512 KiB PRG plus 8 KiB volatile CHR RAM;
+its battery variant requires exactly 8 KiB PRG NVRAM.
 
 These rules follow the NES 2.0 distinction between volatile/non-volatile PRG and CHR fields and the
 documented [MMC1 board wiring](https://www.nesdev.org/wiki/MMC1). Declared capacity is accepted only
@@ -119,7 +120,7 @@ submapper 0. Mapper 34 submapper 1 selects NINA-001 and submapper 2 selects BNRO
 submapper 0 chooses exactly one board from CHR geometry instead of exposing both register sets.
 Mapper 6 NES 2.0 submappers 0-7 select the initial Magic Card latch mode; legacy mapper 6 means mode
 1, while mapper 8 is its mode-4 synonym and accepts submapper 0. Mapper 17 accepts submappers 0-3
-solely for the trainer relocation described above. Mappers 15/225/228 accept submapper 0 only.
+solely for the trainer relocation described above. Mappers 15/225/228/242 accept submapper 0 only.
 Mapper 227 accepts submapper 0 (RPG/optional NVRAM), submapper 1 (protected multicart/solder-pad
 reads), and submapper 2 (protected multicart/outer-bank reset rule).
 

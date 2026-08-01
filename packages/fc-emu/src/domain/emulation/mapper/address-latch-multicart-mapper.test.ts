@@ -201,6 +201,72 @@ describe("address-latch multicarts", () => {
     expect(mapper.cpuReadDriveMask?.(0x8000)).toBe(0);
   });
 
+  it("implements mapper 242's address-derived UNROM and NROM modes", () => {
+    const cartridge = createTestCartridge({ mapper: 242, prgBanks: 32 });
+    fillBanks(cartridge.prgRom, 0x4000);
+    const mapper = createMapper(cartridge, silentInterruptPort);
+    const outer8Inner3 = 0x8000 | 0x0020 | 0x000c;
+    const modes = [
+      ["UNROM fixed inner 0", 0, [11, 8]],
+      ["even-bank UNROM fixed inner 0", 0x0001, [10, 8]],
+      ["UNROM fixed inner 7", 0x0200, [11, 15]],
+      ["even-bank UNROM fixed inner 7", 0x0201, [10, 15]],
+      ["NROM-128", 0x0080, [11, 11]],
+      ["NROM-256", 0x0081, [10, 11]],
+    ] as const;
+
+    for (const [mode, bits, expectedBanks] of modes) {
+      mapper.write(outer8Inner3 | bits, 0);
+      expect({ mode, banks: readAt(mapper, [0x8000, 0xc000]) }).toEqual({
+        mode,
+        banks: expectedBanks,
+      });
+    }
+
+    mapper.write(outer8Inner3 | 0x0002, 0);
+    expect(cartridge.mirroringMode).toBe(NametableMirroring.Horizontal);
+  });
+
+  it("models mapper 242 multicart CHR protection and unbridged menu pads", () => {
+    const cartridge = createTestCartridge({ mapper: 242, prgBanks: 32 });
+    for (let index = 0; index < cartridge.prgRom.byteLength; index++) {
+      cartridge.prgRom[index] = index & 0x1f;
+    }
+    const mapper = createMapper(cartridge, silentInterruptPort);
+
+    mapper.write(0x001f, 0x51);
+    expect(mapper.read(0x001f)).toBe(0x51);
+    expect(mapper.read(0x801f)).toBe(0x1f);
+
+    mapper.write(0x8180, 0);
+    mapper.write(0x001f, 0x52);
+    expect(mapper.read(0x001f)).toBe(0x51);
+    expect(mapper.read(0x801f)).toBe(0);
+  });
+
+  it("hardwires mapper 242's battery RPG board to NROM modes and maps WRAM", () => {
+    const cartridge = createTestCartridge({ mapper: 242, battery: true, prgBanks: 32 });
+    fillBanks(cartridge.prgRom, 0x4000);
+    const bus = new Bus(cartridge);
+    const mapper = bus.Mapper;
+
+    mapper.write(0x800d, 0);
+    expect(readAt(mapper, [0x8000, 0xc000])).toEqual([2, 3]);
+    mapper.write(0x6000, 0x61);
+    expect(mapper.read(0x6000)).toBe(0x61);
+    expect(mapper.cpuReadDriveMask?.(0x6000)).toBe(0xff);
+
+    const state = bus.captureState();
+    mapper.powerOn();
+    mapper.write(0x6000, 0x71);
+    bus.restoreState(state);
+    expect(readAt(mapper, [0x8000, 0xc000, 0x6000])).toEqual([2, 3, 0x61]);
+
+    mapper.write(0x8080, 0);
+    mapper.write(0x0010, 0x62);
+    expect(mapper.read(0x0010)).toBe(0x62);
+  });
+
   it("resets bank latches without clearing mapper 225's warm-reset menu RAM", () => {
     const bus = new Bus(createTestCartridge({ mapper: 225, prgBanks: 64, chrBanks: 64 }));
     bus.Mapper.writeCpuExpansion?.(0x5800, 0x0d);
@@ -241,6 +307,8 @@ describe("address-latch multicarts", () => {
     { mapper: 227, nes2: true, submapper: 2, prgBanks: 64 },
     { mapper: 228, prgBanks: 32, chrBanks: 64 },
     { mapper: 228, nes2: true, prgBanks: 96, chrBanks: 64 },
+    { mapper: 242, prgBanks: 32 },
+    { mapper: 242, battery: true, prgBanks: 32 },
   ])("constructs $mapper/$submapper physical board geometry", (options) => {
     expect(() => createMapper(createTestCartridge(options), silentInterruptPort)).not.toThrow();
   });
@@ -250,6 +318,7 @@ describe("address-latch multicarts", () => {
     { mapper: 225, nes2: true, submapper: 1, prgBanks: 64, chrBanks: 64 },
     { mapper: 227, nes2: true, submapper: 3, prgBanks: 64 },
     { mapper: 228, nes2: true, submapper: 1, prgBanks: 32, chrBanks: 64 },
+    { mapper: 242, nes2: true, submapper: 1, prgBanks: 32 },
   ])("rejects mapper $mapper unallocated submapper $submapper", (options) => {
     expect(() => createMapper(createTestCartridge(options), silentInterruptPort)).toThrowError(
       UnsupportedMapperVariantError,
@@ -286,6 +355,18 @@ describe("address-latch multicarts", () => {
     {
       name: "Active Enterprises invented fourth PRG chip",
       options: { mapper: 228, prgBanks: 128, chrBanks: 64 },
+    },
+    {
+      name: "mapper 242 undersized PRG",
+      options: { mapper: 242, prgBanks: 16 },
+    },
+    {
+      name: "mapper 242 CHR ROM",
+      options: { mapper: 242, prgBanks: 32, chrBanks: 1 },
+    },
+    {
+      name: "mapper 242 oversized RPG NVRAM",
+      options: { mapper: 242, nes2: true, battery: true, prgBanks: 32, prgNvRamShift: 8 },
     },
     {
       name: "four-screen header",

@@ -4,12 +4,13 @@ type AddressLatchMulticartBoardId =
   | "mapper-227-rpg"
   | "mapper-227-multicart"
   | "mapper-227-outer-reset"
-  | "active-enterprises";
+  | "active-enterprises"
+  | "mapper-242";
 
 export interface AddressLatchMulticartBoard {
   readonly id: AddressLatchMulticartBoardId;
-  readonly mapperNumber: 15 | 225 | 227 | 228;
-  readonly chrWriteProtection: "none" | "mapper-15" | "mapper-227";
+  readonly mapperNumber: 15 | 225 | 227 | 228 | 242;
+  readonly chrWriteProtection: "none" | "mapper-15" | "mapper-227" | "mapper-242";
   readonly hasNibbleRam: boolean;
   readonly hasSolderPadReadMode: boolean;
   readonly resetsOuterBankForInnerZero: boolean;
@@ -44,6 +45,10 @@ export function findAddressLatchMulticartBoard(
     case 228:
       return submapperNumber === 0
         ? board("active-enterprises", 228, "none", false, false, false, false)
+        : undefined;
+    case 242:
+      return submapperNumber === 0
+        ? board("mapper-242", 242, "mapper-242", false, true, false, true)
         : undefined;
     default:
       return undefined;

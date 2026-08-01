@@ -192,6 +192,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
+| 242 | Waixing 43272  | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 245 | Waixing F003   | `waixing-f003-245`        | `waixing-f003-mapper.ts`     | no            | no   |
 | 248 | Kasheng MMC3   | `kasheng-115`             | `kasheng-115-mapper.ts`      | no            | A12  |
 
@@ -357,7 +358,7 @@ Fixed 32 KiB PRG. 16 KiB CHR RAM is split into a fixed `$0000-$0FFF` bank 0 and 
 selected by bits 1-0 of the `$8000-$FFFF` register with AND-type bus conflicts. Because legacy iNES
 cannot declare the implied 16 KiB CHR RAM, CPROM images require an NES 2.0 header.
 
-## Address-latch multicarts (15, 225, 227, 228)
+## Address-latch multicarts (15, 225, 227, 228, 242)
 
 `AddressLatchMulticartMapper` shares only the physical behavior common to these discrete boards: a
 write-address latch, the data bits used by 15/228, mirroring, optional four-nibble register RAM and
@@ -392,6 +393,16 @@ bank, and A13 controls mirroring. A 512 KiB image occupies chip 0. Action 52's 1
 physical chips 0, 1 and 3 consecutively; selecting absent chip 2 leaves all CPU data lines open.
 The rumored four-nibble expansion RAM is not present on either real board and is not modeled. See
 [NESdev mapper 228](https://www.nesdev.org/wiki/INES_Mapper_228).
+
+Mapper 242's Waixing/UNL-43272 board latches A6-A5 as outer and A4-A2 as inner PRG lines. A7 selects
+UNROM-like versus NROM wiring, A0 selects mirrored 16 KiB versus paired 32 KiB NROM, A9 chooses the
+fixed upper UNROM bank, and A1 controls mirroring. On multicarts, A7 also protects unbanked 8 KiB
+CHR RAM and A8 can replace PRG A4-A0 with five menu solder pads; the modeled unbridged value is
+zero. The battery RPG variant maps exactly 8 KiB NVRAM, leaves CHR writable and hardwires the PRG
+path to NROM modes. The implemented scope is the standard 512 KiB single-ROM board; ET-113's 640 KiB
+two-chip power-on selection remains explicit future work. A local _Wai Xin Zhan Shi_ image observes
+five latch states across 700 frames and completes deterministic 100-frame replay. See
+[NESdev mapper 242](https://www.nesdev.org/wiki/INES_Mapper_242).
 
 ## Bandai FCG / LZ93D50 (16)
 

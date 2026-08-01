@@ -565,6 +565,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
     case 225:
     case 227:
     case 228:
+    case 242:
       return createAddressLatchMulticartMapper(cartridge);
     case 245:
       requireBaseSubmapper(cartridge);
@@ -663,6 +664,20 @@ function requireAddressLatchMulticartLayout(
       requireRomLayout(cartridge, [0x80_000, 0x180_000], 0x80_000);
       requireChrRom(cartridge, board.id);
       requireNoBatteryPrgRam(cartridge, board.id);
+      return;
+    case 242:
+      requireRomLayout(cartridge, [0x80_000], 0x2000);
+      requireVolatileChrRam(cartridge, board.id);
+      if (cartridge.hasBatteryBackup) {
+        if (cartridge.prgRamBytes !== 0 || cartridge.prgNvRamBytes !== 0x2000) {
+          throw configurationError(
+            cartridge,
+            "mapper 242 RPG boards require exactly 8 KiB of PRG NVRAM",
+          );
+        }
+      } else {
+        requireNoPrgRam(cartridge);
+      }
   }
 }
 

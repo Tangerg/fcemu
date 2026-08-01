@@ -33,7 +33,8 @@ export type MapperState =
         | "mapper-227-rpg"
         | "mapper-227-multicart"
         | "mapper-227-outer-reset"
-        | "active-enterprises";
+        | "active-enterprises"
+        | "mapper-242";
       readonly addressLatch: number;
       readonly dataLatch: number;
       readonly nibbleRam: Uint8Array;

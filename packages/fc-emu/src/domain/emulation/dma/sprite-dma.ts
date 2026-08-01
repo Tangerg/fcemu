@@ -82,7 +82,16 @@ export class SpriteDma {
   }
 
   restoreState(state: SpriteDmaState): void {
+    SpriteDma.validateState(state);
+    this.page = state.page;
+    this.index = state.index;
+    this.readValue = state.readValue;
+    this.phase = state.phase;
+  }
+
+  static validateState(state: SpriteDmaState): void {
     if (
+      !state ||
       !isByte(state.page) ||
       !Number.isInteger(state.index) ||
       state.index < 0 ||
@@ -94,9 +103,8 @@ export class SpriteDma {
     if (!["idle", "halt", DmaBusPhase.Get, DmaBusPhase.Put].includes(state.phase)) {
       throw new RangeError("Sprite DMA save state contains an invalid phase");
     }
-    this.page = state.page;
-    this.index = state.index;
-    this.readValue = state.readValue;
-    this.phase = state.phase;
+    if (state.index === 0x100 && state.phase !== "idle") {
+      throw new RangeError("Sprite DMA save state continues after its final byte");
+    }
   }
 }

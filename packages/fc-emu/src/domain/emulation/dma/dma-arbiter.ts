@@ -105,12 +105,21 @@ export class DmaArbiter {
   }
 
   restoreState(state: DmaArbiterState): void {
-    if (state.cadence.getCycleParity !== 0 && state.cadence.getCycleParity !== 1) {
-      throw new RangeError("DMA save state contains an invalid GET-cycle parity");
-    }
+    this.validateState(state);
     this.getCycleParity = state.cadence.getCycleParity;
     this.sprite.restoreState(state.sprite);
     this.dmc.restoreState(state.dmc);
+  }
+
+  validateState(state: DmaArbiterState): void {
+    if (
+      !state?.cadence ||
+      (state.cadence.getCycleParity !== 0 && state.cadence.getCycleParity !== 1)
+    ) {
+      throw new RangeError("DMA save state contains an invalid GET-cycle parity");
+    }
+    SpriteDma.validateState(state.sprite);
+    DmcDma.validateState(state.dmc);
   }
 
   private canClockSprite(getCycle: boolean): boolean {

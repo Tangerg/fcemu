@@ -31,6 +31,20 @@ describe("DmaArbiter", () => {
     ).toThrow(RangeError);
   });
 
+  it("rejects an invalid child before changing cadence or sprite DMA", () => {
+    const arbiter = new DmaArbiter();
+    arbiter.startSprite(0x02);
+    const before = arbiter.captureState();
+    const invalid = {
+      cadence: { getCycleParity: 0 as const },
+      sprite: { ...before.sprite, page: 0x03 },
+      dmc: { ...before.dmc, preparationCycles: 3 },
+    };
+
+    expect(() => arbiter.restoreState(invalid)).toThrow(/DMC DMA/i);
+    expect(arbiter.captureState()).toEqual(before);
+  });
+
   it.each([
     { startingCycle: 0, expectedCycles: 3 },
     { startingCycle: 1, expectedCycles: 4 },

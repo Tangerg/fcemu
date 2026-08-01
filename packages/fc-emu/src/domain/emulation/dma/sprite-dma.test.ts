@@ -59,4 +59,13 @@ describe("SpriteDma", () => {
     dma.reset();
     expect(dma.active).toBe(false);
   });
+
+  it("rejects invalid state without changing the transfer", () => {
+    const dma = new SpriteDma();
+    dma.start(0x02);
+    const before = dma.captureState();
+
+    expect(() => dma.restoreState({ ...before, index: 0x100 })).toThrow(/final byte/i);
+    expect(dma.captureState()).toEqual(before);
+  });
 });

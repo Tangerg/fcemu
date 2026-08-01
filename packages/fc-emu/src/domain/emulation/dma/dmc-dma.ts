@@ -118,7 +118,18 @@ export class DmcDma {
   }
 
   restoreState(state: DmcDmaState): void {
+    DmcDma.validateState(state);
+    this.address = state.address;
+    this.haltAddress = state.haltAddress;
+    this.preparationCycles = state.preparationCycles;
+    this.requested = state.requested;
+    this.running = state.running;
+    this.haltPhase = state.haltPhase;
+  }
+
+  static validateState(state: DmcDmaState): void {
     if (
+      !state ||
       !isWord(state.address) ||
       !isWord(state.haltAddress) ||
       !Number.isInteger(state.preparationCycles) ||
@@ -127,8 +138,14 @@ export class DmcDma {
     ) {
       throw new RangeError("DMC DMA save state contains invalid transfer state");
     }
+    if (typeof state.requested !== "boolean" || typeof state.running !== "boolean") {
+      throw new RangeError("DMC DMA save state contains invalid request state");
+    }
     if (state.running && !state.requested) {
       throw new RangeError("A running DMC DMA save state must retain its request");
+    }
+    if (!state.running && state.preparationCycles !== 0) {
+      throw new RangeError("An idle DMC DMA save state cannot retain preparation cycles");
     }
     if (
       state.haltPhase !== undefined &&
@@ -137,12 +154,9 @@ export class DmcDma {
     ) {
       throw new RangeError("DMC DMA save state contains an invalid halt phase");
     }
-    this.address = state.address;
-    this.haltAddress = state.haltAddress;
-    this.preparationCycles = state.preparationCycles;
-    this.requested = state.requested;
-    this.running = state.running;
-    this.haltPhase = state.haltPhase;
+    if (!state.requested && state.haltPhase !== undefined) {
+      throw new RangeError("An idle DMC DMA save state cannot retain a halt phase");
+    }
   }
 
   private get haltedReadHasSingleSideEffect(): boolean {

@@ -203,11 +203,16 @@ PUT cycle (`phaseAt(cpu.cpuCycles - 1) === Put`), so DMA phase governs controlle
 (`captureState` rolls back all aggregates if any nested invariant fails). `restoreState` re-validates
 every field:
 
-| Field                    | Contents                                                                                    | Validation                                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `cadence.getCycleParity` | GET/PUT bus alignment bit                                                                   | must be `0` or `1`                                                                                                   |
-| `sprite`                 | `page`, `index`, `readValue`, `phase`                                                       | `page`/`readValue` a byte, `index` in `0..0x100`, `phase` a valid `SpriteDmaCycle`                                   |
-| `dmc`                    | `address`, `haltAddress`, `preparationCycles`, `requested`, `running`, optional `haltPhase` | addresses 16-bit, `preparationCycles` in `0..2`, `running` implies `requested`, `haltPhase` is `get`/`put` or absent |
+| Field                    | Contents                                                                                    | Validation                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `cadence.getCycleParity` | GET/PUT bus alignment bit                                                                   | must be `0` or `1`                                                                                  |
+| `sprite`                 | `page`, `index`, `readValue`, `phase`                                                       | `page`/`readValue` a byte, `index` in `0..0x100`, valid phase, final index only while idle          |
+| `dmc`                    | `address`, `haltAddress`, `preparationCycles`, `requested`, `running`, optional `haltPhase` | addresses 16-bit, booleans exact, preparation in `0..2` only while running, request/phase coherence |
+
+`DmaArbiter.restoreState` validates the cadence and both child transfers before assigning any of
+them. `SpriteDma` and `DmcDma` expose the same pure validators to the aggregate and run them again
+for direct restoration, so malformed DMC state cannot leave a new cadence or partially restored OAM
+transfer behind.
 
 `haltPhase` is the retained requested halt phase and is omitted from the snapshot when `undefined`. The
 DMC **implicit-stop / enable-disable delay counters** (`transferStartDelay`, `disableDelay`) are _not_

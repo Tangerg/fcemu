@@ -28,7 +28,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture          |
 | 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture              |
-| 18     | Jaleco SS8806  | Implemented | Nibble banking/RAM/mirroring/cycle-IRQ tests; no fixture           |
+| 18     | Jaleco SS8806  | Verified    | Tests; pinned JF-25 _The Lord of King_ gameplay/IRQ runner         |
 | 19     | Namco 129/163  | Verified    | Tests; pinned _King of Kings_ N163 audio/gameplay runner           |
 | 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture           |
 | 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture         |
@@ -313,9 +313,12 @@ and `$6000.D6` supplying PRG A18.
   can inhibit borrow at 4, 8 or 12 bits while retaining the upper counter bits. The implementation
   follows the current NESdev borrow/underflow description; older Mesen/Nestopia sources instead
   assert on the preceding 1→0 transition, so the chosen boundary is explicit in focused tests.
-  Legacy iNES cannot say that the optional RAM is absent and therefore keeps its conventional 8 KiB
-  allocation; NES 2.0 can declare zero. Optional boards' external µPD7755/7756 sample-playback chip
-  is not emulated.
+  Unknown legacy iNES images cannot say that the optional RAM is absent and therefore keep the
+  conventional 8 KiB allocation; exact JF-25 _The Lord of King_ content metadata resolves its
+  physical zero-WRAM layout, while NES 2.0 can declare zero directly. Its pinned profile runs 2,400
+  input-driven frames from the opening through the first playable room, with 584 distinct frames
+  and exact PRG/CHR, vertical-mirroring, active 16-bit IRQ, visual, audio, CPU-cycle and save-state
+  replay checkpoints. Optional boards' external µPD7755/7756 sample-playback chip is not emulated.
 - Mapper 19 models the Namco 129/163 ASIC rather than treating chip RAM as ordinary PRG RAM. Three
   switchable 8 KiB PRG banks precede a fixed tail; eight pattern and four nametable selectors can
   address 1 KiB CHR banks or route CIRAM per slot. Mixed CHR ROM/RAM uses `$00-$DF` for ROM and

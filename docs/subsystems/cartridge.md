@@ -106,8 +106,9 @@ console type, mapper number, both ROM lengths and independent CRC-32 values for 
 and CHR regions; filenames and headers alone never select an entry. _Vs. Soccer_ set SC4-3 (PRG
 `46914E3E`, CHR `FEBB5370`) resolves to `RP2C04-0003`, normal UniSystem hardware and player-one
 gameplay on `$4017`. HVC-ELROM-01 _Uchuu Keibitai SDF_ (PRG `D979C8B7`, CHR `8734D65D`) resolves
-the generic 8 KiB fallback to its physical zero-WRAM layout. NAM-KK-5900 _King of Kings_ (PRG
-`1DD6619B`, CHR `D3F4B947`) supplies Mapper 19 submapper 5, preserving the board's measured
+the generic 8 KiB fallback to its physical zero-WRAM layout. JF-25 _The Lord of King_ (PRG
+`EFB1DF9E`, CHR `7A2DCF20`) does the same for its absent external WRAM. NAM-KK-5900 _King of Kings_
+(PRG `1DD6619B`, CHR `D3F4B947`) supplies Mapper 19 submapper 5, preserving the board's measured
 18.0–19.5 dB N163 mix instead of the conservative legacy fallback.
 
 The lookup completes metadata only; it never changes ROM bytes, the mapper number or ROM geometry.

@@ -60,6 +60,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // The Lord of King, JF-25: the production board has no external WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 18,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xefb1df9e,
+      chrCrc32: 0x7a2dcf20,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // King of Kings, NAM-KK-5900: N163 mix measured in the submapper-5 range.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 19,

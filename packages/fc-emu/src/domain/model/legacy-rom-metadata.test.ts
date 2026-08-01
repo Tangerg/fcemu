@@ -43,6 +43,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ submapperNumber: 5 });
   });
 
+  it("identifies the exact The Lord of King JF-25 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 18,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xefb1df9e,
+        chrCrc32: 0x7a2dcf20,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("does not guess metadata from mapper geometry or a near CRC match", () => {
     expect(
       findLegacyRomMetadata({

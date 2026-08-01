@@ -63,6 +63,12 @@ vector; mapper 12.1 uses the same `$7003` call but copies its header CHR payload
 `$40000` for the loader to transfer into 32 KiB CHR RAM; mapper 17 submappers 0-3 load and cold-jump
 to `$7000`, `$5D00`, `$5E00` or `$5F00`.
 
+Mapper 18 optionally carries one exact 8 KiB external PRG RAM/NVRAM chip. Unknown legacy iNES
+images retain the conventional implicit allocation because the header cannot encode absence;
+NES 2.0 declares either zero or exactly 8 KiB. Exact legacy content metadata identifies JF-25
+_The Lord of King_ by PRG CRC `EFB1DF9E` and CHR CRC `7A2DCF20`, resolving its physical zero-WRAM
+layout instead of exposing the generic fallback.
+
 Mapper 19 derives the Namco 163 ASIC's 128-byte shared RAM independently from header PRG/CHR
 fields. The battery flag makes those bytes persistent even when the NES 2.0 PRG NVRAM field is
 zero. Optional external memory is absent or exactly 8 KiB; NES 2.0 must declare it as volatile PRG

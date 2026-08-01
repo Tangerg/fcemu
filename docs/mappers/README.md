@@ -518,9 +518,10 @@ all eight (256 KiB maximum).
 
 An optional exact 8 KiB PRG-RAM/NVRAM window occupies `$6000-$7FFF`. `$9002` bit 0 enables reads and
 bit 1 permits writes, so disabled reads remain CPU open bus and read-only state is distinct from
-chip disable. Legacy iNES retains its conventional 8 KiB allocation because it cannot encode the
-RAM-absent board; NES 2.0 may explicitly declare zero. `$F002` selects horizontal, vertical,
-lower-one-screen or upper-one-screen nametables.
+chip disable. Unknown legacy iNES images retain the conventional 8 KiB allocation because they
+cannot encode a RAM-absent board; an exact PRG/CHR content record identifies JF-25 _The Lord of
+King_ and removes its nonexistent WRAM. NES 2.0 may explicitly declare zero. `$F002` selects
+horizontal, vertical, lower-one-screen or upper-one-screen nametables.
 
 `$E000-$E003` assemble a 16-bit IRQ reload value; `$F000` reloads the live counter and acknowledges
 the line. `$F001` acknowledges, enables counting and selects 16/12/8/4-bit width with bit 3 taking
@@ -529,7 +530,10 @@ the borrow asserts IRQ and wraps only those low bits; upper bits remain unchange
 current [NESdev mapper 18](https://www.nesdev.org/wiki/INES_Mapper_018) hardware description.
 Mesen and Nestopia currently assert one cycle earlier on the 1→0 transition, so focused tests pin the
 underflow interpretation rather than hiding the contradiction. `$F003` is the port for an optional
-external µPD7755/7756 sample player; that separate audio device is not emulated.
+external µPD7755/7756 sample player; that separate audio device is not emulated. The pinned JF-25
+profile runs 2,400 input-driven frames from its opening into the first playable room, pinning 584
+distinct frames, three exact mapper-state checkpoints, active 16-bit IRQ reload/counter state,
+native audio, CPU cycles and deterministic save-state replay.
 
 ## Namco 129 / 163 (19)
 

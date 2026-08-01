@@ -31,8 +31,12 @@ Loading another ROM is latest-wins. `EmulatorApplication.operationSequence` inva
 file, storage, audio and region-rebuild continuations. The loaded `RomImage` and its runtime live in
 one private `ActiveEmulation` record and are installed or cleared atomically.
 
-Eject, disposal and load failure cancel scheduled frames, clear the active pair and reset runtime
-diagnostics. Battery persistence is best-effort and cannot later stop or replace a newer session.
+Eject, disposal and terminal application failures cancel scheduled frames, clear the active pair and
+reset runtime diagnostics. A runtime or scheduler failure also suspends audio and checkpoints battery
+state on the best-effort persistence queue before exposing the error. Audio-resume rejection is
+recoverable only while the same session is still running; an older rejection cannot overwrite a
+later pause or stop. Battery persistence is
+best-effort and cannot later stop or replace a newer session.
 The IndexedDB adapter rejects battery records that are not the `ArrayBuffer` shape it writes; it
 never coerces an unrelated structured-clone value into zero-filled NVRAM.
 

@@ -106,6 +106,119 @@ describe("EmulatorApplication", () => {
     expect(runFrame).toHaveBeenCalledTimes(2);
   });
 
+  it("terminates the frame loop and audio after a runtime failure", async () => {
+    const scheduler = new TestScheduler();
+    const runFrame = vi.fn<() => { cpuCycles: number }>(() => {
+      throw new Error("PPU invariant failed");
+    });
+    const suspend = vi.fn<() => Promise<void>>().mockResolvedValue();
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: {
+        create: () => ({ ...createRuntime({ consoleRegion: "ntsc" }), runFrame }),
+      },
+      scheduler,
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: async () => "running" as const,
+        suspend,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+    await application.loadRom(testFile("game.nes"));
+
+    scheduler.runNext();
+    scheduler.runNext();
+
+    expect(runFrame).toHaveBeenCalledOnce();
+    expect(suspend).toHaveBeenCalledOnce();
+    expect(application.getSnapshot()).toMatchObject({
+      status: "error",
+      audioStatus: "inactive",
+      error: "PPU invariant failed",
+    });
+    expect(application.getDiagnostics()).toMatchObject({
+      actualFrameRateHz: 0,
+      targetFrameRateHz: 0,
+    });
+  });
+
+  it("reports a frame scheduler failure as terminal instead of blocked audio", async () => {
+    const suspend = vi.fn<() => Promise<void>>().mockResolvedValue();
+    const resume = vi.fn<() => Promise<"running">>().mockResolvedValue("running");
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create: () => createRuntime({ consoleRegion: "ntsc" }) },
+      scheduler: {
+        schedule: () => {
+          throw new Error("animation frame unavailable");
+        },
+      },
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume,
+        suspend,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    await application.loadRom(testFile("game.nes"));
+
+    expect(resume).not.toHaveBeenCalled();
+    expect(suspend).toHaveBeenCalledOnce();
+    expect(application.getSnapshot()).toMatchObject({
+      status: "error",
+      audioStatus: "inactive",
+      error: "animation frame unavailable",
+    });
+  });
+
+  it("ignores a stale audio rejection after the user pauses", async () => {
+    const audioResume = deferred<"running" | "blocked">();
+    const scheduler = new TestScheduler();
+    const application = new EmulatorApplication({
+      romReader: {
+        read: async () => ({ id: "game", name: "game.nes", bytes: new ArrayBuffer(1) }),
+      },
+      emulatorFactory: { create: () => createRuntime({ consoleRegion: "ntsc" }) },
+      scheduler,
+      audio: {
+        diagnostics: NO_AUDIO_DIAGNOSTICS,
+        activate: () => undefined,
+        resume: () => audioResume.promise,
+        suspend: async () => undefined,
+        dispose: async () => undefined,
+      },
+      controllerInput: new TestControllerInput(),
+      saveRamStorage: { load: async () => undefined, save: async () => undefined },
+      quickSaveStorage: NO_QUICK_SAVE_STORAGE,
+    });
+
+    const loading = application.loadRom(testFile("game.nes"));
+    await vi.waitFor(() => expect(application.getSnapshot().status).toBe("running"));
+    await application.pause();
+    audioResume.reject(new Error("resume denied after pause"));
+    await loading;
+
+    expect(application.getSnapshot()).toMatchObject({
+      status: "paused",
+      audioStatus: "inactive",
+    });
+    expect(application.getSnapshot().error).toBeUndefined();
+  });
+
   it("reports measured frame rate and audio health without adding them to session state", async () => {
     const scheduler = new TestScheduler();
     const runFrame = vi.fn<() => { cpuCycles: number }>(() => ({ cpuCycles: 100 }));
@@ -1477,8 +1590,10 @@ function testFile(name: string) {
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
-  const promise = new Promise<T>((complete) => {
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((complete, fail) => {
     resolve = complete;
+    reject = fail;
   });
-  return { promise, resolve };
+  return { promise, resolve, reject };
 }

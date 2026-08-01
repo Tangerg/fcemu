@@ -195,6 +195,12 @@ export class EmulatorApplication {
       this.frameTimeDebtMs = 0;
       this.resetFrameRateDiagnostics();
       this.scheduleNextFrame();
+    } catch (error) {
+      this.failIfCurrent(operation, error);
+      return;
+    }
+
+    try {
       const audioResult = await this.dependencies.audio.resume();
       if (
         !this.isCurrentEmulation(operation, activeEmulation) ||
@@ -204,12 +210,10 @@ export class EmulatorApplication {
       }
       this.session = this.session.audioChanged(audioResult);
       this.emit();
-    } catch (error) {
+    } catch {
       if (this.isCurrent(operation) && this.session.snapshot.status === "running") {
         this.session = this.session.audioChanged("blocked");
         this.emit();
-      } else {
-        this.failIfCurrent(operation, error);
       }
     }
   }
@@ -494,7 +498,9 @@ export class EmulatorApplication {
 
   private scheduleNextFrame(): void {
     if (this.session.snapshot.status !== "running") return;
+    const operation = this.operationSequence;
     this.scheduledFrame = this.dependencies.scheduler.schedule((timestamp) => {
+      this.scheduledFrame = undefined;
       const activeEmulation = this.activeEmulation;
       if (!activeEmulation || this.session.snapshot.status !== "running") return;
       const { runtime, rom } = activeEmulation;
@@ -517,8 +523,7 @@ export class EmulatorApplication {
         }
         this.scheduleNextFrame();
       } catch (error) {
-        this.session = this.session.fail(toErrorMessage(error));
-        this.emit();
+        this.failIfCurrent(operation, error);
       }
     });
   }
@@ -586,10 +591,20 @@ export class EmulatorApplication {
 
   private failIfCurrent(operation: number, error: unknown): void {
     if (!this.isCurrent(operation)) return;
+    this.operationSequence += 1;
     this.cancelScheduledFrame();
+    const activeEmulation = this.activeEmulation;
+    if (activeEmulation) {
+      void this.persistRuntime(activeEmulation.runtime, activeEmulation.rom.id);
+    }
     this.activeEmulation = undefined;
     this.quickSaves.clear();
     this.resetFrameRateDiagnostics();
+    try {
+      void this.dependencies.audio.suspend().catch(() => undefined);
+    } catch {
+      // Failure termination must remain deterministic even if an adapter throws synchronously.
+    }
     this.session = this.session.fail(toErrorMessage(error));
     this.emit();
   }

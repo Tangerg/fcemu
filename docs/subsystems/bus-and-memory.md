@@ -205,7 +205,9 @@ which stores the byte in `pendingControllerWrite`. The bus commits it only on a 
 value to both `controller1.strobe` and `controller2.strobe` and clears the pending write. Because the
 commit is gated on GET/PUT alignment, the two writes of an RMW instruction can either form or suppress
 a one-cycle strobe. The pending write is bus state (a save-state field), not duplicated inside each
-controller.
+controller. A stable snapshot may carry that field only immediately after a GET cycle; a PUT cycle
+would already have committed it. The two controller snapshots must expose the same strobe level,
+and a high strobe pins each serial index to the first (A-button) bit.
 
 ## IRQ sources (`IRQSource`)
 
@@ -224,16 +226,20 @@ one is pending. `restoreState()` is transactional: it captures the current state
 unchecked restore, and rolls back on any thrown error. The unchecked restore validates the RAM type
 and length, validates the IRQ-source array (only the three known sources, no duplicates), validates
 `pendingControllerWrite` as a byte, requires a boolean DMA-access flag, and distinguishes an omitted
-VS snapshot from any supplied value. Before changing RAM or a device it cross-checks two invariants:
-the PPU `/NMI` output must equal the CPU `/NMI` input line, and the presence of any IRQ source must
-equal the saved CPU IRQ input. Nested device validation may still fail later, but the outer transaction
-then restores the complete pre-restore snapshot.
+VS snapshot from any supplied value. Before changing RAM or a device it cross-checks the shared
+signals and transactions that no child can validate alone:
 
-The aggregate additionally preserves IRQ **source identity**, not only the OR-ed CPU line: an
-`apu-dmc` source must match the DMC channel's pending flag, while `apu-frame` must match the frame flag
-and its delayed status-read clear. `restoreIRQSource` lets the APU reconcile those physical levels
-after direct restoration without running normal edge-recognition timing; `setIRQSource` remains the
-runtime event path and delegates only its level update to that primitive.
+- the PPU `/NMI` output equals the CPU `/NMI` input;
+- the OR of the named IRQ sources equals the CPU IRQ input, and each APU/mapper source agrees with
+  its owning device;
+- the DMC channel request and address agree with the DMA arbiter;
+- CPU/APU/PPU clock-domain watermarks are fully committed;
+- both controllers share one strobe level, and a pending OUT write follows a GET cycle.
+
+`restoreIRQSource` lets the APU reconcile physical IRQ levels after direct restoration without
+running normal edge-recognition timing; `setIRQSource` remains the runtime event path and delegates
+only its level update to that primitive. Nested device validation may still fail later, but the outer
+transaction then restores the complete pre-restore snapshot.
 
 ## Verification and known limits
 

@@ -165,6 +165,9 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if ((state.vsSystem === undefined) !== (this.vsSystem === undefined)) {
       throw new Error("Bus save state targets another console type");
     }
+    if (state.controller1.strobeSignal !== state.controller2.strobeSignal) {
+      throw new Error("Bus save-state controller strobe lines disagree");
+    }
     if (irqSources.length > 0 !== state.cpu.interrupts.irqLineAsserted) {
       throw new Error("Bus save-state IRQ sources disagree with the CPU interrupt line");
     }
@@ -202,6 +205,15 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
       state.clock.synchronizedPpuMasterClock !== committedMasterClock
     ) {
       throw new Error("Bus save-state PPU watermark disagrees with the committed machine clock");
+    }
+    if (state.pendingControllerWrite !== undefined) {
+      const lastCompletedCpuCycle = state.cpu.cpuCycles - 1;
+      if (
+        lastCompletedCpuCycle < 0 ||
+        lastCompletedCpuCycle % 2 !== state.dma.cadence.getCycleParity
+      ) {
+        throw new Error("Bus save-state pending controller write is not waiting after a GET cycle");
+      }
     }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);

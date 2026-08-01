@@ -53,6 +53,9 @@ class Controller {
     if (typeof state.strobeSignal !== "boolean") {
       throw new TypeError("Controller save state contains an invalid strobe value");
     }
+    if (state.strobeSignal && state.currentButtonIndex !== 0) {
+      throw new RangeError("A strobed controller save state must remain at the first button");
+    }
     this.buttons.splice(0, this.buttons.length, ...state.buttons);
     this.currentButtonIndex = state.currentButtonIndex;
     this.strobeSignal = state.strobeSignal;

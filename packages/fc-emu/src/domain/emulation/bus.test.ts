@@ -411,6 +411,29 @@ describe("Bus lifecycle", () => {
     expect(bus.captureState()).toEqual(before);
   });
 
+  it("rejects different strobe levels on controllers sharing the OUT0 line", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      controller1: { ...before.controller1, strobeSignal: true },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/controller strobe lines disagree/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("rejects a pending controller write after a completed PUT cycle", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.updateSeconds(1 / bus.Timing.cpuFrequencyHz);
+    const before = bus.captureState();
+
+    expect(() => bus.restoreState({ ...before, pendingControllerWrite: 1 })).toThrow(
+      /not waiting after a GET cycle/i,
+    );
+    expect(bus.captureState()).toEqual(before);
+  });
+
   it("commits only the latest $4016 write on a PUT cycle", () => {
     const bus = new Bus(createTestCartridge());
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;
@@ -419,11 +442,14 @@ describe("Bus lifecycle", () => {
     bus.updateSeconds(oneCpuCycle); // Complete the initial PUT without a write.
     bus.scheduleControllerWrite(1);
     bus.updateSeconds(oneCpuCycle); // GET: high remains pending.
-    expect(bus.captureState().pendingControllerWrite).toBe(1);
+    const pending = bus.captureState();
+    expect(pending.pendingControllerWrite).toBe(1);
     expect(bus.Controller1.captureState()).toMatchObject({
       currentButtonIndex: 8,
       strobeSignal: false,
     });
+    bus.restoreState(pending);
+    expect(bus.captureState()).toEqual(pending);
 
     bus.scheduleControllerWrite(0);
     bus.updateSeconds(oneCpuCycle); // PUT: the newer low value wins.

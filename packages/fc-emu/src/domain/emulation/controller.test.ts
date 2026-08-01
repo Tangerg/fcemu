@@ -55,4 +55,19 @@ describe("Controller", () => {
 
     expect(() => controller.restoreState({ ...state, currentButtonIndex: 9 })).toThrow(RangeError);
   });
+
+  it("rejects a shifted save state while the shared strobe is high", () => {
+    const controller = new Controller();
+    void controller.currentButton;
+    const before = controller.captureState();
+
+    expect(() =>
+      controller.restoreState({
+        ...before,
+        currentButtonIndex: 1,
+        strobeSignal: true,
+      }),
+    ).toThrow(/first button/i);
+    expect(controller.captureState()).toEqual(before);
+  });
 });

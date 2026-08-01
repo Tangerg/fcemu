@@ -16,6 +16,7 @@ interface ApuBusPort {
   cancelDmcDma(): void;
   requestDmcDma(address: number, haltPhase: DmaBusPhase): void;
   setIRQSource(source: IRQSource, asserted: boolean): void;
+  restoreIRQSource(source: IRQSource, asserted: boolean): void;
   currentDmaPhase(): DmaBusPhase;
   cartridgeAudioSample(): number;
 }
@@ -941,6 +942,11 @@ class APU {
       this.pendingRegisterWrites.length,
       ...state.pendingRegisterWrites.map((write) => ({ ...write })),
     );
+    this.bus.restoreIRQSource(
+      IRQSource.ApuFrame,
+      this.frameIRQPending && this.frameIrqClearDelay === 0,
+    );
+    this.bus.restoreIRQSource(IRQSource.ApuDmc, this.deltaModulationChannel.interruptPending);
   }
 
   public reset(): void {
@@ -1290,6 +1296,12 @@ class APU {
     }
     if (!isIntegerInRange(state.frameIrqClearDelay, 0, 2)) {
       throw new RangeError("APU save state contains an invalid frame-IRQ clear delay");
+    }
+    if (
+      (state.frameIRQPending && !state.frameSequencer.irqEnabled) ||
+      (state.frameIrqClearDelay > 0 && !state.frameIRQPending)
+    ) {
+      throw new RangeError("APU save state contains inconsistent frame-IRQ state");
     }
     if (
       !Array.isArray(state.pendingRegisterWrites) ||

@@ -134,6 +134,34 @@ describe("2A03 APU", () => {
     expect(bus.APU.captureState()).toEqual(before);
   });
 
+  it("reconciles named frame and DMC IRQ sources after direct restoration", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.APU.captureState();
+
+    bus.APU.restoreState({
+      ...before,
+      frameIRQPending: true,
+      frameIrqClearDelay: 0,
+    });
+    expect(bus.captureState().irqSources).toEqual(["apu-frame"]);
+    expect(bus.CPU.isIRQLineAsserted).toBe(true);
+
+    bus.APU.restoreState({
+      ...before,
+      deltaModulationChannel: {
+        ...before.deltaModulationChannel,
+        irqEnabled: true,
+        irqPending: true,
+      },
+    });
+    expect(bus.captureState().irqSources).toEqual(["apu-dmc"]);
+    expect(bus.CPU.isIRQLineAsserted).toBe(true);
+
+    bus.APU.restoreState(before);
+    expect(bus.captureState().irqSources).toEqual([]);
+    expect(bus.CPU.isIRQLineAsserted).toBe(false);
+  });
+
   it("recreates channel state on power-on", () => {
     const bus = new Bus(createTestCartridge());
     bus.APU.writeRegister(0x4015, 1);

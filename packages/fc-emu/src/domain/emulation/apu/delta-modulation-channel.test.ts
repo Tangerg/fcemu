@@ -125,6 +125,14 @@ describe("DeltaModulationChannel", () => {
     expect(channel.captureState()).toEqual(before);
   });
 
+  it("rejects a pending IRQ after IRQ generation has been disabled", () => {
+    const channel = createChannel(createPort(0));
+    const before = channel.captureState();
+
+    expect(() => channel.restoreState({ ...before, irqPending: true })).toThrow(/DMC channel/i);
+    expect(channel.captureState()).toEqual(before);
+  });
+
   it("repeats a one-byte sample completed on the output-counter reset boundary", () => {
     const port = createPort(0);
     const channel = createChannel(port, RP2A03H_DMC_PROFILE);

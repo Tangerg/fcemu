@@ -229,6 +229,12 @@ the PPU `/NMI` output must equal the CPU `/NMI` input line, and the presence of 
 equal the saved CPU IRQ input. Nested device validation may still fail later, but the outer transaction
 then restores the complete pre-restore snapshot.
 
+The aggregate additionally preserves IRQ **source identity**, not only the OR-ed CPU line: an
+`apu-dmc` source must match the DMC channel's pending flag, while `apu-frame` must match the frame flag
+and its delayed status-read clear. `restoreIRQSource` lets the APU reconcile those physical levels
+after direct restoration without running normal edge-recognition timing; `setIRQSource` remains the
+runtime event path and delegates only its level update to that primitive.
+
 ## Verification and known limits
 
 Aggregate tests exercise mirrored maps, internal/external open bus, controller partial drives,

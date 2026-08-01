@@ -309,6 +309,13 @@ the console's current version 16 save-state envelope. Output-filter history firs
 in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and version 15 added
 mapper-owned RAM/NVRAM for Namco 163; version 16 adds VS cabinet state.
 
+After a successful aggregate restore, the APU reconciles its two named external lines through the
+bus's restore-only IRQ port: DMC is asserted exactly when `irqPending` is set; frame IRQ is asserted
+when `frameIRQPending` is set and no status-read clear delay remains. This port updates physical
+source levels without treating restoration as a newly sampled runtime edge. Validation also rejects
+a DMC IRQ without IRQ enable (or with bytes still remaining), a frame IRQ while the sequencer is
+inhibited, and a frame-clear delay without a pending frame flag.
+
 ## Audio output boundary
 
 The native pulse and TND nonlinear outputs are combined with the mapper's optional cartridge-audio

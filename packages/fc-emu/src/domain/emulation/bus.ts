@@ -167,6 +167,13 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (irqSources.length > 0 !== state.cpu.interrupts.irqLineAsserted) {
       throw new Error("Bus save-state IRQ sources disagree with the CPU interrupt line");
     }
+    if (irqSources.includes(IRQSource.ApuDmc) !== state.apu.deltaModulationChannel.irqPending) {
+      throw new Error("Bus save-state DMC IRQ source disagrees with the APU channel");
+    }
+    const frameIrqAsserted = state.apu.frameIRQPending && state.apu.frameIrqClearDelay === 0;
+    if (irqSources.includes(IRQSource.ApuFrame) !== frameIrqAsserted) {
+      throw new Error("Bus save-state frame IRQ source disagrees with the APU sequencer");
+    }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);
     this.mapper.restoreState(state.mapper);
@@ -211,13 +218,18 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
   }
 
   setIRQSource(source: IRQSource, asserted: boolean): void {
-    if (asserted) this.irqSources.add(source);
-    else this.irqSources.delete(source);
-    this.cpu.setIRQLine(this.irqSources.size > 0);
+    this.restoreIRQSource(source, asserted);
     const remainingInstructionCycles = this.clock.remainingCommittedApuCycles;
     if (asserted && (source === IRQSource.Mapper || remainingInstructionCycles >= 2)) {
       this.cpu.sampleIRQLine(source === IRQSource.Mapper || remainingInstructionCycles >= 3);
     }
+  }
+
+  /** Restores a physical source level without recognizing it as a new runtime edge. */
+  restoreIRQSource(source: IRQSource, asserted: boolean): void {
+    if (asserted) this.irqSources.add(source);
+    else this.irqSources.delete(source);
+    this.cpu.setIRQLine(this.irqSources.size > 0);
   }
 
   setMapperIrq(asserted: boolean): void {

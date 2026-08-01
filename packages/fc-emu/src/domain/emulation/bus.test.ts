@@ -217,6 +217,25 @@ describe("Bus lifecycle", () => {
     expect(bus.captureState()).toEqual(before);
   });
 
+  it("rejects a missing named DMC IRQ source even when the CPU line level agrees", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      apu: {
+        ...before.apu,
+        deltaModulationChannel: {
+          ...before.apu.deltaModulationChannel,
+          irqEnabled: true,
+          irqPending: true,
+        },
+      },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/DMC IRQ source disagrees/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
   it("commits only the latest $4016 write on a PUT cycle", () => {
     const bus = new Bus(createTestCartridge());
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;

@@ -308,6 +308,7 @@ export class DeltaModulationChannel {
       typeof state.loop !== "boolean" ||
       typeof state.irqEnabled !== "boolean" ||
       typeof state.irqPending !== "boolean" ||
+      (state.irqPending && (!state.irqEnabled || state.currentLength !== 0)) ||
       typeof state.dmaRequested !== "boolean" ||
       !isIntegerInRange(state.transferStartDelay, 0, 4) ||
       !isIntegerInRange(state.disableDelay, 0, 3)

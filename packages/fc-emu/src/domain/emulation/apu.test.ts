@@ -134,6 +134,22 @@ describe("2A03 APU", () => {
     expect(bus.APU.captureState()).toEqual(before);
   });
 
+  it("rejects a queued register write whose commit cycle has already arrived", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.APU.scheduleRegisterWrite(0x4000, 0x1a, 2);
+    const before = bus.APU.captureState();
+    const pending = before.pendingRegisterWrites[0];
+    if (!pending) throw new Error("Expected a pending APU register write");
+
+    expect(() =>
+      bus.APU.restoreState({
+        ...before,
+        pendingRegisterWrites: [{ ...pending, cycle: before.cycle }],
+      }),
+    ).toThrow(/pending register write/i);
+    expect(bus.APU.captureState()).toEqual(before);
+  });
+
   it("reconciles named frame and DMC IRQ sources after direct restoration", () => {
     const bus = new Bus(createTestCartridge());
     const before = bus.APU.captureState();

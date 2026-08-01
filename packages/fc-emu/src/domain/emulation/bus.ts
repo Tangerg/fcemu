@@ -186,6 +186,23 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (dmcChannel.dmaRequested && dmcChannel.currentAddress !== dmcDma.address) {
       throw new Error("Bus save-state DMC channel address disagrees with the DMA transfer");
     }
+    if (state.cpu.cpuCycles !== state.clock.committedCpuCycle) {
+      throw new Error("Bus save-state CPU cycles disagree with the committed machine clock");
+    }
+    if (
+      state.apu.cycle !== state.clock.synchronizedApuCycle ||
+      state.clock.synchronizedApuCycle !== state.clock.committedCpuCycle
+    ) {
+      throw new Error("Bus save-state APU cycle disagrees with the committed machine clock");
+    }
+    const committedMasterClock =
+      state.clock.committedCpuCycle * this.timing.cpuPpu.cpuMasterClockDivider;
+    if (
+      !Number.isSafeInteger(committedMasterClock) ||
+      state.clock.synchronizedPpuMasterClock !== committedMasterClock
+    ) {
+      throw new Error("Bus save-state PPU watermark disagrees with the committed machine clock");
+    }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);
     this.mapper.restoreState(state.mapper);

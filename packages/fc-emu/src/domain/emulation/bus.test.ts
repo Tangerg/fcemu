@@ -369,6 +369,48 @@ describe("Bus lifecycle", () => {
     expect(bus.captureState()).toEqual(reset);
   });
 
+  it("rejects a CPU cycle count ahead of the committed machine clock", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.updateSeconds(1 / bus.Timing.cpuFrequencyHz);
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      cpu: { ...before.cpu, cpuCycles: before.cpu.cpuCycles + 1 },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/CPU cycles disagree/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("rejects an APU cycle ahead of its synchronized machine-clock watermark", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.updateSeconds(1 / bus.Timing.cpuFrequencyHz);
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      apu: { ...before.apu, cycle: before.apu.cycle + 1 },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/APU cycle disagrees/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("rejects a PPU watermark behind the committed machine clock", () => {
+    const bus = new Bus(createTestCartridge());
+    bus.updateSeconds(1 / bus.Timing.cpuFrequencyHz);
+    const before = bus.captureState();
+    const corrupted = {
+      ...before,
+      clock: {
+        ...before.clock,
+        synchronizedPpuMasterClock: before.clock.synchronizedPpuMasterClock - 1,
+      },
+    };
+
+    expect(() => bus.restoreState(corrupted)).toThrow(/PPU watermark disagrees/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
   it("commits only the latest $4016 write on a PUT cycle", () => {
     const bus = new Bus(createTestCartridge());
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;

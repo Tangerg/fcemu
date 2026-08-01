@@ -267,6 +267,13 @@ blob:
 Any violation throws `RangeError` and leaves the clock untouched, so `Bus` can roll the whole
 snapshot back. `reset` zeroes all five for power-on / soft reset.
 
+`MachineClock` also serves in-flight synchronization, so its standalone snapshot permits APU/PPU
+watermarks behind the committed CPU boundary. A complete `BusSnapshot` is captured only between
+updates and is stricter: `cpu.cpuCycles`, `apu.cycle`, `committedCpuCycle` and
+`synchronizedApuCycle` must agree, while `synchronizedPpuMasterClock` must equal the committed CPU
+cycles multiplied by the region's CPU master-clock divider. This rejects a locally valid but
+impossible splice of independently captured clock domains before any aggregate is changed.
+
 These watermarks are part of the public save-state envelope carried by `EmulatorSaveState`
 (current `SAVE_STATE_VERSION = 17`, guarded together with format, ROM identity and console region).
 Older in-memory snapshots are rejected explicitly rather than restored with ambiguous state. The

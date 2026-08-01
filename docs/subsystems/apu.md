@@ -307,10 +307,11 @@ its hardware constraints: booleans remain booleans; length, envelope, timer, dut
 counters stay within their register widths; noise periods belong to the active region; DMC
 addresses, lengths, buffers, timer periods and DMA delays remain representable; and the frame
 sequencer stays within the active region's cycle range. The aggregate additionally rejects a
-mismatched sample rate, non-finite filter history, invalid frame-IRQ state, and malformed or
-out-of-order pending writes. Direct child restores run the same pure validation before assignment,
-so a rejected snapshot leaves both a standalone child and the complete APU unchanged. `sampleBuffer`
-and `lastClockCycle` are omitted from their snapshots when undefined. The APU state travels inside
+mismatched sample rate, non-finite filter history, invalid frame-IRQ state, and malformed,
+out-of-order or already-due pending writes. Direct child restores run the same pure validation before
+assignment, so a rejected snapshot leaves both a standalone child and the complete APU unchanged.
+`sampleBuffer` and `lastClockCycle` are omitted from their snapshots when undefined. The APU state
+travels inside
 the console's current version 17 save-state envelope. Output-filter history first entered the schema
 in version 13; version 14 added the PPU's real sprite-fetch pipeline state, and version 15 added
 mapper-owned RAM/NVRAM for Namco 163; version 16 added VS cabinet state, and version 17 persists the

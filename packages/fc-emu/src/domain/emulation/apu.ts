@@ -1312,7 +1312,7 @@ class APU {
           isIntegerInRange(write.address, 0x4000, 0x4017) &&
           isByte(write.value) &&
           Number.isSafeInteger(write.cycle) &&
-          write.cycle >= 0 &&
+          write.cycle > state.cycle &&
           (index === 0 || (writes[index - 1]?.cycle ?? -1) <= write.cycle),
       )
     ) {

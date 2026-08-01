@@ -1092,9 +1092,17 @@ are ignored.
 Registers 0 and 1 select the first two 8 KiB PRG-ROM windows; the final two windows are fixed to the
 last two banks. Registers 2 and 3 each select an even-aligned 2 KiB CHR pair, while registers 4–7
 select four independent 1 KiB CHR banks. `$C000` bits 4–7 independently supply CHR A18 to those
-four 1 KiB registers only. The board exposes no PRG RAM, bus conflict or IRQ, and powers on with
-cleared registers and vertical mirroring. Unsupported submappers, CHR RAM, four-screen nametables,
-PRG images beyond 128 KiB and CHR images beyond 512 KiB fail closed. See
+four 1 KiB registers only. The board exposes no decoded PRG RAM, bus conflict or IRQ, and powers on
+with cleared registers and vertical mirroring.
+
+The checksum-pinned 128 KiB PRG + 256 KiB CHR _Sango Fighter_ profile runs 2,520 input-driven frames
+from title into active combat with 460 distinct frames, exact visual/audio/CPU-cycle checkpoints and
+a deterministic 120-frame save-state replay. Its execution trace writes multiple values to all eight
+bank registers. Its fixed vertical mirroring and 256 KiB CHR geometry cannot exercise `$E000` changes
+or the four CHR A18 lines, which remain covered by focused board tests.
+
+Unsupported submappers, CHR RAM, four-screen nametables, PRG images beyond 128 KiB and CHR images
+beyond 512 KiB fail closed. See
 [NESdev mapper 112](https://www.nesdev.org/wiki/INES_Mapper_112).
 
 ## HES NTD-8 (113)

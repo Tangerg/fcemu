@@ -72,7 +72,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 96     | Oeka Kids      | Implemented | Address-edge/CHR-RAM/conflict/state tests; two local replay smokes |
 | 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM           |
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
-| 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
+| 112    | NTDEC/Asder    | Verified    | Banking/state tests; pinned _Sango Fighter_ real-ROM runner        |
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
 | 114    | SuperGame MMC3 | Verified    | Scramble/MMC3A tests; pinned _The Lion King_ real-ROM runner       |
 | 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
@@ -420,9 +420,14 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 112 (NTDEC/Asder) uses a two-stage selector/data register with two switchable and two fixed
   8 KiB PRG windows. Two even-aligned 2 KiB and four independent 1 KiB CHR paths remain distinct;
   the outer register supplies separate CHR A18 lines only to the latter four. Even-address mirrors
-  are decoded, D0 controls vertical/horizontal mirroring, and the board has no RAM, conflicts or IRQ.
-  Three user-local images completed 180-frame starts with deterministic 60-frame save-state replay;
-  their bytes and hashes remain outside the repository, so the status remains `Implemented`.
+  are decoded, D0 controls vertical/horizontal mirroring, and the board has no decoded RAM,
+  conflicts or IRQ.
+  The checksum-pinned 128 KiB PRG + 256 KiB CHR _Sango Fighter_ profile verifies 2,520 input-driven
+  frames from title through mode and character selection into active combat, 460 distinct frames,
+  exact visual/audio/CPU-cycle results and a deterministic 120-frame save-state replay. A separate
+  trace observed multiple values in all eight bank registers. This image keeps mirroring vertical
+  and is too small to use CHR A18, so mirroring changes and the four independent outer CHR lines
+  remain focused-test evidence rather than claims made by the profile.
 - Mapper 113 (HES NTD-8) extends that expansion latch without approximating it as mapper 79. D5-D3
   select up to eight 32 KiB PRG banks; D6 joins D2-D0 as the non-contiguous 8 KiB CHR bank field;
   D7 selects horizontal/vertical mirroring. The board has no bus conflicts, IRQ, PRG RAM or driven

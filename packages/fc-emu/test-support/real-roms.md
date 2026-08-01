@@ -27,18 +27,19 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover eight files used during development:
+The current profiles cover nine files used during development:
 
-| Profile     | Expected file       | SHA-256                                                            | Mapper |
-| ----------- | ------------------- | ------------------------------------------------------------------ | ------ |
-| `mario`     | `MARIO.NES`         | `e9d2cc78600d4b765eca41b87eaa2b8f593d5bad5d71d2f3d6b43c5092e5705b` | 0      |
-| `contra`    | `CONTRA.NES`        | `26541a5550ee22deeb3d5484e4a96130219b58cff74d068fb1eb6567fa5e5519` | 2      |
-| `kage`      | `KAGE.NES`          | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
-| `smb3`      | `SMB3-J.NES`        | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
-| `punchout`  | `PUNCHOUT-J.NES`    | `137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0` | 9      |
-| `dbz5`      | `dbz5cn.nes`        | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
-| `sango4`    | `sango4.nes`        | `dee4d95f36a621b85cfba3e7ecba7a83cda3814bb0d96f76b6502f616f21c25f` | 117    |
-| `decathlon` | `Cecathlon (C).nes` | `b51a894b0e478bc16f88fb1940dad05109ad1f23897b778506349dda26adae24` | 244    |
+| Profile     | Expected file                | SHA-256                                                            | Mapper |
+| ----------- | ---------------------------- | ------------------------------------------------------------------ | ------ |
+| `mario`     | `MARIO.NES`                  | `e9d2cc78600d4b765eca41b87eaa2b8f593d5bad5d71d2f3d6b43c5092e5705b` | 0      |
+| `contra`    | `CONTRA.NES`                 | `26541a5550ee22deeb3d5484e4a96130219b58cff74d068fb1eb6567fa5e5519` | 2      |
+| `kage`      | `KAGE.NES`                   | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
+| `smb3`      | `SMB3-J.NES`                 | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
+| `punchout`  | `PUNCHOUT-J.NES`             | `137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0` | 9      |
+| `dbz5`      | `dbz5cn.nes`                 | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
+| `sango4`    | `sango4.nes`                 | `dee4d95f36a621b85cfba3e7ecba7a83cda3814bb0d96f76b6502f616f21c25f` | 117    |
+| `decathlon` | `Cecathlon (C).nes`          | `b51a894b0e478bc16f88fb1940dad05109ad1f23897b778506349dda26adae24` | 244    |
+| `timediver` | `Time Diver Avenger (C).nes` | `36bec12c4caccc958a70634e56eb18f6ec1e92c5e6d1a88afcfd1cd52050b54e` | 250    |
 
 Run one profile with an explicit file:
 
@@ -51,6 +52,7 @@ yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
 yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
 yarn smoke:real-rom -- decathlon "/absolute/path/to/Cecathlon (C).nes"
+yarn smoke:real-rom -- timediver "/absolute/path/to/Time Diver Avenger (C).nes"
 ```
 
 Or run every profile against a directory containing the expected filenames:
@@ -83,7 +85,7 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 117 or 244 software. In
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 117, 244 or 250 software. In
 particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.
 

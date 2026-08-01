@@ -100,7 +100,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 245    | Waixing F003   | Implemented | Outer-PRG/direct-CHR/A12/state tests; three local replay smokes    |
 | 246    | C&E Fong Shen  | Implemented | Register/WRAM/alias/state tests; three local replay smokes         |
 | 248    | Kasheng MMC3   | Implemented | Mapper-115 duplicate board tests; one local replay smoke           |
-| 250    | MMC3 addr/data | Implemented | Address/data rewiring/MMC3/IRQ/state tests; one local replay smoke |
+| 250    | MMC3 addr/data | Verified    | Rewiring/IRQ tests; pinned _Time Diver_ real-ROM runner            |
 
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
@@ -662,9 +662,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 250 keeps the standard MMC3 memory, mirroring, PRG-RAM protection and filtered A12 IRQ
   paths but rewires CPU writes: A10 selects the odd/even register port, A7-A0 carry its value, and
   CPU D7-D0 are ignored. The mapper factory bounds the shared MMC3 core to 512 KiB PRG, 256 KiB CHR,
-  optional 8 KiB PRG RAM/NVRAM, two-screen nametables and submapper 0. A local 128 KiB + 128 KiB
-  _Time Diver Avenger_ image ran 2200 frames without halting, exercised 15 distinct MMC3 bank states,
-  produced 150 distinct frames through frame 2100 and completed deterministic 120-frame replay.
+  optional 8 KiB PRG RAM/NVRAM, two-screen nametables and submapper 0. The pinned 128 KiB + 128 KiB
+  _Time Diver Avenger_ profile runs 2,200 input-driven frames with 401 distinct frames and exact
+  visual/audio/CPU-cycle checkpoints, then completes a deterministic 120-frame save-state replay.
+  A separate register trace exercised 15 distinct MMC3 bank states; the remaining register and
+  geometry boundaries stay covered by focused tests.
 
 The completed finite mapper track and the external-verification follow-up are recorded in
 [Engineering roadmap](./engineering-roadmap.md). Numbers outside that boundary remain unsupported

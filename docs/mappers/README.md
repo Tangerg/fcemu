@@ -1404,10 +1404,11 @@ The board is an immutable wiring mode around `Mmc3Mapper`, so it does not duplic
 mirroring, RAM, IRQ or save-state implementation. The factory accepts submapper 0, 32-512 KiB PRG
 ROM, 8-256 KiB CHR ROM, optional 8 KiB PRG RAM/NVRAM and two-screen nametables. Tests cover both
 address inputs, ignored CPU data, every register group, PRG/CHR banking, RAM protection, A12 IRQ,
-save-state restoration and the complete geometry boundary. A user-local 128 KiB + 128 KiB _Time
-Diver Avenger_ image ran 2200 frames without halting, exercised 15 distinct MMC3 bank-register
-states, produced 150 distinct frames through frame 2100 and completed deterministic 120-frame
-save-state replay. The address transform agrees in
+save-state restoration and the complete geometry boundary. The pinned 128 KiB + 128 KiB _Time
+Diver Avenger_ profile runs 2,200 input-driven frames with 401 distinct frames plus exact visual,
+audio and CPU-cycle checkpoints, then completes a deterministic 120-frame save-state replay. A
+separate register trace exercised 15 distinct MMC3 bank-register states. The address transform
+agrees in
 [NESdev mapper 250](https://www.nesdev.org/wiki/INES_Mapper_250),
 [MesenCE](https://github.com/nesdev-org/MesenCE/blob/master/Core/NES/Mappers/Mmc3Variants/MMC3_250.h),
 [puNES](https://github.com/punesemu/puNES/blob/master/src/core/mappers/mapper_250.c) and

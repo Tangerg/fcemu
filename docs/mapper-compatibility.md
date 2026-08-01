@@ -78,7 +78,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
 | 118    | TxSROM         | Verified    | CIRAM/IRQ tests; pinned _Pro Sport Hockey_ real-ROM runner         |
-| 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
+| 119    | TQROM          | Verified    | Mixed-CHR/IRQ tests; pinned _Pinbot_ real-ROM runner               |
 | 133    | Sachen SA72008 | Implemented | Expansion decode/banking/open-bus/state tests; local legacy smoke  |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
@@ -566,7 +566,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 119 (TQROM) keeps standard MMC3 mirroring and IRQs while CHR bank bit 6 selects between
   16–64 KiB CHR ROM and eight 1 KiB banks of volatile CHR RAM. Official boards have 128 KiB PRG ROM
   and no PRG RAM. Legacy iNES implies the otherwise-unrepresentable 8 KiB CHR RAM; NES 2.0 declares
-  it explicitly.
+  it explicitly. The checksum-pinned 128 KiB PRG + 64 KiB CHR ROM + 8 KiB CHR RAM _Pinbot_ profile
+  verifies 2,760 input-driven frames from title and player selection into active pinball, 825
+  distinct frames, exact visual/audio/CPU-cycle results and a deterministic 120-frame save-state
+  replay. Its trace reaches all-ROM, lower-half-RAM, upper-half-RAM and all-RAM slot patterns, writes
+  6,245 nonzero CHR-RAM bytes and observes IRQ pending. CHR-mode 0 remains focused-test evidence.
 - Mapper 133 follows the established SA-72008 compatibility path: writes matching `$E100=$4100`
   latch D2 as one 32 KiB PRG line and D1-D0 as two 8 KiB CHR lines, while reads remain open bus and
   mirroring stays hardwired. The early 60-pin Sachen 3009/AX-24G hardware is deliberately not

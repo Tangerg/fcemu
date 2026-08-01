@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover twenty-one files used during development:
+The current profiles cover twenty-two files used during development:
 
 | Profile          | Expected file                | SHA-256                                                            | Mapper |
 | ---------------- | ---------------------------- | ------------------------------------------------------------------ | ------ |
@@ -42,6 +42,7 @@ The current profiles cover twenty-one files used during development:
 | `yuuyuu`         | `youyou_c.nes`               | `dd2a2a1123ac405bbb975ee1c1f8845e85fcd4c6f993ee7afc895b2022a5190c` | 115    |
 | `sango4`         | `sango4.nes`                 | `dee4d95f36a621b85cfba3e7ecba7a83cda3814bb0d96f76b6502f616f21c25f` | 117    |
 | `prosporthockey` | `Pro Sport Hockey (U).nes`   | `a03cbb96ce879e81c04bde420d189329daad39b990d06f9dea284d2db4bd5254` | 118    |
+| `pinbot`         | `Pinbot (U).nes`             | `549575dae837426ba964c74f09fd11ee49fdaf82ae2669c157de5612bf76ff70` | 119    |
 | `pocahontas`     | `Pocahontas.nes`             | `c41984e57d492149e6778b29b8cdc1bc733eda8fc8c1891d782384e019b46ede` | 182    |
 | `thunderwarrior` | `ThunderWarrior.nes`         | `6eba6a209e0d60c63d73e2e02b858b9580fd40e719775ffe43ae940a61ba57a2` | 189    |
 | `super42`        | `Super_42-in-1.nes`          | `927d2738e57ca5a6bd54c6eb1c2223c0332a9018249272779bcea968d5f4aabb` | 226    |
@@ -67,6 +68,7 @@ yarn smoke:real-rom -- lionking /absolute/path/to/TheLionKing.nes
 yarn smoke:real-rom -- yuuyuu /absolute/path/to/youyou_c.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
 yarn smoke:real-rom -- prosporthockey "/absolute/path/to/Pro Sport Hockey (U).nes"
+yarn smoke:real-rom -- pinbot "/absolute/path/to/Pinbot (U).nes"
 yarn smoke:real-rom -- pocahontas /absolute/path/to/Pocahontas.nes
 yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes
@@ -111,8 +113,8 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 112, 114, 115, 117, 118, 182,
-189, 226, 240, 242, 244, 245, 246, 248 or 250
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 112, 114, 115, 117, 118, 119,
+182, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.
 

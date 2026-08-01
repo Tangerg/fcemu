@@ -1222,7 +1222,13 @@ per-slot CIRAM layouts remain covered by focused board tests. See
 TQROM keeps standard MMC3 mirroring but connects CHR A16 to chip enable: bank values with bit 6 clear
 select 16–64 KiB CHR ROM, while set values select one of eight 1 KiB CHR-RAM banks. Official boards
 use 128 KiB PRG ROM, 8 KiB volatile CHR RAM and no PRG RAM. Legacy iNES cannot declare the mixed CHR
-layout, so mapper 119 implies the RAM; NES 2.0 must declare it explicitly. See
+layout, so mapper 119 implies the RAM; NES 2.0 must declare it explicitly.
+
+The checksum-pinned 128 KiB PRG + 64 KiB CHR ROM + 8 KiB CHR RAM _Pinbot_ profile runs 2,760
+input-driven frames from title into active pinball with 825 distinct frames, exact
+visual/audio/CPU-cycle checkpoints and a deterministic 120-frame save-state replay. Its trace
+selects all four ROM/RAM slot combinations, writes 6,245 nonzero CHR-RAM bytes and observes IRQ
+pending; CHR-mode 0 remains covered by focused board tests. See
 [NESdev mapper 119](https://www.nesdev.org/wiki/TQROM).
 
 ## Sachen SA-72008 (133)

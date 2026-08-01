@@ -81,6 +81,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 119    | TQROM          | Verified    | Mixed-CHR/IRQ tests; pinned _Pinbot_ real-ROM runner               |
 | 133    | Sachen SA72008 | Verified    | Board tests; pinned _Jovial Race_ real-ROM runner                  |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
+| 142    | Kaiser KS7032  | Verified    | KS202/IRQ tests; pinned Kaiser _Super Mario Bros. 2_ runner        |
 | 150    | Sachen SA-015  | Implemented | ASIC/pin-routing/solder-pad/nametable/state tests; no fixture      |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
@@ -106,7 +107,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/150/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -148,7 +149,7 @@ Mapper 12 legacy images and NES 2.0 submapper 0 select Rex Soft's SL-5020B MMC3A
 submapper 1 instead identifies an FFE Super Magic Card 4M extraction with fixed `$7000` trainer
 placement; other submappers fail closed.
 
-Mappers 15/133/150/225/226/228/240/242/243/244/246/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
+Mappers 15/133/142/150/225/226/228/240/242/243/244/246/250 accept only submapper 0. Mapper 227 submapper 0 selects the RPG-compatible board
 with optional battery WRAM and always-writable CHR RAM; submapper 1 selects multicart CHR protection
 and solder-pad reads; submapper 2 selects multicart protection plus the inner-bank-zero outer-bank
 rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
@@ -196,7 +197,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/150/152/180/182/184/185/206/244/248 because those
+  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/142/150/152/180/182/184/185/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -585,6 +586,13 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB
   PRG bank and bits 3-0 select an 8 KiB CHR-ROM bank. The window has no bus conflicts and reads are
   open bus rather than a fabricated zero.
+- Mapper 142 models Kaiser's KS7032 board and KS202 ASIC independently of VRC3. Select/data writes
+  assign four 8 KiB PRG windows at `$6000-$DFFF`, while the final bank is fixed at `$E000` and 8 KiB
+  CHR RAM is unbanked. Its four-nibble reload feeds a CPU-cycle counter. Overflow asserts IRQ,
+  reloads and disables the one-shot counter; `$D000` acknowledges without VRC3-style re-enable.
+  The checksum-pinned Kaiser _Super Mario Bros. 2_ profile verifies a 600-frame attract baseline and
+  1,800 input-driven frames into World 1-1, with 739 distinct interactive frames, exact visual,
+  audio and CPU-cycle results, and deterministic 120-frame save-state replay.
 - Mapper 150 models the eight-register ASIC on Sachen SA-015/SA-630 rather than aliasing the
   differently bonded SA-020A board. Mirrored `$4100/$4101` index/data ports retain and read all three
   bits; R5 selects one of four 32 KiB PRG banks, R4 supplies CHR A15, R6 supplies CHR A14-A13 and R7

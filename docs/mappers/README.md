@@ -186,6 +186,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 133 | Sachen SA72008 | `sachen-sa72008-133`      | `sachen-sa72008-mapper.ts`   | no            | no   |
 | 140 | Jaleco JF      | `jaleco-jf`               | `jaleco-jf-mapper.ts`        | no            | no   |
+| 142 | Kaiser KS7032  | `kaiser-ks202-142`        | `kaiser-ks202-mapper.ts`     | no            | cyc. |
 | 150 | Sachen SA-015  | `sachen-sa015-150`        | `sachen-sa015-mapper.ts`     | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
@@ -1260,6 +1261,30 @@ bits 3-0 to select one of sixteen 8 KiB CHR-ROM banks. The register occupies oth
 space, so writes have no bus conflicts and reads remain open bus. PRG and CHR are limited to the
 128 KiB reachable by those physical select lines. See
 [NESdev mapper 140](https://www.nesdev.org/wiki/INES_Mapper_140).
+
+## Kaiser KS7032 / KS202 (142)
+
+Mapper 142 is Kaiser's KS7032 FDS-conversion board built around the KS202 ASIC. `$E000-$EFFF`
+selects one of eight internal register numbers and a following `$F000-$FFFF` write updates selectors
+1-4 with its low nibble. Those four registers map 8 KiB PRG-ROM banks at `$8000`, `$A000`, `$C000`
+and `$6000`; the final bank stays fixed at `$E000`. Selectors 0 and 5-7 have no modeled external
+output. The board provides unbanked 8 KiB volatile CHR RAM, no writable CPU memory and hardwired
+two-screen mirroring.
+
+Writes in the complete `$8000-$BFFF` pages assemble a 16-bit IRQ reload value from four low nibbles.
+`$C000` bit 1 enables the CPU-cycle counter and reloads it, while any `$C000`/`$D000` write clears the
+IRQ line. On 16-bit overflow, the counter reloads, asserts IRQ and disables itself. `$D000` only
+acknowledges: it does not copy bit 0 into enable as VRC3 does. This one-shot overflow behavior follows
+the PCB-corrected implementation rather than inheriting the current VRC3 entity's repeating modes.
+
+The factory accepts only the known 128 KiB PRG-ROM plus 8 KiB CHR-RAM geometry, two-screen
+nametables and submapper 0. The checksum-pinned Kaiser _Super Mario Bros. 2_ profile runs a 600-frame
+attract baseline and 1,800 input-driven frames into World 1-1. It produces 739 distinct interactive
+frames, exact visual/audio/CPU-cycle checkpoints and deterministic 120-frame save-state replay. Its
+trace reaches PRG register sets `0/0/0/0`, `12/13/4/11` and `12/13/0/11`, plus completed IRQ reloads
+`$E9A7/$E9AE`. See
+[NESdev mapper 142](https://www.nesdev.org/wiki/INES_Mapper_142) and the
+[MAME KS7032 implementation](https://github.com/mamedev/mame/blob/f6258eb0fb487248c02cf5131ef509ddb46b7dee/src/devices/bus/nes/kaiser.cpp#L430).
 
 ## Sachen SA-015 / SA-630 (150)
 

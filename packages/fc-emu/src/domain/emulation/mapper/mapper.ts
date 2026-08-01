@@ -84,6 +84,15 @@ export type MapperState =
     }
   | { readonly kind: "sachen-sa72008-133"; readonly register: number }
   | {
+      readonly kind: "kaiser-ks202-142";
+      readonly selectedRegister: number;
+      readonly prgBanks: readonly number[];
+      readonly irqReload: number;
+      readonly irqCounter: number;
+      readonly irqEnabled: boolean;
+      readonly irqPending: boolean;
+    }
+  | {
       readonly kind: "sachen-sa015-150";
       readonly selectedRegister: number;
       readonly registers: readonly number[];

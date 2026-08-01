@@ -40,6 +40,7 @@ import { JalecoMapper } from "./jaleco-mapper.js";
 import { JalecoSs8806Mapper } from "./jaleco-ss8806-mapper.js";
 import { JyCompanyMapper } from "./jy-company-mapper.js";
 import { Jy830623cMapper } from "./jy-830623c-mapper.js";
+import { KaiserKs202Mapper } from "./kaiser-ks202-mapper.js";
 import { Kasheng115Mapper } from "./kasheng-115-mapper.js";
 import { resolveMapper34Board } from "./mapper34-board.js";
 import { Mmc1Board } from "./mmc1-board.js";
@@ -560,6 +561,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "Jaleco JF-11/JF-14");
       requireNoPrgRam(cartridge);
       return new JalecoJfMapper(cartridge);
+    case 142:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x20_000], 0x2000);
+      requireVolatileChrRam(cartridge, "Kaiser KS7032");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Kaiser KS7032");
+      return new KaiserKs202Mapper(interruptPort, cartridge);
     case 150:
       requireBaseSubmapper(cartridge);
       requireMapper150Layout(cartridge);

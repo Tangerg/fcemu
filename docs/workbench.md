@@ -71,6 +71,8 @@ cycle/dot-stepped hardware engine.
 - Main-thread samples are grouped into transferable batches.
 - A separately bundled AudioWorklet owns a bounded rebuffering ring.
 - Pause, reset, power cycle, quick-load and disposal clear stale queued/ring audio.
+- Context-state requests are reconciled in order with latest-intent semantics: a pause that arrives
+  during worklet initialization or an in-flight `resume()` cannot be undone by that older request.
 - Autoplay denial becomes the explicit `blocked` application state; a later user gesture retries the
   existing audio port without restarting emulation.
 

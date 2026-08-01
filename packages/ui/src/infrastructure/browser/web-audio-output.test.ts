@@ -55,6 +55,39 @@ describe("WebAudioOutput", () => {
     expect(fixture.messages.at(-1)?.message).toEqual({ type: "reset" });
   });
 
+  it("does not resume after suspension wins a pending worklet initialization", async () => {
+    const moduleLoad = deferred<void>();
+    const fixture = createAudioFixture(() => moduleLoad.promise);
+    const output = new WebAudioOutput(fixture.environment);
+
+    const resuming = output.resume();
+    await output.suspend();
+    moduleLoad.resolve();
+
+    await expect(resuming).resolves.toBe("blocked");
+    expect(fixture.resume).not.toHaveBeenCalled();
+    expect(fixture.contextState()).toBe("suspended");
+  });
+
+  it("re-suspends when pause arrives during an in-flight context resume", async () => {
+    const resumeContext = deferred<void>();
+    const fixture = createAudioFixture(
+      async () => undefined,
+      () => resumeContext.promise,
+    );
+    const output = new WebAudioOutput(fixture.environment);
+
+    const resuming = output.resume();
+    await vi.waitFor(() => expect(fixture.resume).toHaveBeenCalledOnce());
+    const suspending = output.suspend();
+    resumeContext.resolve();
+
+    await expect(resuming).resolves.toBe("blocked");
+    await suspending;
+    expect(fixture.suspend).toHaveBeenCalledOnce();
+    expect(fixture.contextState()).toBe("suspended");
+  });
+
   it("does not create a node if disposal wins an initialization race", async () => {
     const moduleLoad = deferred<void>();
     const fixture = createAudioFixture(() => moduleLoad.promise);
@@ -86,10 +119,14 @@ describe("WebAudioOutput", () => {
   });
 });
 
-function createAudioFixture(loadModule: () => Promise<void> = async () => undefined) {
+function createAudioFixture(
+  loadModule: () => Promise<void> = async () => undefined,
+  resumeContext: () => Promise<void> = async () => undefined,
+) {
   const messages: Array<{ message: unknown; transfer?: readonly Transferable[] }> = [];
   const addModule = vi.fn<() => Promise<void>>(loadModule);
   const resume = vi.fn<() => Promise<void>>(async () => {
+    await resumeContext();
     context.state = "running";
   });
   const suspend = vi.fn<() => Promise<void>>(async () => {
@@ -130,6 +167,7 @@ function createAudioFixture(loadModule: () => Promise<void> = async () => undefi
     addModule,
     close,
     connect,
+    contextState: () => context.state,
     createNode,
     environment,
     emitFromWorklet(message: unknown) {

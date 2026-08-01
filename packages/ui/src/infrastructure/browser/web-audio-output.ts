@@ -44,6 +44,8 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   private node: AudioWorkletNode | undefined;
   private initialization: Promise<void> | undefined;
   private generation = 0;
+  private wantsRunningContext = false;
+  private contextStateTail: Promise<void> = Promise.resolve();
   private bufferPolicy = createAudioBufferPolicy(44_100);
   private readonly pendingBatches: Float32Array<ArrayBuffer>[] = [];
   private readonly batcher = new AudioSampleBatcher(AUDIO_BATCH_SIZE, (batch) =>
@@ -71,8 +73,9 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   }
 
   activate(): void {
+    this.wantsRunningContext = true;
     const context = this.ensureContext();
-    void this.startContext(context).catch(() => undefined);
+    void this.requestRunningContext(context).catch(() => undefined);
   }
 
   writeSample(sample: number): void {
@@ -81,6 +84,7 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   }
 
   async resume(): Promise<"running" | "blocked"> {
+    this.wantsRunningContext = true;
     const context = this.ensureContext();
 
     return new Promise((resolve) => {
@@ -92,7 +96,7 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
         resolve(result);
       };
       const timeout = setTimeout(() => finish("blocked"), AUDIO_RESUME_TIMEOUT_MS);
-      void this.startContext(context).then(
+      void this.requestRunningContext(context).then(
         (running) => finish(running ? "running" : "blocked"),
         () => finish("blocked"),
       );
@@ -100,13 +104,17 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
   }
 
   async suspend(): Promise<void> {
+    this.wantsRunningContext = false;
     this.resetBufferedAudio();
-    await this.context?.suspend();
+    const context = this.context;
+    if (context) await this.enqueueContextReconciliation(context);
   }
 
   async dispose(): Promise<void> {
+    this.wantsRunningContext = false;
     const context = this.context;
     const initialization = this.initialization;
+    const contextStateTail = this.contextStateTail;
     const node = this.node;
     this.generation++;
     this.context = undefined;
@@ -117,7 +125,7 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
       node.port.onmessage = null;
       node.disconnect();
     }
-    await initialization?.catch(() => undefined);
+    await Promise.all([initialization?.catch(() => undefined), contextStateTail]);
     if (context?.state !== "closed") await context?.close();
   }
 
@@ -165,11 +173,38 @@ export class WebAudioOutput implements AudioSampleSink, AudioLifecyclePort {
     this.flushPendingBatches();
   }
 
-  private async startContext(context: AudioContext): Promise<boolean> {
+  private async requestRunningContext(context: AudioContext): Promise<boolean> {
     await this.initialization;
-    if (context !== this.context || context.state === "closed") return false;
-    if (context.state !== "running") await context.resume();
-    return context === this.context && context.state === "running";
+    if (context !== this.context || context.state === "closed" || !this.wantsRunningContext) {
+      return false;
+    }
+    return this.enqueueContextReconciliation(context);
+  }
+
+  private enqueueContextReconciliation(context: AudioContext): Promise<boolean> {
+    const transition = this.contextStateTail.then(() => this.reconcileContextState(context));
+    this.contextStateTail = transition.then(
+      () => undefined,
+      () => undefined,
+    );
+    return transition;
+  }
+
+  private async reconcileContextState(context: AudioContext): Promise<boolean> {
+    while (this.isCurrentContext(context)) {
+      const shouldRun = this.wantsRunningContext;
+      if (shouldRun && context.state !== "running") await context.resume();
+      else if (!shouldRun && context.state === "running") await context.suspend();
+
+      if (!this.isCurrentContext(context)) return false;
+      if (this.wantsRunningContext !== shouldRun) continue;
+      return shouldRun && context.state === "running";
+    }
+    return false;
+  }
+
+  private isCurrentContext(context: AudioContext): boolean {
+    return context === this.context && context.state !== "closed";
   }
 
   private enqueueBatch(batch: Float32Array<ArrayBuffer>): void {

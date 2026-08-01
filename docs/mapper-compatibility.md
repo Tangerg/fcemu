@@ -16,7 +16,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                    |
 | 3      | CNROM          | Verified    | Tests; pinned _The Legend of Kage_ real-ROM runner                 |
 | 4      | MMC3           | Verified    | A12/IRQ tests; pinned _Super Mario Bros. 3_ real-ROM runner        |
-| 5      | MMC5/ExROM     | Implemented | Banking/ExRAM/split/IRQ/audio/state tests; no conformance ROM      |
+| 5      | MMC5/ExROM     | Verified    | Tests; pinned _Uchuu Keibitai SDF_ ELROM real-ROM runner           |
 | 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture              |
 | 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned          |
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture        |
@@ -235,7 +235,13 @@ and `$6000.D6` supplying PRG A18.
   The write key remains the exact `$5102=2`, `$5103=1` pair. Scanline, MMC5A timer and PCM sources
   share one level-sensitive IRQ output, while the two pulse channels and PCM DAC enter the normal
   expansion-audio path. Unknown diagnostic pins and `$5207/$5208` behavior remain open bus instead
-  of fabricated registers.
+  of fabricated registers. The pinned HVC-ELROM-01 _Uchuu Keibitai SDF_ profile matches independent
+  PRG/CHR CRCs `D979C8B7`/`8734D65D` and the board's physical zero-WRAM layout. Its 1,800-frame
+  scenario produces 1,079 distinct frames while exercising both CHR register sets, ExRAM modes 0
+  and 2, dynamic nametable routing, multiplication and both pulse channels; exact mapper checkpoints
+  plus a 120-frame video/audio save-state replay lock that path. Focused tests, rather than this one
+  title, remain the evidence for CHR high bits, vertical split, scanline/timer/PCM IRQ edges and
+  unexercised RAM geometries.
 - Mappers 6/8/12.1/17 follow their current NESdev disk-extraction definitions rather than the obsolete
   FFE ASIC approximations found in older emulator tables. The iNES PRG/CHR payload initializes
   mutable card RAM, and each board owns exactly 32 KiB of volatile work RAM with no battery-backed

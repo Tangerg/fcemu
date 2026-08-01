@@ -312,6 +312,14 @@ dividers participate in validated save states. Undocumented `$5207/$5208` and di
 `$5800-$5BFF` behavior remain open bus. See [NESdev MMC5](https://www.nesdev.org/wiki/MMC5) and
 [MMC5 audio](https://www.nesdev.org/wiki/MMC5_audio).
 
+The pinned HVC-ELROM-01 _Uchuu Keibitai SDF_ profile identifies its 128 KiB PRG and 128 KiB CHR
+payload with independent CRCs `D979C8B7`/`8734D65D`; an exact legacy-content record corrects the
+old iNES header's otherwise ambiguous RAM field to the board's physical zero-WRAM layout. The
+public-facade run reaches active play for 1,800 frames and locks video, audio, CPU cycles, both CHR
+register sets, ExRAM modes 0/2, nametable routing, multiplication, dual-pulse state and a 120-frame
+save-state replay. CHR high-bit banking, vertical split, scanline/timer/PCM IRQ edges and other RAM
+geometries retain their focused test evidence and are not inferred from this title.
+
 ## FFE Magic Card / Super Magic Card (6, 8, 17)
 
 These mapper numbers identify play-mode disk extractions for Front Fareast copier RAM cards, not

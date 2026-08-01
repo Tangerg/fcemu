@@ -4,7 +4,7 @@ The Cartridge subsystem turns a raw ROM image (`ArrayBuffer`) into an immutable-
 that owns program/character ROM, the four physically distinct writable memory regions, and the
 board-identifying facts a mapper needs. Parsing, policy, and memory are deliberately separated:
 `parseCartridgeHeader` interprets iNES/NES 2.0 header bytes into a frozen `CartridgeHeader`, the
-content-addressed legacy VS lookup fills hardware facts that iNES could not encode, the `Cartridge`
+content-addressed legacy-ROM lookup fills hardware facts that iNES could not encode, the `Cartridge`
 aggregate applies the core's supported-format policy (rejecting layouts it cannot represent with
 `CartridgeFormatError`), and `CartridgeMemory` owns all mutable RAM/NVRAM behind logical address
 spaces that never expose their backing arrays. Mapper selection consumes this aggregate but lives
@@ -24,9 +24,9 @@ constructor is private. It runs a fixed pipeline:
    `CARTRIDGE_HEADER_SIZE` (16): optional 512-byte trainer, then PRG ROM, then CHR ROM. Each slice
    is bounds-checked against `arrayBuffer.byteLength` and raises a distinct incompleteness error if
    the file is truncated.
-4. `enrichLegacyVsRomMetadata` checks an exact mapper/size/PRG-CRC/CHR-CRC tuple when an iNES image
-   declares VS System hardware; unknown payloads and every NES 2.0 image remain untouched. A changed
-   header is validated again before construction.
+4. `enrichLegacyRomMetadata` checks an exact console/mapper/size/PRG-CRC/CHR-CRC tuple for an iNES
+   image. Known records may complete otherwise absent board facts; unknown payloads and every NES
+   2.0 image remain untouched. A changed header is validated again before construction.
 5. The private constructor allocates `CartridgeMemory` from the header's four RAM sizes, retains an
    immutable trainer copy, performs the default PRG-memory initialization when applicable, and
    freezes the derived board facts.
@@ -97,18 +97,20 @@ Mapper 77 adds 8 KiB of board-implied RAM beside CHR ROM, and mapper 119 similar
 and mappers select the single-screen variants at runtime. `timingMode` is a `CartridgeTimingMode`
 enum (`Ntsc`, `Pal`, `MultiRegion`, `Dendy`).
 
-### Legacy VS content metadata
+### Legacy content metadata
 
-iNES can identify a VS image but cannot identify its RGB PPU permutation, protection hardware or
-controller-port convention. `legacy-vs-rom-metadata.ts` therefore performs the content lookup
-recommended for old VS dumps. A match requires the mapper number, both ROM lengths and independent
-CRC-32 values for the extracted PRG and CHR regions; filenames and headers alone never select an
-entry. The initial record is _Vs. Soccer_ set SC4-3: PRG CRC `46914E3E`, CHR CRC `FEBB5370`,
-`RP2C04-0003` (`vsPpuType = 4`), normal UniSystem hardware and player-one gameplay on `$4017`.
+iNES cannot encode some board facts reliably: VS images omit RGB PPU/protection/control wiring, and
+a zero RAM byte means either unspecified memory or no chip. `legacy-rom-metadata.ts` performs a
+narrow content lookup only where physical board evidence resolves that ambiguity. A match requires
+console type, mapper number, both ROM lengths and independent CRC-32 values for the extracted PRG
+and CHR regions; filenames and headers alone never select an entry. _Vs. Soccer_ set SC4-3 (PRG
+`46914E3E`, CHR `FEBB5370`) resolves to `RP2C04-0003`, normal UniSystem hardware and player-one
+gameplay on `$4017`. HVC-ELROM-01 _Uchuu Keibitai SDF_ (PRG `D979C8B7`, CHR `8734D65D`) resolves
+the generic 8 KiB fallback to its physical zero-WRAM layout.
 
-The lookup completes metadata only; it never changes ROM bytes, mapper identity or geometry. An
-unknown legacy payload retains the conservative iNES defaults, while NES 2.0 byte 13 and byte 15
-remain authoritative even if their PRG/CHR bytes match a catalog entry.
+The lookup completes metadata only; it never changes ROM bytes, mapper identity or ROM geometry.
+Unknown legacy payloads retain conservative iNES defaults, while all explicit NES 2.0 fields remain
+authoritative even if their PRG/CHR bytes match a catalog entry.
 
 ### ROM size encoding
 

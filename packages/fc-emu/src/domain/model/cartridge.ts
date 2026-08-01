@@ -14,7 +14,7 @@ import {
   type CartridgeMemoryState,
   type CartridgeSaveSnapshot,
 } from "./cartridge-memory.js";
-import { enrichLegacyVsRomMetadata } from "./legacy-vs-rom-metadata.js";
+import { enrichLegacyRomMetadata } from "./legacy-rom-metadata.js";
 
 export { CartridgeFormatError } from "./cartridge-format-error.js";
 export type { CartridgeFormatErrorCode } from "./cartridge-format-error.js";
@@ -81,7 +81,7 @@ class Cartridge {
       chrRom = new Uint8Array(arrayBuffer.slice(offset, offset + parsedHeader.chrRomSize));
     }
 
-    const header = enrichLegacyVsRomMetadata(parsedHeader, prgRom, chrRom);
+    const header = enrichLegacyRomMetadata(parsedHeader, prgRom, chrRom);
     if (header !== parsedHeader) Cartridge.validateSupportedHeader(header, sourceName);
     return new Cartridge(header, prgRom, chrRom, trainer);
   }

@@ -81,7 +81,9 @@ PRG/CHR bytes but retains the EEPROM and its independent battery-save revision.
 Mapper 5 always owns 1 KiB of volatile ExRAM independently from header RAM fields; the battery flag
 never makes ExRAM persistent. ExROM accepts CHR ROM and 32 KiB–1 MiB PRG/8 KiB–1 MiB CHR ROM
 geometry. Writable PRG memory may be absent, one 8 KiB chip, one 32 KiB chip, or ETROM's exact
-8 KiB volatile plus 8 KiB battery pair. Legacy iNES retains its conventional single 8 KiB chip.
+8 KiB volatile plus 8 KiB battery pair. Legacy iNES retains its conventional single 8 KiB chip
+unless an exact content record establishes a different physical layout; the pinned HVC-ELROM-01
+_Uchuu Keibitai SDF_ identity establishes no external WRAM.
 NES 2.0 submapper 0 is accepted; unallocated variants and four-screen headers fail closed because
 MMC5 owns all four nametable routes itself.
 
@@ -125,11 +127,12 @@ protection. DualSystem types 5–6 require two synchronized CPUs/PPUs, watchdog 
 arbitration and therefore fail closed. Default expansion values 0, 4 and 5 are accepted; 4/5 state
 whether player one is reported through `$4016` or `$4017`.
 
-Legacy iNES has none of those PPU or input fields. The core may complete them only through an exact
-content record containing mapper, PRG/CHR lengths and independent PRG/CHR CRC-32 values. The pinned
-_Vs. Soccer_ SC4-3 payload resolves to `RP2C04-0003` and reversed gameplay-stick routing; unknown
-payloads keep the conservative 2C03/default-routing interpretation. Explicit NES 2.0 metadata always
-wins, and the lookup never repairs or rewrites a ROM image.
+Legacy iNES cannot encode several board facts reliably. The core may complete them only through an
+exact content record containing console type, mapper, PRG/CHR lengths and independent PRG/CHR
+CRC-32 values. The pinned _Vs. Soccer_ SC4-3 payload resolves to `RP2C04-0003` and reversed
+gameplay-stick routing; HVC-ELROM-01 _Uchuu Keibitai SDF_ resolves the ambiguous zero byte 8 to its
+physical zero-WRAM layout. Unknown payloads keep conservative iNES defaults. Explicit NES 2.0
+metadata always wins, and the lookup never repairs or rewrites a ROM image.
 
 ## Mapper variants and board shape
 

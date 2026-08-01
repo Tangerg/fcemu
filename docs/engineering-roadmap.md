@@ -13,11 +13,11 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 97 implemented mapper IDs; thirty-four mapper IDs currently have reproducible external or pinned
+- 97 implemented mapper IDs; thirty-five mapper IDs currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-17 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
-- Checksum-pinned external conformance runners and thirty-three local real-ROM smoke profiles.
+- Checksum-pinned external conformance runners and thirty-four local real-ROM smoke profiles.
 - A built-package consumer gate for public declarations, runtime exports and blocked deep imports.
 
 See [Mapper compatibility](./mapper-compatibility.md) and [Testing](./testing.md) for the precise

@@ -78,6 +78,7 @@ import { TaitoTc0690Mapper, type TaitoTc0690IrqRevision } from "./taito-tc0690-m
 import { TaitoX1005Mapper } from "./taito-x1-005-mapper.js";
 import { TaitoX1017Mapper } from "./taito-x1-017-mapper.js";
 import { TxcMmc3189Mapper } from "./txc-mmc3-189-mapper.js";
+import { Unl187Mapper } from "./unl-187-mapper.js";
 import { Sunsoft1Mapper } from "./sunsoft1-mapper.js";
 import { Sunsoft2Mapper } from "./sunsoft2-mapper.js";
 import { Sunsoft3Mapper } from "./sunsoft3-mapper.js";
@@ -613,6 +614,10 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireChrRom(cartridge, "CNROM protection");
       requireNoPrgRam(cartridge);
       return new CnromProtectionMapper(cartridge, resolveCnromProtectionChip(cartridge));
+    case 187:
+      requireBaseSubmapper(cartridge);
+      requireUnl187Layout(cartridge);
+      return new Unl187Mapper(interruptPort, cartridge);
     case 189:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x20_000, 0x0400, 0x2000);
@@ -1173,6 +1178,18 @@ function requireTqromLayout(cartridge: Cartridge): void {
   if (cartridge.chrWritableBytes !== 0x2000 || cartridge.chrNvRamBytes !== 0) {
     throw configurationError(cartridge, "TQROM requires 8 KiB of volatile CHR RAM");
   }
+}
+
+function requireUnl187Layout(cartridge: Cartridge): void {
+  if (![0x20_000, 0x40_000].includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, "UNL mapper 187 PRG ROM must be 128 KiB or 256 KiB");
+  }
+  if (![0x40_000, 0x80_000].includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, "UNL mapper 187 CHR ROM must be 256 KiB or 512 KiB");
+  }
+  requireChrRom(cartridge, "UNL mapper 187");
+  requireNoBatteryPrgRam(cartridge, "UNL mapper 187");
+  requireTwoScreenNametables(cartridge, "UNL mapper 187");
 }
 
 function requireIremLrog017Layout(cartridge: Cartridge): void {

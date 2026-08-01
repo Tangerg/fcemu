@@ -103,6 +103,12 @@ export type MapperState =
       readonly lastPpuAddress: number;
     }
   | {
+      readonly kind: "unl-187";
+      readonly prgControl: number;
+      readonly securityIndex: number;
+      readonly mmc3: Mmc3State;
+    }
+  | {
       readonly kind: "sachen-sa015-150";
       readonly selectedRegister: number;
       readonly registers: readonly number[];

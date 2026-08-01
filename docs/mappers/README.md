@@ -194,6 +194,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 182 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
 | 184 | Sunsoft-1      | `sunsoft-1`               | `sunsoft1-mapper.ts`         | no            | no   |
 | 185 | CNROM protect  | `cnrom-protection`        | `cnrom-protection-mapper.ts` | AND           | no   |
+| 187 | UNL SF3/KOF96  | `unl-187`                 | `unl-187-mapper.ts`          | no            | A12  |
 | 189 | TXC MMC3       | `txc-mmc3-189`            | `txc-mmc3-189-mapper.ts`     | no            | A12  |
 | 206 | Namco 118      | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 225 | ET-4310/K-1010 | `address-latch-multicart` | shared multicart mapper      | no            | no   |
@@ -1361,6 +1362,30 @@ board's enable wiring, the cartridge tri-states PPU pattern reads. NES 2.0 subma
 identify enable values 0-3 and are supported; legacy/submapper 0 does not identify that value and
 fails closed. PRG stays fixed as a 16 KiB mirrored or 32 KiB image, and PRG RAM is absent. See
 [NESdev mapper 185](https://www.nesdev.org/wiki/INES_Mapper_185).
+
+## UNL SF3/KOF96 (187)
+
+Mapper 187 wraps an MMC3-compatible core with the protection and outer-bank logic used by the
+unlicensed SF3/KOF96 boards. Exact writes to `$5000` or `$6000` update the outer PRG register. With
+D7 clear, MMC3 R6/R7 and PRG mode select the four 8 KiB windows through a six-bit bank path. With D7
+set, the outer register replaces that path with either a mirrored 16 KiB bank or one of two 32 KiB
+wiring modes selected by D5/D6. PRG ROM is 128 or 256 KiB, and the board exposes no PRG-RAM window.
+
+The MMC3 core retains horizontal/vertical mirroring and its filtered-A12 IRQ counter. CHR ROM is 256
+or 512 KiB; CHR A18 is asserted only for the four PPU slots currently sourced by MMC3's two 2 KiB
+registers R0/R1, including when CHR mode exchanges the pattern-table halves. Reads throughout
+`$5000-$5FFF` drive the board's reachable `$83` protection response. An exact `$8000` write arms the
+exact `$8001` bank-data port, so that one address is ignored beforehand; other mirrored MMC3
+register aliases retain their normal decode independently of the gate.
+
+Checksum-pinned _The King of Fighters '96_ and _Street Fighter Zero 2 '97_ profiles cover both
+published PRG/CHR capacities, outer-override activity, 2,400 input-driven frames, exact visual,
+audio and CPU-cycle checkpoints, and deterministic 120-frame save-state replay. The local
+`sf97.nes` image does not follow this board's startup protocol despite declaring mapper 187, so it
+remains rejected as suspect metadata rather than receiving a title-hash compatibility path. The
+implementation follows matching behavior in
+[Mesen 2](https://github.com/SourMesen/Mesen2/blob/b9fa69ddc6d0a331fb103fdb5eef6904305703c2/Core/NES/Mappers/Mmc3Variants/MMC3_187.h) and
+[FCEUX](https://github.com/TASEmulators/fceux/blob/a62b868e9247c4aafd66f597cdfa8d2609704087/src/boards/187.cpp).
 
 ## TXC MMC3 (189)
 

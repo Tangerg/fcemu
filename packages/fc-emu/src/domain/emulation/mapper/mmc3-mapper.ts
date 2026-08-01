@@ -229,6 +229,12 @@ export class Mmc3Mapper implements Mapper {
     return this.chrBankValue(address & 0x1fff);
   }
 
+  /** Reports whether this PPU slot is currently sourced by MMC3 register R0 or R1. */
+  selectedChrBankUsesTwoKilobyteRegister(address: number): boolean {
+    const slot = (address >>> 10) & 0x07;
+    return this.chrMode === 0 ? slot < 4 : slot >= 4;
+  }
+
   write(address: number, value: number): void {
     if (address < 0x2000) {
       if (this.board === "tqrom") {

@@ -89,6 +89,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
 | 184    | Sunsoft-1      | Verified    | Board tests; pinned _The Wing of Madoola_ real-ROM runner          |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
+| 187    | UNL SF3/KOF96  | Verified    | Board tests; pinned _KOF '96_ and _SF Zero 2 '97_ runners          |
 | 189    | TXC MMC3       | Verified    | Outer-PRG/MMC3/IRQ tests; pinned _Thunder Warrior_ real-ROM runner |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
@@ -108,7 +109,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -198,7 +199,7 @@ and `$6000.D6` supplying PRG A18.
   one of the console's two CIRAM pages. Historical BNTest execution is not treated as current
   `Verified` evidence until its fixture identity and runner are pinned.
 - NES 2.0 PRG-RAM declarations are also rejected for mappers
-  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/142/150/152/180/182/184/185/206/244/248 because those
+  9/11/13/32/33/41/64/66/70/71/75/76/78/79/87/88/89/91/93/94/95/97/114/115/117/119/133/140/142/150/152/180/182/184/185/187/206/244/248 because those
   selected boards do not decode a writable `$6000-$7FFF` window. Legacy iNES's implicit 8 KiB
   allocation remains a parser-compatibility detail but is not exposed by these mappers.
 - Mapper 1 resolves standard, SUROM, SOROM, SXROM and SZROM wiring from memory geometry. Its CHR
@@ -622,6 +623,14 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 185 keeps CNROM's fixed 16/32 KiB PRG and AND-conflicted two-bit latch but uses the latch as
   CHR-ROM chip select. NES 2.0 submappers 4-7 name enable values 0-3. Any other value tri-states the
   PPU data pins, whose undriven read follows the address low byte; unknown legacy wiring is rejected.
+- Mapper 187 layers the UNL SF3/KOF96 protection and outer-bank circuit over a standard MMC3 core.
+  Exact `$5000`/`$6000` writes choose normal six-bit MMC3 PRG banking, mirrored 16 KiB banking or
+  either documented 32 KiB wiring; CHR A18 applies only to slots sourced by R0/R1. The expansion
+  range returns the board's `$83` protection value, and `$8001` remains gated until an exact `$8000`
+  write. Pinned _The King of Fighters '96_ and _Street Fighter Zero 2 '97_ profiles verify the
+  256/512 KiB CHR and 128/256 KiB PRG board capacities with exact frame/audio/cycle checkpoints and
+  deterministic replay. A local `sf97.nes` mapper-187 header conflicts with the observed startup
+  protocol and is deliberately not repaired with a checksum-based board guess.
 - Mapper 189 composes a standard MMC3 clone with TXC's independent 32 KiB PRG outer latch. Writes
   across the generalized `$4020-$7FFF` decode OR the data byte's upper and lower nibbles to select
   one of eight whole PRG banks; MMC3 R6/R7 and PRG mode cannot split that external window. The MMC3

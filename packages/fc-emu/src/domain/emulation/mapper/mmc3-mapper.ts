@@ -5,7 +5,7 @@ import { MapperKind } from "./mapper-kind.js";
 import type { Mapper, MapperInterruptPort, MapperState, Mmc3State } from "./mapper.js";
 import { areBooleans, isFixedByteArray } from "./state-validation.js";
 
-export type Mmc3Board = "standard" | "txsrom" | "tqrom";
+export type Mmc3Board = "standard" | "txsrom" | "tqrom" | "waixing-type-a";
 
 /** Nintendo MMC3 register core with revision-B IRQ behavior and explicit board wiring. */
 export class Mmc3Mapper implements Mapper {
@@ -171,6 +171,7 @@ export class Mmc3Mapper implements Mapper {
   read(address: number): number {
     if (address < 0x2000) {
       if (this.board === "tqrom") return this.readTqromChr(address);
+      if (this.board === "waixing-type-a") return this.readWaixingTypeAChr(address);
       const bank = Math.floor(address / 0x0400);
       const offset = address % 0x0400;
       return this.cartridge.readChr(this.chrOffsets[bank] + offset);
@@ -229,6 +230,10 @@ export class Mmc3Mapper implements Mapper {
     if (address < 0x2000) {
       if (this.board === "tqrom") {
         this.writeTqromChr(address, value);
+        return;
+      }
+      if (this.board === "waixing-type-a") {
+        this.writeWaixingTypeAChr(address, value);
         return;
       }
       const bank = Math.floor(address / 0x0400);
@@ -369,6 +374,20 @@ export class Mmc3Mapper implements Mapper {
     if ((bank & 0x40) === 0) return;
     const offset = (bank & 0x07) * 0x0400 + (address & 0x03ff);
     this.cartridge.writeWritableChr(offset, value);
+  }
+
+  private readWaixingTypeAChr(address: number): number {
+    const bank = this.chrBankValue(address);
+    if (bank === 0x08 || bank === 0x09) {
+      return this.cartridge.readWritableChr((bank - 0x08) * 0x0400 + (address & 0x03ff));
+    }
+    return this.cartridge.readChr(this.chrBankOffset(bank) + (address & 0x03ff));
+  }
+
+  private writeWaixingTypeAChr(address: number, value: number): void {
+    const bank = this.chrBankValue(address);
+    if (bank !== 0x08 && bank !== 0x09) return;
+    this.cartridge.writeWritableChr((bank - 0x08) * 0x0400 + (address & 0x03ff), value);
   }
 
   private get mapsPrgRam(): boolean {

@@ -271,6 +271,23 @@ describe("Cartridge", () => {
     expect(cartridge.readWritableChr(0x10)).toBe(0x42);
   });
 
+  it("adds Waixing Type A's board-implied 2 KiB CHR RAM to legacy CHR ROM", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 74, prgBanks: 8, chrBanks: 32 }),
+    );
+    cartridge.chrRom[0x10] = 0x31;
+    cartridge.writeWritableChr(0x10, 0x42);
+
+    expect(cartridge).toMatchObject({
+      chrRom: expect.objectContaining({ length: 0x40_000 }),
+      chrRamBytes: 0x0800,
+      chrWritableBytes: 0x0800,
+      hasWritableChrMemory: true,
+    });
+    expect(cartridge.readChr(0x10)).toBe(0x31);
+    expect(cartridge.readWritableChr(0x10)).toBe(0x42);
+  });
+
   it.each([
     { mapper: 16, battery: true, prgRamBytes: 0, prgNvRamBytes: 0x100 },
     { mapper: 80, battery: false, prgRamBytes: 0x80, prgNvRamBytes: 0 },

@@ -154,6 +154,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 71  | Codemasters    | `codemasters`             | `codemasters-mapper.ts`      | no            | no   |
 | 72  | Jaleco JF-17   | `jaleco-jf17`             | `jaleco-jf17-mapper.ts`      | AND           | no   |
 | 73  | Konami VRC3    | `vrc3`                    | `vrc3-mapper.ts`             | no            | cyc. |
+| 74  | Waixing Type A | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 75  | Konami VRC1    | `vrc1`                    | `vrc1-mapper.ts`             | no            | no   |
 | 76  | Namco 3446     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 77  | Irem LROG017   | `irem-lrog017`            | `irem-lrog017-mapper.ts`     | AND           | no   |
@@ -712,6 +713,23 @@ upper byte remains unchanged. `$C000` control writes acknowledge IRQ and optiona
 counter; `$D000` acknowledges and copies the saved A flag into the enable flag. The implementation
 keeps this counter separate from the scanline-capable VRC4/VRC6/VRC7 IRQ core. See
 [NESdev VRC3](https://www.nesdev.org/wiki/VRC3).
+
+## Waixing Type A (74)
+
+Waixing's 43-393/43-406/860908C board retains the MMC3 PRG windows, `$A000` horizontal/vertical
+mirroring, optional direct 8 KiB PRG RAM/NVRAM protection and filtered PPU-A12 IRQ. Its CHR path is
+not ordinary MMC3 and does not make CHR ROM generally writable: an exact 1 KiB bank value `$08` or
+`$09` selects the corresponding half of a board-owned 2 KiB volatile CHR RAM, while every other
+value selects CHR ROM. R0 still forms a 2 KiB pair, so selecting `$08` exposes both RAM pages.
+
+Legacy iNES cannot encode mixed CHR memory, so the board policy supplies the physical 2 KiB RAM;
+NES 2.0 must declare exactly that capacity. The accepted base board has 128–512 KiB PRG ROM,
+8–256 KiB CHR ROM, submapper 0 and two-screen mirroring. Threshold-based RAM selection, writable
+CHR-ROM compatibility behavior, pure-CHR-RAM images and oversized or four-screen variants fail
+closed. Two local exact-geometry images exercise `$08/$09`, modify CHR RAM, advance through hundreds
+of distinct frames and reproduce identical 60-frame save-state replays; their copyrighted payloads
+and checksums remain outside the repository. See
+[NESdev mapper 74](https://www.nesdev.org/wiki/INES_Mapper_074).
 
 ## Konami VRC1 (75)
 

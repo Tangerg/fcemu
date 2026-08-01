@@ -49,6 +49,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                       |
 | 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
 | 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
+| 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
 | 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM            |
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
 | 77     | Irem LROG017   | Implemented | Mixed-CHR/nametable/open-bus/state tests; one local replay smoke   |
@@ -88,7 +89,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/189/206/245 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/118/119/140/152/184/189/206/245 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -323,6 +324,12 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   control/acknowledge path copies A to E exactly as hardware documents. Three user-local images
   completed 240-frame runs with deterministic 60-frame save-state replay. Their bytes and hashes
   remain outside the repository, so this is `Implemented` evidence rather than `Verified`.
+- Mapper 74 (Waixing Type A) keeps standard MMC3 PRG banking, mirroring, direct PRG-RAM protection
+  and filtered A12 IRQ, but exact 1 KiB CHR bank values `$08/$09` redirect to the two halves of 2 KiB
+  volatile CHR RAM. All other values remain CHR ROM; there is no threshold, masked alias or generic
+  writable-ROM fallback. Two local exact-geometry images select both RAM pages, modify them, advance
+  through hundreds of frames and reproduce deterministic save-state replays. Their copyrighted
+  bytes and checksums remain outside the repository, so status stays `Implemented`.
 - Mapper 75 (Konami VRC1) exposes three switchable 8 KiB PRG banks followed by the fixed final bank,
   plus two 4 KiB CHR banks whose fifth select bits share the horizontal/vertical mirroring register.
   Four-screen cartridges ignore that mirroring output; the ASIC has no IRQ, PRG RAM or bus

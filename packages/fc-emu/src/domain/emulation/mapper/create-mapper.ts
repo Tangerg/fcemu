@@ -321,6 +321,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireOptional8KiBPrgRam(cartridge, "Konami VRC3");
       requireTwoScreenNametables(cartridge, "Konami VRC3");
       return new Vrc3Mapper(interruptPort, cartridge);
+    case 74:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x20_000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x80_000, 0x40_000);
+      requireWaixingTypeAChrMemory(cartridge);
+      requireMmc3PrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Waixing Type A");
+      return new Mmc3Mapper(interruptPort, cartridge, "waixing-type-a");
     case 75:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x1000, 0x2000);
@@ -681,6 +689,19 @@ function requireWaixingF003PrgNvRam(cartridge: Cartridge): void {
     cartridge.prgNvRamBytes !== 0x2000
   ) {
     throw configurationError(cartridge, "Waixing F003 requires 8 KiB of battery-backed PRG NVRAM");
+  }
+}
+
+function requireWaixingTypeAChrMemory(cartridge: Cartridge): void {
+  if (
+    cartridge.chrRom.byteLength === 0 ||
+    cartridge.chrRamBytes !== 0x0800 ||
+    cartridge.chrNvRamBytes !== 0
+  ) {
+    throw configurationError(
+      cartridge,
+      "Waixing Type A requires CHR ROM plus exactly 2 KiB of volatile CHR RAM",
+    );
   }
 }
 

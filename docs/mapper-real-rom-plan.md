@@ -147,6 +147,10 @@ the same ID covers materially different hardware that the primary image cannot e
   baseline yet.
 - Mapper 99 is not the whole VS platform. Some VS protection games use mapper 206; their VS console
   metadata must remain present for cabinet inputs, RGB PPU selection and protection reads.
+- Mapper 113 is the HES/AVE multicart extension of mapper 79. Reject 32 KiB single-game NINA-03/06
+  images such as legacy-header _AV Soccer_ even when their iNES mapper field says 113: applying the
+  multicart's D7 mirroring control corrupts their selection screen. Require _HES 6-in-1_,
+  _Mind Blower Pak_ or _Total Funpak_ with board-consistent geometry and provenance.
 - Multicart and unlicensed names are frequently reused for different PCBs. Accept them only after
   parsing the actual header and checking ROM geometry against the mapper factory.
 

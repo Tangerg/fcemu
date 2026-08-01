@@ -73,7 +73,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM           |
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
 | 112    | NTDEC/Asder    | Verified    | Banking/state tests; pinned _Sango Fighter_ real-ROM runner        |
-| 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
+| 113    | HES NTD-8      | Implemented | Board/geometry/state tests; local single-game misheaders rejected  |
 | 114    | SuperGame MMC3 | Verified    | Scramble/MMC3A tests; pinned _The Lion King_ real-ROM runner       |
 | 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
@@ -431,9 +431,12 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 113 (HES NTD-8) extends that expansion latch without approximating it as mapper 79. D5-D3
   select up to eight 32 KiB PRG banks; D6 joins D2-D0 as the non-contiguous 8 KiB CHR bank field;
   D7 selects horizontal/vertical mirroring. The board has no bus conflicts, IRQ, PRG RAM or driven
-  expansion reads. Focused state and geometry tests pass, and four user-local images completed
-  240-frame runs with deterministic 60-frame save-state replay; their bytes and hashes are not
-  repository fixtures, so the status remains `Implemented` rather than `Verified`.
+  expansion reads. Focused state and geometry tests pass. Four user-local 32 KiB single-game images
+  previously used as short replay smokes were audited as NINA-03/NINA-06 software with mapper-113
+  headers, not HES NTD-8 multicarts. In particular, applying D7 as mapper-controlled mirroring to
+  _AV Soccer_ corrupts its selection screen, while the mapper-79 hardwired-mirroring contract renders
+  it coherently. Those images are now rejected as mapper-113 evidence; a checksum-pinned _HES 6-in-1_,
+  _Mind Blower Pak_ or _Total Funpak_ image is still required for `Verified` status.
 - Mapper 114 models the SuperGame protection board around an MMC3A core. Submappers 0/1 retain their
   different register-address and bank-index permutations. `$6000` selects mirrored NROM-128 or
   paired NROM-256 override windows and `$6001` supplies CHR A18 without passing through MMC3 WRAM

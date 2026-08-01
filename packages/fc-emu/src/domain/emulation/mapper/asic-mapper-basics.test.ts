@@ -114,6 +114,18 @@ describe("basic ASIC mappers", () => {
     expect(readAt(bus.Mapper, [0x8000, 0x0000])).toEqual([1, 5]);
   });
 
+  it("keeps Mapper 79 solder-pad mirroring fixed when ignored latch bits change", () => {
+    const cartridge = createTestCartridge({ mapper: 79, prgBanks: 4, chrBanks: 8 });
+    cartridge.mirroringMode = NametableMirroring.Vertical;
+    const memory = new CPUMemory(new Bus(cartridge));
+
+    memory.write(0x4120, 0xbf);
+    expect(cartridge.mirroringMode).toBe(NametableMirroring.Vertical);
+
+    memory.write(0x4120, 0x3f);
+    expect(cartridge.mirroringMode).toBe(NametableMirroring.Vertical);
+  });
+
   it("maps TAM-S1's fixed-last lower window, switchable upper window and mirroring", () => {
     const cartridge = createTestCartridge({ mapper: 97, prgBanks: 16 });
     fillBanks(cartridge.prgRom, 0x4000);

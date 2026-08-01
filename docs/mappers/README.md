@@ -1115,7 +1115,14 @@ one of sixteen 8 KiB CHR-ROM banks. Bit 7 selects horizontal (0) or vertical (1)
 Expansion reads remain open bus. The board has no PRG RAM, bus conflicts, IRQ or expansion audio;
 power-on clears both bank fields and selects horizontal mirroring. Unsupported submappers,
 four-screen nametable memory, CHR RAM and ROM images beyond 256 KiB PRG or 128 KiB CHR fail closed.
-See [NESdev mapper 113](https://www.nesdev.org/wiki/INES_Mapper_113).
+
+Mapper 113 is specifically the HES/AVE multicart extension; ordinary 32 KiB NINA-03/NINA-06 games
+belong to mapper 79, whose mirroring is hardwired. Four local single-game images with legacy
+mapper-113 headers were rejected as end-to-end evidence after the D7 mirroring behavior visibly
+corrupted _AV Soccer_'s selection screen. Do not weaken the mapper-113 circuit model or checksum-pin
+those images to accommodate a bad header. See
+[NESdev mapper 79](https://www.nesdev.org/wiki/INES_Mapper_079) and
+[NESdev mapper 113](https://www.nesdev.org/wiki/INES_Mapper_113).
 
 ## SuperGame MMC3 clone (114, 182)
 

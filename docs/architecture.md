@@ -206,8 +206,8 @@ The core save-state envelope is version 16. This revision adds the optional VS U
 timed coin contacts, counter output and protection-device position to the bus snapshot. Every
 executing aggregate exposes a typed snapshot with runtime validation. `Bus.restoreState()` is
 transactional: a nested failure rolls the entire machine back to the pre-restore snapshot.
-The APU and VRC mapper trees also validate every descendant before their first assignment, so their
-direct aggregate restorers cannot expose a partially applied child state.
+The CPU, APU, DMA and VRC mapper trees also validate every descendant before their first assignment,
+so their direct aggregate restorers cannot expose a partially applied child state.
 
 The UI runtime port deliberately carries save-state payloads as `unknown`. Its core adapter forwards
 that payload without asserting an internal type; `Emulator.restoreSaveState()` owns envelope

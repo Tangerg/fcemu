@@ -47,6 +47,14 @@ describe("CpuInterruptEntry", () => {
     expect(port.pushes).toEqual([0x80, 0x02, 0x34]);
     expect(port.pc).toBe(0x1234);
   });
+
+  it("rejects an invalid restored entry before constructing it", () => {
+    const state = new CpuInterruptEntry("nmi").captureState();
+
+    expect(() => CpuInterruptEntry.fromState({ ...state, vector: 0xfffe })).toThrow(
+      /interrupt entry/i,
+    );
+  });
 });
 
 type TestPort = CpuInterruptEntryPort & {

@@ -1,3 +1,5 @@
+import { isByte, isIntegerInRange } from "../numeric-range.js";
+
 export type CpuInterruptEntryKind = "irq" | "nmi" | "brk";
 
 export interface CpuInterruptEntryState {
@@ -32,11 +34,26 @@ export class CpuInterruptEntry {
   }
 
   static fromState(state: CpuInterruptEntryState): CpuInterruptEntry {
+    CpuInterruptEntry.validateState(state);
     const entry = new CpuInterruptEntry(state.kind);
     entry.step = state.step;
     entry.vector = state.vector;
     entry.vectorLow = state.vectorLow;
     return entry;
+  }
+
+  static validateState(state: CpuInterruptEntryState): void {
+    const maximumStep = state?.kind === "brk" ? 5 : 6;
+    if (
+      !state ||
+      (state.kind !== "irq" && state.kind !== "nmi" && state.kind !== "brk") ||
+      !isIntegerInRange(state.step, 0, maximumStep) ||
+      (state.vector !== 0xfffa && state.vector !== 0xfffe) ||
+      (state.kind === "nmi" && state.vector !== 0xfffa) ||
+      !isByte(state.vectorLow)
+    ) {
+      throw new RangeError("CPU save state contains an invalid interrupt entry");
+    }
   }
 
   /** Clocks one entry cycle and returns true after the vector high read. */

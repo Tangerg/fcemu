@@ -1722,6 +1722,7 @@ class CPU {
   }
 
   private validateSnapshot(snapshot: CpuSnapshot): void {
+    if (!snapshot?.registers) throw new RangeError("CPU save state is missing registers");
     const registers = snapshot.registers;
     if (
       !isByte(registers.A) ||
@@ -1739,22 +1740,95 @@ class CPU {
     if (!Number.isSafeInteger(snapshot.cpuCycles) || snapshot.cpuCycles < 0) {
       throw new RangeError("CPU save state contains an invalid cycle count");
     }
+    if (
+      typeof snapshot.halted !== "boolean" ||
+      typeof snapshot.interruptPolledThisCycle !== "boolean"
+    ) {
+      throw new RangeError("CPU save state contains an invalid execution flag");
+    }
+    CpuInterruptState.validateState(snapshot.interrupts);
     if (snapshot.interruptEntry && snapshot.activeInstruction) {
       throw new Error("CPU save state cannot contain both an instruction and interrupt entry");
     }
+    if (snapshot.interruptEntry) CpuInterruptEntry.validateState(snapshot.interruptEntry);
     if (
       snapshot.indexedReadResult &&
       (!isWord(snapshot.indexedReadResult.address) || !isByte(snapshot.indexedReadResult.value))
     ) {
       throw new RangeError("CPU save state contains an invalid indexed-read latch");
     }
-    const active = snapshot.activeInstruction;
+    if (snapshot.activeInstruction) this.validateActiveInstruction(snapshot.activeInstruction);
+  }
+
+  private validateActiveInstruction(active: ActiveInstructionState): void {
     if (
-      active &&
-      (!isByte(active.opcode) || typeof active.interruptDisableBeforeInstruction !== "boolean")
+      !active ||
+      !isByte(active.opcode) ||
+      typeof active.interruptDisableBeforeInstruction !== "boolean"
     ) {
       throw new RangeError("CPU save state contains an invalid active instruction");
     }
+    const plan = createInstructionCyclePlan(getInstruction(active.opcode));
+    switch (active.kind) {
+      case "implied":
+        if (plan.kind !== "implied") this.throwInvalidActiveInstruction();
+        return;
+      case "branch":
+        CpuBranchCycle.validateState(active.cycle);
+        if (plan.kind !== "branch") this.throwInvalidActiveInstruction();
+        return;
+      case "memory":
+        CpuMemoryCycle.validateState(active.cycle);
+        if (
+          plan.kind !== "memory" ||
+          plan.operation === InstructionMemoryOperation.ReadModifyWrite ||
+          active.cycle.kind !== plan.cycle ||
+          CpuMemoryCycle.isCompleteState(active.cycle)
+        ) {
+          this.throwInvalidActiveInstruction();
+        }
+        return;
+      case "rmw": {
+        CpuMemoryCycle.validateState(active.addressCycle);
+        if (active.dataCycle) CpuReadModifyWriteCycle.validateState(active.dataCycle);
+        const addressComplete = CpuMemoryCycle.isCompleteState(active.addressCycle);
+        if (
+          plan.kind !== "memory" ||
+          plan.operation !== InstructionMemoryOperation.ReadModifyWrite ||
+          active.addressCycle.kind !== plan.cycle ||
+          addressComplete !== (active.dataCycle !== undefined) ||
+          active.dataCycle?.step === 0
+        ) {
+          this.throwInvalidActiveInstruction();
+        }
+        return;
+      }
+      case "stack": {
+        CpuStackCycle.validateState(active.cycle);
+        const cycleOperation =
+          active.operation === "pha" || active.operation === "php" ? "push" : "pull";
+        if (
+          plan.kind !== "stack" ||
+          active.operation !== plan.operation ||
+          active.cycle.operation !== cycleOperation
+        ) {
+          this.throwInvalidActiveInstruction();
+        }
+        return;
+      }
+      case "control-flow":
+        CpuControlFlowCycle.validateState(active.cycle);
+        if (plan.kind !== "control-flow" || active.cycle.kind !== plan.operation) {
+          this.throwInvalidActiveInstruction();
+        }
+        return;
+      default:
+        this.throwInvalidActiveInstruction();
+    }
+  }
+
+  private throwInvalidActiveInstruction(): never {
+    throw new RangeError("CPU save state contains an invalid active instruction");
   }
 }
 

@@ -1,3 +1,5 @@
+import { isByte, isIntegerInRange, isWord } from "../numeric-range.js";
+
 export interface CpuReadModifyWriteCyclePort {
   readByte(address: number): number;
   writeByte(address: number, value: number): void;
@@ -27,10 +29,22 @@ export class CpuReadModifyWriteCycle {
     state: CpuReadModifyWriteCycleState,
     transform: (previousValue: number) => number,
   ): CpuReadModifyWriteCycle {
+    CpuReadModifyWriteCycle.validateState(state);
     const cycle = new CpuReadModifyWriteCycle(state.address, transform);
     cycle.step = state.step;
     cycle.previousValue = state.previousValue;
     return cycle;
+  }
+
+  static validateState(state: CpuReadModifyWriteCycleState): void {
+    if (
+      !state ||
+      !isWord(state.address) ||
+      !isIntegerInRange(state.step, 0, 2) ||
+      !isByte(state.previousValue)
+    ) {
+      throw new RangeError("CPU save state contains an invalid read-modify-write cycle");
+    }
   }
 
   /** Clocks one data cycle and returns the new byte after the final write. */

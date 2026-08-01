@@ -1,3 +1,5 @@
+import { isIntegerInRange, isWord } from "../numeric-range.js";
+
 export interface CpuControlFlowCyclePort {
   readByte(address: number): number;
   pushByte(value: number): void;
@@ -27,10 +29,23 @@ export class CpuControlFlowCycle {
   }
 
   static fromState(state: CpuControlFlowCycleState): CpuControlFlowCycle {
+    CpuControlFlowCycle.validateState(state);
     const cycle = new CpuControlFlowCycle(state.kind);
     cycle.step = state.step;
     cycle.lowByte = state.lowByte;
     return cycle;
+  }
+
+  static validateState(state: CpuControlFlowCycleState): void {
+    const maximumStep = state ? CpuControlFlowCycle.maximumStep(state.kind) : undefined;
+    if (
+      !state ||
+      maximumStep === undefined ||
+      !isIntegerInRange(state.step, 0, maximumStep) ||
+      !isWord(state.lowByte)
+    ) {
+      throw new RangeError("CPU save state contains an invalid control-flow cycle");
+    }
   }
 
   /** Clocks one post-opcode cycle and returns true at the instruction polling boundary. */
@@ -172,5 +187,20 @@ export class CpuControlFlowCycle {
     const pointer = this.lowByte;
     this.lowByte = port.readByte(pointer);
     port.setProgramCounter(pointer);
+  }
+
+  private static maximumStep(kind: CpuControlFlowKind): number | undefined {
+    switch (kind) {
+      case "jmp-absolute":
+        return 1;
+      case "jmp-indirect":
+        return 3;
+      case "jsr":
+      case "rts":
+      case "rti":
+        return 4;
+      default:
+        return undefined;
+    }
   }
 }

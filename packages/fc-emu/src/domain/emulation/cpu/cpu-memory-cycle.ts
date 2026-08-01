@@ -1,3 +1,5 @@
+import { isByte, isIntegerInRange, isWord } from "../numeric-range.js";
+
 export type CpuMemoryCycleKind =
   | "immediate"
   | "zero-page"
@@ -53,6 +55,7 @@ export class CpuMemoryCycle {
   }
 
   static fromState(state: CpuMemoryCycleState): CpuMemoryCycle {
+    CpuMemoryCycle.validateState(state);
     const cycle = new CpuMemoryCycle(state.kind, state.index);
     cycle.step = state.step;
     cycle.address = state.address;
@@ -60,6 +63,27 @@ export class CpuMemoryCycle {
     cycle.pageCrossed = state.pageCrossed;
     cycle.indexedDummyReadHalted = state.indexedDummyReadHalted;
     return cycle;
+  }
+
+  static validateState(state: CpuMemoryCycleState): void {
+    const completionStep = state ? CpuMemoryCycle.completionStep(state) : undefined;
+    if (
+      !state ||
+      completionStep === undefined ||
+      !isByte(state.index) ||
+      !isIntegerInRange(state.step, 0, completionStep) ||
+      !isWord(state.address) ||
+      !isWord(state.effectiveAddress) ||
+      typeof state.pageCrossed !== "boolean" ||
+      typeof state.indexedDummyReadHalted !== "boolean"
+    ) {
+      throw new RangeError("CPU save state contains an invalid memory cycle");
+    }
+  }
+
+  static isCompleteState(state: CpuMemoryCycleState): boolean {
+    CpuMemoryCycle.validateState(state);
+    return state.step === CpuMemoryCycle.completionStep(state);
   }
 
   /** Whether RDY stretched the indexed dummy read immediately before a write. */
@@ -247,5 +271,29 @@ export class CpuMemoryCycle {
 
   private completedError(): Error {
     return new Error(`A completed ${this.kind} memory cycle cannot be clocked again`);
+  }
+
+  private static completionStep(state: CpuMemoryCycleState): number | undefined {
+    switch (state.kind) {
+      case "immediate":
+        return 1;
+      case "zero-page":
+        return 2;
+      case "zero-page-indexed":
+      case "absolute":
+        return 3;
+      case "absolute-indexed-read":
+        return state.pageCrossed ? 4 : 3;
+      case "absolute-indexed-write":
+        return 4;
+      case "indexed-indirect":
+        return 5;
+      case "indirect-indexed-read":
+        return state.pageCrossed ? 5 : 4;
+      case "indirect-indexed-write":
+        return 5;
+      default:
+        return undefined;
+    }
   }
 }

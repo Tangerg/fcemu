@@ -65,7 +65,41 @@ export class CpuInterruptState {
   }
 
   restoreState(state: CpuInterruptSnapshot): void {
-    Object.assign(this, state);
+    CpuInterruptState.validateState(state);
+    this.nmiLineAsserted = state.nmiLineAsserted;
+    this.nmiLineSampled = state.nmiLineSampled;
+    this.nmiPending = state.nmiPending;
+    this.nmiSampled = state.nmiSampled;
+    this.softwareIrqPending = state.softwareIrqPending;
+    this.irqLineAsserted = state.irqLineAsserted;
+    this.irqLineSampled = state.irqLineSampled;
+    this.deferDmaIrqUntilAfterInstruction = state.deferDmaIrqUntilAfterInstruction;
+    this.deferIrqSampleUntilNextInstruction = state.deferIrqSampleUntilNextInstruction;
+    this.irqPollingDisabled = state.irqPollingDisabled;
+    this.deferNmiUntilAfterInstruction = state.deferNmiUntilAfterInstruction;
+    this.interruptEntryFinishedThisCycle = state.interruptEntryFinishedThisCycle;
+  }
+
+  static validateState(state: CpuInterruptSnapshot): void {
+    if (
+      !state ||
+      ![
+        state.nmiLineAsserted,
+        state.nmiLineSampled,
+        state.nmiPending,
+        state.nmiSampled,
+        state.softwareIrqPending,
+        state.irqLineAsserted,
+        state.irqLineSampled,
+        state.deferDmaIrqUntilAfterInstruction,
+        state.deferIrqSampleUntilNextInstruction,
+        state.irqPollingDisabled,
+        state.deferNmiUntilAfterInstruction,
+        state.interruptEntryFinishedThisCycle,
+      ].every((value) => typeof value === "boolean")
+    ) {
+      throw new RangeError("CPU save state contains an invalid interrupt latch");
+    }
   }
 
   beginCpuUpdate(): void {

@@ -399,6 +399,26 @@ describe("2A03 CPU", () => {
     expect(bus.PPU.nameTableData[2]).toBe(0);
     expect(bus.PPU.nameTableData[3]).toBe(0x7f);
   });
+
+  it("rejects an invalid active cycle before changing any CPU state", () => {
+    const bus = createBus([0xa9, 0x42]);
+    bus.CPU.clock();
+    const before = bus.CPU.captureState();
+    const active = before.activeInstruction;
+    if (!active || active.kind !== "memory") throw new Error("Expected an active memory cycle");
+
+    const invalid = {
+      ...before,
+      registers: { ...before.registers, A: before.registers.A ^ 1 },
+      activeInstruction: {
+        ...active,
+        cycle: { ...active.cycle, kind: "zero-page" as const },
+      },
+    };
+
+    expect(() => bus.CPU.restoreState(invalid)).toThrow(/active instruction/i);
+    expect(bus.CPU.captureState()).toEqual(before);
+  });
 });
 
 function createBus(

@@ -143,6 +143,12 @@ describe("CPU operand memory cycles", () => {
     expect(restored.clock(fixture.port)).toBe(true);
     expect(fixture.execute).toHaveBeenCalledWith(0x0500);
   });
+
+  it("rejects a restored memory cycle beyond its completion step", () => {
+    const state = new CpuMemoryCycle("absolute").captureState();
+
+    expect(() => CpuMemoryCycle.fromState({ ...state, step: 4 })).toThrow(/memory cycle/i);
+  });
 });
 
 function clockToCompletion(cycle: CpuMemoryCycle, port: CpuMemoryCyclePort): number {

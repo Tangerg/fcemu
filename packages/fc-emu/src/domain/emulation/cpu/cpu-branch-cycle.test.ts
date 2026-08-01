@@ -50,6 +50,12 @@ describe("CPU relative branch cycles", () => {
     expect(branch.clock(fixture.port)).toEqual({ taken: true, pageCrossed: true });
     expect(fixture.programCounter()).toBe(0xfffe);
   });
+
+  it("rejects an unreachable restored branch step", () => {
+    const state = new CpuBranchCycle(false).captureState();
+
+    expect(() => CpuBranchCycle.fromState({ ...state, step: 2 })).toThrow(/branch cycle/i);
+  });
 });
 
 function createFixture(

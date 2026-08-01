@@ -33,6 +33,12 @@ describe("CPU stack instruction cycles", () => {
 
     expect(() => cycle.clock(fixture.port)).toThrow("completed stack push");
   });
+
+  it("rejects a restored stack cycle beyond its operation boundary", () => {
+    const state = CpuStackCycle.push(0x42).captureState();
+
+    expect(() => CpuStackCycle.fromState({ ...state, step: 2 })).toThrow(/stack cycle/i);
+  });
 });
 
 function createFixture(): {

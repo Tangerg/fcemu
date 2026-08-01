@@ -39,4 +39,12 @@ describe("CPU read-modify-write data cycles", () => {
     expect(cycle.clock(port)).toBe(0x80);
     expect(transform).toHaveBeenCalledOnce();
   });
+
+  it("rejects an invalid restored data latch", () => {
+    const state = new CpuReadModifyWriteCycle(0x1234, (value) => value).captureState();
+
+    expect(() =>
+      CpuReadModifyWriteCycle.fromState({ ...state, previousValue: 0x100 }, (value) => value),
+    ).toThrow(/read-modify-write cycle/i);
+  });
 });

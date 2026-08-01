@@ -333,13 +333,18 @@ flag, beginning the interrupt update and incrementing `cpuCycles`) while DMA dri
 either an in-flight `interruptEntry` or an `activeInstruction`, plus the optional indexed-read latch.
 The active-instruction snapshot is a discriminated union mirroring the runtime families; each cycle
 object implements `captureState`/`fromState`, and an RMW `dataCycle` is rebound to a fresh transform
-closure on restore. Validation rejects out-of-range registers, non-byte data-bus latches, a negative
-or unsafe `cpuCycles`, an out-of-range indexed-read latch, an invalid active-opcode, and the illegal
-combination of a simultaneous instruction and interrupt entry; `rmwExecution` is transient and always
-cleared on restore. Because every executing sub-state round-trips, a save state can be taken and
-restored mid-instruction at any bus cycle — the per-subcycle detail persisted here is what advances the
-public save-state envelope (e.g. the internal/external data-bus latches and the RDY-stretched indexed
-dummy-read flag).
+closure on restore. Validation walks the complete execution tree before changing registers: it checks
+register and bus widths, cycle counts and execution flags, every interrupt latch, interrupt-entry kind
+and step, and each branch, memory, stack, control-flow and RMW subcycle. The active opcode is decoded
+again and must agree with its saved instruction family, addressing-cycle kind and stack/control-flow
+operation; an RMW data cycle is legal only after its address cycle has completed. A simultaneous
+instruction and interrupt entry remains forbidden. Each subcycle's `fromState` uses the same pure
+validator, while `CpuInterruptState.restoreState` assigns its known latches explicitly rather than
+copying arbitrary object properties. Consequently a rejected direct CPU restore leaves the complete
+CPU unchanged; `rmwExecution` is transient and always cleared only after a successful restore. Because
+every executing sub-state round-trips, a save state can be taken and restored mid-instruction at any
+bus cycle — the per-subcycle detail persisted here is what advances the public save-state envelope
+(e.g. the internal/external data-bus latches and the RDY-stretched indexed dummy-read flag).
 
 ## Verification and known limits
 

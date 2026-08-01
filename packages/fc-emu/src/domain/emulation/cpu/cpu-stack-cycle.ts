@@ -1,3 +1,5 @@
+import { isByte, isIntegerInRange } from "../numeric-range.js";
+
 export interface CpuStackCyclePort {
   readByte(address: number): number;
   pushByte(value: number): void;
@@ -36,9 +38,22 @@ export class CpuStackCycle {
   }
 
   static fromState(state: CpuStackCycleState): CpuStackCycle {
+    CpuStackCycle.validateState(state);
     const cycle = new CpuStackCycle(state.operation, state.pushedValue);
     cycle.step = state.step;
     return cycle;
+  }
+
+  static validateState(state: CpuStackCycleState): void {
+    const maximumStep = state?.operation === "push" ? 1 : 2;
+    if (
+      !state ||
+      (state.operation !== "push" && state.operation !== "pull") ||
+      !isByte(state.pushedValue) ||
+      !isIntegerInRange(state.step, 0, maximumStep)
+    ) {
+      throw new RangeError("CPU save state contains an invalid stack cycle");
+    }
   }
 
   /** Clocks one post-opcode cycle and returns a value only at completion. */

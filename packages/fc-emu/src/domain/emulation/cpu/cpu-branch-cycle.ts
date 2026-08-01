@@ -1,3 +1,5 @@
+import { isIntegerInRange, isWord } from "../numeric-range.js";
+
 export interface CpuBranchCyclePort {
   readByte(address: number): number;
   getProgramCounter(): number;
@@ -37,12 +39,27 @@ export class CpuBranchCycle {
   }
 
   static fromState(state: CpuBranchCycleState): CpuBranchCycle {
+    CpuBranchCycle.validateState(state);
     const cycle = new CpuBranchCycle(state.taken);
     cycle.step = state.step;
     cycle.target = state.target;
     cycle.wrongPageAddress = state.wrongPageAddress;
     cycle.pageCrossed = state.pageCrossed;
     return cycle;
+  }
+
+  static validateState(state: CpuBranchCycleState): void {
+    if (
+      !state ||
+      typeof state.taken !== "boolean" ||
+      !isIntegerInRange(state.step, 0, 2) ||
+      !isWord(state.target) ||
+      !isWord(state.wrongPageAddress) ||
+      typeof state.pageCrossed !== "boolean" ||
+      (state.step === 2 && (!state.taken || !state.pageCrossed))
+    ) {
+      throw new RangeError("CPU save state contains an invalid branch cycle");
+    }
   }
 
   /** Branches poll before the operand cycle and crossings again before PCH fixup. */

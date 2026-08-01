@@ -90,6 +90,14 @@ describe("CPU subroutine and return cycles", () => {
     expect(fixture.processorFlags()).toBe(0xef);
     expect(fixture.programCounter()).toBe(0x5678);
   });
+
+  it("rejects an invalid restored control-flow latch", () => {
+    const state = new CpuControlFlowCycle("jsr").captureState();
+
+    expect(() => CpuControlFlowCycle.fromState({ ...state, lowByte: 0x1_0000 })).toThrow(
+      /control-flow cycle/i,
+    );
+  });
 });
 
 function clockToCompletion(cycle: CpuControlFlowCycle, port: CpuControlFlowCyclePort): number {

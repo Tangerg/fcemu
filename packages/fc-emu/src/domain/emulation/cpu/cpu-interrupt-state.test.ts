@@ -140,6 +140,20 @@ describe("CpuInterruptState", () => {
     expect(interrupts.consumeNmiForVectorHijack()).toBe(true);
     expect(interrupts.consumeNmiForVectorHijack()).toBe(false);
   });
+
+  it("rejects invalid state without changing any interrupt latch", () => {
+    const interrupts = enabledInterrupts();
+    interrupts.requestNmi(true);
+    const before = interrupts.captureState();
+
+    expect(() =>
+      interrupts.restoreState({
+        ...before,
+        irqLineSampled: 1 as unknown as boolean,
+      }),
+    ).toThrow(/interrupt latch/i);
+    expect(interrupts.captureState()).toEqual(before);
+  });
 });
 
 function enabledInterrupts(): CpuInterruptState {

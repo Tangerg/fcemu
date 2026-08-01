@@ -247,7 +247,9 @@ swappable between `$8000` and `$C000` by the PRG mode. `$A000`/`$A001` set mirro
 enable/write-protect. The revision-B IRQ counter clocks on filtered PPU A12 rising edges (`tickPpu`
 counts low dots; `observePpuAddress` clocks a rise after ≥10 low dots). Its asserted IRQ output is
 part of the mapper snapshot, so direct mapper restoration and the bus's named-source validation
-cannot reconstruct contradictory line levels. See the
+cannot reconstruct contradictory line levels. A pinned local _Super Mario Bros. 3_ profile crosses
+the title demo, world map and World 1-1; it locks scrolling, audio, CPU-cycle and mid-level
+save-state-replay output without committing the ROM. See the
 [NESdev MMC3 page](https://www.nesdev.org/wiki/MMC3).
 
 ## MMC5 / ExROM (5)

@@ -15,7 +15,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 1      | MMC1/SxROM     | Verified    | Board tests; Holy Mapperel SK/SG/SN/SU/SX 5/5                      |
 | 2      | UxROM/UNROM    | Verified    | Unit tests; pinned `CONTRA.NES` real-ROM runner                    |
 | 3      | CNROM          | Verified    | Tests; pinned _The Legend of Kage_ real-ROM runner                 |
-| 4      | MMC3           | Implemented | A12/IRQ tests; real PPU dot-260 integration; fixture unpinned      |
+| 4      | MMC3           | Verified    | A12/IRQ tests; pinned _Super Mario Bros. 3_ real-ROM runner        |
 | 5      | MMC5/ExROM     | Implemented | Banking/ExRAM/split/IRQ/audio/state tests; no conformance ROM      |
 | 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture              |
 | 7      | AxROM          | Implemented | Banking/mirroring/conflict tests; BNTest fixture unpinned          |
@@ -176,7 +176,9 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   protection remains a separate board implementation, and Family Trainer speech hardware remains
   out of scope.
 - Mapper 4 implements the MMC3 `$A001` PRG-RAM enable and write-protect bits. MMC6 remains excluded
-  by its NES 2.0 submapper and different split protection scheme.
+  by its NES 2.0 submapper and different split protection scheme. The pinned _Super Mario Bros. 3_
+  profile crosses the title demo, world map and World 1-1, then validates scrolling, audio, CPU
+  cycles and a mid-level save-state replay through the public facade.
 - Mapper 5 models MMC5/ExROM rather than an MMC3-shaped banking subset. Four PRG and CHR modes,
   A/B fetch-selected CHR register sets, dynamic CIRAM/ExRAM/fill nametables, extended attributes and
   vertical split all follow the ASIC's physical outputs. The PPU supplies background/sprite fetch

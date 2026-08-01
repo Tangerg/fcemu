@@ -9,6 +9,7 @@ const BUTTONS = Object.freeze({
   a: ControllerButton.A,
   b: ControllerButton.B,
   start: ControllerButton.Start,
+  up: ControllerButton.Up,
   right: ControllerButton.Right,
 });
 
@@ -171,6 +172,74 @@ const PROFILES = Object.freeze({
       frameSequenceSha256: "d3eed93fe024078a67436efb06867b21c3235cc4006c322fed0636d20e8a7384",
       audioSamples: 88_055,
       audioSha256: "39f7a0e79c04ebb1d2de92f3296e3d144b0f9255ae3e08ac40272bc3fe0678f8",
+      cpuCycles: 3_573_660,
+    },
+  },
+  smb3: {
+    title: "Super Mario Bros. 3 (Japan)",
+    fileName: "SMB3-J.NES",
+    sha256: "2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 4,
+      submapperNumber: 0,
+      consoleRegion: "ntsc",
+      prgRomBytes: 262_144,
+      chrRomBytes: 131_072,
+      hasWritableChrMemory: false,
+    },
+    baseline: {
+      frames: 900,
+      minimumDistinctFrames: 700,
+      finalFrameSha256: "4c72a17c83f4a293bd16ca06f715922da65f16bc67acbdd4ec002e7886c8dedd",
+      frameSequenceSha256: "c76be87146eac60044893a9171040b506533d25434c7d7471208d35415ccb762",
+      cpuCycles: 26_775_059,
+    },
+    interactive: {
+      frames: 2160,
+      minimumDistinctFrames: 1300,
+      events: [
+        { frame: 840, button: "start", pressed: true },
+        { frame: 842, button: "start", pressed: false },
+        { frame: 960, button: "start", pressed: true },
+        { frame: 962, button: "start", pressed: false },
+        { frame: 1440, button: "right", pressed: true },
+        { frame: 1460, button: "right", pressed: false },
+        { frame: 1500, button: "up", pressed: true },
+        { frame: 1520, button: "up", pressed: false },
+        { frame: 1620, button: "a", pressed: true },
+        { frame: 1626, button: "a", pressed: false },
+        { frame: 1800, button: "right", pressed: true },
+        { frame: 1800, button: "b", pressed: true },
+        { frame: 1890, button: "a", pressed: true },
+        { frame: 1896, button: "a", pressed: false },
+        { frame: 2040, button: "b", pressed: false },
+        { frame: 2040, button: "right", pressed: false },
+      ],
+      checkpoints: {
+        900: "385b93044be7be1b0815d71ab1d3430165184ca514fc20954e58eddcbe4a169e",
+        1080: "d7f4ccfc5af17e1eec0c8451498812e7dfdee7551ff67c1269c451ebeedf56ad",
+        1320: "7078ad8b9d4aed00dd9be1f9b6721ac02af0db0f124d54dfa62c1b3e0947236f",
+        1560: "927344f9c2822444cb8af88e7795174d6c3cf91f79f3c871c80bae1656fd6c0f",
+        1680: "43f1599f8fd67b027bae7a481030d503f4616cbe16f38737c3c29454f268d8d0",
+        1740: "4b2a3cff26996bfb267c60ac0d5903ed68b7d288900a5bd253ae1a8cbcb447d4",
+        1800: "ab31e2d5cece5b8fbf5cc9f92480f9dd1043a779c8aadc735e1f15269a1df9f7",
+        1890: "6f41e59a0d08e554f29023e43a05a9dd969332641196aa29092a2ae4f5b0d2f2",
+        2040: "6cd92d5a34fb2b1470d11d3618a08b20c916865878bd65a657108c60e3a921c9",
+        2160: "7c1d5c4a2263fd33908437c34e064af6a686290c4a8711a8906f99a4039c5469",
+      },
+      finalFrameSha256: "7c1d5c4a2263fd33908437c34e064af6a686290c4a8711a8906f99a4039c5469",
+      frameSequenceSha256: "000d01238a57d674e87bdfd84315c0c4725ca8419dabc00447a70dc0791a36ce",
+      audioSamples: 1_584_314,
+      audioSha256: "0003f668aff7b684ca9ab67182f3244631f48e34170ac8cf6c0e2036d2f0c0ef",
+      cpuCycles: 64_298_495,
+    },
+    replay: {
+      checkpointFrame: 1800,
+      frames: 120,
+      frameSequenceSha256: "fca3632c911afd01980cd1390df469941347a8809c2cbf054b1d6f8ba304c0c5",
+      audioSamples: 88_055,
+      audioSha256: "52fcee6b2e6730cb3e6d96b18971282bd659a81d20ff24089b5f0387c95e5ad9",
       cpuCycles: 3_573_660,
     },
   },
@@ -478,7 +547,7 @@ function printResults(results) {
 
 function printUsage() {
   console.error(
-    "Usage: yarn smoke:real-rom -- <mario|contra|kage> /path/to/file.nes\n" +
+    "Usage: yarn smoke:real-rom -- <mario|contra|kage|smb3> /path/to/file.nes\n" +
       "       yarn smoke:real-rom -- all /path/to/rom-directory\n" +
       "       yarn smoke:real-rom -- --list",
   );

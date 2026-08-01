@@ -13,7 +13,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 96 implemented mapper IDs; thirty mapper IDs currently have reproducible external or pinned
+- 97 implemented mapper IDs; thirty mapper IDs currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-17 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
@@ -45,7 +45,7 @@ the historical title table, whose own introduction warns that those fields are i
 
 All 31 IDs in that bounded track meet the mapper implementation definition of done below. Mappers 12
 (Rex Soft SL-5020B/FFE 4M), 41 (Caltron 6-in-1), 67 (Sunsoft-3), 74 (Waixing Type A), 86 (Jaleco
-JF-13), 114/182
+JF-13), 92 (Jaleco JF-19), 114/182
 (SuperGame MMC3), 115/248 (Kasheng MMC3), 117 (Future Media), 133 (Sachen SA-72008), 142 (Kaiser
 KS7032), 150 (Sachen SA-015/SA-630), 163 (Nanjing FC-001), 164 (Dongda PEC-9588), 187
 (UNL SF3/KOF96), 189 (TXC MMC3),
@@ -61,7 +61,7 @@ remains a separate follow-up.
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 6, 8, 10, 11,
 13, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 32, 33, 41, 48, 64, 65, 66, 67, 68, 69, 70, 71, 72,
-73, 74, 75, 76, 77, 78, 79, 80, 82, 83, 85, 86, 87, 88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 113,
+73, 74, 75, 76, 77, 78, 79, 80, 82, 83, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 99, 113,
 140, 150, 152, 180, 185, 206, 225, 227, 228, 241 and 243
 are implemented but do not yet have executable external verification.
 

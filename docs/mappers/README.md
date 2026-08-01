@@ -172,6 +172,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 89  | Sunsoft-2      | `sunsoft-2`               | `sunsoft2-mapper.ts`         | AND           | no   |
 | 90  | J.Y. Company   | `jy-company`              | `jy-company-mapper.ts`       | no            | both |
 | 91  | JY/EJ bootleg  | board-specific            | two boards + shared banking  | no            | both |
+| 92  | Jaleco JF-19   | `jaleco-jf17`             | `jaleco-jf17-mapper.ts`      | AND           | no   |
 | 93  | Sunsoft-3R     | `sunsoft-3r`              | `sunsoft3r-mapper.ts`        | AND           | no   |
 | 94  | UN1ROM         | `uxrom`                   | `uxrom-mapper.ts`            | AND           | no   |
 | 95  | Namco 3425     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
@@ -795,20 +796,32 @@ to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire H
 mirroring from `$9000-$9FFF` bit 4 and rejects four-screen layouts; submapper 0 (BF9093) keeps the
 header's fixed mirroring, including externally declared four-screen memory.
 
-## Jaleco JF-17 (72)
+## Jaleco JF-17 / JF-19 (72, 92)
 
-JF-17 maps one switchable 16 KiB PRG bank at `$8000-$BFFF`, fixes the final bank at
-`$C000-$FFFF`, and switches one 8 KiB CHR-ROM bank. Its single AND-conflicted `$8000-$FFFF` port
-feeds two edge-triggered latches: a low-to-high transition on effective D7 captures D2-D0 for PRG,
-and a low-to-high transition on effective D6 captures D3-D0 for CHR. Continuous high writes do not
-re-latch; a low write rearms each clock independently. The edge-history bits are therefore part of
-save state rather than being reconstructed from the selected banks.
+JF-17 maps one switchable 16 KiB PRG bank at `$8000-$BFFF` and fixes the final bank at
+`$C000-$FFFF`. JF-19 reverses those roles: mapper 92 fixes bank 0 in the lower window and switches
+the upper window across all sixteen banks. Both boards switch one 8 KiB CHR-ROM bank and feed their
+single AND-conflicted `$8000-$FFFF` port into two edge-triggered latches. A low-to-high transition
+on effective D7 captures D2-D0 for JF-17 or D3-D0 for JF-19 PRG; an independent D6 rise captures
+D3-D0 for CHR. Continuous-high writes do not re-latch, and a low write rearms each clock
+independently. The edge-history bits are therefore save-state data rather than reconstructed from
+the selected banks.
 
-The board carries exactly 128 KiB each of PRG and CHR ROM, no PRG RAM or IRQ, and uses solder-pad
-horizontal/vertical mirroring. JF-19 is mapper 92 and is not inferred from image size. The optional
-µPD7756C sample playback used by _Moero!! Pro Tennis_ is not emulated because its external sample
-payload is not present in ordinary iNES images. See
-[NESdev mapper 72](https://www.nesdev.org/wiki/INES_Mapper_072).
+JF-17 carries exactly 128 KiB each of PRG and CHR ROM; JF-19 carries 256 KiB PRG plus 128 KiB CHR.
+Neither board maps PRG RAM or IRQ, and both use solder-pad horizontal/vertical mirroring. The shared
+implementation follows the current
+[NESdev mapper 72 hardware description](https://www.nesdev.org/wiki/INES_Mapper_072) and the JF-19
+window wiring in the pinned
+[Mesen 2 implementation](https://github.com/SourMesen/Mesen2/blob/b9fa69ddc6d0a331fb103fdb5eef6904305703c2/Core/NES/Mappers/Jaleco/JalecoJf17_19.h).
+[NESCartDB's JF-19 board record](https://nescartdb.com/profile/view/1731/moero-pro-yakyuu-88-kettei-ban)
+confirms the mapper, exact ROM geometry, vertical solder-pad setting, absence of WRAM and combined
+payload CRC `B297B5E7`.
+
+The µPD7756C sample playback used by some JF-17/JF-19 releases is not emulated: ordinary iNES files
+contain neither the external sample payload nor a standard way to identify it. A user-local
+_Moero!! Pro Yakyuu '88 Ketteihen_ payload matching that catalog CRC completed 1,500 frames and a
+deterministic 300-frame save-state replay. Its containing file has 524,304 trailing bytes, so it is
+evidence for `Implemented`, not a checksum-pinned `Verified` fixture.
 
 ## Konami VRC3 (73)
 

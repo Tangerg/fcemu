@@ -159,10 +159,116 @@ describe("JalecoJf17Mapper", () => {
       ),
     ).toThrow(UnsupportedMapperConfigurationError);
   });
+
+  it("models JF-19's fixed-lower and switchable-upper 16 KiB PRG windows", () => {
+    const cartridge = createJf19Cartridge();
+    fillBanks(cartridge.prgRom, 0x4000);
+    allowWritesAt(cartridge, 0x9000);
+    const mapper = new JalecoJf17Mapper(cartridge, "jf-19");
+
+    expect(mapper.read(0x8000)).toBe(0);
+    expect(mapper.read(0xc000)).toBe(15);
+
+    mapper.write(0x9000, 0x8d);
+
+    expect(mapper.read(0x8000)).toBe(0);
+    expect(mapper.read(0xc000)).toBe(13);
+  });
+
+  it("gives JF-19 the shared CHR latch and independent edge history", () => {
+    const cartridge = createJf19Cartridge();
+    fillBanks(cartridge.chrRom, 0x2000);
+    allowWritesAt(cartridge, 0x9000);
+    const mapper = new JalecoJf17Mapper(cartridge, "jf-19");
+
+    mapper.write(0x9000, 0x4f);
+    mapper.write(0x9000, 0x4e);
+    expect(mapper.read(0x0000)).toBe(15);
+
+    mapper.write(0x9000, 0x0e);
+    mapper.write(0x9000, 0x4e);
+    expect(mapper.read(0x0000)).toBe(14);
+  });
+
+  it("applies fixed-bank ROM conflicts before JF-19's four-bit PRG latch", () => {
+    const cartridge = createJf19Cartridge();
+    fillBanks(cartridge.prgRom, 0x4000);
+    cartridge.prgRom[0x1000] = 0x8b;
+    const mapper = new JalecoJf17Mapper(cartridge, "jf-19");
+
+    mapper.write(0x9000, 0x8f);
+
+    expect(mapper.captureState()).toMatchObject({ prgBank: 11, prgClockHigh: true });
+    expect(mapper.read(0xc000)).toBe(11);
+  });
+
+  it("resets JF-19 to its boot windows and round-trips latch state", () => {
+    const cartridge = createJf19Cartridge();
+    fillBanks(cartridge.prgRom, 0x4000);
+    allowWritesAt(cartridge, 0x9000);
+    const mapper = new JalecoJf17Mapper(cartridge, "jf-19");
+
+    expect(mapper.captureState()).toEqual({
+      kind: "jaleco-jf17",
+      prgBank: 15,
+      chrBank: 0,
+      prgClockHigh: false,
+      chrClockHigh: false,
+    });
+
+    mapper.write(0x9000, 0xcd);
+    const state = mapper.captureState();
+    mapper.powerOn();
+    mapper.restoreState(state);
+
+    expect(mapper.captureState()).toEqual(state);
+    expect(mapper.read(0xc000)).toBe(13);
+  });
+
+  it("accepts only JF-19's exact mapper-92 geometry", () => {
+    expect(() => createMapper(createJf19Cartridge(), interruptPort)).not.toThrow();
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 92, nes2: true, submapper: 1, prgBanks: 16, chrBanks: 16 }),
+        interruptPort,
+      ),
+    ).toThrow(UnsupportedMapperVariantError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 92, prgBanks: 8, chrBanks: 16 }), interruptPort),
+    ).toThrow(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 92, prgBanks: 16, chrBanks: 8 }), interruptPort),
+    ).toThrow(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(createTestCartridge({ mapper: 92, prgBanks: 16 }), interruptPort),
+    ).toThrow(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({
+          mapper: 92,
+          nes2: true,
+          prgBanks: 16,
+          chrBanks: 16,
+          prgRamShift: 7,
+        }),
+        interruptPort,
+      ),
+    ).toThrow(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 92, prgBanks: 16, chrBanks: 16, fourScreen: true }),
+        interruptPort,
+      ),
+    ).toThrow(UnsupportedMapperConfigurationError);
+  });
 });
 
 function createJf17Cartridge() {
   return createTestCartridge({ mapper: 72, prgBanks: 8, chrBanks: 16 });
+}
+
+function createJf19Cartridge() {
+  return createTestCartridge({ mapper: 92, prgBanks: 16, chrBanks: 16 });
 }
 
 function fillBanks(bytes: Uint8Array, bankSize: number): void {
@@ -173,7 +279,7 @@ function fillBanks(bytes: Uint8Array, bankSize: number): void {
 
 function allowWritesAt(cartridge: ReturnType<typeof createJf17Cartridge>, address: number): void {
   const offset = address - 0x8000;
-  for (let bank = 0; bank < 8; bank++) {
+  for (let bank = 0; bank < cartridge.prgRom.byteLength / 0x4000; bank++) {
     cartridge.prgRom[bank * 0x4000 + (offset & 0x3fff)] = 0xff;
   }
 }

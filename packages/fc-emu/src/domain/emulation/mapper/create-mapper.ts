@@ -477,6 +477,13 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
             cartridge.submapperNumber,
           );
       }
+    case 92:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(cartridge, [0x40_000], 0x20_000);
+      requireChrRom(cartridge, "Jaleco JF-19 mapper 92");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Jaleco JF-19 mapper 92");
+      return new JalecoJf17Mapper(cartridge, "jf-19");
     case 93:
       requireBaseSubmapper(cartridge);
       requireRomLayout(cartridge, [0x8000, 0x10_000, 0x20_000], 0x2000);

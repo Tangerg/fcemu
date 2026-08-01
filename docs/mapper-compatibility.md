@@ -67,6 +67,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM               |
 | 90     | J.Y. EL861226C | Implemented | PRG/CHR/multiplier/latch/four-source-IRQ/state tests; no fixture   |
 | 91     | JY/EJ bootleg  | Implemented | Outer-bank/A12/M2/submapper/state tests; no conformance ROM        |
+| 92     | Jaleco JF-19   | Implemented | Dual-edge/window/state tests; canonical payload local replay       |
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM         |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM        |
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM              |
@@ -111,7 +112,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/86/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/164/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/86/87/88/89/90/92/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/164/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -385,11 +386,15 @@ and `$6000.D6` supplying PRG A18.
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
   single-screen mirroring and rejects four-screen layouts; submapper 0 keeps the header's fixed
   mirroring and may retain external four-screen memory.
-- Mapper 72 (Jaleco JF-17) applies ROM bus conflicts before treating D7 and D6 as independent
-  rising-edge clocks for its 16 KiB PRG and 8 KiB CHR latches. Clock history is save-state data;
-  geometry is fixed at 128 KiB PRG plus 128 KiB CHR ROM, and mirroring stays on solder pads. The
-  user-local _Pinball Quest_ image completed 240 frames with deterministic 60-frame save-state
-  replay. JF-19 belongs to mapper 92, and JF-17's optional µPD7756C sample audio remains unsupported.
+- Mappers 72/92 (Jaleco JF-17/JF-19) apply ROM bus conflicts before treating D7 and D6 as
+  independent rising-edge clocks for their 16 KiB PRG and 8 KiB CHR latches. JF-17 switches the
+  lower PRG window with three data bits and fixes the final bank above it; JF-19 fixes bank 0 below
+  a four-bit switchable upper window. Clock history is save-state data; both use exactly 128 KiB
+  CHR ROM, while PRG is respectively 128/256 KiB, with no PRG RAM and solder-pad mirroring. The
+  user-local _Pinball Quest_ image completed 240 frames with deterministic 60-frame replay. A
+  _Moero!! Pro Yakyuu '88 Ketteihen_ payload whose CRC matches NESCartDB completed 1,500 frames and
+  deterministic 300-frame replay, but its padded container is not a pinnable fixture. Optional
+  µPD7756C sample audio remains unsupported because normal iNES images omit its sample ROM.
 - Mapper 73 (Konami VRC3) keeps fixed CHR RAM and solder-pad mirroring around one switchable and one
   fixed 16 KiB PRG window, with optional direct 8 KiB PRG RAM. Its four nibble registers feed a
   16-bit CPU-cycle up-counter; 8-bit mode preserves the counter's upper byte, and the distinct

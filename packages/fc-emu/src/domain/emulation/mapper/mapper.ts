@@ -494,6 +494,13 @@ export type MapperState =
       readonly mirroring: number;
     }
   | {
+      readonly kind: "ntdec-asder";
+      readonly currentRegister: number;
+      readonly registers: readonly number[];
+      readonly outerChrBank: number;
+      readonly mirroring: number;
+    }
+  | {
       readonly kind: "irem-tam-s1";
       readonly prgBank: number;
       readonly mirroring: number;

@@ -47,6 +47,7 @@ import {
 } from "./namco118-mapper.js";
 import { Namco163Mapper, type Namco163AudioLevel } from "./namco163-mapper.js";
 import { NromMapper } from "./nrom-mapper.js";
+import { NtdecAsderMapper } from "./ntdec-asder-mapper.js";
 import { Nina0306Mapper } from "./nina0306-mapper.js";
 import { Nina001Mapper } from "./nina001-mapper.js";
 import { Rambo1Mapper } from "./rambo1-mapper.js";
@@ -420,6 +421,14 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireVsSystemMapperLayout(cartridge);
       return new VsSystemMapper(cartridge);
+    case 112:
+      requireBaseSubmapper(cartridge);
+      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireMaximumRomSize(cartridge, 0x20_000, 0x80_000);
+      requireChrRom(cartridge, "NTDEC/Asder mapper 112");
+      requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "NTDEC/Asder mapper 112");
+      return new NtdecAsderMapper(cartridge);
     case 113:
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);

@@ -43,6 +43,7 @@ export const MapperKind = {
   Sunsoft4: "sunsoft-4",
   Nina0306: "nina-03-06",
   HesNtd8: "hes-ntd8",
+  NtdecAsder: "ntdec-asder",
   IremTamS1: "irem-tam-s1",
   Irem78: "irem-78",
   Vrc1: "vrc1",

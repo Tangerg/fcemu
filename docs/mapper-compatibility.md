@@ -65,6 +65,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM              |
 | 97     | Irem TAM-S1    | Implemented | Inverted PRG/mirroring/CHR-RAM tests; no conformance ROM           |
 | 99     | VS mainboard   | Implemented | Socket/open-bus/RGB PPU/cabinet/protection/state tests; no fixture |
+| 112    | NTDEC/Asder    | Implemented | Decode/banking/mirroring/state tests; three local replay smokes    |
 | 113    | HES NTD-8      | Implemented | Decode/banking/mirroring/state tests; four local replay smokes     |
 | 118    | TxSROM         | Implemented | CIRAM banking/IRQ/geometry tests; no conformance ROM               |
 | 119    | TQROM          | Implemented | Mixed CHR ROM/RAM/IRQ/geometry tests; no conformance ROM           |
@@ -81,7 +82,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/73/75/76/79/80/82/87/88/89/90/93/94/95/97/99/113/118/119/140/152/184/206 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/68/69/70/73/75/76/79/80/82/87/88/89/90/93/94/95/97/99/112/113/118/119/140/152/184/206 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -319,6 +320,12 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
 - Mapper 79 (AVE NINA-03/NINA-06) decodes its latch only at `$4100-$5FFF` addresses matching
   `(address & $E100) == $4100`. D3 selects one of two 32 KiB PRG banks and D2-D0 select one of eight
   8 KiB CHR-ROM banks; mirroring is hardwired and there are no conflicts, IRQs or PRG RAM.
+- Mapper 112 (NTDEC/Asder) uses a two-stage selector/data register with two switchable and two fixed
+  8 KiB PRG windows. Two even-aligned 2 KiB and four independent 1 KiB CHR paths remain distinct;
+  the outer register supplies separate CHR A18 lines only to the latter four. Even-address mirrors
+  are decoded, D0 controls vertical/horizontal mirroring, and the board has no RAM, conflicts or IRQ.
+  Three user-local images completed 180-frame starts with deterministic 60-frame save-state replay;
+  their bytes and hashes remain outside the repository, so the status remains `Implemented`.
 - Mapper 113 (HES NTD-8) extends that expansion latch without approximating it as mapper 79. D5-D3
   select up to eight 32 KiB PRG banks; D6 joins D2-D0 as the non-contiguous 8 KiB CHR bank field;
   D7 selects horizontal/vertical mirroring. The board has no bus conflicts, IRQ, PRG RAM or driven

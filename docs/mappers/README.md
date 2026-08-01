@@ -157,6 +157,7 @@ counters against their bit width and all booleans by runtime type) and throws
 | 95  | Namco 3425     | `namco-118`               | `namco118-mapper.ts`         | no            | no   |
 | 97  | Irem TAM-S1    | `irem-tam-s1`             | `irem-tam-s1-mapper.ts`      | no            | no   |
 | 99  | VS mainboard   | `vs-system`               | `vs-system-mapper.ts`        | no            | no   |
+| 112 | NTDEC/Asder    | `ntdec-asder`             | `ntdec-asder-mapper.ts`      | no            | no   |
 | 113 | HES NTD-8      | `hes-ntd8`                | `hes-ntd8-mapper.ts`         | no            | no   |
 | 118 | TxSROM         | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
 | 119 | TQROM          | `mmc3`                    | `mmc3-mapper.ts`             | no            | A12  |
@@ -862,6 +863,21 @@ approximated with one CPU. See [NESdev mapper 99](https://www.nesdev.org/wiki/IN
 decoded Super Xevious phases follow the maintained
 [MAME VS driver](https://github.com/mamedev/mame/blob/master/src/mame/nintendo/vsnes.cpp); the
 device remains console-owned because those boards use mapper 206, not mapper 99.
+
+## NTDEC/Asder (112)
+
+Mapper 112 uses a two-stage register path rather than the Namco 118 command layout. Even-address
+mirrors of `$8000`, `$A000`, `$C000` and `$E000` select one of eight registers, write its byte,
+write the outer CHR lines and select vertical/horizontal mirroring respectively. Odd-address writes
+are ignored.
+
+Registers 0 and 1 select the first two 8 KiB PRG-ROM windows; the final two windows are fixed to the
+last two banks. Registers 2 and 3 each select an even-aligned 2 KiB CHR pair, while registers 4–7
+select four independent 1 KiB CHR banks. `$C000` bits 4–7 independently supply CHR A18 to those
+four 1 KiB registers only. The board exposes no PRG RAM, bus conflict or IRQ, and powers on with
+cleared registers and vertical mirroring. Unsupported submappers, CHR RAM, four-screen nametables,
+PRG images beyond 128 KiB and CHR images beyond 512 KiB fail closed. See
+[NESdev mapper 112](https://www.nesdev.org/wiki/INES_Mapper_112).
 
 ## HES NTD-8 (113)
 

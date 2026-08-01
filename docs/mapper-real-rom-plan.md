@@ -78,7 +78,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     66 | GxROM/MHROM        | _Dragon Power_ (USA, pinned NES-GN-ROM-03 profile)                     | _Super Mario Bros. / Duck Hunt_ (USA, MHROM)                                      | Combined 32 KiB PRG and 8 KiB CHR selection                      |
 |     67 | Sunsoft-3          | _Mito Koumon II: Sekai Manyuu Ki_ (Japan)                              | _Fantasy Zone II_ (Japan)                                                         | 2 KiB CHR windows, four-way mirroring and one-shot cycle IRQ     |
 |     68 | Sunsoft-4          | _After Burner_ (USA)                                                   | _Nantettatte!! Baseball_ (Japan)                                                  | CHR-backed nametables, RAM and mirroring                         |
-|     69 | Sunsoft FME-7      | _Batman: Return of the Joker_ (USA)                                    | _Gimmick!_ (Japan), tracked as expected audio-incomplete                          | Command/data banking, RAM window and decrementing IRQ            |
+|     69 | Sunsoft FME-7      | _Batman_ (Japan, pinned BAT-E301 profile)                              | _Batman: Return of the Joker_ (USA) for WRAM; _Gimmick!_ for future 5B audio      | Command/data banking, RAM window and decrementing IRQ            |
 |     70 | Bandai 74xx        | _Kamen Rider Club_ (Japan)                                             | —                                                                                 | Conflicted PRG/CHR latch with hard-wired mirroring               |
 |     71 | Codemasters        | _Fire Hawk_ (USA)                                                      | _Micro Machines_ for fixed-mirroring wiring                                       | Controlled one-screen submapper, PRG switching and timing        |
 |     72 | Jaleco JF-17       | _Pinball Quest_ (Japan)                                                | _Moero!! Pro Tennis_, tracked as expected audio-incomplete                        | Conflict-masked rising-edge PRG and CHR latches                  |
@@ -149,9 +149,10 @@ the same ID covers materially different hardware that the primary image cannot e
   repair a modern header.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'
   original retail cartridge boards. Preserve the conversion provenance and trainer metadata.
-- Mapper 69 can validate FME-7 banking and IRQ with _Batman: Return of the Joker_. _Gimmick!_ also
-  requires Sunsoft 5B audio, which is not implemented, so its audio must not be accepted as a passing
-  baseline yet.
+- Mapper 69 base banking and cycle IRQ now have a pinned Japanese _Batman_ BAT-E301 gameplay profile.
+  That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
+  the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,
+  so its audio must not be accepted as a passing baseline yet.
 - The local _Urusei Yatsura: Lum no Wedding Bell_ image is not Mapper 86 evidence. It declares an
   impossible 32 KiB PRG/32 KiB CHR JF-13 layout; the title is a JF-10/J87 board. Keep it rejected
   and obtain a canonical 128 KiB PRG/64 KiB CHR _Moero!! Pro Yakyuu_ image instead. The local

@@ -46,7 +46,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 66     | GxROM/MHROM    | Verified    | Tests; pinned _Dragon Power_ GNROM gameplay runner                 |
 | 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
 | 68     | Sunsoft-4      | Implemented | PRG/CHR/RAM/ROM-nametable tests; no conformance ROM                |
-| 69     | Sunsoft FME-7  | Implemented | Banking/mirroring/IRQ unit tests; no 5B audio                      |
+| 69     | Sunsoft FME-7  | Verified    | Tests; pinned _Batman_ BAT-E301 gameplay/IRQ; no 5B audio          |
 | 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                       |
 | 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
@@ -592,7 +592,12 @@ and `$6000.D6` supplying PRG A18.
   parameter write: eight 1 KiB CHR banks, a `$6000-$7FFF` window that selects PRG ROM or enabled PRG
   RAM through bits 6-7, three 8 KiB PRG banks with `$E000` fixed, four-way mirroring, and a 16-bit IRQ
   counter decremented every CPU cycle that asserts on the `$0000`→`$FFFF` wrap. The Sunsoft 5B
-  expansion audio at `$C000-$FFFF` is not emulated, so the audio submapper stays out of scope.
+  expansion audio at `$C000-$FFFF` is not emulated, so the audio submapper stays out of scope. Exact
+  content metadata identifies Japanese _Batman_ as the zero-WRAM BAT-E301 Sunsoft-5A board. Its
+  pinned 3,200-frame route enters Stage 1, produces 1,181 distinct frames and records the enabled
+  cycle counter at several live values alongside broad PRG/CHR changes. Exact visual, native-audio,
+  CPU-cycle and input-active save-state hashes make the base Mapper 69 gameplay path reproducible.
+  BAT-E301 does not verify command `$8`'s RAM mode or Sunsoft 5B audio; those remain separate evidence.
 - Mappers 70 and 152 share the Bandai 74\*161/32 latch: a 16 KiB `$8000-$BFFF` bank with `$C000-$FFFF`
   fixed, an 8 KiB CHR bank and AND-type bus conflicts. Mapper 152 spends bit 7 on single-screen
   mirroring, leaving a 3-bit PRG field and making four-screen declarations invalid; mapper 70 keeps

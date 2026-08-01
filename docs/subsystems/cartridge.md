@@ -111,15 +111,16 @@ the generic 8 KiB fallback to its physical zero-WRAM layout. DRAGON BALL Z-B _Cr
 board's generic RAM. JF-25 _The Lord of King_ (PRG `EFB1DF9E`, CHR `7A2DCF20`) does the same for its
 absent external WRAM. IF-28 _Kaiketsu Yanchamaru 3_ (PRG `E30B7F64`, CHR `AF5FD6B5`) removes it
 from the zero-WRAM FC-00-017B H3001 board. TGN-020-SK _Skull & Crossbones_ (PRG `0857DF48`, CHR
-`D0BF8C50`) does the same for its zero-WRAM 800032 REV A RAMBO-1 board. NAM-KK-5900 _King of Kings_
-(PRG `1DD6619B`, CHR `D3F4B947`) supplies Mapper 19 submapper 5, preserving the board's measured
-18.0–19.5 dB N163 mix instead of the conservative legacy fallback. NES-AOROM-03 _Battletoads_ (PRG
-`279710DC`, empty CHR) removes iNES's generic PRG RAM allocation from its zero-WRAM AxROM board while
-retaining the board-implied 8 KiB CHR RAM. BC6 _Bible Adventures_ 1.3 (PRG `9B8E02C0`, CHR
-`B0A8C32A`) likewise removes the generic allocation from its zero-WRAM `COLORDREAMS-74*377` board.
-NES-GN-ROM-03 _Dragon Power_ (PRG `ECE525DD`, CHR `59F0FBAA`) removes the same allocation and corrects
-the matching circulating iNES image's horizontal flag to the physical board's hardwired vertical
-mirroring.
+`D0BF8C50`) does the same for its zero-WRAM 800032 REV A RAMBO-1 board. BAT-E301 _Batman_ (PRG
+`094AFAB5`, CHR `F3B41C18`) removes it from the zero-WRAM Sunsoft-5A board. NAM-KK-5900 _King of
+Kings_ (PRG `1DD6619B`, CHR `D3F4B947`) supplies Mapper 19 submapper 5, preserving the board's
+measured 18.0–19.5 dB N163 mix instead of the conservative legacy fallback. NES-AOROM-03
+_Battletoads_ (PRG `279710DC`, empty CHR) removes iNES's generic PRG RAM allocation from its zero-WRAM
+AxROM board while retaining the board-implied 8 KiB CHR RAM. BC6 _Bible Adventures_ 1.3 (PRG
+`9B8E02C0`, CHR `B0A8C32A`) likewise removes the generic allocation from its zero-WRAM
+`COLORDREAMS-74*377` board. NES-GN-ROM-03 _Dragon Power_ (PRG `ECE525DD`, CHR `59F0FBAA`) removes the
+same allocation and corrects the matching circulating iNES image's horizontal flag to the physical
+board's hardwired vertical mirroring.
 
 The lookup completes or corrects metadata only; it never changes ROM bytes, the mapper number or ROM
 geometry. It may supply an otherwise-unrepresentable submapper or correct a known inaccurate legacy

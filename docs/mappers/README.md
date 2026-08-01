@@ -850,8 +850,17 @@ A command register at `$8000-$9FFF` selects one of sixteen internal registers th
 
 The IRQ counter decrements every CPU cycle while enabled (via `observeCpuBusCycle`) and asserts the
 mapper IRQ line when it wraps `$0000`→`$FFFF`. The Sunsoft 5B expansion audio at `$C000-$FFFF` is not
-emulated. See the [NESdev FME-7 page](https://www.nesdev.org/wiki/Sunsoft_FME-7). Representative
-titles: Gimmick!, Batman: Return of the Joker.
+emulated.
+
+Exact content metadata identifies Japanese _Batman_ as the zero-WRAM
+[BAT-E301 Sunsoft-5A board](https://nescartdb.com/profile/view/3145/batman). Its pinned 1,200-frame
+baseline and 3,200-frame input route cross the opening into Stage 1, produce 1,181 distinct frames
+and record the enabled cycle counter at several live values alongside broad PRG/CHR changes. Visual,
+native-audio and CPU-cycle hashes plus an input-active save-state replay cover the base Mapper 69
+gameplay path. This zero-WRAM, non-audio board cannot verify command `$8`'s RAM mode or Sunsoft 5B
+audio; those remain focused-test and future-profile scope respectively. See the
+[NESdev FME-7 page](https://www.nesdev.org/wiki/Sunsoft_FME-7). Representative titles: Batman,
+Gimmick!, Batman: Return of the Joker.
 
 ## Bandai 74xx (70, 152)
 

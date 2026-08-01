@@ -101,6 +101,12 @@ _Kaiketsu Yanchamaru 3_ by PRG CRC `E30B7F64` and CHR CRC `AF5FD6B5`, removing t
 allocation from its zero-WRAM FC-00-017B H3001 board. Unknown legacy images retain the fallback;
 NES 2.0 must declare either no PRG memory or one exact 8 KiB RAM/NVRAM region.
 
+Mapper 69 can expose an optional directly addressed PRG RAM/NVRAM region through command `$8`.
+Exact content metadata identifies Japanese _Batman_ by PRG CRC `094AFAB5` and CHR CRC `F3B41C18`,
+removing iNES's generic allocation from its zero-WRAM BAT-E301 Sunsoft-5A board. Unknown legacy
+images retain the fallback; explicit NES 2.0 memory remains authoritative and must fit the modeled
+8 KiB window without mixing volatile and nonvolatile regions.
+
 Mapper 19 derives the Namco 163 ASIC's 128-byte shared RAM independently from header PRG/CHR
 fields. The battery flag makes those bytes persistent even when the NES 2.0 PRG NVRAM field is
 zero. Optional external memory is absent or exactly 8 KiB; NES 2.0 must declare it as volatile PRG

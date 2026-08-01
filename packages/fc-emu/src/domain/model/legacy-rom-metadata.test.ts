@@ -134,6 +134,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Batman BAT-E301 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 69,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x094afab5,
+        chrCrc32: 0xf3b41c18,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("does not guess metadata from mapper geometry or a near CRC match", () => {
     expect(
       findLegacyRomMetadata({

@@ -154,6 +154,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Batman (Japan), BAT-E301: Sunsoft-5A without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 69,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x094afab5,
+      chrCrc32: 0xf3b41c18,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // King of Kings, NAM-KK-5900: N163 mix measured in the submapper-5 range.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 19,

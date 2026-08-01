@@ -548,8 +548,10 @@ Two 8 KiB PRG registers at `$8000`/`$8001` map CPU `$8000-$BFFF`; the final two 
 dropped as on MMC3), while `$A000-$A003` select four 1 KiB windows. Register decoding uses the
 documented `$A003` mask across `$8000-$BFFF`; `$8000` bit 6 selects vertical/horizontal mirroring.
 The first two CHR registers can address 512 KiB, while the 1 KiB registers address the lower
-256 KiB. Mapper 33 intentionally has no IRQ; IRQ-capable/mislabeled mapper-48 images are not
-approximated. See [NESdev mapper 33](https://www.nesdev.org/wiki/INES_Mapper_033).
+256 KiB. Because that register drives the board's two-screen CIRAM wiring, four-screen headers are
+rejected instead of silently exposing an impossible nametable layout. Mapper 33 intentionally has
+no IRQ; IRQ-capable/mislabeled mapper-48 images are not approximated. See
+[NESdev mapper 33](https://www.nesdev.org/wiki/INES_Mapper_033).
 
 ## BNROM / NINA-001 (34)
 

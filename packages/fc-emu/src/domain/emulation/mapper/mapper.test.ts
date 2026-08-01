@@ -708,6 +708,10 @@ describe("cartridge mappers", () => {
     ["Jaleco 87 with a non-NROM PRG size", { mapper: 87, prgBanks: 4, chrBanks: 1 }],
     ["Namco 118 beyond its 64 KiB CHR capacity", { mapper: 206, prgBanks: 8, chrBanks: 9 }],
     ["Taito TC0190 beyond its 512 KiB PRG capacity", { mapper: 33, prgBanks: 33, chrBanks: 1 }],
+    [
+      "Taito TC0190 with four-screen nametables",
+      { mapper: 33, prgBanks: 8, chrBanks: 8, fourScreen: true },
+    ],
     ["mapper 78 beyond its 128 KiB CHR capacity", { mapper: 78, prgBanks: 2, chrBanks: 17 }],
     ["UN1ROM with the wrong PRG geometry", { mapper: 94, prgBanks: 4 }],
     ["inverted UxROM beyond its 128 KiB PRG capacity", { mapper: 180, prgBanks: 9 }],

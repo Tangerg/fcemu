@@ -228,6 +228,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireMaximumRomSize(cartridge, 0x80_000, 0x80_000);
       requireChrRom(cartridge, "Taito TC0190");
       requireNoPrgRam(cartridge);
+      requireTwoScreenNametables(cartridge, "Taito TC0190");
       return new TaitoTc0190Mapper(cartridge);
     case 34: {
       const board = resolveMapper34Board(cartridge);

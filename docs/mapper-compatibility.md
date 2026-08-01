@@ -275,8 +275,9 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   distinguish that wiring without a title database.
 - Mapper 33 (Taito TC0190) has two switchable 8 KiB PRG banks followed by the final two fixed banks,
   two 2 KiB and four 1 KiB CHR-ROM windows, and bit-6 horizontal/vertical mirroring. Its 2 KiB CHR
-  register values are offsets in 2 KiB units rather than MMC3-style even 1 KiB indexes. Mapper 48
-  dumps mislabeled as 33 remain out of scope because mapper 33 has no IRQ.
+  register values are offsets in 2 KiB units rather than MMC3-style even 1 KiB indexes. Four-screen
+  headers are rejected because the modeled board only drives the two-screen CIRAM layout. Mapper
+  48 dumps mislabeled as 33 remain out of scope because mapper 33 has no IRQ.
 - Mapper 48 (Taito TC0690) reuses TC0190's PRG/CHR banking circuit but moves mirroring to `$E000`
   and adds an MMC3-shaped filtered-A12 IRQ counter with inverted reload values. IRQ assertion is
   delayed after the counter event: submapper 0 uses the empirically compatible 22 CPU cycles, while

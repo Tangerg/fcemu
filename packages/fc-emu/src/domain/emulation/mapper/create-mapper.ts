@@ -10,6 +10,7 @@ import { Bandai74Mapper } from "./bandai74-mapper.js";
 import { BandaiFcgMapper, type BandaiFcgBoard } from "./bandai-fcg-mapper.js";
 import { Bmc226Mapper } from "./bmc-226-mapper.js";
 import { BnromMapper } from "./bnrom-mapper.js";
+import { BxromWram241Mapper } from "./bxrom-wram-241-mapper.js";
 import { CeDecathlonMapper } from "./ce-decathlon-mapper.js";
 import { CeFongShenBangMapper } from "./ce-fong-shen-bang-mapper.js";
 import { CeSupertoneMapper } from "./ce-supertone-mapper.js";
@@ -607,6 +608,23 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       }
       requireTwoScreenNametables(cartridge, "C&E/Supertone mapper 240");
       return new CeSupertoneMapper(cartridge);
+    case 241:
+      requireBaseSubmapper(cartridge);
+      requireRomLayout(
+        cartridge,
+        [0x8000, 0x1_0000, 0x2_0000, 0x4_0000, 0x8_0000, 0x10_0000],
+        0x2000,
+      );
+      requireVolatileChrRam(cartridge, "BxROM-with-WRAM mapper 241");
+      requireDirectPrgRam(cartridge);
+      if (cartridge.prgWritableBytes !== 0x2000) {
+        throw configurationError(
+          cartridge,
+          "BxROM-with-WRAM mapper 241 requires exactly 8 KiB of PRG RAM or NVRAM",
+        );
+      }
+      requireTwoScreenNametables(cartridge, "BxROM-with-WRAM mapper 241");
+      return new BxromWram241Mapper(cartridge);
     case 242:
       return createAddressLatchMulticartMapper(cartridge);
     case 243:

@@ -16,6 +16,7 @@ export const MapperKind = {
   Gxrom: "gxrom",
   ColorDreams: "color-dreams",
   CeSupertone240: "ce-supertone-240",
+  BxromWram241: "bxrom-wram-241",
   CeDecathlon244: "ce-decathlon-244",
   CeFongShenBang246: "ce-fong-shen-bang-246",
   SachenSa72008: "sachen-sa72008-133",

@@ -70,6 +70,7 @@ export type MapperState =
       readonly selectedPrgBank: number;
       readonly selectedChrBank: number;
     }
+  | { readonly kind: "bxrom-wram-241"; readonly prgBankRegister: number }
   | {
       readonly kind: "ce-decathlon-244";
       readonly selectedPrgBank: number;

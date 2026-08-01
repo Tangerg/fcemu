@@ -91,6 +91,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
 | 240    | C&E/Supertone  | Implemented | Expansion-latch/PRG/CHR/WRAM/state tests; two local replay smokes  |
+| 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
 | 242    | Waixing 43272  | Implemented | Six PRG modes/CHR protect/WRAM/state tests; one local replay smoke |
 | 243    | Sachen SA-020A | Implemented | ASIC/decode/banking/nametable/state tests; local legacy smoke      |
 | 244    | C&E Decathlon  | Implemented | Full PRG/CHR permutation/state tests; local bank-switching smoke   |
@@ -102,7 +103,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/152/182/184/189/206/226/240/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/152/182/184/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -574,6 +575,14 @@ and `$6000.D6` supplying PRG A18.
   NVRAM. Two local _Jing Ke Xin Zhuan_ images exercised five effective latch states across 700
   frames, produced 182/153 distinct frames in their first 600, completed deterministic 100-frame
   replays and retained a running CPU.
+- Mapper 241 models the conflict-free BxROM-with-WRAM contract rather than FCEUX's incorrect-dump
+  exception. Any `$8000-$FFFF` write latches one 32 KiB PRG bank; 8 KiB WRAM or battery NVRAM is
+  direct at `$6000-$7FFF`, 8 KiB CHR RAM is unbanked and mirroring stays hardwired. One local 512 KiB
+  _Edu_ image exercised banks 0/1/2/4 and retained an 8 KiB battery snapshot; one local 128 KiB
+  _Journey to the West_ image exercised banks 0/1/3 with volatile WRAM. Both completed 1200
+  non-halted frames and identical 120-frame save-state replay. Some educational cartridges add an
+  LPC speech device at `$5000-$5FFF`; that optional audio hardware is not yet modeled and remains
+  open bus, so status stays `Implemented` rather than `Verified`.
 - Mapper 242 models the 512 KiB Waixing/UNL-43272 address latch with four outer and three inner PRG
   lines, UNROM/NROM-128/NROM-256 modes and address-selected mirroring. Multicart boards protect
   their unbanked 8 KiB CHR RAM in NROM modes and can replace PRG A4-A0 with the unbridged menu-pad

@@ -196,6 +196,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 227 | 810449/FW-01   | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 228 | Active Ent.    | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 240 | C&E/Supertone  | `ce-supertone-240`        | `ce-supertone-mapper.ts`     | no            | no   |
+| 241 | BxROM + WRAM   | `bxrom-wram-241`          | `bxrom-wram-241-mapper.ts`   | no            | no   |
 | 242 | Waixing 43272  | `address-latch-multicart` | shared multicart mapper      | no            | no   |
 | 243 | Sachen SA-020A | `sachen-sa020a-243`       | `sachen-sa020a-mapper.ts`    | no            | no   |
 | 244 | C&E Decathlon  | `ce-decathlon-244`        | `ce-decathlon-mapper.ts`     | no            | no   |
@@ -1214,6 +1215,32 @@ state. Two user-local _Jing Ke Xin Zhuan_ images exercised five bank states acro
 produced 182/153 distinct frames in their first 600 and completed identical 100-frame replay
 segments without halting. Their copyrighted bytes remain outside the repository. See
 [NESdev mapper 240](https://www.nesdev.org/wiki/INES_Mapper_240).
+
+## BxROM with WRAM (241)
+
+Mapper 241 adds direct 8 KiB WRAM or battery-backed NVRAM at `$6000-$7FFF` to a conflict-free BxROM
+data path. Every write at `$8000-$FFFF` replaces one byte-wide latch; its connected low lines select
+the complete 32 KiB PRG window while unconnected high lines naturally mirror the available power-of-
+two ROM. The board has unbanked 8 KiB volatile CHR RAM, no IRQ and horizontal or vertical mirroring
+hardwired in the cartridge header. Cold power clears the PRG latch; warm reset does not reach it.
+
+The factory accepts power-of-two PRG capacities from 32 KiB through 1 MiB, exactly 8 KiB of PRG RAM
+or NVRAM, exactly 8 KiB of volatile CHR RAM and only the base submapper. It rejects four-screen
+memory and does not reproduce FCEUX's D7 bank alteration, which exists only for an overdump whose
+proper identity is NES 2.0 mapper 481.
+
+Some educational cartridges additionally carry a TMS5220C-data-compatible LPC speech device at
+`$5000-$5FFF`. iNES/NES 2.0 does not distinguish that optional population with a mapper subvariant;
+the synthesis device is not yet implemented, so its range remains open bus rather than returning a
+fabricated constant. This limits speech without contaminating the proven banking owner.
+
+A user-local 512 KiB _Edu_ image selected raw banks 0/1/2/4, retained an 8 KiB battery snapshot and
+completed 1200 non-halted frames. A 128 KiB _Journey to the West_ image selected banks 0/1/3 with
+volatile WRAM. Both reproduced identical 120-frame save-state segments. Their bytes remain outside
+the repository. See [NESdev mapper 241](https://www.nesdev.org/wiki/INES_Mapper_241), the
+[Mesen CE implementation](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Unlicensed/Mapper241.h)
+and the
+[MAME TXC board notes](https://github.com/mamedev/mame/blob/dcc9f33c59815103994534a85d2f70d77b2ca862/src/devices/bus/nes/txc.cpp#L259).
 
 ## Sachen SA-020A (243)
 

@@ -873,6 +873,15 @@ export const REAL_ROM_PROFILES = Object.freeze({
 });
 
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
+const REQUIRED_CARTRIDGE_FIELDS = Object.freeze([
+  "format",
+  "mapperNumber",
+  "submapperNumber",
+  "consoleRegion",
+  "hasWritableChrMemory",
+  "prgRomBytes",
+  "chrRomBytes",
+]);
 
 export function validateRealRomProfiles(profiles, buttonNames) {
   if (!isRecord(profiles) || Object.keys(profiles).length === 0) {
@@ -890,13 +899,68 @@ export function validateRealRomProfiles(profiles, buttonNames) {
     if (fileNames.has(profile.fileName)) fail(id, `duplicates fileName ${profile.fileName}`);
     fileNames.add(profile.fileName);
     requireSha256(id, "sha256", profile.sha256);
-    if (!isRecord(profile.cartridge)) fail(id, "cartridge must be an object");
-    requireInteger(id, "cartridge.mapperNumber", profile.cartridge.mapperNumber, 0);
+    validateCartridge(id, profile.cartridge);
 
     validateScenario(id, "baseline", profile.baseline, false);
     validateScenario(id, "interactive", profile.interactive, true);
     validateEvents(id, profile.interactive, validButtons);
     validateReplay(id, profile.replay, profile.interactive);
+  }
+}
+
+function validateCartridge(id, cartridge) {
+  if (!isRecord(cartridge)) fail(id, "cartridge must be an object");
+  for (const field of REQUIRED_CARTRIDGE_FIELDS) {
+    if (!Object.hasOwn(cartridge, field)) fail(id, `cartridge is missing required field ${field}`);
+  }
+
+  for (const [field, value] of Object.entries(cartridge)) {
+    const path = `cartridge.${field}`;
+    switch (field) {
+      case "format":
+        requireOneOf(id, path, value, ["ines", "nes2"]);
+        break;
+      case "mapperNumber":
+        requireIntegerBetween(id, path, value, 0, 0x0fff);
+        break;
+      case "submapperNumber":
+        requireIntegerBetween(id, path, value, 0, 0x0f);
+        break;
+      case "timingMode":
+        requireIntegerBetween(id, path, value, 0, 3);
+        break;
+      case "consoleType":
+        requireIntegerBetween(id, path, value, 0, 1);
+        break;
+      case "vsPpuType":
+      case "vsHardwareType":
+        requireIntegerBetween(id, path, value, 0, 0x0f);
+        break;
+      case "consoleRegion":
+        requireOneOf(id, path, value, ["ntsc", "pal", "dendy"]);
+        break;
+      case "mirroringMode":
+        requireIntegerBetween(id, path, value, 0, 4);
+        break;
+      case "hasBatteryBackup":
+      case "hasWritableChrMemory":
+        requireBoolean(id, path, value);
+        break;
+      case "prgRomBytes":
+        requireInteger(id, path, value, 1);
+        break;
+      case "chrRomBytes":
+      case "prgRamBytes":
+      case "prgNvRamBytes":
+      case "chrRamBytes":
+      case "chrNvRamBytes":
+      case "mapperRamBytes":
+      case "mapperNvRamBytes":
+        requireInteger(id, path, value, 0);
+        break;
+      default:
+        fail(id, `cartridge contains unknown field ${field}`);
+    }
   }
 }
 
@@ -983,6 +1047,22 @@ function requireInteger(id, path, value, minimum) {
   if (!Number.isSafeInteger(value) || value < minimum) {
     fail(id, `${path} must be an integer greater than or equal to ${minimum}`);
   }
+}
+
+function requireIntegerBetween(id, path, value, minimum, maximum) {
+  if (!Number.isSafeInteger(value) || value < minimum || value > maximum) {
+    fail(id, `${path} must be an integer between ${minimum} and ${maximum}`);
+  }
+}
+
+function requireOneOf(id, path, value, allowedValues) {
+  if (!allowedValues.includes(value)) {
+    fail(id, `${path} must be one of ${allowedValues.join(", ")}`);
+  }
+}
+
+function requireBoolean(id, path, value) {
+  if (typeof value !== "boolean") fail(id, `${path} must be boolean`);
 }
 
 function isRecord(value) {

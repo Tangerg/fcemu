@@ -80,8 +80,9 @@ Each profile verifies:
 Profile data lives in
 [`scripts/real-rom-profiles.mjs`](../scripts/real-rom-profiles.mjs), separate from runner execution
 logic. Before reading a ROM, the runner rejects invalid IDs, path-bearing or duplicate filenames,
-malformed SHA-256 values, unsorted or unknown input events, checkpoint gaps and replay segments that
-leave the pinned interactive timeline. The validator has focused regressions in
+malformed SHA-256 values, missing, unknown, mistyped or out-of-range cartridge metadata, unsorted or
+unknown input events, checkpoint gaps and replay segments that leave the pinned interactive
+timeline. The validator has focused regressions in
 [`scripts/real-rom-profiles.test.mjs`](../scripts/real-rom-profiles.test.mjs).
 
 These commands are intentionally not part of CI because the ROM files cannot be distributed with the

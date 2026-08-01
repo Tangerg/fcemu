@@ -15,6 +15,40 @@ describe("real-ROM profile validation", () => {
     expect(() => validateRealRomProfiles(profiles, BUTTON_NAMES)).toThrowError(/fileName.*path/);
   });
 
+  it("rejects missing and unknown cartridge metadata fields", () => {
+    const missing = cloneOneProfile();
+    delete missing.fixture.cartridge.consoleRegion;
+    expect(() => validateRealRomProfiles(missing, BUTTON_NAMES)).toThrowError(
+      /missing required field consoleRegion/,
+    );
+
+    const unknown = cloneOneProfile();
+    unknown.fixture.cartridge.prgROMBytes = unknown.fixture.cartridge.prgRomBytes;
+    expect(() => validateRealRomProfiles(unknown, BUTTON_NAMES)).toThrowError(
+      /unknown field prgROMBytes/,
+    );
+  });
+
+  it("rejects invalid cartridge metadata values", () => {
+    const format = cloneOneProfile();
+    format.fixture.cartridge.format = "unif";
+    expect(() => validateRealRomProfiles(format, BUTTON_NAMES)).toThrowError(
+      /cartridge\.format.*one of ines, nes2/,
+    );
+
+    const mapper = cloneOneProfile();
+    mapper.fixture.cartridge.mapperNumber = 0x1000;
+    expect(() => validateRealRomProfiles(mapper, BUTTON_NAMES)).toThrowError(
+      /cartridge\.mapperNumber.*between 0 and 4095/,
+    );
+
+    const battery = cloneOneProfile();
+    battery.fixture.cartridge.hasBatteryBackup = 1;
+    expect(() => validateRealRomProfiles(battery, BUTTON_NAMES)).toThrowError(
+      /cartridge\.hasBatteryBackup.*boolean/,
+    );
+  });
+
   it("rejects unknown buttons and unsorted input events", () => {
     const unknownButton = cloneOneProfile();
     unknownButton.fixture.interactive.events[0].button = "turbo";

@@ -185,6 +185,38 @@ describe("Bus lifecycle", () => {
     expect(bus.CPU.readByte(0x4018)).toBe(0x5a);
   });
 
+  it("rejects an invalid DMA-access flag before changing internal RAM", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const changedRam = before.ram.slice();
+    changedRam[0] = 0x5a;
+
+    expect(() =>
+      bus.restoreState({
+        ...before,
+        ram: changedRam,
+        performingDmaMemoryAccess: 1 as unknown as boolean,
+      }),
+    ).toThrow(/DMA-access flag/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
+  it("rejects IRQ-source disagreement before changing internal RAM", () => {
+    const bus = new Bus(createTestCartridge());
+    const before = bus.captureState();
+    const changedRam = before.ram.slice();
+    changedRam[0] = 0x6b;
+
+    expect(() =>
+      bus.restoreState({
+        ...before,
+        ram: changedRam,
+        irqSources: ["mapper"],
+      }),
+    ).toThrow(/IRQ sources disagree/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
   it("commits only the latest $4016 write on a PUT cycle", () => {
     const bus = new Bus(createTestCartridge());
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;

@@ -155,11 +155,17 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if (state.pendingControllerWrite !== undefined && !isByte(state.pendingControllerWrite)) {
       throw new RangeError("Bus save state contains an invalid pending controller write");
     }
+    if (typeof state.performingDmaMemoryAccess !== "boolean") {
+      throw new RangeError("Bus save state contains an invalid DMA-access flag");
+    }
     if (state.ppu.nmiLineAsserted !== state.cpu.interrupts.nmiLineAsserted) {
       throw new Error("Bus save-state PPU /NMI output disagrees with the CPU input line");
     }
-    if (Boolean(state.vsSystem) !== Boolean(this.vsSystem)) {
+    if ((state.vsSystem === undefined) !== (this.vsSystem === undefined)) {
       throw new Error("Bus save state targets another console type");
+    }
+    if (irqSources.length > 0 !== state.cpu.interrupts.irqLineAsserted) {
+      throw new Error("Bus save-state IRQ sources disagree with the CPU interrupt line");
     }
     this.ram.set(state.ram);
     this.cartridge.restoreMemoryState(state.cartridgeMemory);
@@ -174,9 +180,6 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.clock.restoreState(state.clock);
     this.irqSources.clear();
     for (const source of irqSources) this.irqSources.add(source);
-    if (this.irqSources.size > 0 !== this.cpu.isIRQLineAsserted) {
-      throw new Error("Bus save-state IRQ sources disagree with the CPU interrupt line");
-    }
     this.performingDmaMemoryAccess = state.performingDmaMemoryAccess;
     this.pendingControllerWrite = state.pendingControllerWrite;
   }
@@ -473,7 +476,11 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
 
   private static validateIRQSources(sources: readonly IRQSource[]): readonly IRQSource[] {
     const valid = new Set<IRQSource>([IRQSource.ApuDmc, IRQSource.ApuFrame, IRQSource.Mapper]);
-    if (sources.some((source) => !valid.has(source)) || new Set(sources).size !== sources.length) {
+    if (
+      !Array.isArray(sources) ||
+      sources.some((source) => !valid.has(source)) ||
+      new Set(sources).size !== sources.length
+    ) {
       throw new RangeError("Bus save state contains invalid IRQ sources");
     }
     return sources;

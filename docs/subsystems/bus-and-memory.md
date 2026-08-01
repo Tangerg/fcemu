@@ -223,8 +223,11 @@ asserted `irqSources`, the `performingDmaMemoryAccess` flag, and `pendingControl
 one is pending. `restoreState()` is transactional: it captures the current state, attempts an
 unchecked restore, and rolls back on any thrown error. The unchecked restore validates the RAM type
 and length, validates the IRQ-source array (only the three known sources, no duplicates), validates
-`pendingControllerWrite` as a byte, and cross-checks two invariants — the PPU `/NMI` output must equal
-the CPU `/NMI` input line, and the presence of any IRQ source must equal `cpu.isIRQLineAsserted`.
+`pendingControllerWrite` as a byte, requires a boolean DMA-access flag, and distinguishes an omitted
+VS snapshot from any supplied value. Before changing RAM or a device it cross-checks two invariants:
+the PPU `/NMI` output must equal the CPU `/NMI` input line, and the presence of any IRQ source must
+equal the saved CPU IRQ input. Nested device validation may still fail later, but the outer transaction
+then restores the complete pre-restore snapshot.
 
 ## Verification and known limits
 

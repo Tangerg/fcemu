@@ -315,6 +315,70 @@ const PROFILES = Object.freeze({
       cpuCycles: 3_573_660,
     },
   },
+  dbz5: {
+    title: "Dragon Ball Z 5 (Chinese)",
+    fileName: "dbz5cn.nes",
+    sha256: "4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 12,
+      submapperNumber: 0,
+      consoleRegion: "ntsc",
+      mirroringMode: 0,
+      prgRomBytes: 262_144,
+      chrRomBytes: 524_288,
+      prgRamBytes: 8192,
+      hasWritableChrMemory: false,
+    },
+    baseline: {
+      frames: 600,
+      minimumDistinctFrames: 400,
+      finalFrameSha256: "84d66ee732472f77aeb4fafe7805a5ef1ecc4c20a137f6ef8ddd9685a595e6cb",
+      frameSequenceSha256: "4e0b93991ac0cead1757054bb3d73b2e3dcd305c70b8b7fad90dd40cd653b4d6",
+      cpuCycles: 17_840_908,
+    },
+    interactive: {
+      frames: 1200,
+      minimumDistinctFrames: 550,
+      events: [
+        { frame: 600, button: "start", pressed: true },
+        { frame: 602, button: "start", pressed: false },
+        { frame: 840, button: "start", pressed: true },
+        { frame: 842, button: "start", pressed: false },
+        { frame: 960, button: "right", pressed: true },
+        { frame: 1020, button: "a", pressed: true },
+        { frame: 1026, button: "a", pressed: false },
+        { frame: 1080, button: "b", pressed: true },
+        { frame: 1086, button: "b", pressed: false },
+        { frame: 1140, button: "right", pressed: false },
+      ],
+      checkpoints: {
+        120: "5a3f1d11969a48903f816c352099e1dcf7db411c05b2d9add79888154b400b03",
+        240: "aa15357eabf1d8250bb509cb6ad1a0db16e0a93d305e5273a61a37d6fa767a49",
+        360: "3eee7f613f758e3859c0ae9665b6b22f9427079bcab27678e40d71db904f9b9f",
+        480: "10cf8fb2d6aa5f131eb8a9505e44dc3861e2496600023a46f9934ef6383eda24",
+        600: "84d66ee732472f77aeb4fafe7805a5ef1ecc4c20a137f6ef8ddd9685a595e6cb",
+        720: "6fd9657195b7b3f6ff9211db08d861fe8c4eb258d3b0a63e62161742240c1cc0",
+        840: "afe994aae0c311e7ddefd4fe2f29cb4b6f370bee6ca233c588dd85077d7c4451",
+        960: "c96fc561477f51f1fd938ecffdc44abf117a2a549c77618fc2ac751ac5e2a6c4",
+        1080: "2c335930bd55d9b1bbf48f8cc871cd170d889dde9137b1265505cd007e4eda18",
+        1200: "62b19453cff16a9fa852919211483bfe59392ce755cce94ea573fb696a02300c",
+      },
+      finalFrameSha256: "62b19453cff16a9fa852919211483bfe59392ce755cce94ea573fb696a02300c",
+      frameSequenceSha256: "0c74eb08873f6eff3c657885d1bbd5c48e0bb41bd0ac55a2a3dcffaf2b6ef3b8",
+      audioSamples: 879_874,
+      audioSha256: "151a1d51a1a674024b819c4fdcd65fe2dc6031357a84852d1796de29c9900551",
+      cpuCycles: 35_709_209,
+    },
+    replay: {
+      checkpointFrame: 960,
+      frames: 120,
+      frameSequenceSha256: "7dc821e6db87143a3d6cc3c21bf1d7fbbd765b262b68b8e914baf0e269b17ae2",
+      audioSamples: 88_055,
+      audioSha256: "cb92b6e9ecc0c602de0c41e900608ead20f25cc9ae589cb6db61c79d42d935d3",
+      cpuCycles: 3_573_660,
+    },
+  },
 });
 
 const profileArgument = process.argv[2];
@@ -618,8 +682,9 @@ function printResults(results) {
 }
 
 function printUsage() {
+  const profileIds = Object.keys(PROFILES).join("|");
   console.error(
-    "Usage: yarn smoke:real-rom -- <mario|contra|kage|smb3|punchout> /path/to/file.nes\n" +
+    `Usage: yarn smoke:real-rom -- <${profileIds}> /path/to/file.nes\n` +
       "       yarn smoke:real-rom -- all /path/to/rom-directory\n" +
       "       yarn smoke:real-rom -- --list",
   );

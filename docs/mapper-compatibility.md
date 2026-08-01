@@ -23,7 +23,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
 | 10     | MMC4/FxROM     | Implemented | PRG/RAM/latch/mirroring tests; no conformance ROM                  |
 | 11     | Color Dreams   | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
-| 12     | Rex/FFE 4M     | Implemented | MMC3A/outer-CHR/card/state tests; local DBZ5 replay                |
+| 12     | Rex/FFE 4M     | Verified    | MMC3A/card tests; pinned SL-5020B _DBZ5_ real-ROM runner           |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
 | 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
 | 16     | Bandai FCG     | Implemented | ASIC-decode/IRQ/24C02/persistence/state tests; no fixture          |
@@ -257,10 +257,12 @@ and `$6000.D6` supplying PRG A18.
   only hard-wired language bit D0; all known boards select Chinese. The MMC3 core retains its
   optional 8 KiB WRAM window and revision-A zero-latch IRQ behavior. The older FCEUX deferred-outer
   latch and reset-toggled language choice are compatibility inventions and are not hidden variants.
-  A local 256 KiB PRG + 512 KiB CHR _Dragon Ball Z 5_ image ran 1,200 frames without halting and
-  replayed frames 601-720 identically. It read `$4132` once and wrote `$02` there 1,400 times, so it
-  validates the language/decode path but never drives the two connected outer-CHR bits; those remain
-  unit-tested hardware evidence.
+  The pinned 256 KiB PRG + 512 KiB CHR _Dragon Ball Z 5_ profile runs 1,200 frames with a deterministic
+  input timeline, audio and CPU-cycle checks, then replays frames 961-1,080 identically from a save
+  state. A separate register trace read `$4132` once and wrote `$02` there 1,400 times, so the profile
+  validates the SL-5020B language/decode path but never drives the two connected outer-CHR bits;
+  those remain unit-tested hardware evidence. The distinct FFE 4M submapper-1 board is still missing
+  external verification.
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.

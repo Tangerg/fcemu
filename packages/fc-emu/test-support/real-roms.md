@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover five files used during development:
+The current profiles cover six files used during development:
 
 | Profile    | Expected file    | SHA-256                                                            | Mapper |
 | ---------- | ---------------- | ------------------------------------------------------------------ | ------ |
@@ -36,6 +36,7 @@ The current profiles cover five files used during development:
 | `kage`     | `KAGE.NES`       | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
 | `smb3`     | `SMB3-J.NES`     | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
 | `punchout` | `PUNCHOUT-J.NES` | `137a2f258d13367238f352d6471f0f62682dadfa4764e848b5bc96145fe789c0` | 9      |
+| `dbz5`     | `dbz5cn.nes`     | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
 
 Run one profile with an explicit file:
 
@@ -45,6 +46,7 @@ yarn smoke:real-rom -- contra /absolute/path/to/CONTRA.NES
 yarn smoke:real-rom -- kage /absolute/path/to/KAGE.NES
 yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
 yarn smoke:real-rom -- punchout /absolute/path/to/PUNCHOUT-J.NES
+yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 ```
 
 Or run every profile against a directory containing the expected filenames:
@@ -70,7 +72,8 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4 or 9 software.
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 9 or 12 software. In particular, the
+Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M submapper-1 board.
 
 If a profile diverges:
 

@@ -357,6 +357,33 @@ describe("Cartridge", () => {
     expect(persistent.readMapperRam(3)).toBe(0x52);
   });
 
+  it("models Mapper 164's volatile work RAM and erased 93C66 EEPROM separately", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 164, battery: true, prgBanks: 64 }),
+    );
+
+    expect(cartridge).toMatchObject({
+      prgRamBytes: 0x0800,
+      prgNvRamBytes: 0,
+      mapperRamBytes: 0,
+      mapperNvRamBytes: 0x0200,
+      chrRamBytes: 0x2000,
+      hasBatteryBackup: true,
+    });
+    expect(cartridge.readMapperRam(0)).toBe(0xff);
+    expect(cartridge.readMapperRam(0x01ff)).toBe(0xff);
+    cartridge.writePrgRam(0, 0x41);
+    cartridge.writeMapperRam(3, 0x52);
+    expect(cartridge.captureBatterySave()).toMatchObject({
+      revision: 1,
+      data: expect.objectContaining({ length: 0x0200, 3: 0x52 }),
+    });
+
+    cartridge.powerOn();
+    expect(cartridge.readPrgRam(0)).toBe(0);
+    expect(cartridge.readMapperRam(3)).toBe(0x52);
+  });
+
   it("owns MMC5 ExRAM as volatile mapper memory even on a battery board", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({ mapper: 5, battery: true, prgBanks: 2, chrBanks: 1 }),

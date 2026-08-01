@@ -32,6 +32,7 @@ const LEGACY_RAM_UNIT = 8192;
 const TAITO_X1_005_RAM_SIZE = 0x80;
 const TAITO_X1_017_RAM_SIZE = 0x1400;
 const BANDAI_24C02_NVRAM_SIZE = 0x100;
+const DONGDA_PEC9588_PRG_RAM_SIZE = 0x0800;
 const FFE_MAGIC_CARD_WRAM_SIZE = 0x8000;
 const OEKA_KIDS_CHR_RAM_SIZE = 0x8000;
 const LROG017_CHR_RAM_SIZE = 0x2000;
@@ -166,6 +167,13 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       ...header,
       prgRamSize: 0,
       prgNvRamSize: BANDAI_24C02_NVRAM_SIZE,
+    });
+  }
+  if (header.mapperNumber === 164 && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      prgRamSize: DONGDA_PEC9588_PRG_RAM_SIZE,
+      prgNvRamSize: 0,
     });
   }
   const isFfeRamCartridge =

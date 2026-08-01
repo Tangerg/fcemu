@@ -84,7 +84,8 @@ and 7; the remaining fields diverge by format.
 the battery flag routes that entire legacy window to NVRAM rather than volatile RAM. iNES with no CHR
 ROM implies exactly 8 KiB of volatile CHR RAM unless mapper 96 supplies its physical 32 KiB chip.
 Mapper 77 adds 8 KiB of board-implied RAM beside CHR ROM, and mapper 119 similarly implies TQROM's
-8 KiB RAM.
+8 KiB RAM. Mapper 164 is another explicit exception: its battery flag denotes a mapper-owned
+512-byte EEPROM, while format policy supplies 2 KiB of volatile CPU work RAM.
 
 `mirroringMode` is a `NametableMirroring` enum (`Horizontal`, `Vertical`, `SingleScreenLower`,
 `SingleScreenUpper`, `FourScreen`); the header only ever decodes Horizontal, Vertical, or FourScreen,
@@ -150,7 +151,7 @@ access goes through index-based accessors, and the frozen `layout` records all s
 
 `applyBoardMemoryPolicy` replaces header-generic capacities with physical board sizes when the
 format cannot express them faithfully: 32 KiB volatile work RAM for FFE mappers 6/8/17, 128 bytes
-for mapper 80's X1-005, 5 KiB for mapper 82's X1-017 and 2 KiB for legacy mapper 99. They then use the same `CartridgeMemory`
+for mapper 80's X1-005, 5 KiB for mapper 82's X1-017, and 2 KiB for legacy mappers 99 and 164. They then use the same `CartridgeMemory`
 ownership, power-loss and battery snapshot paths as ordinary PRG memory; the mapper alone owns
 address decoding and protection keys.
 
@@ -158,6 +159,11 @@ Namco 163's 128-byte shared chip RAM does not occupy PRG or CHR address space. `
 that exact capacity for mapper 19 and allocates it as mapper RAM or mapper NVRAM according to the
 battery flag. This keeps optional external WRAM independent and lets a battery-only internal-RAM
 board persist without fabricating an 8 KiB PRG region.
+
+Dongda PEC-9588's 512-byte 93C66 EEPROM is also mapper-owned memory. Mapper 164's battery flag makes
+that region persistent independently of its optional volatile PRG work RAM. The memory starts erased
+to `$FF`; serial commands mutate it through mapper accessors so battery revisions, power behavior and
+save-state snapshots remain owned by `CartridgeMemory` rather than by the protocol device.
 
 | Region              | Backing field | Volatile | In battery save | Cleared by `powerOn` | Logical space (order)   |
 | ------------------- | ------------- | -------- | --------------- | -------------------- | ----------------------- |

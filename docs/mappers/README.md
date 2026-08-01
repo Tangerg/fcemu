@@ -190,6 +190,7 @@ the mirroring modes their own registers can drive when restoring state.
 | 150 | Sachen SA-015  | `sachen-sa015-150`        | `sachen-sa015-mapper.ts`     | no            | no   |
 | 152 | Bandai 74xx    | `bandai-74`               | `bandai74-mapper.ts`         | AND           | no   |
 | 163 | Nanjing FC-001 | `nanjing-fc001-163`       | `nanjing-fc001-mapper.ts`    | no            | no   |
+| 164 | Dongda PEC9588 | `dongda-pec9588-164`      | `dongda-pec9588-mapper.ts`   | no            | no   |
 | 180 | Inverted UxROM | `uxrom`                   | `uxrom-mapper.ts`            | submapper     | no   |
 | 182 | SuperGame MMC3 | `supergame-114`           | `supergame-114-mapper.ts`    | no            | A12  |
 | 184 | Sunsoft-1      | `sunsoft-1`               | `sunsoft1-mapper.ts`         | no            | no   |
@@ -1338,6 +1339,42 @@ _Xian Jian Qi Xia Zhuan_ profile runs a 600-frame title baseline and 2,400 input
 both title stages into the opening dialogue. It produces 69 distinct interactive frames, exact
 visual/audio/CPU-cycle checkpoints and a deterministic 120-frame save-state replay. See
 [NESdev mapper 163](https://www.nesdev.org/wiki/INES_Mapper_163).
+
+## Dongda PEC-9588 (164)
+
+Mapper 164 models the Dongda PEC-9588/cy2000-3 circuit rather than the obsolete two-register BxROM
+approximation found in older emulator sources. Register pages `$5000`, `$5100`, `$5200` and `$5300`
+select the low PRG/mode lines, high PRG lines, Microwire pins and mirroring control. Every register
+uses an `$FF00` decode. On power or reset, all board registers clear: `$8000-$BFFF` selects 16 KiB
+bank 0 and `$C000-$FFFF` selects bank `$1F`, where the reset vector resides.
+
+With `$5000.D4` clear, the board is UxROM-like. D5 and D3-D0 select the lower 16 KiB bank; the upper
+window uses bank `$1F`, or bank `$1C/$1E` when D6 enables its alternative fixed-bank wiring. With D4
+set, D3-D0 select a consecutive 32 KiB BxROM-style bank. `$5100.D1-D0` supply PRG A20/A19 in both
+modes. UxROM mode forces vertical mirroring; BxROM mode selects horizontal or vertical mirroring
+from `$5300.D7`.
+
+The cartridge has 8 KiB of unbanked volatile CHR RAM. When `$5000.D7` enables 1bpp mode, CHR A3 and
+A12 no longer follow pattern-fetch A3/A12: they use PPU A0/A9 captured on the most recent PPU A13
+rising edge. This models the board's address lines directly and works for rendering and `$2007`
+access without scanline callbacks. The `$6000-$7FFF` window is absent or a 2 KiB volatile RAM chip
+mirrored four times; legacy iNES uses the 2 KiB compatibility layout, while NES 2.0 can declare its
+absence explicitly.
+
+Save data lives in a separate 512-byte 93C66 EEPROM, not in PRG NVRAM. `$5200` drives EEPROM DI,
+clock and chip-select, while `$5500-$55FF` drives only CPU D2 with the inverted serial output. The
+Microwire device implements READ with its initial dummy bit and sequential output, WRITE/ERASE,
+WRAL/ERAL and EWEN/EWDS write protection. In-flight protocol and write-enable state participate in
+save states; EEPROM bytes use mapper-owned NVRAM and therefore survive power cycles and battery-save
+round trips independently of volatile PRG/CHR RAM.
+
+The factory accepts 512 KiB, 1 MiB or 2 MiB PRG ROM, 8 KiB volatile CHR RAM, optional 2 KiB volatile
+PRG RAM, the 512-byte EEPROM, two-screen nametables and submapper 0. The checksum-pinned 1 MiB
+_Digimon: Crystal Version_ profile verifies a 600-frame animated baseline with 574 distinct frames
+and 3,000 input-driven frames through the title, character selection and opening dialogue with 345
+distinct frames, exact visual/audio/CPU-cycle checkpoints and deterministic 120-frame save-state
+replay. See [NESdev mapper 164](https://www.nesdev.org/wiki/INES_Mapper_164) and Microchip's
+[AT93C66B command/timing specification](https://ww1.microchip.com/downloads/aemDocuments/documents/MPD/ProductDocuments/DataSheets/AT93C56B-AT93C66B-Microwire-Serial-EEPROM-Industrial-Grade-DS20006260.pdf).
 
 ## Sunsoft-1 (184)
 

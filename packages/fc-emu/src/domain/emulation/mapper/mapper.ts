@@ -103,6 +103,28 @@ export type MapperState =
       readonly lastPpuAddress: number;
     }
   | {
+      readonly kind: "dongda-pec9588-164";
+      readonly prgBankLow: number;
+      readonly prgBankHigh: number;
+      readonly mirroringControl: number;
+      readonly latchedChrA3: number;
+      readonly latchedChrA12: number;
+      readonly lastPpuAddress: number;
+      readonly eeprom: {
+        readonly mode: number;
+        readonly command: number;
+        readonly commandBits: number;
+        readonly address: number;
+        readonly data: number;
+        readonly dataBits: number;
+        readonly readBit: number;
+        readonly output: number;
+        readonly writeEnabled: boolean;
+        readonly selected: boolean;
+        readonly clock: number;
+      };
+    }
+  | {
       readonly kind: "unl-187";
       readonly prgControl: number;
       readonly securityIndex: number;

@@ -13,11 +13,11 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 94 implemented mapper IDs; twenty-nine mapper IDs currently have reproducible external or pinned
+- 95 implemented mapper IDs; thirty mapper IDs currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-17 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad input, IndexedDB persistence and quick saves.
-- Checksum-pinned external conformance runners and twenty-eight local real-ROM smoke profiles.
+- Checksum-pinned external conformance runners and twenty-nine local real-ROM smoke profiles.
 - A built-package consumer gate for public declarations, runtime exports and blocked deep imports.
 
 See [Mapper compatibility](./mapper-compatibility.md) and [Testing](./testing.md) for the precise
@@ -46,7 +46,8 @@ the historical title table, whose own introduction warns that those fields are i
 All 31 IDs in that bounded track meet the mapper implementation definition of done below. Mappers 12
 (Rex Soft SL-5020B/FFE 4M), 41 (Caltron 6-in-1), 67 (Sunsoft-3), 74 (Waixing Type A), 114/182
 (SuperGame MMC3), 115/248 (Kasheng MMC3), 117 (Future Media), 133 (Sachen SA-72008), 142 (Kaiser
-KS7032), 150 (Sachen SA-015/SA-630), 163 (Nanjing FC-001), 187 (UNL SF3/KOF96), 189 (TXC MMC3),
+KS7032), 150 (Sachen SA-015/SA-630), 163 (Nanjing FC-001), 164 (Dongda PEC-9588), 187
+(UNL SF3/KOF96), 189 (TXC MMC3),
 226 (BMC 42/63/76-in-1), 240 (C&E/Supertone),
 241 (BxROM with WRAM), 242 (Waixing 43272), 243
 (Sachen SA-020A), 244 (C&E Decathlon), 245 (Waixing F003), 246 (C&E Fong Shen Bang) and 250 (Time

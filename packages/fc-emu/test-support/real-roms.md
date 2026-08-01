@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover twenty-eight files used during development:
+The current profiles cover twenty-nine files used during development:
 
 | Profile          | Expected file                                | SHA-256                                                            | Mapper |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -46,6 +46,7 @@ The current profiles cover twenty-eight files used during development:
 | `jovialrace`     | `Jovial Race (Clamshell).nes`                | `953d51cffae411ce92147de6e054236788b42abccf7d8060205014c38a0cb0fd` | 133    |
 | `kaisersmb2`     | `Super Mario Bros 2 (J) (Kaiser Pirate).nes` | `f715e217f2b221d94c36744136f177442e6ccba0b3c7f15d7e3ad44f96975d75` | 142    |
 | `chinesepaladin` | `pal_I.nes`                                  | `2df705fdcb03fe257cb66dc30a5f6cd41e9d242e97f3dc78ebc32d375f1f65ca` | 163    |
+| `digimoncrystal` | `数码暴龙水晶版.nes`                         | `0dedaf18953a6161099ccbcd8b38ba9216457ead2f344ecbcc74b5570dc7549c` | 164    |
 | `pocahontas`     | `Pocahontas.nes`                             | `c41984e57d492149e6778b29b8cdc1bc733eda8fc8c1891d782384e019b46ede` | 182    |
 | `wingofmadoola`  | `Wing of Madoola, The ((J).nes`              | `d5b56d62c48ded34524db1a556086606bd9f816433eed1539e70501e8db64833` | 184    |
 | `kof96`          | `kof96.nes`                                  | `0498c552f672488399ea8f741dc862ae8188367d8486fbf52214255eaf53bd1d` | 187    |
@@ -78,6 +79,7 @@ yarn smoke:real-rom -- pinbot "/absolute/path/to/Pinbot (U).nes"
 yarn smoke:real-rom -- jovialrace "/absolute/path/to/Jovial Race (Clamshell).nes"
 yarn smoke:real-rom -- kaisersmb2 "/absolute/path/to/Super Mario Bros 2 (J) (Kaiser Pirate).nes"
 yarn smoke:real-rom -- chinesepaladin /absolute/path/to/pal_I.nes
+yarn smoke:real-rom -- digimoncrystal /absolute/path/to/数码暴龙水晶版.nes
 yarn smoke:real-rom -- pocahontas /absolute/path/to/Pocahontas.nes
 yarn smoke:real-rom -- wingofmadoola "/absolute/path/to/Wing of Madoola, The ((J).nes"
 yarn smoke:real-rom -- kof96 /absolute/path/to/kof96.nes
@@ -126,7 +128,7 @@ The runner exits non-zero for a missing file, identity mismatch or any failed ch
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
 not a general compatibility claim for all Mapper 0, 2, 3, 4, 9, 12, 112, 114, 115, 117, 118, 119,
-133, 142, 163, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
+133, 142, 163, 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.
 

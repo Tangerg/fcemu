@@ -85,6 +85,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 150    | Sachen SA-015  | Implemented | ASIC/pin-routing/solder-pad/nametable/state tests; no fixture      |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 163    | Nanjing FC-001 | Verified    | FC-001 register/CHR/state tests; pinned _Chinese Paladin_ runner   |
+| 164    | Dongda PEC9588 | Verified    | PRG/1bpp/93C66 tests; pinned _Digimon Crystal_ real-ROM runner     |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
 | 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
 | 184    | Sunsoft-1      | Verified    | Board tests; pinned _The Wing of Madoola_ real-ROM runner          |
@@ -109,7 +110,7 @@ describes evidence maturity rather than a runtime feature flag.
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper
-0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
+0/4/5/9/10/11/13/18/24/26/33/41/64/65/66/67/68/69/70/72/73/74/75/76/77/79/80/82/87/88/89/90/93/94/95/96/97/99/112/113/115/117/118/119/133/140/142/150/152/163/164/182/184/187/189/206/226/240/241/242/243/244/245/246/248/250 currently
 accept only submapper 0. Mapper 1
 accepts submapper 0, deprecated geometry-qualified
 SUROM/SOROM/SXROM identifiers 1/2/4, and fixed-PRG SEROM/SHROM/SH1ROM submapper 5. Mapper 2/3/7/180
@@ -609,6 +610,15 @@ and `$6000.D6` supplying PRG A18.
   600-frame baseline, 2,400 input-driven frames into the opening dialogue, 69 distinct interactive
   frames, exact visual/audio/CPU-cycle results and deterministic 120-frame save-state replay.
   Submapper 1 remains rejected until its separate ADPCM hardware is modeled.
+- Mapper 164 models the Dongda PEC-9588/cy2000-3 board's UxROM/BxROM modes, high PRG lines and
+  reset-time bank `$1F` instead of the older two-register approximation. Its 1bpp path replaces CHR
+  A3/A12 with PPU A0/A9 captured at the latest A13 rise. Legacy iNES maps the documented 2 KiB
+  volatile work RAM through `$6000-$7FFF`; a separate mapper-owned 512-byte 93C66 provides battery
+  persistence through the `$5200` Microwire pins and inverted `$5500.D2` input. Focused tests cover
+  the complete x8 command set, write protection, sequential reads, memory separation, reset and
+  transactional state. The pinned 1 MiB _Digimon: Crystal Version_ profile verifies 600 animated
+  baseline frames and 3,000 input-driven frames into opening dialogue with exact visual, audio,
+  cycle and replay results.
 - Mapper 180 uses the opposite UxROM window arrangement: the first 16 KiB PRG bank is fixed at
   `$8000-$BFFF`, while `$C000-$FFFF` is switchable. Legacy images use original UNROM AND conflicts;
   NES 2.0 submapper 1 disables them and submapper 2 makes them explicit.

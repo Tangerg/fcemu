@@ -20,6 +20,7 @@ import { CnromMapper } from "./cnrom-mapper.js";
 import { CodemastersMapper } from "./codemasters-mapper.js";
 import { ColorDreamsMapper } from "./color-dreams-mapper.js";
 import { CpromMapper } from "./cprom-mapper.js";
+import { DongdaPec9588Mapper } from "./dongda-pec9588-mapper.js";
 import { findConyYokoBoard, type ConyYokoBoard } from "./cony-yoko-board.js";
 import { ConyYokoMapper } from "./cony-yoko-mapper.js";
 import { Ej0061Mapper } from "./ej-006-1-mapper.js";
@@ -591,6 +592,10 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireNanjingFc001PrgNvRam(cartridge);
       requireTwoScreenNametables(cartridge, "Nanjing FC-001");
       return new NanjingFc001Mapper(cartridge);
+    case 164:
+      requireBaseSubmapper(cartridge);
+      requireDongdaPec9588Layout(cartridge);
+      return new DongdaPec9588Mapper(cartridge);
     case 180:
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x2000);
@@ -1190,6 +1195,28 @@ function requireUnl187Layout(cartridge: Cartridge): void {
   requireChrRom(cartridge, "UNL mapper 187");
   requireNoBatteryPrgRam(cartridge, "UNL mapper 187");
   requireTwoScreenNametables(cartridge, "UNL mapper 187");
+}
+
+function requireDongdaPec9588Layout(cartridge: Cartridge): void {
+  if (![0x80_000, 0x10_0000, 0x20_0000].includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, "Dongda PEC-9588 PRG ROM must be 512 KiB, 1 MiB or 2 MiB");
+  }
+  if (
+    ![0, 0x0800].includes(cartridge.prgRamBytes) ||
+    cartridge.prgNvRamBytes !== 0 ||
+    cartridge.mapperRamBytes !== 0 ||
+    cartridge.mapperNvRamBytes !== 0x0200
+  ) {
+    throw configurationError(
+      cartridge,
+      "Dongda PEC-9588 requires optional 2 KiB volatile PRG RAM and a 512-byte 93C66 EEPROM",
+    );
+  }
+  if (!cartridge.hasBatteryBackup) {
+    throw configurationError(cartridge, "Dongda PEC-9588 requires battery-backed EEPROM memory");
+  }
+  requireVolatileChrRam(cartridge, "Dongda PEC-9588");
+  requireTwoScreenNametables(cartridge, "Dongda PEC-9588");
 }
 
 function requireIremLrog017Layout(cartridge: Cartridge): void {

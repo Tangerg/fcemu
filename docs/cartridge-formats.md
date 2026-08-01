@@ -71,6 +71,13 @@ external allocation because it cannot describe absence. Submapper 1 requires bat
 internal RAM and no external WRAM; submappers 1/2 omit audio mixing, while 3/4/5 name the published
 N163 mix levels.
 
+Mapper 164 likewise separates the Dongda board's 512-byte 93C66 EEPROM from CPU-visible PRG RAM.
+The battery flag denotes that mapper-owned NVRAM even when NES 2.0 declares no PRG/CHR NVRAM.
+Legacy iNES's generic 8 KiB battery allocation is replaced with the documented 2 KiB volatile work
+RAM compatibility layout plus the EEPROM; NES 2.0 may declare either no work RAM or exactly 2 KiB
+of volatile PRG RAM. Fresh EEPROM storage starts in its erased `$FF` state. Power-on clears volatile
+PRG/CHR bytes but retains the EEPROM and its independent battery-save revision.
+
 Mapper 5 always owns 1 KiB of volatile ExRAM independently from header RAM fields; the battery flag
 never makes ExRAM persistent. ExROM accepts CHR ROM and 32 KiB–1 MiB PRG/8 KiB–1 MiB CHR ROM
 geometry. Writable PRG memory may be absent, one 8 KiB chip, one 32 KiB chip, or ETROM's exact

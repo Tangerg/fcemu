@@ -87,6 +87,12 @@ export class CartridgeMemory {
     }
   }
 
+  initializeMapper(index: number, data: Uint8Array): void {
+    for (let offset = 0; offset < data.byteLength; offset++) {
+      this.initialize(this.mapperRam, this.mapperNvRam, index + offset, data[offset]);
+    }
+  }
+
   readChr(index: number): number {
     return this.read(this.chrRam, this.chrNvRam, index);
   }

@@ -23,6 +23,7 @@ export const MapperKind = {
   SachenSa72008: "sachen-sa72008-133",
   KaiserKs202142: "kaiser-ks202-142",
   NanjingFc001163: "nanjing-fc001-163",
+  DongdaPec9588164: "dongda-pec9588-164",
   Unl187: "unl-187",
   SachenSa015150: "sachen-sa015-150",
   SachenSa020a243: "sachen-sa020a-243",

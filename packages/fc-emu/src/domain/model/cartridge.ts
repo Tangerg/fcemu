@@ -24,6 +24,7 @@ export type { CartridgeFormat } from "./cartridge-header.js";
 const MAX_SUPPORTED_PRG_RAM_SIZE = 0x8000;
 const MMC5_EXRAM_SIZE = 0x0400;
 const NAMCO_163_INTERNAL_RAM_SIZE = 0x80;
+const DONGDA_93C66_NVRAM_SIZE = 0x0200;
 const TRAINER_RAM_OFFSET = 0x1000;
 
 /** Cartridge ROM, writable memory and board-identifying metadata. */
@@ -100,8 +101,11 @@ class Cartridge {
         ? MMC5_EXRAM_SIZE
         : header.mapperNumber === 19
           ? NAMCO_163_INTERNAL_RAM_SIZE
-          : 0;
-    const mapperMemoryIsPersistent = header.mapperNumber === 19 && header.hasBatteryFlag;
+          : header.mapperNumber === 164
+            ? DONGDA_93C66_NVRAM_SIZE
+            : 0;
+    const mapperMemoryIsPersistent =
+      (header.mapperNumber === 19 || header.mapperNumber === 164) && header.hasBatteryFlag;
     this.mapperRamBytes = mapperMemoryIsPersistent ? 0 : mapperMemoryBytes;
     this.mapperNvRamBytes = mapperMemoryIsPersistent ? mapperMemoryBytes : 0;
     this.memory = new CartridgeMemory({
@@ -112,6 +116,11 @@ class Cartridge {
       mapperRamBytes: this.mapperRamBytes,
       mapperNvRamBytes: this.mapperNvRamBytes,
     });
+    if (header.mapperNumber === 164) {
+      const erasedEeprom = new Uint8Array(DONGDA_93C66_NVRAM_SIZE);
+      erasedEeprom.fill(0xff);
+      this.memory.initializeMapper(0, erasedEeprom);
+    }
     const mapperLoadsTrainer =
       [6, 8, 17].includes(header.mapperNumber) ||
       (header.mapperNumber === 12 && header.format === "nes2" && header.submapperNumber === 1);
@@ -267,7 +276,7 @@ class Cartridge {
       header.hasBatteryFlag &&
       header.prgNvRamSize === 0 &&
       header.chrNvRamSize === 0 &&
-      header.mapperNumber !== 19
+      ![19, 164].includes(header.mapperNumber)
     ) {
       throw new CartridgeFormatError(
         "UNSUPPORTED_BATTERY_MEMORY",

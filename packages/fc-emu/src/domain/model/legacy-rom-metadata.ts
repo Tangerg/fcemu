@@ -142,6 +142,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Skull & Crossbones, TGN-020-SK/800032 REV A: RAMBO-1 without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 64,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x10_000,
+      prgCrc32: 0x0857df48,
+      chrCrc32: 0xd0bf8c50,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // King of Kings, NAM-KK-5900: N163 mix measured in the submapper-5 range.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 19,

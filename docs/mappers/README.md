@@ -764,7 +764,14 @@ switching out of cycle mode lets the already-running four-cycle prescaler finish
 schedules the IRQ output four CPU cycles later. `$E000` disables, acknowledges and cancels a
 not-yet-visible output, while `$E001` enables without acknowledging an asserted line. `$A000`
 switches vertical/horizontal mirroring; `$A001` has no known function and the board decodes no PRG
-RAM. See [NESdev RAMBO-1](https://www.nesdev.org/wiki/RAMBO-1).
+RAM.
+
+Exact content metadata identifies _Skull & Crossbones_ as the zero-WRAM TGN-020-SK/800032 REV A
+board. Its pinned 1,500-frame baseline records an enabled CPU-cycle IRQ counter, while the
+2,400-frame input route reaches active gameplay with 1,799 distinct frames and records filtered-A12
+IRQ assertions plus broad PRG/CHR register changes. Visual/audio/CPU hashes and an input-active
+save-state replay preserve the split gameplay status bar without the historically common garbage
+scanline. See [NESdev RAMBO-1](https://www.nesdev.org/wiki/RAMBO-1).
 
 ## Irem H3001 (65)
 

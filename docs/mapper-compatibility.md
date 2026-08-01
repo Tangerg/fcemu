@@ -41,7 +41,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                     |
 | 41     | Caltron 6-in-1 | Implemented | Address/data/conflict/reset/state tests; local no-bank replay      |
 | 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM           |
-| 64     | Tengen RAMBO-1 | Implemented | PRG/CHR modes/dual-clock IRQ/state tests; no conformance ROM       |
+| 64     | Tengen RAMBO-1 | Verified    | Tests; pinned _Skull & Crossbones_ dual-IRQ gameplay runner        |
 | 65     | Irem H3001     | Verified    | Tests; pinned _Kaiketsu Yanchamaru 3_ gameplay runner              |
 | 66     | GxROM/MHROM    | Verified    | Tests; pinned _Dragon Power_ GNROM gameplay runner                 |
 | 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
@@ -433,7 +433,12 @@ and `$6000.D6` supplying PRG A18.
   selector; the K, P and C control bits are preserved independently. Its IRQ counter selects either
   filtered PPU-A12 rises or one clock per four CPU M2 cycles, keeps the documented reload bias and
   delayed output, and completes an in-flight CPU prescaler period when changing modes. The board
-  switches horizontal/vertical mirroring and exposes no PRG RAM.
+  switches horizontal/vertical mirroring and exposes no PRG RAM. Exact content metadata identifies
+  _Skull & Crossbones_ as the zero-WRAM TGN-020-SK/800032 REV A board. Its pinned 1,500-frame
+  baseline records an enabled CPU-cycle IRQ counter; its 2,400-frame input route reaches active
+  gameplay with 1,799 distinct frames and records filtered-A12 IRQ assertions alongside broad PRG/
+  CHR register changes. Exact visual, native-audio, CPU-cycle and input-active save-state hashes
+  also preserve the split status bar without the historically common garbage scanline.
 - Mapper 65 (Irem H3001) exposes only two writable PRG registers; `$9000` swaps the first register
   between `$8000` and `$C000`, opposite a fixed second-to-last bank. `$B000-$B007` select eight
   1 KiB CHR banks, `$9001` selects vertical/horizontal/lower-one-screen nametables, and an optional

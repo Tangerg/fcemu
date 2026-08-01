@@ -121,6 +121,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Skull & Crossbones 800032 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 64,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x10_000,
+        prgCrc32: 0x0857df48,
+        chrCrc32: 0xd0bf8c50,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it("does not guess metadata from mapper geometry or a near CRC match", () => {
     expect(
       findLegacyRomMetadata({

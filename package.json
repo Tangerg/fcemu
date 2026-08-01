@@ -31,6 +31,7 @@
     "fetch:test-roms": "node packages/fc-emu/scripts/fetch-test-roms.mjs",
     "smoke:real-rom": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-real-rom-smoke.mjs",
     "conformance:rom": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-blargg-rom.mjs",
+    "conformance:fixtures": "yarn fetch:test-roms && yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-fixture-conformance.mjs",
     "conformance:nestest": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-nestest.mjs",
     "conformance:cpu-timing": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-cpu-timing-test.mjs",
     "conformance:accuracy-coin": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-accuracy-coin.mjs",

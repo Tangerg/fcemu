@@ -34,6 +34,16 @@ yarn fetch:test-roms
 The command refuses redirects, unexpected hosts, changed lengths and checksum mismatches. It never
 overwrites a mismatched existing fixture.
 
+Run the complete pinned set with one build through the same command used by CI:
+
+```bash
+yarn conformance:fixtures
+```
+
+This executes nestest, CPU timing, both instruction modes, PPU VBL/NMI, APU and both Sprite/DMC DMA
+collision fixtures. It invokes `fetch:test-roms` first, so cached files are checksum-verified and a
+missing fixture is downloaded from the pinned revision before execution.
+
 `nestest` is not a self-reporting ROM. Its dedicated runner initializes the published `$C000` state
 and compares all 8,991 pre-instruction register states and CPU-cycle positions with the pinned log:
 

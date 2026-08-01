@@ -20,3 +20,4 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn quality
       - run: yarn build
+      - run: yarn conformance:fixtures

@@ -32,6 +32,7 @@
     "fetch:test-roms": "node scripts/fetch-test-roms.mjs",
     "smoke:real-rom": "yarn build && node scripts/run-real-rom-smoke.mjs",
     "conformance:rom": "yarn build && node scripts/run-blargg-rom.mjs",
+    "conformance:fixtures": "yarn fetch:test-roms && yarn build && node scripts/run-fixture-conformance.mjs",
     "conformance:nestest": "yarn build && node scripts/run-nestest.mjs",
     "conformance:cpu-timing": "yarn build && node scripts/run-cpu-timing-test.mjs",
     "conformance:accuracy-coin": "yarn build && node scripts/run-accuracy-coin.mjs",

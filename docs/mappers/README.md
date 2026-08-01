@@ -1245,8 +1245,12 @@ four-screen memory, non-power-of-two layouts and unknown submappers. Mapper 133 
 labels the original 60-pin Sachen 3009 board, whose AX-24G clone has a different `$8000/$8001`
 register path and analog feedback. It is not guessed from a title hash: both early game programs
 already contain the compatible `$4120` write, so emulators only need the simpler SA-72008 behavior.
-A user-local early _Jovial Race_ image completed 700 frames and deterministic replay through that
-compatibility path. See [NESdev mapper 133](https://www.nesdev.org/wiki/INES_Mapper_133).
+The checksum-pinned 64 KiB PRG + 32 KiB CHR 72-pin _Jovial Race_ profile runs a 1,200-frame attract
+baseline and 2,520 input-driven frames from title and player selection into active racing. It
+produces 1,069 distinct interactive frames, exact visual/audio/CPU-cycle checkpoints and a
+deterministic 120-frame save-state replay. The trace selects latch values `$00/$07/$03/$04`, both
+PRG banks and CHR banks 0/3; the other two reachable CHR banks remain covered by focused tests. See
+[NESdev mapper 133](https://www.nesdev.org/wiki/INES_Mapper_133).
 
 ## Jaleco JF-11/JF-14 (140)
 

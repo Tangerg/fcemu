@@ -122,6 +122,7 @@ yarn smoke:real-rom -- yuuyuu /absolute/path/to/youyou_c.nes
 yarn smoke:real-rom -- sango4 /absolute/path/to/sango4.nes
 yarn smoke:real-rom -- prosporthockey "/absolute/path/to/Pro Sport Hockey (U).nes"
 yarn smoke:real-rom -- pinbot "/absolute/path/to/Pinbot (U).nes"
+yarn smoke:real-rom -- jovialrace "/absolute/path/to/Jovial Race (Clamshell).nes"
 yarn smoke:real-rom -- pocahontas /absolute/path/to/Pocahontas.nes
 yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes

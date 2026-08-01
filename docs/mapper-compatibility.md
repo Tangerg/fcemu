@@ -79,7 +79,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
 | 118    | TxSROM         | Verified    | CIRAM/IRQ tests; pinned _Pro Sport Hockey_ real-ROM runner         |
 | 119    | TQROM          | Verified    | Mixed-CHR/IRQ tests; pinned _Pinbot_ real-ROM runner               |
-| 133    | Sachen SA72008 | Implemented | Expansion decode/banking/open-bus/state tests; local legacy smoke  |
+| 133    | Sachen SA72008 | Verified    | Board tests; pinned _Jovial Race_ real-ROM runner                  |
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
@@ -575,10 +575,12 @@ and `$6000.D6` supplying PRG A18.
   latch D2 as one 32 KiB PRG line and D1-D0 as two 8 KiB CHR lines, while reads remain open bus and
   mirroring stays hardwired. The early 60-pin Sachen 3009/AX-24G hardware is deliberately not
   approximated; its _Jovial Race_ program also writes the compatible `$4120` latch before using its
-  native ports. A local early-release image ran 700 frames without halting, exercised latch values
-  `$00/$07/$03/$04`, produced 34 distinct frames in the first 600 and completed deterministic
-  100-frame replay. This is end-to-end compatibility evidence, not validation of the unimplemented
-  analog-feedback board.
+  native ports. The checksum-pinned 64 KiB PRG + 32 KiB CHR 72-pin _Jovial Race_ profile verifies a
+  1,200-frame attract baseline and 2,520 input-driven frames from title and player selection into
+  active racing, with 1,069 distinct interactive frames, exact visual/audio/CPU-cycle results and a
+  deterministic 120-frame save-state replay. Its trace exercises latch values `$00/$07/$03/$04`,
+  both PRG banks and CHR banks 0/3; CHR banks 1/2 remain focused-test evidence. This does not validate
+  the unimplemented analog-feedback board.
 - Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB
   PRG bank and bits 3-0 select an 8 KiB CHR-ROM bank. The window has no bus conflicts and reads are
   open bus rather than a fabricated zero.

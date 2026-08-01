@@ -246,7 +246,7 @@ require a second synchronized CPU/PPU and shared-RAM ownership arbitration.
   `$E0-$FF` for up to 32 KiB RAM when pattern-side CIRAM substitution is disabled. The four external
   2 KiB WRAM regions have exact `$F800` write-protection bits, while reads remain visible. The
   15-bit CPU-cycle IRQ saturates at `$7FFF`. Its shared 128-byte mapper RAM participates in power,
-  battery and version-16 full-state policy; the data-port address saturates rather than wrapping.
+  battery and the current full-state policy; the data-port address saturates rather than wrapping.
   Audio services one of up to eight descending wavetable channels every 15 CPU cycles and retains
   the held multiplexed output instead of averaging channels. Submappers 1/2 mute audio, while
   3/4/5 select the documented board mix levels. Pin-44 diagnostic CHR data remains an explicit

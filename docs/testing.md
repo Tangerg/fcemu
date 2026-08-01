@@ -13,16 +13,16 @@ yarn build
 
 `yarn quality` runs, in order:
 
-| Gate                  | Purpose                                                        |
-| --------------------- | -------------------------------------------------------------- |
-| `yarn typecheck`      | Type-check both workspaces without emitting output.            |
-| `yarn lint`           | Reject Oxlint warnings in production and test code.            |
-| `yarn format:check`   | Enforce one Prettier representation.                           |
-| `yarn check:docs`     | Validate Markdown, local links and mapper-catalog consistency. |
-| `yarn test`           | Run all core and UI Vitest suites.                             |
-| `yarn knip`           | Detect unused files, exports and dependencies.                 |
-| `yarn check:circular` | Reject runtime import cycles.                                  |
-| `yarn check:layers`   | Enforce package and clean-architecture dependency direction.   |
+| Gate                  | Purpose                                                       |
+| --------------------- | ------------------------------------------------------------- |
+| `yarn typecheck`      | Type-check both workspaces without emitting output.           |
+| `yarn lint`           | Reject Oxlint warnings in production and test code.           |
+| `yarn format:check`   | Enforce one Prettier representation.                          |
+| `yarn check:docs`     | Validate links, mapper catalog and save-state version claims. |
+| `yarn test`           | Run all core and UI Vitest suites.                            |
+| `yarn knip`           | Detect unused files, exports and dependencies.                |
+| `yarn check:circular` | Reject runtime import cycles.                                 |
+| `yarn check:layers`   | Enforce package and clean-architecture dependency direction.  |
 
 CI runs the same gate on pushes to `master`/`main` and on every pull request, then runs the
 production build.

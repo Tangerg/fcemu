@@ -17,6 +17,7 @@ for (const file of markdownFiles) {
 
 validateDocumentationIndex();
 validateMapperCatalog();
+validateSaveStateVersion();
 
 if (failures.length > 0) {
   console.error(`[check-docs] Found ${failures.length} documentation problem(s):`);
@@ -24,7 +25,7 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `[check-docs] OK — ${markdownFiles.length} Markdown files and the mapper catalog are consistent.`,
+    `[check-docs] OK — ${markdownFiles.length} Markdown files, the mapper catalog and save-state version are consistent.`,
   );
 }
 
@@ -235,6 +236,81 @@ function validateMapperCatalog() {
   validateMapperList(readmeMappers, readmeFile, "implemented mapper ID list", true);
   validateMapperList(tableMappers, compatibilityFile, "compatibility table", true);
   validateMapperList(referenceMappers, referenceFile, "board reference headings", false);
+}
+
+function validateSaveStateVersion() {
+  const implementationFile = path.join(
+    root,
+    "packages",
+    "fc-emu",
+    "src",
+    "application",
+    "emulator.ts",
+  );
+  const version = numericConstant(implementationFile, "SAVE_STATE_VERSION");
+  if (version === undefined) return;
+
+  const claims = [
+    {
+      file: path.join(root, "docs", "architecture.md"),
+      pattern: /core save-state envelope is version (\d+)/i,
+    },
+    {
+      file: path.join(root, "docs", "core-api.md"),
+      pattern: /Schema\s+version (\d+) is intentionally exact/i,
+    },
+    {
+      file: path.join(root, "docs", "engineering-roadmap.md"),
+      pattern: /Transactional version-(\d+) save states/i,
+    },
+    {
+      file: path.join(root, "docs", "subsystems", "apu.md"),
+      pattern: /console's current version (\d+) save-state envelope/i,
+    },
+    {
+      file: path.join(root, "docs", "subsystems", "clock-and-timing.md"),
+      pattern: /current `SAVE_STATE_VERSION = (\d+)`/,
+    },
+    {
+      file: path.join(root, "docs", "subsystems", "ppu.md"),
+      pattern: /public save-state envelope is version (\d+)/i,
+    },
+  ];
+
+  for (const claim of claims) {
+    const match = claim.pattern.exec(fs.readFileSync(claim.file, "utf8"));
+    if (!match) {
+      fail(claim.file, "cannot locate the current save-state version statement");
+      continue;
+    }
+    const documentedVersion = Number(match[1]);
+    if (documentedVersion !== version) {
+      fail(
+        claim.file,
+        `documents save-state version ${documentedVersion}; implementation uses ${version}`,
+      );
+    }
+  }
+}
+
+function numericConstant(file, name) {
+  const source = fs.readFileSync(file, "utf8");
+  const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
+  for (const statement of sourceFile.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    for (const declaration of statement.declarationList.declarations) {
+      if (
+        ts.isIdentifier(declaration.name) &&
+        declaration.name.text === name &&
+        declaration.initializer &&
+        ts.isNumericLiteral(declaration.initializer)
+      ) {
+        return Number(declaration.initializer.text);
+      }
+    }
+  }
+  fail(file, `cannot locate numeric constant ${name}`);
+  return undefined;
 }
 
 function mapperCases(file) {

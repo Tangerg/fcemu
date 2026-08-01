@@ -84,7 +84,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
 | 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
-| 184    | Sunsoft-1      | Implemented | CHR wiring/open-bus/geometry tests; no conformance ROM             |
+| 184    | Sunsoft-1      | Verified    | Board tests; pinned _The Wing of Madoola_ real-ROM runner          |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
 | 189    | TXC MMC3       | Verified    | Outer-PRG/MMC3/IRQ tests; pinned _Thunder Warrior_ real-ROM runner |
 | 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
@@ -589,7 +589,12 @@ and `$6000.D6` supplying PRG A18.
   NES 2.0 submapper 1 disables them and submapper 2 makes them explicit.
 - Mapper 184 (Sunsoft-1) fixes 32 KiB PRG and selects two 4 KiB CHR-ROM windows through a write-only
   `$6000-$7FFF` latch. Bits 2-0 select the lower bank; bits 5-4 select the upper bank with CHR A14
-  hard-wired high. Its 16 KiB and 32 KiB CHR layouts are both modeled explicitly.
+  hard-wired high. Its 16 KiB and 32 KiB CHR layouts are both modeled explicitly. The
+  checksum-pinned 32 KiB PRG + 32 KiB CHR _The Wing of Madoola_ profile verifies 3,000 input-driven
+  frames from title into active stage-one play, with 2,295 distinct frames, exact
+  visual/audio/CPU-cycle results and a deterministic 120-frame save-state replay. Its trace reaches
+  lower/upper CHR bank pairs 0/4, 0/7, 2/7 and 3/7; the remaining reachable pairs stay covered by
+  focused board tests.
 - Mapper 185 keeps CNROM's fixed 16/32 KiB PRG and AND-conflicted two-bit latch but uses the latch as
   CHR-ROM chip select. NES 2.0 submappers 4-7 name enable values 0-3. Any other value tri-states the
   PPU data pins, whose undriven read follows the address low byte; unknown legacy wiring is rejected.

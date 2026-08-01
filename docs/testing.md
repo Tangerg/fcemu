@@ -124,6 +124,7 @@ yarn smoke:real-rom -- prosporthockey "/absolute/path/to/Pro Sport Hockey (U).ne
 yarn smoke:real-rom -- pinbot "/absolute/path/to/Pinbot (U).nes"
 yarn smoke:real-rom -- jovialrace "/absolute/path/to/Jovial Race (Clamshell).nes"
 yarn smoke:real-rom -- pocahontas /absolute/path/to/Pocahontas.nes
+yarn smoke:real-rom -- wingofmadoola "/absolute/path/to/Wing of Madoola, The ((J).nes"
 yarn smoke:real-rom -- thunderwarrior /absolute/path/to/ThunderWarrior.nes
 yarn smoke:real-rom -- super42 /absolute/path/to/Super_42-in-1.nes
 yarn smoke:real-rom -- genke "/absolute/path/to/Gen Ke Le Zhuan (C).nes"

@@ -1265,7 +1265,13 @@ space, so writes have no bus conflicts and reads remain open bus. PRG and CHR ar
 PRG ROM is a fixed 32 KiB window. The write-only `$6000-$7FFF` latch selects the lower 4 KiB CHR bank
 from bits 2-0 and the upper 4 KiB bank from bits 5-4; the upper CHR A14 line is hard-wired high, so
 that window selects banks 4-7 on a 32 KiB CHR ROM and mirrors onto banks 0-3 on a 16 KiB ROM. Reads
-from the latch window remain open bus. See
+from the latch window remain open bus.
+
+The checksum-pinned 32 KiB PRG + 32 KiB CHR _The Wing of Madoola_ profile runs 3,000 input-driven
+frames from title into active stage-one play, producing 2,295 distinct frames, exact
+visual/audio/CPU-cycle checkpoints and a deterministic 120-frame save-state replay. The trace
+selects lower/upper CHR bank pairs 0/4, 0/7, 2/7 and 3/7; the remaining reachable pairs stay covered
+by focused tests. See
 [NESdev mapper 184](https://www.nesdev.org/wiki/INES_Mapper_184) and the
 [Sunsoft-1 pinout](https://www.nesdev.org/wiki/Sunsoft_1_pinout).
 

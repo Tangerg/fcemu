@@ -116,7 +116,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |    152 | Bandai 74xx        | _Pocket Zaurus: Juu Ouken no Nazo_ (Japan)                             | —                                                                                 | Reduced PRG field and single-screen mirroring bit                |
 |    180 | Inverted UxROM     | _Crazy Climber_ (Japan)                                                | —                                                                                 | Fixed first 16 KiB plus switchable upper bank                    |
 |    182 | SuperGame MMC3     | _Pocahontas_ (Hosenkan, pinned local profile)                          | —                                                                                 | Mapper-114.0 duplicate routing, scrambling and MMC3A IRQ         |
-|    184 | Sunsoft-1          | _Atlantis no Nazo_ (Japan)                                             | —                                                                                 | Independently wired 4 KiB CHR windows                            |
+|    184 | Sunsoft-1          | _The Wing of Madoola_ (Japan, pinned local profile)                    | _Atlantis no Nazo_ for the 16 KiB CHR layout                                      | Independently wired 4 KiB CHR windows                            |
 |    185 | CNROM protection   | _Mighty Bomb Jack_ (Japan, NES 2.0 header)                             | PRG0 and PRG1 revisions if both are available                                     | Explicit chip-select submapper, PPU open bus and conflicts       |
 |    189 | TXC MMC3           | _Thunder Warrior_ (pinned local profile)                               | _Street Fighter II: The World Warrior_ (unlicensed)                               | 32 KiB outer PRG latch plus MMC3 CHR, mirroring and A12 IRQ      |
 |    206 | Namco 118/DxROM    | _Super Chinese_ (Japan)                                                | VS _RBI Baseball_, _TKO Boxing_ and _Super Xevious_ for protection hardware       | Simplified MMC3 banking plus console-owned VS security variants  |
@@ -151,6 +151,9 @@ the same ID covers materially different hardware that the primary image cannot e
   images such as legacy-header _AV Soccer_ even when their iNES mapper field says 113: applying the
   multicart's D7 mirroring control corrupts their selection screen. Require _HES 6-in-1_,
   _Mind Blower Pak_ or _Total Funpak_ with board-consistent geometry and provenance.
+- The local _Mississippi Satsujin Jiken_ candidate is not Mapper 140 evidence: it declares mapper
+  66, contains 524,304 bytes beyond its declared payload and boots through a `$8000` bank write.
+  Keep it quarantined; do not strip or reheader it. Require a canonical mapper-140 image instead.
 - Multicart and unlicensed names are frequently reused for different PCBs. Accept them only after
   parsing the actual header and checking ROM geometry against the mapper factory.
 

@@ -23,9 +23,9 @@ mapper compatibility.
 - Independent `@fcemu/core` and `@fcemu/ui` packages with enforced clean-architecture boundaries.
 
 Implemented mapper IDs: **0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24,
-25, 26, 32, 33, 34, 48, 64, 65, 66, 68, 69, 70, 71, 75, 76, 78, 79, 80, 82, 83, 85, 87, 88, 89,
-90, 91, 93, 94, 95, 97, 99, 118, 119, 140, 152, 180, 184, 185, 206, 225, 227 and 228**. “Implemented” and
-“verified” have different evidence requirements; see
+25, 26, 32, 33, 34, 48, 64, 65, 66, 68, 69, 70, 71, 72, 73, 75, 76, 77, 78, 79, 80, 82, 83, 85, 87,
+88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 112, 113, 118, 119, 140, 152, 180, 184, 185, 206, 225, 227 and
+228**. “Implemented” and “verified” have different evidence requirements; see
 [Mapper compatibility](./docs/mapper-compatibility.md) before filing a game-compatibility report.
 
 ## Quick start

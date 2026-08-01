@@ -205,9 +205,15 @@ function validateMapperCatalog() {
     "mapper",
     "create-mapper.ts",
   );
+  const readmeFile = path.join(root, "README.md");
   const compatibilityFile = path.join(root, "docs", "mapper-compatibility.md");
   const referenceFile = path.join(root, "docs", "mappers", "README.md");
   const factoryMappers = mapperCases(factoryFile);
+  const readmeSource = fs.readFileSync(readmeFile, "utf8");
+  const readmeMatch = /Implemented mapper IDs:\s+\*\*([\s\S]*?)\*\*\./.exec(readmeSource);
+  const readmeMappers = readmeMatch
+    ? [...(readmeMatch[1] ?? "").matchAll(/\d+/g)].map((match) => Number(match[0]))
+    : [];
   const compatibilitySource = fs.readFileSync(compatibilityFile, "utf8");
   const tableMappers = [
     ...compatibilitySource.matchAll(/^\|\s*(\d+)\s*\|\s*[^|]+\|\s*(?:Implemented|Verified)\s*\|/gm),
@@ -221,9 +227,12 @@ function validateMapperCatalog() {
       .filter(Number.isInteger),
   );
 
+  if (!readmeMatch) fail(readmeFile, "cannot locate the implemented mapper ID list");
+  else compareMapperSets(factoryMappers, readmeMappers, readmeFile, "implemented mapper ID list");
   compareMapperSets(factoryMappers, tableMappers, compatibilityFile, "compatibility table");
   compareMapperSets(factoryMappers, referenceMappers, referenceFile, "board reference headings");
   validateMapperList(factoryMappers, factoryFile, "factory mapper switch", false);
+  validateMapperList(readmeMappers, readmeFile, "implemented mapper ID list", true);
   validateMapperList(tableMappers, compatibilityFile, "compatibility table", true);
   validateMapperList(referenceMappers, referenceFile, "board reference headings", false);
 }

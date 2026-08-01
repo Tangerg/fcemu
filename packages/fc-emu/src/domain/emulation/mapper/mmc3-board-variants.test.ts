@@ -8,7 +8,7 @@ import {
   UnsupportedMapperConfigurationError,
   UnsupportedMapperVariantError,
 } from "./mapper-errors.js";
-import type { Mapper } from "./mapper.js";
+import type { Mapper, MapperState } from "./mapper.js";
 
 const interruptPort = { setMapperIrq() {} };
 
@@ -139,6 +139,36 @@ describe("MMC3 board variants", () => {
     mapper.restoreState(state);
 
     expect(mapper.captureState()).toEqual(state);
+  });
+
+  it.each([
+    {
+      name: "four-screen MMC3",
+      options: { mapper: 4, prgBanks: 8, chrBanks: 8, fourScreen: true },
+      mirroring: NametableMirroring.Horizontal,
+    },
+    {
+      name: "TxSROM",
+      options: { mapper: 118, prgBanks: 8, chrBanks: 16 },
+      mirroring: NametableMirroring.Vertical,
+    },
+    {
+      name: "TQROM",
+      options: { mapper: 119, prgBanks: 8, chrBanks: 8 },
+      mirroring: NametableMirroring.SingleScreenUpper,
+    },
+  ])("rejects mirroring impossible on $name", ({ options, mirroring }) => {
+    const cartridge = createTestCartridge(options);
+    if (options.mapper === 118) cartridge.mirroringMode = NametableMirroring.Horizontal;
+    const mapper = createMapper(cartridge, interruptPort);
+    mapper.write(0x8000, 0x06);
+    mapper.write(0x8001, 0x03);
+    const before = mapper.captureState();
+
+    expect(() => mapper.restoreState({ ...before, register: 7, mirroring } as MapperState)).toThrow(
+      /mirroring for this board/i,
+    );
+    expect(mapper.captureState()).toEqual(before);
   });
 
   it("rejects TxSROM and TQROM memory absent from their physical boards", () => {

@@ -106,6 +106,10 @@ line only after that validation succeeds. Optional mirroring circuits are valida
 selected board: controlled variants accept only modes their register can drive, while hardwired
 variants require the exact fixed mode.
 
+MMC3 applies the same rule to board wiring: standard/TQROM boards accept the horizontal/vertical
+`$A000` output, four-screen boards retain header four-screen routing, and TxSROM retains its fixed
+header mode because CHR A17 replaces the ordinary mirroring register at the nametable address path.
+
 ## Implemented boards
 
 | #   | Family         | Kind                      | Implementation               | Bus conflicts | IRQ  |

@@ -114,8 +114,8 @@ export class Mmc3Mapper implements Mapper {
     ) {
       throw new RangeError("MMC3 save state contains invalid timing or register state");
     }
-    if (!Object.values(NametableMirroring).includes(state.mirroring as NametableMirroring)) {
-      throw new RangeError("MMC3 save state contains invalid mirroring");
+    if (!this.acceptsMirroring(state.mirroring)) {
+      throw new RangeError("MMC3 save state contains invalid mirroring for this board");
     }
     this.register = state.register;
     this.registers = [...state.registers];
@@ -263,6 +263,13 @@ export class Mmc3Mapper implements Mapper {
         this.cartridge.mirroringMode = NametableMirroring.Horizontal;
         break;
     }
+  }
+
+  private acceptsMirroring(value: number): boolean {
+    if (this.board === "txsrom" || this.powerOnMirroring === NametableMirroring.FourScreen) {
+      return value === this.powerOnMirroring;
+    }
+    return value === NametableMirroring.Horizontal || value === NametableMirroring.Vertical;
   }
 
   private writeProtect(value: number): void {

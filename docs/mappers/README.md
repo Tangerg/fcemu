@@ -618,12 +618,16 @@ sequence; a `$FF` counter clock reloads the latch and asserts IRQ. `VrcIrq` is a
 domain component so later VRC6/VRC7 boards can reuse this actual circuit without importing VRC4
 banking.
 
-Exact legacy content metadata separates four VRC boards that iNES cannot distinguish precisely:
+Exact legacy content metadata separates VRC boards that iNES cannot distinguish precisely:
 _Wai Wai World 2_ is zero-WRAM
 [352398 VRC4a](https://nescartdb.com/profile/view/2273/wai-wai-world-2-sos-paseri-jou),
 _Ganbare Goemon 2_ is zero-WRAM [350926 VRC2b](https://nescartdb.com/profile/view/1568/ganbare-goemon-2),
 _Getsufuu Maden_ is zero-WRAM [350636 VRC2b](https://nescartdb.com/profile/view/3306/getsufuu-maden),
 and _Crisis Force_ is 2 KiB-WRAM [352396 VRC4e](https://nescartdb.com/profile/view/2279/crisis-force).
+Mapper 25 records _Gradius II_, _Racer Mini Yonku_ and _Bio Miracle Bokutte Upa_ as 351406 VRC4b
+with 2 KiB, zero and zero WRAM respectively; _Teenage Mutant Ninja Turtles 2_ as zero-WRAM 352400
+VRC4d; and _Ganbare Goemon Gaiden_ as 8 KiB-NVRAM 351948 VRC2c. Each entry requires both independent
+PRG/CHR CRCs, so a cheat with one canonical region cannot inherit physical-board metadata.
 Mapper 22 needs no content override because it names only the zero-WRAM
 [351618 VRC2a](https://nescartdb.com/profile/view/3132/ganbare-pennant-race) board. The pinned
 _Ganbare Pennant Race!_ profile matches its PRG/CHR CRCs `953CA1B6`/`89A44100`, runs 3,600 frames
@@ -639,6 +643,13 @@ record 16 PRG bank values, changes in every CHR register, both mirroring states 
 VRC4-only IRQ/swap/RAM state; video, native audio, CPU cycles and a 120-frame input-active save-state
 replay are exact. The local file with payload CRC `88C83A1D` is a known _Crisis Force_ bad dump and
 is deliberately excluded; only the canonical `FCBF28B1` payload receives VRC4e/2 KiB metadata.
+The pinned _Racer Mini Yonku_ profile matches the 351406 record's PRG/CHR CRCs
+`A2E68DA8`/`B2D960CC`, removes iNES's fabricated 8 KiB RAM and selects exact VRC4b routing. Its
+900-frame attract sequence and 2,100-frame input route pin PRG/CHR banks, horizontal and
+lower-single-screen mirroring, active scanline IRQ state, video, native audio, CPU cycles and a
+120-frame save-state replay. Local _Bio Miracle_, _Teenage Mutant Ninja Turtles 2_ and _Ganbare
+Goemon Gaiden_ containers have canonical extracted regions but trailing data, so they inform exact
+metadata without becoming smoke profiles.
 
 See [NESdev VRC2/VRC4](https://www.nesdev.org/wiki/VRC4),
 [NES 2.0 submappers](https://www.nesdev.org/wiki/NES_2.0_submappers) and

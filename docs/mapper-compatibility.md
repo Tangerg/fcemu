@@ -34,7 +34,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 22     | Konami VRC2a   | Verified    | Tests; pinned exact _Ganbare Pennant Race!_ VRC2a gameplay         |
 | 23     | VRC2b/VRC4e/f  | Verified    | Tests; pinned exact _Ganbare Goemon 2_ VRC2b gameplay              |
 | 24     | Konami VRC6a   | Verified    | Tests; pinned natt VRC6a CHR/nametable matrix                      |
-| 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture          |
+| 25     | VRC2c/VRC4b/d  | Verified    | Tests; pinned exact _Racer Mini Yonku_ VRC4b replay                |
 | 26     | Konami VRC6b   | Verified    | Tests; pinned _Esper Dream 2_ banking/nametable/IRQ runner         |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM         |
 | 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM          |
@@ -371,7 +371,10 @@ and `$6000.D6` supplying PRG A18.
   and VRC2a wiring rather than silently modulo an unreachable declaration.
   Exact content metadata identifies _Wai Wai World 2_ as the zero-WRAM 352398 VRC4a board,
   _Ganbare Goemon 2_ as zero-WRAM 350926 VRC2b, _Getsufuu Maden_ as zero-WRAM 350636 VRC2b, and
-  _Crisis Force_ as 2 KiB-WRAM 352396 VRC4e. Mapper 22 itself is already an unambiguous singleton;
+  _Crisis Force_ as 2 KiB-WRAM 352396 VRC4e. For Mapper 25 it identifies _Gradius II_, _Racer Mini
+  Yonku_ and _Bio Miracle Bokutte Upa_ as 351406 VRC4b with 2 KiB, zero and zero WRAM respectively;
+  _Teenage Mutant Ninja Turtles 2_ as zero-WRAM 352400 VRC4d; and _Ganbare Goemon Gaiden_ as
+  8 KiB-NVRAM 351948 VRC2c. Mapper 22 itself is already an unambiguous singleton;
   the exact KON-RC834 _Ganbare Pennant Race!_ PRG/CHR payload matches the 351618 board record, so
   legacy iNES policy removes the generic RAM fallback for all mapper-22 images rather than using a
   title hash. Its pinned profile runs a 600-frame baseline and a 3,600-frame input route through
@@ -388,9 +391,13 @@ and `$6000.D6` supplying PRG A18.
   mode selection, story and active gameplay, producing 1,671 distinct frames. Exact state
   checkpoints cross 16 PRG values, changes in all eight CHR registers and both mirroring states
   while retaining VRC2-only `irq: null`, disabled swap mode and zero WRAM; visual, native-audio,
-  CPU-cycle and input-active save-state hashes lock the public path. The one-bit latch and VRC4e
-  RAM/IRQ paths remain focused-test evidence until separately observed in a canonical real-ROM
-  route.
+  CPU-cycle and input-active save-state hashes lock the public path. The exact _Racer Mini Yonku_
+  profile adds a 900-frame attract-mode race and a 2,100-frame controller-driven event setup.
+  Checkpoints observe VRC4b-only A1/A0 routing, PRG banks 20/21 and 28/29, all CHR latches,
+  horizontal and lower-single-screen mirroring, active scanline IRQs and zero WRAM; video, native
+  audio, CPU cycles and a 120-frame save-state replay are deterministic. VRC2 latch behavior,
+  VRC4e's 2 KiB RAM path and the VRC4d/VRC2c routes remain focused-test or exact-metadata evidence
+  until separately observed through clean real-ROM profiles.
 - Mappers 24/26 share one VRC6 ASIC model. Mapper 26 swaps only A0/A1 before canonical register
   decode. The core implements the 16+8+fixed PRG layout, Mapper 24's physically absent WRAM,
   Mapper 26's gated 8 KiB WRAM, all `$B003` pattern and CIRAM/ROM-nametable arrangements,

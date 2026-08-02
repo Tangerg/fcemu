@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover 51 files used during development:
+The current profiles cover 52 files used during development:
 
 | Profile           | Expected file                                         | SHA-256                                                            | Mapper |
 | ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -45,6 +45,7 @@ The current profiles cover 51 files used during development:
 | `waiwai2`         | `konami2.nes`                                         | `575b0346e5e2ed7186d95c2b5f67fe7b51f18514edc0cf84b745b31688443587` | 21     |
 | `pennant`         | `Ganbare Penant Race! (J).nes`                        | `5efe8f930d8f052787d128fba032438d1905db7de36e29c79a0f4475ce2db3e9` | 22     |
 | `goemon2`         | `Ganbare Goemon 2 (J).nes`                            | `57dd19aac878b61bfd995cb42c2084262de5b0da8f02b42362d153fa3118e5b2` | 23     |
+| `racermini`       | `Racer Mini Yon Ku - Japan Cup (J).nes`               | `91062a09ab527f7d7d7a6415d2e9248c370d224050d5e80e28976ee242deaef9` | 25     |
 | `napoleon`        | `Napoleon Senki (J).nes`                              | `0a45b46c226cdf4f7b6ad5c50327d09a1370e7ef3390ed9da9ac8b5ee7e72753` | 77     |
 | `batman`          | `Batman (J).nes`                                      | `39b3982742429e9226de6d1f3eb86adb94fa54e77f416a635fa58a8e7c832093` | 69     |
 | `esper-dream-2`   | `Esper Dream 2 - Aratanaru Tatakai (J).nes`           | `9dff8bc590cf73e9063575dd77707964c69f81573bb84ecd5c13aab874db1717` | 26     |
@@ -100,6 +101,7 @@ yarn smoke:real-rom -- afterburner "/absolute/path/to/After Burner (U).nes"
 yarn smoke:real-rom -- waiwai2 /absolute/path/to/konami2.nes
 yarn smoke:real-rom -- pennant "/absolute/path/to/Ganbare Penant Race! (J).nes"
 yarn smoke:real-rom -- goemon2 "/absolute/path/to/Ganbare Goemon 2 (J).nes"
+yarn smoke:real-rom -- racermini "/absolute/path/to/Racer Mini Yon Ku - Japan Cup (J).nes"
 yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
 yarn smoke:real-rom -- batman "/absolute/path/to/Batman (J).nes"
 yarn smoke:real-rom -- esper-dream-2 "/absolute/path/to/Esper Dream 2 - Aratanaru Tatakai (J).nes"
@@ -181,7 +183,7 @@ The runner exits non-zero for a missing file, identity mismatch or any failed ch
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
 not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 21, 22, 23,
-26, 64, 65, 66, 68, 69, 77, 85, 87, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142, 163,
+25, 26, 64, 65, 66, 68, 69, 77, 85, 87, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142, 163,
 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M
 submapper-1 board.

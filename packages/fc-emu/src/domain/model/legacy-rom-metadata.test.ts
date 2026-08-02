@@ -117,6 +117,76 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it.each([
+    {
+      title: "Gradius II 351406 VRC4b",
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xc71d4ce7,
+      chrCrc32: 0x537b6f6a,
+      overrides: { submapperNumber: 1, prgRamSize: 0x0800, prgNvRamSize: 0 },
+    },
+    {
+      title: "Racer Mini Yonku 351406 VRC4b",
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xa2e68da8,
+      chrCrc32: 0xb2d960cc,
+      overrides: { submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 },
+    },
+    {
+      title: "Bio Miracle Bokutte Upa 351406 VRC4b",
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x0bbd85ff,
+      chrCrc32: 0xb8168efa,
+      overrides: { submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 },
+    },
+    {
+      title: "Teenage Mutant Ninja Turtles 2 352400 VRC4d",
+      prgRomBytes: 0x40_000,
+      chrRomBytes: 0x40_000,
+      prgCrc32: 0x5f82cb7d,
+      chrCrc32: 0x4aa9b12a,
+      overrides: { submapperNumber: 2, prgRamSize: 0, prgNvRamSize: 0 },
+    },
+    {
+      title: "Ganbare Goemon Gaiden 351948 VRC2c",
+      prgRomBytes: 0x40_000,
+      chrRomBytes: 0x40_000,
+      prgCrc32: 0x8360fa88,
+      chrCrc32: 0x99a563fe,
+      overrides: { submapperNumber: 3, prgRamSize: 0, prgNvRamSize: 0x2000 },
+    },
+  ])(
+    "identifies the exact $title board",
+    ({ prgRomBytes, chrRomBytes, prgCrc32, chrCrc32, overrides }) => {
+      expect(
+        findLegacyRomMetadata({
+          consoleType: 0,
+          mapperNumber: 25,
+          prgRomBytes,
+          chrRomBytes,
+          prgCrc32,
+          chrCrc32,
+        })?.overrides,
+      ).toEqual(overrides);
+    },
+  );
+
+  it("does not identify a near-match Mapper 25 payload", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 25,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xa2e68da8,
+        chrCrc32: 0xb2d960cd,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Battletoads NES-AOROM-03 memory layout", () => {
     expect(
       findLegacyRomMetadata({

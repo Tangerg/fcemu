@@ -66,7 +66,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     22 | Konami VRC2a       | _Ganbare Pennant Race!_ (Japan, pinned exact 351618 profile)           | _TwinBee 3: Poko Poko Daimaou_ for a second software route                        | Swapped pins, shifted CHR banks, grounded D0 and zero WRAM       |
 |     23 | VRC2b/VRC4e/f      | _Ganbare Goemon 2_ (Japan, pinned exact 350926 VRC2b)                  | Canonical _Crisis Force_ for VRC4e IRQ/2 KiB RAM                                  | Exact/legacy pin routes, RAM/latch and IRQ                       |
 |     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan; clean canonical image still needed)        | Pinned natt VRC6a matrix already verifies CHR/nametable routing                   | VRC6a gameplay, IRQ, two pulses, saw and mixer                   |
-|     25 | VRC2c/VRC4b/d      | _Gradius II_ (Japan)                                                   | _Ganbare Goemon Gaiden_ for another pin route                                     | Pin routing, PRG/CHR modes and VRC IRQ                           |
+|     25 | VRC2c/VRC4b/d      | _Racer Mini Yonku_ (Japan, pinned exact 351406 VRC4b)                  | Clean _Gradius II_ for 2 KiB WRAM; clean VRC4d and VRC2c images                   | All pin routes, RAM variants, PRG/CHR modes and VRC IRQ          |
 |     26 | Konami VRC6b       | _Esper Dream 2_ (Japan, pinned local profile)                          | _Mouryou Senki Madara_ for an active VRC6-audio sequence                          | Swapped A0/A1, banking, CHR nametables and IRQ; audio supplement |
 |     32 | Irem G-101         | _Image Fight_ (Japan)                                                  | _Major League_ (Japan, mapper 32.1)                                               | PRG mode, CHR banks and fixed-upper one-screen wiring            |
 |     33 | Taito TC0190       | _Akira_ (Japan)                                                        | _Don Doko Don_ (Japan)                                                            | Register mask, PRG/CHR banks and mapper-controlled mirroring     |
@@ -168,6 +168,13 @@ the same ID covers materially different hardware that the primary image cannot e
   The route reaches an active baseball game and crosses both PRG register values plus all eight
   shifted CHR registers. Grounded-D0 electrical behavior remains covered by the focused CPU-bus
   test because this title does not use that readback as an observable game mechanic.
+- Mapper 25 now has a pinned exact _Racer Mini Yonku_ 351406/VRC4b profile with zero WRAM. Its
+  attract race and input-driven event setup observe exact A1/A0 routing, PRG/CHR changes,
+  horizontal/lower-single-screen mirroring and active scanline IRQs. The local _Bio Miracle_,
+  _Teenage Mutant Ninja Turtles 2_ and _Ganbare Goemon Gaiden_ files have canonical extracted CRCs
+  but 524,304 trailing bytes, so they are excluded from profiles. The local _Gradius II_ candidates
+  either alter PRG or both ROM regions; only `C71D4CE7`/`537B6F6A` may validate its 2 KiB-WRAM
+  board.
 - Mapper 69 base banking and cycle IRQ now have a pinned Japanese _Batman_ BAT-E301 gameplay profile.
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,

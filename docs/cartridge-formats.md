@@ -107,14 +107,17 @@ RAM/NVRAM. Mapper 26 selects the distinct 351949A/VRC6b board and requires exact
 volatile or non-volatile PRG region; its `$B003.D7` gate cannot be used to infer a memory chip that
 the selected board does not carry.
 
-Legacy mappers 21 and 23 combine physically different VRC pin routes that plain iNES cannot name.
+Legacy mappers 21, 23 and 25 combine physically different VRC pin routes that plain iNES cannot name.
 Exact content metadata resolves KON-RC850 _Wai Wai World 2_ (PRG `B201B522`, CHR `75754679`) to
 submapper 1 VRC4a with no WRAM. It resolves KON-RC833 _Ganbare Goemon 2_ (PRG `112140A4`, CHR
 `B0C3CE2D`) and KON-RC819 _Getsufuu
 Maden_ (PRG `C8859038`, CHR `DCFA8063`) to submapper 3 VRC2b with no WRAM. KON-RC856 _Crisis
 Force_ (PRG `99580334`, CHR `A709BCB8`) resolves to submapper 2 VRC4e with its physical 2 KiB
-volatile WRAM. Unknown legacy payloads retain the dual-route VRC4 compatibility model and generic
-RAM fallback; an image matching only one region CRC receives no override.
+volatile WRAM. Mapper 25 exact records resolve 351406 VRC4b (_Gradius II_, _Racer Mini Yonku_ and
+_Bio Miracle Bokutte Upa_), 352400 VRC4d (_Teenage Mutant Ninja Turtles 2_) and 351948 VRC2c
+(_Ganbare Goemon Gaiden_) with their physical 2 KiB WRAM, zero-WRAM or 8 KiB battery-NVRAM layout.
+Unknown legacy payloads retain the dual-route VRC4 compatibility model and generic RAM fallback; an
+image matching only one region CRC receives no override.
 
 Mapper 64 RAMBO-1 never decodes a PRG-RAM window. Exact content metadata identifies TGN-020-SK
 _Skull & Crossbones_ by PRG CRC `0857DF48` and CHR CRC `D0BF8C50`, removing the generic iNES

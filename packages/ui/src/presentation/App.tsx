@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ChangeEvent, DragEvent } from "react";
+import type { ChangeEvent, DragEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { EmulatorApplication } from "../application/emulator-application.js";
 import type { EmulatorApplicationDiagnostics } from "../application/emulator-application.js";
 import { QUICK_SAVE_SLOTS } from "../domain/emulation-session.js";
@@ -7,6 +7,7 @@ import type { QuickSaveSlot, SessionSnapshot } from "../domain/emulation-session
 import { parseRegionPreference, REGION_PREFERENCES } from "../domain/execution-region.js";
 import "./App.css";
 import { formatMapperLabel } from "./mapper-label.js";
+import { mapOekaKidsTabletPointer } from "./oeka-kids-tablet-input.js";
 
 const INITIAL_SNAPSHOT: SessionSnapshot = {
   status: "idle",
@@ -47,6 +48,7 @@ export function App({ createApplication }: AppProps) {
     QuickSaveSlot | undefined
   >();
   const hasQuickSave = snapshot.quickSaveSlots.includes(snapshot.selectedQuickSaveSlot);
+  const usesOekaKidsTablet = snapshot.rom?.defaultExpansionDevice === 0x17;
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -124,6 +126,28 @@ export function App({ createApplication }: AppProps) {
     romPickerRef.current?.focus({ preventScroll: true });
   };
 
+  const sendTabletPointer = (
+    event: ReactPointerEvent<HTMLCanvasElement>,
+    contact: boolean,
+    clicked: boolean,
+  ) => {
+    const application = applicationRef.current;
+    if (!usesOekaKidsTablet || !application) return;
+    event.preventDefault();
+    application.setOekaKidsTabletInput(
+      mapOekaKidsTabletPointer(
+        event.currentTarget.getBoundingClientRect(),
+        event.clientX,
+        event.clientY,
+        contact,
+        clicked,
+      ),
+    );
+  };
+
+  const pointerTouchesTablet = (event: ReactPointerEvent<HTMLCanvasElement>) =>
+    event.pointerType === "mouse" || event.pressure > 0 || event.buttons !== 0;
+
   const isRunning = snapshot.status === "running";
   const needsAudioRecovery = isRunning && snapshot.audioStatus === "blocked";
   const transportLabel = needsAudioRecovery ? "启用声音" : isRunning ? "暂停" : "继续";
@@ -170,8 +194,32 @@ export function App({ createApplication }: AppProps) {
               width="256"
               height="240"
               tabIndex={canToggle ? 0 : -1}
-              aria-label="FC 模拟器画面"
+              aria-label={usesOekaKidsTablet ? "FC 模拟器画面与绘图板" : "FC 模拟器画面"}
               aria-describedby="controller-help"
+              data-tablet={usesOekaKidsTablet || undefined}
+              onPointerEnter={(event) =>
+                sendTabletPointer(event, pointerTouchesTablet(event), (event.buttons & 1) !== 0)
+              }
+              onPointerMove={(event) =>
+                sendTabletPointer(event, pointerTouchesTablet(event), (event.buttons & 1) !== 0)
+              }
+              onPointerDown={(event) => {
+                if (!usesOekaKidsTablet || !event.isPrimary || event.button !== 0) return;
+                event.currentTarget.setPointerCapture(event.pointerId);
+                sendTabletPointer(event, true, true);
+                focusGameplay();
+              }}
+              onPointerUp={(event) => {
+                sendTabletPointer(event, event.pointerType === "mouse", false);
+                if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                  event.currentTarget.releasePointerCapture(event.pointerId);
+                }
+              }}
+              onPointerLeave={(event) => sendTabletPointer(event, false, false)}
+              onPointerCancel={(event) => sendTabletPointer(event, false, false)}
+              onContextMenu={(event) => {
+                if (usesOekaKidsTablet) event.preventDefault();
+              }}
             />
             {snapshot.status === "idle" && (
               <div className="screen-empty" aria-hidden="true">
@@ -453,7 +501,10 @@ export function App({ createApplication }: AppProps) {
               </div>
             </details>
 
-            <ControllerGuide isVsSystem={snapshot.rom?.consoleType === 1} />
+            <ControllerGuide
+              isVsSystem={snapshot.rom?.consoleType === 1}
+              usesOekaKidsTablet={usesOekaKidsTablet}
+            />
           </div>
         </div>
       </section>
@@ -504,7 +555,29 @@ function SectionHeading({
   );
 }
 
-function ControllerGuide({ isVsSystem }: { readonly isVsSystem: boolean }) {
+function ControllerGuide({
+  isVsSystem,
+  usesOekaKidsTablet,
+}: {
+  readonly isVsSystem: boolean;
+  readonly usesOekaKidsTablet: boolean;
+}) {
+  if (usesOekaKidsTablet) {
+    return (
+      <section id="controller-help" className="controller-guide" aria-label="绘图板操作">
+        <div className="controller-guide-heading">
+          <span>OEKA KIDS TABLET</span>
+          <strong>绘图板输入</strong>
+        </div>
+        <div className="controller-player tablet-player">
+          <b>✎</b>
+          <span>移动指针定位画笔</span>
+          <span>按住主键落笔 / 选择</span>
+        </div>
+        <p>画面就是绘图板有效区域；鼠标悬停模拟笔尖接触，点击模拟压笔。</p>
+      </section>
+    );
+  }
   return (
     <section id="controller-help" className="controller-guide" aria-label="键盘操作">
       <div className="controller-guide-heading">

@@ -15,6 +15,12 @@ import { isByte } from "./numeric-range.js";
 import { MachineClock, type MachineClockState } from "./clock/machine-clock.js";
 import { resolvePpuVariant } from "./ppu/ppu-variant.js";
 import { VsSystem, type VsExpansionRead, type VsSystemState } from "./vs-system.js";
+import {
+  OekaKidsTablet,
+  type OekaKidsTabletInput,
+  type OekaKidsTabletRead,
+  type OekaKidsTabletState,
+} from "./oeka-kids-tablet.js";
 
 export interface BusSnapshot {
   readonly ram: Uint8Array;
@@ -31,6 +37,7 @@ export interface BusSnapshot {
   readonly performingDmaMemoryAccess: boolean;
   readonly pendingControllerWrite?: number;
   readonly vsSystem?: VsSystemState;
+  readonly oekaKidsTablet?: OekaKidsTabletState;
 }
 
 class Bus implements MapperInterruptPort, DmaArbiterPort {
@@ -47,6 +54,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
   private readonly clock: MachineClock;
   private readonly ppuReadSynchronizationRequired: boolean;
   private readonly vsSystem: VsSystem | undefined;
+  private readonly oekaKidsTablet: OekaKidsTablet | undefined;
   private readonly irqSources = new Set<IRQSource>();
   private performingDmaMemoryAccess = false;
   private cpuUpdateActive = false;
@@ -74,6 +82,10 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.vsSystem =
       cartridge.consoleType === 1
         ? new VsSystem(cartridge.vsHardwareType, this.timing.cpuFrequencyHz)
+        : undefined;
+    this.oekaKidsTablet =
+      cartridge.consoleType === 0 && cartridge.defaultExpansionDevice === 0x17
+        ? new OekaKidsTablet()
         : undefined;
     this.powerOn();
   }
@@ -136,6 +148,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
       performingDmaMemoryAccess: this.performingDmaMemoryAccess,
       ...(pendingControllerWrite === undefined ? {} : { pendingControllerWrite }),
       ...(this.vsSystem ? { vsSystem: this.vsSystem.captureState() } : {}),
+      ...(this.oekaKidsTablet ? { oekaKidsTablet: this.oekaKidsTablet.captureState() } : {}),
     };
   }
 
@@ -168,8 +181,17 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     if ((state.vsSystem === undefined) !== (this.vsSystem === undefined)) {
       throw new Error("Bus save state targets another console type");
     }
+    if ((state.oekaKidsTablet === undefined) !== (this.oekaKidsTablet === undefined)) {
+      throw new Error("Bus save state targets another expansion device");
+    }
     if (state.controller1.strobeSignal !== state.controller2.strobeSignal) {
       throw new Error("Bus save-state controller strobe lines disagree");
+    }
+    if (
+      state.oekaKidsTablet &&
+      state.oekaKidsTablet.strobeSignal !== state.controller1.strobeSignal
+    ) {
+      throw new Error("Bus save-state tablet and controller OUT0 lines disagree");
     }
     if (irqSources.length > 0 !== state.cpu.interrupts.irqLineAsserted) {
       throw new Error("Bus save-state IRQ sources disagree with the CPU interrupt line");
@@ -224,6 +246,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.controller1.restoreState(state.controller1);
     this.controller2.restoreState(state.controller2);
     if (state.vsSystem) this.vsSystem?.restoreState(state.vsSystem);
+    if (state.oekaKidsTablet) this.oekaKidsTablet?.restoreState(state.oekaKidsTablet);
     this.ppu.restoreState(state.ppu);
     this.apu.restoreState(state.apu);
     this.cpu.restoreState(state.cpu);
@@ -254,6 +277,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.cartridge.powerOn();
     this.mapper.powerOn();
     this.vsSystem?.powerOn();
+    this.oekaKidsTablet?.powerOn();
     this.controller1.powerOn();
     this.controller2.powerOn();
     this.ppu.powerOn();
@@ -439,6 +463,7 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
     this.pendingControllerWrite = undefined;
     this.controller1.strobe = value;
     this.controller2.strobe = value;
+    this.oekaKidsTablet?.writeLatch(value);
     this.mapper.writeControllerLatch?.(value);
   }
 
@@ -501,6 +526,17 @@ class Bus implements MapperInterruptPort, DmaArbiterPort {
 
   readVsController(port: 1 | 2, serialButton: number): number | undefined {
     return this.vsSystem?.readController(port, serialButton);
+  }
+
+  readControllerExpansion(port: 1 | 2): OekaKidsTabletRead | undefined {
+    return port === 2 ? this.oekaKidsTablet?.read() : undefined;
+  }
+
+  setOekaKidsTabletInput(input: OekaKidsTabletInput): void {
+    if (!this.oekaKidsTablet) {
+      throw new Error("Oeka Kids tablet input is not available for this cartridge");
+    }
+    this.oekaKidsTablet.setInput(input);
   }
 
   get forceVsStartButton(): boolean {

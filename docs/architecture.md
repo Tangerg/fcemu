@@ -202,9 +202,11 @@ Three state categories have different owners and compatibility rules:
 | Emulator save state | Core           | Exact schema version + ROM identity + region + audio rate | Opaque to UI runtime port           |
 | Quick save          | UI application | Outer format + ROM identity + region + slot               | `QuickSaveStoragePort` / IndexedDB  |
 
-The core save-state envelope is version 17. This revision persists the asserted MMC3 IRQ output,
-requires every named bus IRQ source to agree with its owning APU channel or mapper snapshot, and
-cross-checks the DMC reader request/address against the DMA arbiter. Version 16 introduced the
+The core save-state envelope is version 18. This revision adds the Oeka Kids tablet's physical and
+serial state and cross-checks its OUT0 line against both standard controllers. Version 17 persisted
+the asserted MMC3 IRQ output, required every named bus IRQ source to agree with its owning APU
+channel or mapper snapshot, and cross-checked the DMC reader request/address against the DMA
+arbiter. Version 16 introduced the
 optional VS UniSystem cabinet, timed coin contacts, counter output and protection-device position.
 Every executing aggregate exposes a typed snapshot with runtime validation. `Bus.restoreState()` is
 transactional: a nested failure rolls the entire machine back to the pre-restore snapshot. The CPU,
@@ -216,8 +218,9 @@ that payload without asserting an internal type; `Emulator.restoreSaveState()` o
 validation before the bus transaction begins. IndexedDB likewise accepts battery data only when the
 stored record is the `ArrayBuffer` shape written by its storage adapter.
 
-Controller buttons currently held by physical input devices are UI intent, not historical machine
-state. The Workbench reapplies them after restoring or rebuilding a runtime.
+Controller buttons and tablet stylus state currently held by physical input devices are UI intent,
+not historical machine state. The Workbench reapplies them after restoring or rebuilding a runtime;
+the emulated serial shift/latch state itself remains part of the core snapshot.
 
 ## Error boundaries
 

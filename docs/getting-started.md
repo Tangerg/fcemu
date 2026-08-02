@@ -46,6 +46,11 @@ line; the ordinary NES `Select` function is not wired on a VS panel. Gameplay id
 2.0's `$4016`/`$4017` stick-routing metadata when it exists, independently from those fixed cabinet
 selection lines.
 
+Oeka Kids Mapper 96 images expose their required expansion-port drawing tablet automatically. Move
+the pointer over the visible 256 × 240 game image to position the stylus; hold the primary mouse or
+pen button to press/draw. Letterboxed space outside the actual game image is excluded from the tablet
+surface.
+
 After a ROM loads, the canvas receives gameplay focus. `Tab` moves focus to workbench controls;
 activating a control with `Enter` or `Space` returns focus to the canvas when appropriate.
 
@@ -60,6 +65,8 @@ activating a control with `Enter` or `Space` returns focus to the canvas when ap
   preserves battery data and held controller intent, and keeps a paused session paused.
 - **VS coin** appears only for VS UniSystem images. VS hardware is NTSC-only, so PAL/Dendy choices
   are disabled for those sessions.
+- **Oeka Kids tablet** replaces the keyboard guide with pointer instructions when the cartridge's
+  resolved default expansion device is `$17`.
 - **Quick saves** provide three slots isolated by ROM identity and actual execution region.
 - **Eject** stops the runtime and returns focus to the ROM selector.
 

@@ -93,10 +93,15 @@ export class CPUMemory {
           this.bus.forceVsStartButton ? ControllerButton.Start : undefined,
         );
         const vsValue = this.bus.readVsController(2, serialButton);
+        const expansion = this.bus.readControllerExpansion(2);
         return this.finishRead(
           address,
           vsValue === undefined
-            ? this.readPartiallyDriven(serialButton, 0x1f, cpuOwnsRead)
+            ? this.readPartiallyDriven(
+                (serialButton & 1) | (expansion?.value ?? 0),
+                0x1f | (expansion?.drivenMask ?? 0),
+                cpuOwnsRead,
+              )
             : this.readFullyDriven(vsValue, cpuOwnsRead),
         );
       }

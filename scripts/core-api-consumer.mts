@@ -21,6 +21,7 @@ import type {
   EmulatorOutputPorts,
   EmulatorSaveState,
   FrameExecution,
+  OekaKidsTabletInput,
   VideoFrame,
   VideoFrameSink,
 } from "@fcemu/core";
@@ -54,6 +55,8 @@ const battery: BatterySaveSnapshot | undefined = emulator.captureBatterySave();
 const state: EmulatorSaveState = emulator.captureSaveState();
 
 emulator.setControllerButton(1, ControllerButton.A, true);
+const tablet: OekaKidsTabletInput = { x: 120, y: 128, touching: true, clicked: false };
+if (cartridge.defaultExpansionDevice === 0x17) emulator.setOekaKidsTabletInput(tablet);
 emulator.restoreSaveState(state);
 
 void [
@@ -64,6 +67,7 @@ void [
   cartridgeFormat,
   formatErrorCode,
   consoleRegion,
+  tablet,
   CartridgeConsoleType,
   CartridgeFormatError,
   CartridgeTimingMode,

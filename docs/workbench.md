@@ -95,6 +95,12 @@ canceling a gamepad button still held. Source subscription is transactional and 
 idempotent across adapters. A disconnected controller or transient browser Gamepad API failure
 releases its projected buttons before polling continues, preventing stuck input.
 
+Oeka Kids input follows a separate capability because it is an expansion-port pointing device, not
+an eight-button pad. The presentation maps the `object-fit: contain` canvas content rectangle from
+256 × 240 pixels to the tablet's native X 0–239/Y 0–255 ranges and excludes letterboxes. The
+application owns the latest physical stylus intent and reapplies it after reset, region rebuild or
+quick-load; the core adapter forwards only the platform-neutral coordinate/contact value.
+
 The canvas is focusable only while a cartridge session can run. It receives focus after a successful
 load and after workbench actions; focused buttons and inputs retain normal browser keyboard
 semantics. The status output is a polite live region, errors use `role="alert"`, and the workbench
@@ -106,6 +112,8 @@ When `RomDetails.consoleType === 1`, presentation adds a labeled `投币` button
 `EmulatorApplication.insertCoin` and the runtime port into the core cabinet device; React never
 mutates a mapper or controller directly. The button is absent for ordinary NES/Famicom images. The
 controller guide also labels `Enter` as Select-1 and hides the unwired NES Select binding in VS mode.
+For resolved default expansion device `$17`, it instead explains pointer contact and click/press,
+and the canvas enables crosshair/touch-safe interaction.
 
 ## ROM identity and persistence
 

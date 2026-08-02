@@ -5,6 +5,7 @@ import type {
   EmulatorFrameResult,
   EmulatorRuntimePort,
   GameButton,
+  OekaKidsTabletInput,
   RomImage,
 } from "../../application/ports.js";
 import type { RegionPreference } from "../../domain/execution-region.js";
@@ -50,6 +51,10 @@ class CoreEmulatorRuntime implements EmulatorRuntimePort {
 
   setControllerButton(player: 1 | 2, button: GameButton, pressed: boolean): void {
     this.emulator.setControllerButton(player, BUTTON_MAP[button], pressed);
+  }
+
+  setOekaKidsTabletInput(input: OekaKidsTabletInput): void {
+    this.emulator.setOekaKidsTabletInput(input);
   }
 
   insertCoin(slot: 1 | 2 = 1): void {

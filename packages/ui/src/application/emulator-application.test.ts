@@ -4,6 +4,7 @@ import type {
   ControllerInputEvent,
   ControllerInputPort,
   EmulatorFactoryPort,
+  EmulatorRuntimePort,
   FrameSchedulerPort,
   GameButton,
   PersistedQuickSave,
@@ -274,6 +275,7 @@ describe("EmulatorApplication", () => {
             consoleType: 0,
             consoleRegion: "ntsc",
             hasBatteryBackup: false,
+            defaultExpansionDevice: 0,
           },
           frameRateHz: 60.0988,
           runFrame,
@@ -284,6 +286,7 @@ describe("EmulatorApplication", () => {
           captureBatterySave: () => undefined,
           restoreBatterySave: () => undefined,
           setControllerButton,
+          setOekaKidsTabletInput: () => undefined,
           insertCoin: () => undefined,
         }),
       },
@@ -629,6 +632,7 @@ describe("EmulatorApplication", () => {
         consoleType: 0 as const,
         consoleRegion: "ntsc" as const,
         hasBatteryBackup: true,
+        defaultExpansionDevice: 0,
       },
       frameRateHz: 60.0988,
       runFrame: () => ({ cpuCycles: 100 }),
@@ -639,6 +643,7 @@ describe("EmulatorApplication", () => {
       captureBatterySave: () => ({ revision, data: Uint8Array.of(revision) }),
       restoreBatterySave,
       setControllerButton: () => undefined,
+      setOekaKidsTabletInput: () => undefined,
       insertCoin: () => undefined,
     };
     const application = new EmulatorApplication({
@@ -1588,6 +1593,46 @@ describe("EmulatorApplication", () => {
     expect(insertCoin).toHaveBeenNthCalledWith(1, 1);
     expect(insertCoin).toHaveBeenNthCalledWith(2, 2);
   });
+
+  it("routes tablet-native pointer input only to an active Oeka Kids runtime", async () => {
+    const setOekaKidsTabletInput = vi.fn<EmulatorRuntimePort["setOekaKidsTabletInput"]>();
+    const tabletRuntime = createRuntime({
+      consoleRegion: "ntsc",
+      defaultExpansionDevice: 0x17,
+      setOekaKidsTabletInput,
+    });
+    const application = createApplication(
+      {
+        read: async (file) => ({
+          id: file.name,
+          name: file.name,
+          bytes: new ArrayBuffer(1),
+        }),
+      },
+      () => tabletRuntime,
+    );
+
+    await application.loadRom(testFile("oeka-kids.nes"));
+    expect(application.getSnapshot().rom?.defaultExpansionDevice).toBe(0x17);
+    expect(setOekaKidsTabletInput).toHaveBeenCalledWith({
+      x: 0,
+      y: 0,
+      touching: false,
+      clicked: false,
+    });
+
+    application.setOekaKidsTabletInput({ x: 120, y: 128, touching: true, clicked: true });
+    expect(setOekaKidsTabletInput).toHaveBeenLastCalledWith({
+      x: 120,
+      y: 128,
+      touching: true,
+      clicked: true,
+    });
+
+    await application.stop();
+    application.setOekaKidsTabletInput({ x: 1, y: 2, touching: true, clicked: false });
+    expect(setOekaKidsTabletInput).toHaveBeenCalledTimes(2);
+  });
 });
 
 function createApplication(
@@ -1604,6 +1649,7 @@ function createApplication(
         consoleType: 0 | 1;
         consoleRegion: "ntsc" | "pal" | "dendy";
         hasBatteryBackup: boolean;
+        defaultExpansionDevice: number;
       };
       frameRateHz: number;
       runFrame: () => { cpuCycles: number };
@@ -1614,6 +1660,7 @@ function createApplication(
       captureBatterySave: () => undefined;
       restoreBatterySave: () => void;
       setControllerButton: () => void;
+      setOekaKidsTabletInput: () => void;
       insertCoin: () => void;
     }
   >((rom) => ({
@@ -1624,6 +1671,7 @@ function createApplication(
       consoleType: 0,
       consoleRegion: "ntsc",
       hasBatteryBackup: false,
+      defaultExpansionDevice: 0,
     },
     frameRateHz: 60.0988,
     runFrame: () => ({ cpuCycles: 100 }),
@@ -1634,6 +1682,7 @@ function createApplication(
     captureBatterySave: () => undefined,
     restoreBatterySave: () => undefined,
     setControllerButton: () => undefined,
+    setOekaKidsTabletInput: () => undefined,
     insertCoin: () => undefined,
   })),
 ): EmulatorApplication {
@@ -1661,6 +1710,8 @@ function createRuntime({
   restoreSaveState = () => undefined,
   restoreBatterySave = () => undefined,
   setControllerButton = () => undefined,
+  setOekaKidsTabletInput = () => undefined,
+  defaultExpansionDevice = 0,
 }: {
   readonly consoleRegion: "ntsc" | "pal" | "dendy";
   readonly batterySave?: { readonly revision: number; readonly data: Uint8Array };
@@ -1668,6 +1719,8 @@ function createRuntime({
   readonly restoreSaveState?: (state: { readonly data: unknown }) => void;
   readonly restoreBatterySave?: (data: Uint8Array) => void;
   readonly setControllerButton?: (player: 1 | 2, button: GameButton, pressed: boolean) => void;
+  readonly setOekaKidsTabletInput?: EmulatorRuntimePort["setOekaKidsTabletInput"];
+  readonly defaultExpansionDevice?: number;
 }) {
   return {
     cartridge: {
@@ -1677,6 +1730,7 @@ function createRuntime({
       consoleType: 0 as const,
       consoleRegion,
       hasBatteryBackup: batterySave !== undefined,
+      defaultExpansionDevice,
     },
     frameRateHz: consoleRegion === "ntsc" ? 60.0988 : 50.007,
     runFrame: () => ({ cpuCycles: 100 }),
@@ -1687,6 +1741,7 @@ function createRuntime({
     captureBatterySave: () => batterySave,
     restoreBatterySave,
     setControllerButton,
+    setOekaKidsTabletInput,
     insertCoin: () => undefined,
   };
 }

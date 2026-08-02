@@ -137,6 +137,7 @@ yarn smoke:real-rom -- timediver "/absolute/path/to/Time Diver Avenger (C).nes"
 yarn smoke:real-rom -- afterburner "/absolute/path/to/After Burner (U).nes"
 yarn smoke:real-rom -- goemon2 "/absolute/path/to/Ganbare Goemon 2 (J).nes"
 yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
+yarn smoke:real-rom -- oeka-kids "/absolute/path/to/Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory
 ```
 
@@ -154,8 +155,9 @@ headers, trailing data, truncated files and unsupported board configurations for
 yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 ```
 
-Profiles verify cartridge identity, several visual checkpoints, a deterministic input sequence,
-audio output, CPU-cycle counts and two identical save-state replays. Full details live in
+Profiles verify cartridge identity, several visual checkpoints, a deterministic controller,
+cabinet or tablet input sequence, audio output, CPU-cycle counts and two identical save-state
+replays. Full details live in
 [`packages/fc-emu/test-support/real-roms.md`](../packages/fc-emu/test-support/real-roms.md).
 The title, region and board candidates for extending that corpus across every implemented ID live
 in [Mapper real-ROM validation plan](./mapper-real-rom-plan.md).

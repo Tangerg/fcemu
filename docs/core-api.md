@@ -92,6 +92,23 @@ emulator.setDipSwitch(3, true);
 images. `emulator.cartridge.consoleType`, `vsPpuType` and `vsHardwareType` let a host present
 appropriate controls without inspecting ROM bytes.
 
+The Bandai Oeka Kids expansion-port tablet is a separate typed input rather than a controller or
+mapper command:
+
+```ts
+emulator.setOekaKidsTabletInput({
+  x: 120, // native tablet X: 0..239
+  y: 128, // native tablet Y: 0..255
+  touching: true,
+  clicked: false,
+});
+```
+
+Hosts should expose this input when `emulator.cartridge.defaultExpansionDevice === 0x17`.
+`clicked` requires `touching`; invalid coordinate/contact combinations and cartridges without the
+device fail closed. The unusual coordinate extents are hardware-native—the two games rescale them
+back to a 256 × 240 picture.
+
 On VS hardware, logical `ControllerButton.Start` drives the fixed Select-1/Select-2 cabinet line;
 logical NES `Select` is ignored because that button is not wired. A player's A/B/directions follow
 the VS gameplay-stick routing metadata independently: Select-1 always enters through `$4016` bit 2,
@@ -165,7 +182,9 @@ rejected instead of returning a snapshot from the middle of a clock transaction.
 - every nested CPU, PPU, APU, DMA, mapper, clock, controller and cartridge invariant.
 
 Restore is transactional: if any nested validation fails, the live runtime is rolled back. Schema
-version 17 is intentionally exact rather than forward/backward compatible.
+version 18 is intentionally exact rather than forward/backward compatible. Version 18 adds the
+Oeka Kids tablet's physical input, serial report and OUT0/OUT1 line state to the transactional bus
+snapshot.
 
 ## Diagnostics
 

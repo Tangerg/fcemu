@@ -72,6 +72,27 @@ describe("Emulator", () => {
     expect(emulator.captureSaveState()).toEqual(before);
   });
 
+  it("projects and accepts the Oeka Kids tablet through the public facade", () => {
+    const emulator = Emulator.fromRom(createTestRom({ mapper: 96, prgBanks: 8 }));
+
+    expect(emulator.cartridge.defaultExpansionDevice).toBe(0x17);
+    emulator.setOekaKidsTabletInput({ x: 239, y: 255, touching: true, clicked: true });
+    expect(emulator.captureSaveState().state.oekaKidsTablet).toMatchObject({
+      x: 239,
+      y: 255,
+      touching: true,
+      clicked: true,
+    });
+  });
+
+  it("rejects tablet input when the cartridge has no Oeka Kids peripheral", () => {
+    const emulator = Emulator.fromRom(createTestRom());
+
+    expect(() =>
+      emulator.setOekaKidsTabletInput({ x: 0, y: 0, touching: false, clicked: false }),
+    ).toThrow(/not available/);
+  });
+
   it("boots from the cartridge reset vector before the first frame", () => {
     const emulator = Emulator.fromRom(
       createTestRom({ program: [0x4c, 0x00, 0x80], resetVector: 0x8000 }),

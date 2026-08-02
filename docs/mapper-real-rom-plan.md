@@ -103,7 +103,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     93 | Sunsoft-3R         | _Shanghai_ (Japan)                                                     | _Fantasy Zone_ compatible board revision                                          | PRG bank and CHR-RAM enable/open-bus behavior                    |
 |     94 | UN1ROM             | _Senjou no Ookami_ (Japan)                                             | —                                                                                 | Shifted PRG bank field, fixed tail and conflicts                 |
 |     95 | Namco 3425         | _Dragon Buster_ (Japan)                                                | —                                                                                 | CHR-bank-driven CIRAM selection                                  |
-|     96 | Bandai Oeka Kids   | _Oeka Kids: Anpanman to Oekaki Shiyou!!_                               | _Oeka Kids: Anpanman no Hiragana Daisuki_                                         | PPU address-edge CHR latch, 32 KiB RAM and conflicts             |
+|     96 | Bandai Oeka Kids   | _Oeka Kids: Anpanman to Oekaki Shiyou!!_ (pinned local profile)        | _Oeka Kids: Anpanman no Hiragana Daisuki_                                         | PPU address-edge CHR latch, tablet protocol and 32 KiB RAM       |
 |     97 | Irem TAM-S1        | _Kaiketsu Yanchamaru_ (Japan, pinned local profile)                    | —                                                                                 | Inverted fixed/switchable PRG placement and mirroring            |
 |     99 | VS mainboard       | _Vs. Soccer_ SC4-3 (pinned local profile)                              | _Vs. Gumshoe_ (fifth PRG); _Vs. Super Mario Bros._ (normal routing)               | CHR/fifth-PRG, RGB PPU, crossed controls and cabinet I/O         |
 |    112 | NTDEC/Asder        | _Sango Fighter_ (unlicensed, pinned local profile)                     | _Huang Di_                                                                        | Two-stage registers, split CHR outer lines and mirroring         |
@@ -157,6 +157,11 @@ the same ID covers materially different hardware that the primary image cannot e
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,
   so its audio must not be accepted as a passing baseline yet.
+- Mapper 96 now has a pinned _Anpanman to Oekaki Shiyou!!_ profile with the exact PRG CRC
+  `9D048EA4`. Its timeline uses native tablet reports—not no-op controller events—to enter drawing
+  mode and produce a visible stroke, with a save-state checkpoint while the pen is still pressed.
+  _Anpanman no Hiragana Daisuki_ remains useful as the second and only other software path, but is
+  not required to prove the already-shared tablet/board implementation.
 - Mapper 68 now has a pinned USA _After Burner_ TGN-011-AB profile. Its zero-WRAM 800042-01 REV B
   board uses CHR-ROM nametables continuously across the title, carrier launch and active air combat;
   retain a correctly identified _Maharaja_ image for the optional battery-WRAM path. _Nantettatte!!

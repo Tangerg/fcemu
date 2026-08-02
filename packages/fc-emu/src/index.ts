@@ -24,4 +24,5 @@ export { UnsupportedMapperError } from "./domain/emulation/mapper/index.js";
 export { UnsupportedMapperConfigurationError } from "./domain/emulation/mapper/index.js";
 export { UnsupportedMapperVariantError } from "./domain/emulation/mapper/index.js";
 export { ControllerButton } from "./domain/emulation/controller.js";
+export type { OekaKidsTabletInput } from "./domain/emulation/oeka-kids-tablet.js";
 export type { ConsoleRegion } from "./domain/emulation/console-timing.js";

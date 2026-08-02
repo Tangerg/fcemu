@@ -23,6 +23,7 @@ interface EmulatorCartridgeInfo {
   readonly consoleType: 0 | 1;
   readonly consoleRegion: ExecutionRegion;
   readonly hasBatteryBackup: boolean;
+  readonly defaultExpansionDevice: number;
 }
 
 export interface EmulatorFrameResult {
@@ -45,7 +46,15 @@ export interface EmulatorRuntimePort {
   captureBatterySave(): BatterySaveSnapshot | undefined;
   restoreBatterySave(data: Uint8Array): void;
   setControllerButton(player: 1 | 2, button: GameButton, pressed: boolean): void;
+  setOekaKidsTabletInput(input: OekaKidsTabletInput): void;
   insertCoin(slot?: 1 | 2): void;
+}
+
+export interface OekaKidsTabletInput {
+  readonly x: number;
+  readonly y: number;
+  readonly touching: boolean;
+  readonly clicked: boolean;
 }
 
 interface BatterySaveSnapshot {

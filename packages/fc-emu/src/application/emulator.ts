@@ -10,9 +10,10 @@ import type {
 import type { ConsoleRegion } from "../domain/emulation/console-timing.js";
 import type { EmulatorOutputPorts, VideoFrame } from "./ports/emulator-output.js";
 import { createRomIdentity } from "../domain/model/rom-identity.js";
+import type { OekaKidsTabletInput } from "../domain/emulation/oeka-kids-tablet.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
-const SAVE_STATE_VERSION = 17;
+const SAVE_STATE_VERSION = 18;
 
 export interface CartridgeInfo {
   readonly format: CartridgeFormat;
@@ -22,6 +23,7 @@ export interface CartridgeInfo {
   readonly consoleType: CartridgeConsoleType.Standard | CartridgeConsoleType.VsSystem;
   readonly vsPpuType: number;
   readonly vsHardwareType: number;
+  readonly defaultExpansionDevice: number;
   readonly consoleRegion: ConsoleRegion;
   readonly mirroringMode: NametableMirroring;
   readonly hasBatteryBackup: boolean;
@@ -91,6 +93,7 @@ export class Emulator {
         CartridgeConsoleType.Standard | CartridgeConsoleType.VsSystem,
       vsPpuType: cartridge.vsPpuType,
       vsHardwareType: cartridge.vsHardwareType,
+      defaultExpansionDevice: cartridge.defaultExpansionDevice,
       consoleRegion: this.bus.Timing.region,
       get mirroringMode() {
         return cartridge.mirroringMode;
@@ -232,6 +235,10 @@ export class Emulator {
       }
     }
     controller.setButton(button, pressed);
+  }
+
+  setOekaKidsTabletInput(input: OekaKidsTabletInput): void {
+    this.bus.setOekaKidsTabletInput(input);
   }
 
   insertCoin(slot: 1 | 2 = 1): void {

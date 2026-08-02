@@ -1210,8 +1210,12 @@ non-`$2xxx` address to `$2xxx` captures PPU A9-A8, including transitions caused 
 PPUDATA activity. Save states therefore preserve the last observed 14-bit PPU address as well as
 both bank latches. Mirroring is hardwired vertical, and the board has no PRG RAM or IRQ. Legacy
 iNES cannot encode its 32 KiB CHR RAM, so cartridge format policy normalizes mapper 96's zero-CHR
-header to the physical capacity; NES 2.0 must declare it explicitly. The Oeka Kids tablet input
-device remains outside this mapper implementation. See
+header to the physical capacity, removes its nonexistent PRG RAM and selects default expansion
+device `$17`; NES 2.0 must declare the memory and tablet explicitly. The tablet remains outside the
+mapper implementation as a bus-owned console peripheral. The checksum-pinned _Anpanman to Oekaki
+Shiyou!!_ profile enters the tablet-only menu, selects drawing mode, produces a multi-point stroke,
+observes PRG/outer-CHR register changes and replays deterministically from a checkpoint in the
+middle of that stroke. See
 [NESdev mapper 96](https://www.nesdev.org/wiki/INES_Mapper_096).
 
 ## Irem TAM-S1 (97)

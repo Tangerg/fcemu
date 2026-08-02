@@ -9,6 +9,7 @@ import type {
   ControllerInputPort,
   EmulatorFactoryPort,
   EmulatorRuntimePort,
+  OekaKidsTabletInput,
   FrameSchedulerPort,
   GameButton,
   PersistedQuickSave,
@@ -53,6 +54,12 @@ const GAME_BUTTONS: readonly GameButton[] = [
   "left",
   "right",
 ];
+const INACTIVE_TABLET_INPUT: OekaKidsTabletInput = Object.freeze({
+  x: 0,
+  y: 0,
+  touching: false,
+  clicked: false,
+});
 
 export class EmulatorApplication {
   private session = EmulationSession.idle();
@@ -75,6 +82,7 @@ export class EmulatorApplication {
     1: new Set<GameButton>(),
     2: new Set<GameButton>(),
   };
+  private tabletInput = INACTIVE_TABLET_INPUT;
   private readonly persistedRevisions = new WeakMap<EmulatorRuntimePort, number>();
 
   constructor(private readonly dependencies: EmulatorApplicationDependencies) {
@@ -103,6 +111,7 @@ export class EmulatorApplication {
 
   async loadRom(file: BinaryFile): Promise<void> {
     if (this.disposed) return;
+    this.tabletInput = INACTIVE_TABLET_INPUT;
     const operation = ++this.operationSequence;
     const shouldSuspendAudio =
       this.session.snapshot.status === "running" || this.session.snapshot.status === "paused";
@@ -151,7 +160,7 @@ export class EmulatorApplication {
           }
         }
       }
-      this.restoreControllerState(runtime);
+      this.restoreInputState(runtime);
       const activeEmulation = { runtime, rom };
       this.activeEmulation = activeEmulation;
       this.persistedRevisions.set(runtime, runtime.captureBatterySave()?.revision ?? 0);
@@ -281,6 +290,13 @@ export class EmulatorApplication {
     runtime.insertCoin(slot);
   }
 
+  setOekaKidsTabletInput(input: OekaKidsTabletInput): void {
+    const runtime = this.activeEmulation?.runtime;
+    if (!runtime || runtime.cartridge.defaultExpansionDevice !== 0x17) return;
+    runtime.setOekaKidsTabletInput(input);
+    this.tabletInput = Object.freeze({ ...input });
+  }
+
   quickSaveCurrentState(): void {
     const activeEmulation = this.activeEmulation;
     const snapshot = this.session.snapshot;
@@ -383,7 +399,7 @@ export class EmulatorApplication {
 
     try {
       runtime.restoreSaveState(quickSave.runtimeState);
-      this.restoreControllerState(runtime);
+      this.restoreInputState(runtime);
       this.session = this.session.quickSaveRestored(quickSave.frameCount, quickSave.cpuCycles);
       this.emit();
       if (wasRunning) await this.play();
@@ -423,7 +439,7 @@ export class EmulatorApplication {
       if (batterySave && runtime.cartridge.hasBatteryBackup) {
         runtime.restoreBatterySave(batterySave.data);
       }
-      this.restoreControllerState(runtime);
+      this.restoreInputState(runtime);
     } catch {
       this.session = this.session.regionPreferenceChanged(previousPreference);
       this.emit();
@@ -461,6 +477,7 @@ export class EmulatorApplication {
 
   async stop(): Promise<void> {
     if (this.disposed) return;
+    this.tabletInput = INACTIVE_TABLET_INPUT;
     this.operationSequence += 1;
     this.cancelScheduledFrame();
     const activeEmulation = this.activeEmulation;
@@ -724,11 +741,14 @@ export class EmulatorApplication {
     }
   }
 
-  private restoreControllerState(runtime: EmulatorRuntimePort): void {
+  private restoreInputState(runtime: EmulatorRuntimePort): void {
     for (const player of [1, 2] as const) {
       for (const button of GAME_BUTTONS) {
         runtime.setControllerButton(player, button, this.pressedButtons[player].has(button));
       }
+    }
+    if (runtime.cartridge.defaultExpansionDevice === 0x17) {
+      runtime.setOekaKidsTabletInput(this.tabletInput);
     }
   }
 
@@ -756,7 +776,7 @@ export class EmulatorApplication {
 
       const shouldResume = wasRunning && this.session.snapshot.status === "running";
       command(runtime);
-      this.restoreControllerState(runtime);
+      this.restoreInputState(runtime);
       this.resetFrameRateDiagnostics();
       this.session = this.session.restarted();
       this.emit();
@@ -778,6 +798,7 @@ function toRomDetails(rom: RomImage, runtime: EmulatorRuntimePort): RomDetails {
     submapperNumber: runtime.cartridge.submapperNumber,
     consoleType: runtime.cartridge.consoleType,
     consoleRegion: runtime.cartridge.consoleRegion,
+    defaultExpansionDevice: runtime.cartridge.defaultExpansionDevice,
   };
 }
 

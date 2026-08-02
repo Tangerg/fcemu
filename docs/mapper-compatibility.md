@@ -71,7 +71,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM         |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM        |
 | 95     | Namco 3425     | Implemented | CHR/CIRAM-coupling/geometry tests; no conformance ROM              |
-| 96     | Oeka Kids      | Implemented | Address-edge/CHR-RAM/conflict/state tests; two local replay smokes |
+| 96     | Oeka Kids      | Verified    | Board/tablet tests; pinned _Anpanman to Oekaki Shiyou!!_ runner    |
 | 97     | Irem TAM-S1    | Verified    | Board tests; pinned _Kaiketsu Yanchamaru_ real-ROM runner          |
 | 99     | VS mainboard   | Verified    | Board tests; pinned _Vs. Soccer_ cabinet/gameplay real-ROM runner  |
 | 112    | NTDEC/Asder    | Verified    | Banking/state tests; pinned _Sango Fighter_ real-ROM runner        |
@@ -668,8 +668,13 @@ and `$6000.D6` supplying PRG A18.
   the PPU address bus into `$2xxx` captures A9-A8 for the lower pattern-table bank while the upper
   bank remains 3 or 7. The implementation observes both rendering fetches and CPU PPUADDR/PPUDATA
   transitions, preserves the prior address in save state and forces hardwired vertical mirroring.
-  Both user-local game images completed 180-frame starts with deterministic 60-frame save-state
-  replay. Their bytes and hashes remain outside the repository, and tablet input is not yet modeled.
+  Legacy policy also suppresses nonexistent PRG RAM and selects the required expansion-port tablet.
+  That bus-owned device captures native X/Y/contact into an 18-bit report, advances on OUT1 edges
+  and returns handshake/inverted serial data on `$4017` D2/D3. The checksum-pinned _Anpanman to
+  Oekaki Shiyou!!_ profile enters the tablet-only menu, selects drawing mode, draws a five-point
+  stroke, observes Mapper 96 registers 2/4/5 and reproduces video, audio, cycles and tablet serial
+  state across a 120-frame mid-stroke save-state replay. The second local title remains supplemental
+  startup evidence rather than a separate compatibility claim.
 - Mapper 97 (Irem TAM-S1) fixes the final 16 KiB PRG bank at `$8000-$BFFF`, selects one of sixteen
   banks at `$C000-$FFFF` through D3-D0, and uses D7-D6 for lower one-screen, horizontal, vertical or
   upper one-screen mirroring. Its only known board carries 256 KiB PRG ROM and 8 KiB CHR RAM. The

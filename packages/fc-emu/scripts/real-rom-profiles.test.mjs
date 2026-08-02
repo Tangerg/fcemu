@@ -80,7 +80,34 @@ describe("real-ROM profile validation", () => {
       pressed: true,
     };
     expect(() => validateRealRomProfiles(hybrid, BUTTON_NAMES)).toThrowError(
-      /exactly one controller or coin event/,
+      /exactly one controller, coin or tablet event/,
+    );
+  });
+
+  it("accepts native tablet reports and rejects impossible stylus input", () => {
+    const tablet = cloneOneProfile();
+    tablet.fixture.interactive.events[0] = {
+      frame: 1,
+      tablet: { x: 239, y: 255, touching: true, clicked: true },
+    };
+    expect(() => validateRealRomProfiles(tablet, BUTTON_NAMES)).not.toThrow();
+
+    const invalidCoordinate = cloneOneProfile();
+    invalidCoordinate.fixture.interactive.events[0] = {
+      frame: 1,
+      tablet: { x: 240, y: 0, touching: true, clicked: false },
+    };
+    expect(() => validateRealRomProfiles(invalidCoordinate, BUTTON_NAMES)).toThrowError(
+      /tablet\.x.*between 0 and 239/,
+    );
+
+    const impossibleClick = cloneOneProfile();
+    impossibleClick.fixture.interactive.events[0] = {
+      frame: 1,
+      tablet: { x: 0, y: 0, touching: false, clicked: true },
+    };
+    expect(() => validateRealRomProfiles(impossibleClick, BUTTON_NAMES)).toThrowError(
+      /cannot click without touching/,
     );
   });
 

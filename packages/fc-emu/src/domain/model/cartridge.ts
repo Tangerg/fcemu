@@ -257,7 +257,7 @@ class Cartridge {
         "miscellaneous ROM data is not supported",
       );
     }
-    const supportedExpansionDevices = header.consoleType === 1 ? [0, 4, 5] : [0, 1];
+    const supportedExpansionDevices = header.consoleType === 1 ? [0, 4, 5] : [0, 1, 0x17];
     if (!supportedExpansionDevices.includes(header.defaultExpansionDevice)) {
       throw new CartridgeFormatError(
         "UNSUPPORTED_EXPANSION_DEVICE",

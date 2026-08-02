@@ -19,7 +19,8 @@ mapper compatibility.
 - Region-specific NTSC, PAL and Dendy CPU/PPU/APU timing.
 - iNES and a deliberately constrained NES 2.0 subset with explicit board validation.
 - Battery-backed PRG/CHR/mapper persistence and versioned, transactional save states.
-- Keyboard and two-player gamepad input, AudioWorklet output and three persistent quick-save slots.
+- Keyboard, two-player gamepad and Oeka Kids pointer/tablet input, AudioWorklet output and three
+  persistent quick-save slots.
 - Independent `@fcemu/core` and `@fcemu/ui` packages with enforced clean-architecture boundaries.
 
 Implemented mapper IDs: **0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 21, 22, 23, 24,
@@ -56,6 +57,9 @@ canvas owns gameplay keys; tabbing to a workbench control returns those keys to 
 the action completes. A loaded VS UniSystem image adds a dedicated coin button to the workbench;
 after inserting a coin, `Enter` drives the cabinet's Select-1/one-player line, while the ordinary NES
 Select key is not connected.
+
+Mapper 96 Oeka Kids images automatically turn the 256 × 240 game canvas into the drawing tablet:
+pointer movement models stylus contact and the primary mouse/pen button models a press.
 
 For installation details, browser-storage behavior and troubleshooting, read
 [Getting started](./docs/getting-started.md).

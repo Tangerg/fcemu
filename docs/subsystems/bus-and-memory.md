@@ -214,6 +214,22 @@ controller. A stable snapshot may carry that field only immediately after a GET 
 would already have committed it. The two controller snapshots must expose the same strobe level,
 and a high strobe pins each serial index to the first (A-button) bit.
 
+## Oeka Kids expansion-port tablet (`OekaKidsTablet`)
+
+The Bandai tablet is console-owned input, not mapper state. A resolved NES 2.0 default expansion
+device `$17` creates `OekaKidsTablet` beside the two standard controllers; legacy Mapper 96 headers
+receive that device through board-format policy because only the two tablet games use the mapper.
+The public input is the hardware-native X 0–239/Y 0–255 coordinate plus `touching` and `clicked`
+(click requires contact).
+
+The same committed `$4016` latch drives tablet OUT0/OUT1. OUT0 low captures
+`XXXXXXXXYYYYYYYYBA`; while OUT0 is high, each OUT1 low-to-high transition shifts the report once.
+`$4017` reads then combine standard controller D0 with the tablet's D2 handshake and inverted D3
+serial bit, leaving the ordinary controller/open-bus policy centralized in `CPUMemory`. Reports are
+MSB-first, including the inverted touch/click bits. `powerOn()` clears only the serial lines/report,
+preserving the current physical stylus just as controller power-on preserves held buttons. See
+[NESdev Oeka Kids tablet](https://www.nesdev.org/wiki/Oeka_Kids_tablet).
+
 ## IRQ sources (`IRQSource`)
 
 `IRQSource` is a string-valued constant map of the level-sensitive lines the CPU sees: `ApuDmc`
@@ -225,7 +241,8 @@ source. Devices and the bus refer to these named members instead of bare string 
 ## Save-state snapshot
 
 `captureState()` returns a `BusSnapshot` owning the internal RAM (copied), the CPU, PPU, APU,
-cartridge-memory, mapper, both controller and DMA snapshots, the machine-clock state, the array of
+cartridge-memory, mapper, both controller and DMA snapshots, optional VS/tablet device state, the
+machine-clock state, the array of
 asserted `irqSources`, the `performingDmaMemoryAccess` flag, and `pendingControllerWrite` only when
 one is pending. Public capture/restore is rejected while a CPU update or DMA memory access is active;
 the serialized DMA-access flag is consequently required to be `false`, preventing a transient guard
@@ -241,7 +258,9 @@ transactions that no child can validate alone:
   its owning device;
 - the DMC channel request and address agree with the DMA arbiter;
 - CPU/APU/PPU clock-domain watermarks are fully committed;
-- both controllers share one strobe level, and a pending OUT write follows a GET cycle.
+- both controllers share one strobe level, an optional tablet sees the same OUT0 level, and a pending
+  OUT write follows a GET cycle;
+- optional VS and Oeka Kids snapshots match the cartridge-selected console/input hardware.
 
 `restoreIRQSource` lets the APU reconcile physical IRQ levels after direct restoration without
 running normal edge-recognition timing; `setIRQSource` remains the runtime event path and delegates
@@ -271,4 +290,6 @@ that narrow capability to the APU mixer without teaching the APU any mapper regi
   data-bus latches and open bus, and `PPUMemory` 14-bit map.
 - `packages/fc-emu/src/domain/emulation/controller.ts` — `Controller` standard eight-button serial
   shift register with strobe and saturated position.
+- `packages/fc-emu/src/domain/emulation/oeka-kids-tablet.ts` — expansion-port coordinate report,
+  OUT0/OUT1 protocol and snapshot validation.
 - `packages/fc-emu/src/domain/emulation/irq-source.ts` — the `IRQSource` level-sensitive line names.

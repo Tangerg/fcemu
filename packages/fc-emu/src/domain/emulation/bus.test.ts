@@ -487,6 +487,50 @@ describe("Bus lifecycle", () => {
     expect(bus.Controller1.captureState().strobeSignal).toBe(false);
   });
 
+  it("routes Oeka Kids OUT0/OUT1 writes and $4017 D2/D3 reads through the expansion port", () => {
+    const bus = new Bus(createTestCartridge({ nes2: true, defaultExpansionDevice: 0x17 }));
+    const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;
+    const commitControllerWrite = (value: number) => {
+      bus.scheduleControllerWrite(value);
+      for (
+        let step = 0;
+        step < 2 && bus.captureState().pendingControllerWrite !== undefined;
+        step++
+      ) {
+        bus.updateSeconds(oneCpuCycle);
+      }
+      expect(bus.captureState().pendingControllerWrite).toBeUndefined();
+    };
+    bus.setOekaKidsTabletInput({ x: 0x80, y: 0, touching: false, clicked: false });
+    bus.RAM[0] = 0xe0;
+    expect(bus.CPU.readByte(0)).toBe(0xe0);
+
+    commitControllerWrite(0x00);
+    bus.CPU.readByte(0);
+    expect(bus.CPU.readByte(0x4017)).toBe(0xe0);
+    commitControllerWrite(0x01);
+    bus.CPU.readByte(0);
+    expect(bus.CPU.readByte(0x4017)).toBe(0xe4);
+    commitControllerWrite(0x03);
+    bus.CPU.readByte(0);
+    expect(bus.CPU.readByte(0x4017)).toBe(0xe0);
+  });
+
+  it("captures tablet protocol state and rejects an OUT0 mismatch transactionally", () => {
+    const bus = new Bus(createTestCartridge({ nes2: true, defaultExpansionDevice: 0x17 }));
+    bus.setOekaKidsTabletInput({ x: 10, y: 20, touching: true, clicked: false });
+    const before = bus.captureState();
+    expect(before.oekaKidsTablet).toMatchObject({ x: 10, y: 20 });
+
+    expect(() =>
+      bus.restoreState({
+        ...before,
+        oekaKidsTablet: { ...before.oekaKidsTablet!, strobeSignal: true },
+      }),
+    ).toThrow(/tablet and controller OUT0 lines disagree/i);
+    expect(bus.captureState()).toEqual(before);
+  });
+
   it("lets an RMW second write replace a pending OAM DMA before halt", () => {
     const bus = new Bus(createTestCartridge({ program: [0xee, 0x14, 0x40, 0x02] }));
     const oneCpuCycle = 1 / bus.Timing.cpuFrequencyHz;

@@ -115,7 +115,9 @@ describe("OekaKidsMapper", () => {
   });
 
   it("accepts only the documented board geometry", () => {
-    expect(() => createMapper(createOekaKidsCartridge(), interruptPort)).not.toThrow();
+    const legacyCartridge = createOekaKidsCartridge();
+    expect(legacyCartridge).toMatchObject({ prgRamBytes: 0, prgNvRamBytes: 0 });
+    expect(() => createMapper(legacyCartridge, interruptPort)).not.toThrow();
     expect(() =>
       createMapper(
         createTestCartridge({ mapper: 96, nes2: true, prgBanks: 8, chrRamShift: 9 }),

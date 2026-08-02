@@ -7,17 +7,17 @@ execution.
 
 ## Accepted formats
 
-| Capability          | iNES                                               | NES 2.0                                  |
-| ------------------- | -------------------------------------------------- | ---------------------------------------- |
-| Mapper identity     | 8-bit legacy mapper                                | 12-bit mapper plus 4-bit submapper       |
-| PRG/CHR ROM size    | Linear bank counts                                 | Linear and exponent-multiplier encodings |
-| Timing              | NTSC or PAL                                        | NTSC, PAL, multi-region or Dendy         |
-| Console             | Standard NES/Famicom; legacy mapper-99 VS identity | Standard NES/Famicom or VS UniSystem     |
-| PRG writable memory | Direct or board-implied internal memory            | Direct, MMC1-banked or board-implied     |
-| CHR writable memory | Implicit 8 KiB; mapper 74/77/96/119 board-implied  | Explicit CHR RAM or CHR NVRAM            |
-| Trainer             | Default `$7000`; mapper-owned loader exceptions    | Default plus mapper/submapper exceptions |
-| Miscellaneous ROMs  | Not encoded                                        | None                                     |
-| Default expansion   | Legacy/default; exact VS content fallback          | Standard or VS controller port identity  |
+| Capability          | iNES                                               | NES 2.0                                   |
+| ------------------- | -------------------------------------------------- | ----------------------------------------- |
+| Mapper identity     | 8-bit legacy mapper                                | 12-bit mapper plus 4-bit submapper        |
+| PRG/CHR ROM size    | Linear bank counts                                 | Linear and exponent-multiplier encodings  |
+| Timing              | NTSC or PAL                                        | NTSC, PAL, multi-region or Dendy          |
+| Console             | Standard NES/Famicom; legacy mapper-99 VS identity | Standard NES/Famicom or VS UniSystem      |
+| PRG writable memory | Direct or board-implied internal memory            | Direct, MMC1-banked or board-implied      |
+| CHR writable memory | Implicit 8 KiB; mapper 74/77/96/119 board-implied  | Explicit CHR RAM or CHR NVRAM             |
+| Trainer             | Default `$7000`; mapper-owned loader exceptions    | Default plus mapper/submapper exceptions  |
+| Miscellaneous ROMs  | Not encoded                                        | None                                      |
+| Default expansion   | Legacy/default; VS/content and Mapper 96 fallback  | Standard, VS or Oeka Kids device identity |
 
 The battery flag must agree with all NES 2.0 NVRAM metadata. Volatile bytes never enter a save
 snapshot. An 8 KiB CHR NVRAM region is supported when it is the cartridge's only CHR memory.
@@ -39,8 +39,11 @@ because neither header format can encode that capacity exactly; mapper creation 
 requires the battery flag.
 
 Mapper 96 similarly overrides legacy iNES's zero-CHR default with the Oeka Kids board's physical
-32 KiB volatile CHR RAM. NES 2.0 images must declare the same 32 KiB capacity explicitly; CHR ROM,
-CHR NVRAM and other writable sizes are rejected by board creation.
+32 KiB volatile CHR RAM, suppresses the generic 8 KiB PRG-RAM fallback and selects default expansion
+device `$17`. This mapper is used only by the two Oeka Kids tablet titles, so the legacy inference is
+board-complete rather than a title-name heuristic. NES 2.0 images must declare the same 32 KiB
+capacity and device explicitly; CHR ROM, CHR NVRAM and other writable sizes are rejected by board
+creation.
 
 Mapper 74's legacy image cannot declare its additional 2 KiB volatile CHR RAM beside CHR ROM, so
 format policy supplies the board-implied chip. NES 2.0 must declare exactly 2 KiB. The memory is not

@@ -13,6 +13,7 @@ describe("EmulationSession", () => {
         submapperNumber: 1,
         consoleType: 0,
         consoleRegion: "pal",
+        defaultExpansionDevice: 0,
       })
       .play()
       .frameCompleted(29_780);
@@ -42,6 +43,7 @@ describe("EmulationSession", () => {
         submapperNumber: 0,
         consoleType: 0,
         consoleRegion: "ntsc",
+        defaultExpansionDevice: 0,
       }),
     ).toThrow(/Cannot reconfigure/);
   });
@@ -57,6 +59,7 @@ describe("EmulationSession", () => {
         submapperNumber: 0,
         consoleType: 0,
         consoleRegion: "pal",
+        defaultExpansionDevice: 0,
       })
       .play()
       .frameCompleted(33_247)
@@ -68,6 +71,7 @@ describe("EmulationSession", () => {
         submapperNumber: 0,
         consoleType: 0,
         consoleRegion: "pal",
+        defaultExpansionDevice: 0,
       });
 
     expect(paused.snapshot).toMatchObject({
@@ -91,6 +95,7 @@ describe("EmulationSession", () => {
         submapperNumber: 0,
         consoleType: 0,
         consoleRegion: "ntsc",
+        defaultExpansionDevice: 0,
       })
       .play();
     expect(Object.isFrozen(running.snapshot)).toBe(true);
@@ -108,6 +113,7 @@ describe("EmulationSession", () => {
         submapperNumber: 0,
         consoleType: 0,
         consoleRegion: "ntsc",
+        defaultExpansionDevice: 0,
       })
       .play()
       .frameCompleted(100)

@@ -13,6 +13,7 @@ export interface RomDetails {
   readonly submapperNumber: number;
   readonly consoleType: 0 | 1;
   readonly consoleRegion: ExecutionRegion;
+  readonly defaultExpansionDevice: number;
 }
 
 export interface SessionSnapshot {

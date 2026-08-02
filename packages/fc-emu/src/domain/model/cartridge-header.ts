@@ -156,8 +156,16 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
   if (header.mapperNumber === 96 && header.format === "ines" && header.chrRomSize === 0) {
     return Object.freeze({
       ...header,
+      // The two Oeka Kids cartridges have no CPU-visible writable memory.
+      // Suppress the generic iNES byte-8 fallback while supplying their
+      // otherwise-unrepresentable 32 KiB CHR-RAM chip.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
       chrRamSize: OEKA_KIDS_CHR_RAM_SIZE,
       chrNvRamSize: 0,
+      // Mapper 96 is used only by the two Oeka Kids tablet titles. Legacy
+      // iNES cannot declare the required expansion-port peripheral.
+      defaultExpansionDevice: 0x17,
     });
   }
   if (header.mapperNumber === 99 && header.format === "ines") {

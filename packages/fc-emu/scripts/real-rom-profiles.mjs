@@ -2371,6 +2371,85 @@ export const REAL_ROM_PROFILES = Object.freeze({
       cpuCycles: 3_573_660,
     },
   },
+  "oeka-kids": {
+    title: "Oeka Kids: Anpanman to Oekaki Shiyou!! (Japan)",
+    fileName: "Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes",
+    sha256: "d7a1d2a77007a58cb639d8d93c4b29b8cc93d922a72336bb3a97d2a91d5a9ef4",
+    cartridge: {
+      format: "ines",
+      mapperNumber: 96,
+      submapperNumber: 0,
+      consoleRegion: "ntsc",
+      mirroringMode: 1,
+      defaultExpansionDevice: 0x17,
+      hasBatteryBackup: false,
+      prgRomBytes: 131_072,
+      chrRomBytes: 0,
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
+      chrRamBytes: 32_768,
+      chrNvRamBytes: 0,
+      hasWritableChrMemory: true,
+    },
+    baseline: {
+      frames: 600,
+      minimumDistinctFrames: 2,
+      finalFrameSha256: "49c59152ad0a837b42272b6dc239e4faf778c8ffdf120c07537dc4a97eff9fcf",
+      frameSequenceSha256: "c489662b057909cd508001efe47e52d328a1521725b956e3eab16f1bd8fa7a45",
+      cpuCycles: 17_840_913,
+    },
+    interactive: {
+      frames: 900,
+      minimumDistinctFrames: 70,
+      events: [
+        { frame: 180, tablet: { x: 120, y: 128, touching: true, clicked: false } },
+        { frame: 185, tablet: { x: 120, y: 128, touching: true, clicked: true } },
+        { frame: 190, tablet: { x: 120, y: 128, touching: true, clicked: false } },
+        { frame: 200, tablet: { x: 120, y: 128, touching: false, clicked: false } },
+        { frame: 300, tablet: { x: 56, y: 85, touching: true, clicked: false } },
+        { frame: 305, tablet: { x: 56, y: 85, touching: true, clicked: true } },
+        { frame: 310, tablet: { x: 56, y: 85, touching: true, clicked: false } },
+        { frame: 320, tablet: { x: 56, y: 85, touching: false, clicked: false } },
+        { frame: 540, tablet: { x: 40, y: 70, touching: true, clicked: false } },
+        { frame: 545, tablet: { x: 40, y: 70, touching: true, clicked: true } },
+        { frame: 550, tablet: { x: 70, y: 100, touching: true, clicked: true } },
+        { frame: 555, tablet: { x: 100, y: 125, touching: true, clicked: true } },
+        { frame: 560, tablet: { x: 130, y: 150, touching: true, clicked: true } },
+        { frame: 565, tablet: { x: 170, y: 180, touching: true, clicked: true } },
+        { frame: 570, tablet: { x: 170, y: 180, touching: true, clicked: false } },
+        { frame: 575, tablet: { x: 170, y: 180, touching: false, clicked: false } },
+      ],
+      checkpoints: {
+        180: "49c59152ad0a837b42272b6dc239e4faf778c8ffdf120c07537dc4a97eff9fcf",
+        240: "8785eaff33bad843d2c7c059740b30da50a18e094d99a36a1dad108b62619185",
+        360: "a4084518cd3c462c1a8d14f23e454fb8323fbc3fbf31019e880cc40358558444",
+        480: "ef8326e828b11dd3a676f675cb6260e5b51ee22ce1b37744d10eb7c9499ac5a5",
+        550: "c35291ef186cfa6ef8cd22aeb5251fd95d7f44471952297724885d5979668c0c",
+        600: "17d28972403256196bda4e6b652af92c26d06c484b352d4162e4f55556791485",
+        720: "17d28972403256196bda4e6b652af92c26d06c484b352d4162e4f55556791485",
+        900: "17d28972403256196bda4e6b652af92c26d06c484b352d4162e4f55556791485",
+      },
+      mapperCheckpoints: {
+        240: { kind: "oeka-kids", register: 2, innerChrBank: 0, lastPpuAddress: 8194 },
+        480: { kind: "oeka-kids", register: 4, innerChrBank: 0, lastPpuAddress: 8962 },
+        550: { kind: "oeka-kids", register: 5, innerChrBank: 0, lastPpuAddress: 8962 },
+        900: { kind: "oeka-kids", register: 4, innerChrBank: 0, lastPpuAddress: 8962 },
+      },
+      finalFrameSha256: "17d28972403256196bda4e6b652af92c26d06c484b352d4162e4f55556791485",
+      frameSequenceSha256: "162cd830e4bda4ab24260dfd1c28bb2098f264876cbb866d3285f470c0ad3b9d",
+      audioSamples: 659_737,
+      audioSha256: "53fd5eea438654187b45dd7e528b96c985f8a2c4953ad5640bd13f980acda887",
+      cpuCycles: 26_775_069,
+    },
+    replay: {
+      checkpointFrame: 550,
+      frames: 120,
+      frameSequenceSha256: "c6be73aa3a9e06e76b102433c1dd5e7633137450f3d9c52b729359b479a02720",
+      audioSamples: 88_055,
+      audioSha256: "969d4a6d1609deffc993bcd3ef4e2a76fa0f8fbc501bd47b33f6af2d9a9c6937",
+      cpuCycles: 3_573_660,
+    },
+  },
   yanchamaru: {
     title: "Kaiketsu Yanchamaru (Japan)",
     fileName: "KAIKETSU-YANCHAMARU-J.NES",
@@ -4422,6 +4501,9 @@ function validateCartridge(id, cartridge) {
       case "vsHardwareType":
         requireIntegerBetween(id, path, value, 0, 0x0f);
         break;
+      case "defaultExpansionDevice":
+        requireIntegerBetween(id, path, value, 0, 0x3f);
+        break;
       case "consoleRegion":
         requireOneOf(id, path, value, ["ntsc", "pal", "dendy"]);
         break;
@@ -4521,12 +4603,26 @@ function validateEvents(id, scenario, validButtons) {
 
     const isCoinEvent = Object.hasOwn(event, "coin");
     const isControllerEvent = Object.hasOwn(event, "button") || Object.hasOwn(event, "pressed");
-    if (isCoinEvent === isControllerEvent) {
-      fail(id, `${path} must be exactly one controller or coin event`);
+    const isTabletEvent = Object.hasOwn(event, "tablet");
+    if (Number(isCoinEvent) + Number(isControllerEvent) + Number(isTabletEvent) !== 1) {
+      fail(id, `${path} must be exactly one controller, coin or tablet event`);
     }
     if (isCoinEvent) {
       requireKnownFields(id, path, event, ["frame", "coin"]);
       requireIntegerBetween(id, `${path}.coin`, event.coin, 1, 2);
+      continue;
+    }
+    if (isTabletEvent) {
+      requireKnownFields(id, path, event, ["frame", "tablet"]);
+      if (!isRecord(event.tablet)) fail(id, `${path}.tablet must be an object`);
+      requireKnownFields(id, `${path}.tablet`, event.tablet, ["x", "y", "touching", "clicked"]);
+      requireIntegerBetween(id, `${path}.tablet.x`, event.tablet.x, 0, 239);
+      requireIntegerBetween(id, `${path}.tablet.y`, event.tablet.y, 0, 255);
+      requireBoolean(id, `${path}.tablet.touching`, event.tablet.touching);
+      requireBoolean(id, `${path}.tablet.clicked`, event.tablet.clicked);
+      if (event.tablet.clicked && !event.tablet.touching) {
+        fail(id, `${path}.tablet cannot click without touching`);
+      }
       continue;
     }
 

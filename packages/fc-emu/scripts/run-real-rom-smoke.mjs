@@ -318,6 +318,10 @@ function applyInputEvents(emulator, events, frame) {
       emulator.insertCoin(event.coin);
       continue;
     }
+    if (Object.hasOwn(event, "tablet")) {
+      emulator.setOekaKidsTabletInput(event.tablet);
+      continue;
+    }
     emulator.setControllerButton(1, BUTTONS[event.button], event.pressed);
   }
 }

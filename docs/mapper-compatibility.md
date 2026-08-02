@@ -47,7 +47,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 67     | Sunsoft-3      | Implemented | PRG/CHR/mirroring/write-toggle/one-shot-IRQ tests; no fixture      |
 | 68     | Sunsoft-4      | Verified    | Tests; pinned _After Burner_ CHR-nametable gameplay runner         |
 | 69     | Sunsoft FME-7  | Verified    | Tests; pinned _Batman_ BAT-E301 gameplay/IRQ; no 5B audio          |
-| 70     | Bandai 74xx    | Implemented | PRG/CHR/bus-conflict unit tests; no conformance ROM                |
+| 70     | Bandai 74xx    | Verified    | Tests; pinned _Kamen Rider Club_ BA-KAMEN gameplay runner          |
 | 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                       |
 | 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
 | 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
@@ -657,6 +657,11 @@ and `$6000.D6` supplying PRG A18.
   fixed, an 8 KiB CHR bank and AND-type bus conflicts. Mapper 152 spends bit 7 on single-screen
   mirroring, leaving a 3-bit PRG field and making four-screen declarations invalid; mapper 70 keeps
   mirroring hardwired, uses four PRG bits and may retain externally declared four-screen memory.
+  Exact legacy metadata identifies _Kamen Rider Club_ as the vertical, zero-WRAM BA-KAMEN board,
+  correcting both inaccurate fields in its circulating iNES header. The pinned profile runs a
+  600-frame attract baseline and 1,800 input-driven frames into active gameplay, observes PRG banks
+  0/3/4 and CHR banks 0/1/2/12, then completes a deterministic 120-frame visual/audio save-state
+  replay. Focused tests remain the electrical evidence for AND bus conflicts.
 - Mapper 87 (Jaleco/Konami) latches an 8 KiB CHR bank at `$6000-$7FFF` with its two select lines
   reversed (value bit 1 drives CHR line 0, value bit 0 drives CHR line 1); PRG ROM stays NROM-fixed
   and there are no bus conflicts. The checksum-pinned 32 KiB PRG + 16 KiB CHR _The Goonies_

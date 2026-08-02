@@ -122,6 +122,10 @@ image matching only one region CRC receives no override.
 TFC-GO-5900-26 _Golf Ko Open_ (PRG `837C1342`, CHR `DC467CF8`) removes the generic allocation from
 its zero-WRAM TC0190FMC board.
 
+BA-KAMEN _Kamen Rider Club_ (PRG `A59CA2EF`, CHR `CC0FFD0E`) removes the generic allocation and
+corrects the matching iNES image's horizontal flag to its physical board's hardwired vertical
+mirroring.
+
 Mapper 64 RAMBO-1 never decodes a PRG-RAM window. Exact content metadata identifies TGN-020-SK
 _Skull & Crossbones_ by PRG CRC `0857DF48` and CHR CRC `D0BF8C50`, removing the generic iNES
 allocation from its zero-WRAM 800032 REV A board. NES 2.0 Mapper 64 images must declare no PRG

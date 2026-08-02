@@ -274,6 +274,22 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Kamen Rider Club, BA-KAMEN: vertical BANDAI-74*161/161/32 without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 70,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xa59ca2ef,
+      chrCrc32: 0xcc0ffd0e,
+    }),
+    overrides: Object.freeze({
+      mirroringMode: NametableMirroring.Vertical,
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Skull & Crossbones, TGN-020-SK/800032 REV A: RAMBO-1 without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 64,

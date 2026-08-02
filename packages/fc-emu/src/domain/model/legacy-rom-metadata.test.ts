@@ -289,6 +289,30 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Kamen Rider Club BA-KAMEN board facts", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 70,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xa59ca2ef,
+        chrCrc32: 0xcc0ffd0e,
+      })?.overrides,
+    ).toEqual({ mirroringMode: 1, prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 70,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xa59ca2ef,
+        chrCrc32: 0xcc0ffd0f,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Skull & Crossbones 800032 memory layout", () => {
     expect(
       findLegacyRomMetadata({

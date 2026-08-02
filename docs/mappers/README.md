@@ -936,6 +936,13 @@ field. Its four-screen declarations are rejected because that output directly dr
 CIRAM; mapper 70's hardwired variant may retain externally declared four-screen memory. Both are
 implemented by `Bandai74Mapper` with a `hasMirroringControl` flag.
 
+The exact _Kamen Rider Club_ image matches the physical
+[BA-KAMEN BANDAI-74\*161/161/32 board](https://nescartdb.com/profile/view/1742/kamen-rider-club-gekitotsu-shocker-land):
+128 KiB PRG, 128 KiB CHR, vertical mirroring and no WRAM. Content-addressed legacy metadata corrects
+the circulating iNES image's horizontal flag and generic 8 KiB RAM fallback. Its pinned 600-frame
+baseline and 1,800-frame input route reach active gameplay while selecting PRG banks 0/3/4 and CHR
+banks 0/1/2/12, followed by a deterministic 120-frame visual/audio save-state replay.
+
 ## Codemasters / Camerica (71)
 
 A UNROM-style register at `$C000-$FFFF` selects the 16 KiB `$8000-$BFFF` bank; `$C000-$FFFF` is fixed

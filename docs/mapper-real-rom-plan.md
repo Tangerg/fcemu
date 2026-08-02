@@ -79,7 +79,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     67 | Sunsoft-3          | _Mito Koumon II: Sekai Manyuu Ki_ (Japan)                              | _Fantasy Zone II_ (Japan)                                                         | 2 KiB CHR windows, four-way mirroring and one-shot cycle IRQ     |
 |     68 | Sunsoft-4          | _After Burner_ (USA, pinned TGN-011-AB profile)                        | _Maharaja_ (Japan) for battery WRAM                                               | CHR-backed nametables, RAM and mirroring                         |
 |     69 | Sunsoft FME-7      | _Batman_ (Japan, pinned BAT-E301 profile)                              | _Batman: Return of the Joker_ (USA) for WRAM; _Gimmick!_ for future 5B audio      | Command/data banking, RAM window and decrementing IRQ            |
-|     70 | Bandai 74xx        | _Kamen Rider Club_ (Japan)                                             | —                                                                                 | Conflicted PRG/CHR latch with hard-wired mirroring               |
+|     70 | Bandai 74xx        | _Kamen Rider Club_ (Japan, pinned BA-KAMEN profile)                    | A clean Mapper 152 image for the controlled-mirroring sibling                     | Conflicted PRG/CHR latch with hard-wired mirroring               |
 |     71 | Codemasters        | _Fire Hawk_ (USA)                                                      | _Micro Machines_ for fixed-mirroring wiring                                       | Controlled one-screen submapper, PRG switching and timing        |
 |     72 | Jaleco JF-17       | _Pinball Quest_ (Japan)                                                | _Moero!! Pro Tennis_, tracked as expected audio-incomplete                        | Conflict-masked rising-edge PRG and CHR latches                  |
 |     73 | Konami VRC3        | _Salamander_ (Japan)                                                   | —                                                                                 | Nibble latch, 16/8-bit cycle IRQ and PRG/CHR RAM                 |
@@ -186,6 +186,12 @@ the same ID covers materially different hardware that the primary image cannot e
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,
   so its audio must not be accepted as a passing baseline yet.
+- Mapper 70 now has a pinned exact _Kamen Rider Club_ BA-KAMEN profile. Its
+  `A59CA2EF`/`CC0FFD0E` pair matches five physical BANDAI-74\*161/161/32 boards with vertical
+  mirroring and no WRAM, correcting the circulating iNES image's horizontal flag and generic RAM.
+  The input route reaches active gameplay and observes three PRG plus four CHR banks. Mapper 152
+  remains separate evidence scope because it spends PRG bit 7 on controlled single-screen
+  mirroring; a Mapper 70 profile cannot verify that wiring.
 - Mapper 96 now has a pinned _Anpanman to Oekaki Shiyou!!_ profile with the exact PRG CRC
   `9D048EA4`. Its timeline uses native tablet reports—not no-op controller events—to enter drawing
   mode and produce a visible stroke, with a save-state checkpoint while the pen is still pressed.

@@ -133,6 +133,9 @@ AxROM board while retaining the board-implied 8 KiB CHR RAM. BC6 _Bible Adventur
 `COLORDREAMS-74*377` board. NES-GN-ROM-03 _Dragon Power_ (PRG `ECE525DD`, CHR `59F0FBAA`) removes the
 same allocation and corrects the matching circulating iNES image's horizontal flag to the physical
 board's hardwired vertical mirroring.
+BA-KAMEN _Kamen Rider Club_ (PRG `A59CA2EF`, CHR `CC0FFD0E`) likewise removes the generic RAM and
+corrects its circulating iNES image from horizontal to the physical board's hardwired vertical
+mirroring.
 
 The lookup completes or corrects metadata only; it never changes ROM bytes, the mapper number or ROM
 geometry. It may supply an otherwise-unrepresentable submapper or correct a known inaccurate legacy

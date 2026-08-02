@@ -141,6 +141,7 @@ yarn smoke:real-rom -- afterburner "/absolute/path/to/After Burner (U).nes"
 yarn smoke:real-rom -- goemon2 "/absolute/path/to/Ganbare Goemon 2 (J).nes"
 yarn smoke:real-rom -- racermini "/absolute/path/to/Racer Mini Yon Ku - Japan Cup (J).nes"
 yarn smoke:real-rom -- golf-ko-open "/absolute/path/to/0370高尔夫球公开赛2.nes"
+yarn smoke:real-rom -- kamen-rider-club "/absolute/path/to/Kamen Rider Kurabu (J).nes"
 yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
 yarn smoke:real-rom -- oeka-kids "/absolute/path/to/Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory

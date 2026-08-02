@@ -118,9 +118,10 @@ WRAM; KON-RC856 _Crisis Force_ (PRG `99580334`, CHR `A709BCB8`) selects VRC4e an
 _Gradius II_ (`C71D4CE7`/`537B6F6A`), _Racer Mini Yonku_ (`A2E68DA8`/`B2D960CC`), _Bio Miracle
 Bokutte Upa_ (`0BBD85FF`/`B8168EFA`), _Teenage Mutant Ninja Turtles 2_
 (`5F82CB7D`/`4AA9B12A`) and _Ganbare Goemon Gaiden_ (`8360FA88`/`99A563FE`). Their overrides preserve
-the physical 2 KiB WRAM, zero-WRAM or 8 KiB battery-NVRAM layout. IF-28 _Kaiketsu Yanchamaru 3_
-(PRG `E30B7F64`, CHR `AF5FD6B5`) removes it
-from the zero-WRAM FC-00-017B H3001 board. TGN-020-SK _Skull & Crossbones_ (PRG `0857DF48`, CHR
+the physical 2 KiB WRAM, zero-WRAM or 8 KiB battery-NVRAM layout. TFC-GO-5900-26 _Golf Ko Open_
+(`837C1342`/`DC467CF8`) removes the generic allocation from its zero-WRAM TC0190FMC board. IF-28
+_Kaiketsu Yanchamaru 3_ (PRG `E30B7F64`, CHR `AF5FD6B5`) removes it from the zero-WRAM FC-00-017B
+H3001 board. TGN-020-SK _Skull & Crossbones_ (PRG `0857DF48`, CHR
 `D0BF8C50`) does the same for its zero-WRAM 800032 REV A RAMBO-1 board. TGN-011-AB _After Burner_
 (PRG `B938B7E9`, CHR `725A53DC`) removes it from the zero-WRAM 800042-01 REV B Sunsoft-4 board.
 BAT-E301 _Batman_ (PRG `094AFAB5`, CHR `F3B41C18`) removes it from the zero-WRAM Sunsoft-5A board.

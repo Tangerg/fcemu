@@ -187,6 +187,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Golf Ko Open TC0190FMC memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 33,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x40_000,
+        prgCrc32: 0x837c1342,
+        chrCrc32: 0xdc467cf8,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 33,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x40_000,
+        prgCrc32: 0x837c1342,
+        chrCrc32: 0xdc467cf9,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Battletoads NES-AOROM-03 memory layout", () => {
     expect(
       findLegacyRomMetadata({

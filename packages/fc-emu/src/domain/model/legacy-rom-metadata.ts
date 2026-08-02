@@ -238,6 +238,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Golf Ko Open, TFC-GO-5900-26/TC0190FMC: no external WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 33,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x40_000,
+      prgCrc32: 0x837c1342,
+      chrCrc32: 0xdc467cf8,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // The Lord of King, JF-25: the production board has no external WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 18,

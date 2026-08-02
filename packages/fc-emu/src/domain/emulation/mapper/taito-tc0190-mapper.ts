@@ -5,7 +5,7 @@ import type { Mapper, MapperState } from "./mapper.js";
 import { TaitoTc0x90Banking } from "./taito-tc0x90-banking.js";
 
 /**
- * iNES mapper 33: Taito TC0190/IRQ-unused TC0350 board.
+ * iNES mapper 33: Taito TC0190.
  *
  * Two 8 KiB PRG registers precede two fixed tail banks. CHR is split into two 2 KiB and four
  * 1 KiB windows; unlike MMC3, the 2 KiB register value is already expressed in 2 KiB units.

@@ -69,7 +69,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     25 | VRC2c/VRC4b/d      | _Racer Mini Yonku_ (Japan, pinned exact 351406 VRC4b)                  | Clean _Gradius II_ for 2 KiB WRAM; clean VRC4d and VRC2c images                   | All pin routes, RAM variants, PRG/CHR modes and VRC IRQ          |
 |     26 | Konami VRC6b       | _Esper Dream 2_ (Japan, pinned local profile)                          | _Mouryou Senki Madara_ for an active VRC6-audio sequence                          | Swapped A0/A1, banking, CHR nametables and IRQ; audio supplement |
 |     32 | Irem G-101         | _Image Fight_ (Japan)                                                  | _Major League_ (Japan, mapper 32.1)                                               | PRG mode, CHR banks and fixed-upper one-screen wiring            |
-|     33 | Taito TC0190       | _Akira_ (Japan)                                                        | _Don Doko Don_ (Japan)                                                            | Register mask, PRG/CHR banks and mapper-controlled mirroring     |
+|     33 | Taito TC0190       | _Golf Ko Open_ (Japan, pinned TFC-GO-5900-26 profile)                  | _Akira_ for an independent TC0190 software route                                  | Register mask, PRG/CHR banks and mapper-controlled mirroring     |
 |     34 | BNROM/NINA-001     | _Deadly Towers_ (USA, BNROM)                                           | _Impossible Mission II_ (USA, NINA-001)                                           | Mutually exclusive board selection, conflicts and NINA registers |
 |     41 | Caltron 6-in-1     | _Caltron 6-in-1_                                                       | Local _Aladdin 3_ only as a no-banking undersized-image smoke                     | Address latch, gated conflicted CHR latch, mirroring and reset   |
 |     48 | Taito TC0690       | _Bubble Bobble 2_ (Japan)                                              | —                                                                                 | Banking, mirroring and delayed A12 IRQ                           |
@@ -175,6 +175,13 @@ the same ID covers materially different hardware that the primary image cannot e
   but 524,304 trailing bytes, so they are excluded from profiles. The local _Gradius II_ candidates
   either alter PRG or both ROM regions; only `C71D4CE7`/`537B6F6A` may validate its 2 KiB-WRAM
   board.
+- Mapper 33 now has a pinned exact _Golf Ko Open_ TFC-GO-5900-26 profile. Its
+  `837C1342`/`DC467CF8` PRG/CHR pair matches a photographed TC0190FMC board with no WRAM; exact
+  legacy metadata removes iNES's generic allocation. The input route observes both PRG registers,
+  both CHR window sizes and mapper-controlled mirroring. Do not promote another legacy Mapper 33
+  image until its board identity is checked: many circulating TC0690/Mapper 48 files are historically
+  mislabeled as 33, and Mapper 33 cannot supply their IRQ behavior. Keep TC0350 behavior outside
+  this TC0190 claim until a clean image and its decoded register use are pinned independently.
 - Mapper 69 base banking and cycle IRQ now have a pinned Japanese _Batman_ BAT-E301 gameplay profile.
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,

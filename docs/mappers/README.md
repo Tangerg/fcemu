@@ -748,6 +748,13 @@ rejected instead of silently exposing an impossible nametable layout. Mapper 33 
 no IRQ; IRQ-capable/mislabeled mapper-48 images are not approximated. See
 [NESdev mapper 33](https://www.nesdev.org/wiki/INES_Mapper_033).
 
+The exact _Golf Ko Open_ image matches the physical
+[TFC-GO-5900-26/TC0190FMC board](https://nescartdb.com/profile/view/4703/golf-ko-open): 128 KiB PRG,
+256 KiB CHR and no WRAM. Content-addressed legacy metadata removes iNES's generic 8 KiB RAM
+fallback. Its pinned 900-frame baseline and 1,500-frame input route exercise both PRG registers,
+both CHR window sizes and the vertical-to-horizontal mirroring transition, followed by a
+deterministic 120-frame visual/audio save-state replay.
+
 ## BNROM / NINA-001 (34)
 
 `resolveMapper34Board` (`mapper34-board.ts`) chooses exactly one board and never combines their

@@ -37,7 +37,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 25     | VRC2c/VRC4b/d  | Verified    | Tests; pinned exact _Racer Mini Yonku_ VRC4b replay                |
 | 26     | Konami VRC6b   | Verified    | Tests; pinned _Esper Dream 2_ banking/nametable/IRQ runner         |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM         |
-| 33     | Taito TC0190   | Implemented | PRG/CHR/mirroring/register-mask tests; no conformance ROM          |
+| 33     | Taito TC0190   | Verified    | Tests; pinned _Golf Ko Open_ TC0190FMC opening/story runner        |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                     |
 | 41     | Caltron 6-in-1 | Implemented | Address/data/conflict/reset/state tests; local no-bank replay      |
 | 48     | Taito TC0690   | Implemented | Banking/A12/IRQ-revision/delay tests; no conformance ROM           |
@@ -448,7 +448,12 @@ and `$6000.D6` supplying PRG A18.
   two 2 KiB and four 1 KiB CHR-ROM windows, and bit-6 horizontal/vertical mirroring. Its 2 KiB CHR
   register values are offsets in 2 KiB units rather than MMC3-style even 1 KiB indexes. Four-screen
   headers are rejected because the modeled board only drives the two-screen CIRAM layout. Mapper
-  48 dumps mislabeled as 33 remain out of scope because mapper 33 has no IRQ.
+  48 dumps mislabeled as 33 remain out of scope because mapper 33 has no IRQ. Exact legacy metadata
+  identifies the 128 KiB PRG + 256 KiB CHR _Golf Ko Open_ payload as the zero-WRAM
+  TFC-GO-5900-26/TC0190FMC board instead of retaining iNES's generic 8 KiB allocation. Its pinned
+  profile runs a 900-frame attract baseline and 1,500 input-driven frames, observes both PRG
+  registers, both CHR window sizes and the vertical-to-horizontal mirroring transition, then
+  completes a deterministic 120-frame visual/audio save-state replay.
 - Mapper 41 models the Caltron 6-in-1 board as two distinct latches. Writes to `$6000-$67FF`
   capture CPU address bits rather than data: A0-A2 choose a 32 KiB PRG bank, A3-A4 choose the outer
   CHR block and A5 selects vertical/horizontal mirroring. Writes in `$8000-$FFFF` update the inner

@@ -35,6 +35,7 @@
     "conformance:fixtures": "yarn fetch:test-roms && yarn build && node scripts/run-fixture-conformance.mjs",
     "conformance:nestest": "yarn build && node scripts/run-nestest.mjs",
     "conformance:cpu-timing": "yarn build && node scripts/run-cpu-timing-test.mjs",
+    "conformance:vrc6": "yarn fetch:test-roms && yarn build && node scripts/run-vrc6-test.mjs",
     "conformance:accuracy-coin": "yarn build && node scripts/run-accuracy-coin.mjs",
     "conformance:cpu": "yarn conformance:rom",
     "conformance:mmc1": "yarn build && node scripts/run-holy-mapperel.mjs",

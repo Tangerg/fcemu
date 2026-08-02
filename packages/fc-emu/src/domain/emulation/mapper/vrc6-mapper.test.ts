@@ -12,7 +12,7 @@ const noopInterrupt: MapperInterruptPort = { setMapperIrq() {} };
 
 describe("Vrc6Mapper", () => {
   it("maps switchable 16/8 KiB PRG windows, the fixed tail and gated 8 KiB WRAM", () => {
-    const cartridge = createTestCartridge({ mapper: 24, prgBanks: 16, chrBanks: 1 });
+    const cartridge = createTestCartridge({ mapper: 26, prgBanks: 16, chrBanks: 1 });
     fillBanks(cartridge.prgRom, 0x2000);
     const mapper = createMapper(cartridge, noopInterrupt);
 
@@ -28,6 +28,20 @@ describe("Vrc6Mapper", () => {
     expect(mapper.cpuReadDriveMask?.(0x6000)).toBe(0xff);
     mapper.write(0xb003, 0x20);
     expect(mapper.cpuReadDriveMask?.(0x6000)).toBe(0);
+  });
+
+  it("keeps VRC6a's absent WRAM window open even when $B003 enables it", () => {
+    const mapper = createMapper(
+      createTestCartridge({ mapper: 24, prgBanks: 16, chrBanks: 16 }),
+      noopInterrupt,
+    );
+
+    mapper.write(0xb003, 0xa0);
+    mapper.write(0x6000, 0x5a);
+
+    expect(mapper.read(0x6000)).toBe(0);
+    expect(mapper.cpuReadDriveMask?.(0x6000)).toBe(0);
+    expect(mapper.cpuReadDriveMask?.(0x7fff)).toBe(0);
   });
 
   it("swaps only A0/A1 on VRC6b and honors the common F003 mirror mask", () => {
@@ -66,13 +80,13 @@ describe("Vrc6Mapper", () => {
       mapper.write(register < 4 ? 0xd000 + register : 0xe000 + (register - 4), 8 + register * 4);
     }
     mapper.write(0xb003, 0x20);
-    expect(readAt(mapper, patternSlots())).toEqual([8, 13, 16, 21, 24, 29, 32, 37]);
+    expect(readAt(mapper, patternSlots())).toEqual([8, 12, 16, 20, 24, 28, 32, 36]);
 
     mapper.write(0xb003, 0x21);
     expect(readAt(mapper, patternSlots())).toEqual([8, 9, 12, 13, 16, 17, 20, 21]);
 
     mapper.write(0xb003, 0x22);
-    expect(readAt(mapper, patternSlots())).toEqual([8, 13, 16, 21, 24, 25, 28, 29]);
+    expect(readAt(mapper, patternSlots())).toEqual([8, 12, 16, 20, 24, 25, 28, 29]);
 
     mapper.write(0xb003, 0x02);
     expect(readAt(mapper, patternSlots())).toEqual([8, 12, 16, 20, 24, 24, 28, 28]);
@@ -204,9 +218,9 @@ describe("Vrc6Mapper", () => {
 
   it("accepts only the VRC6's reachable ROM, RAM and nametable geometry", () => {
     for (const options of [
-      { mapper: 24, prgBanks: 2, chrBanks: 1 },
+      { mapper: 24, prgBanks: 1, chrBanks: 1 },
       { mapper: 26, prgBanks: 16, chrBanks: 32 },
-      { mapper: 24, nes2: true, prgBanks: 2, chrBanks: 1, prgRamShift: 7 },
+      { mapper: 24, nes2: true, prgBanks: 2, chrBanks: 1 },
       {
         mapper: 26,
         nes2: true,
@@ -233,10 +247,10 @@ describe("Vrc6Mapper", () => {
       ),
     ).toThrowError(UnsupportedMapperVariantError);
     for (const options of [
-      { mapper: 24, nes2: true, prgBanks: 1, chrBanks: 1, prgRamShift: 7 },
-      { mapper: 24, nes2: true, prgBanks: 17, chrBanks: 1, prgRamShift: 7 },
-      { mapper: 24, nes2: true, prgBanks: 2, chrBanks: 33, prgRamShift: 7 },
-      { mapper: 24, nes2: true, prgBanks: 2, chrBanks: 1 },
+      { mapper: 24, nes2: true, prgBanks: 17, chrBanks: 1 },
+      { mapper: 24, nes2: true, prgBanks: 2, chrBanks: 33 },
+      { mapper: 24, nes2: true, prgBanks: 2, chrBanks: 1, prgRamShift: 7 },
+      { mapper: 26, nes2: true, prgBanks: 2, chrBanks: 1 },
       { mapper: 24, nes2: true, prgBanks: 2, chrRamShift: 7, prgRamShift: 7 },
       {
         mapper: 24,

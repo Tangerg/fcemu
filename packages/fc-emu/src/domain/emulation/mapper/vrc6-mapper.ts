@@ -101,7 +101,7 @@ export class Vrc6Mapper implements Mapper {
       return this.cartridge.readChr(bank * CHR_BANK_SIZE + (address & 0x03ff));
     }
     if (address >= 0x8000) return this.readPrg(address);
-    if (address >= 0x6000 && (this.ppuMode & 0x80) !== 0) {
+    if (address >= 0x6000 && this.prgRamWindowIsEnabled()) {
       return this.cartridge.readPrgRam(address & 0x1fff);
     }
     return 0;
@@ -109,14 +109,14 @@ export class Vrc6Mapper implements Mapper {
 
   cpuReadDriveMask(address: number): number {
     if (address >= 0x8000) return 0xff;
-    return address >= 0x6000 && (this.ppuMode & 0x80) !== 0 ? 0xff : 0;
+    return address >= 0x6000 && this.prgRamWindowIsEnabled() ? 0xff : 0;
   }
 
   write(address: number, value: number): void {
     value &= 0xff;
     if (address < 0x2000) return;
     if (address >= 0x6000 && address < 0x8000) {
-      if ((this.ppuMode & 0x80) !== 0) {
+      if (this.prgRamWindowIsEnabled()) {
         this.cartridge.writePrgRam(address & 0x1fff, value);
       }
       return;
@@ -172,13 +172,20 @@ export class Vrc6Mapper implements Mapper {
     return this.cartridge.prgRom[bank * PRG_BANK_SIZE + (address & 0x1fff)] ?? 0;
   }
 
+  private prgRamWindowIsEnabled(): boolean {
+    return this.cartridge.prgWritableBytes > 0 && (this.ppuMode & 0x80) !== 0;
+  }
+
   private selectedChrBank(address: number): number {
     const slot = address >>> 10;
     const mode = this.ppuMode & 3;
     const register =
       mode === 0 ? slot : mode === 1 ? slot >>> 1 : slot < 4 ? slot : 4 + ((slot - 4) >>> 1);
     let bank = this.chrBanks[register] ?? 0;
-    if ((this.ppuMode & 0x20) !== 0) bank = (bank & 0xfe) | (slot & 1);
+    const mapsTwoKiBBank = mode === 1 || (mode >= 2 && slot >= 4);
+    if (mapsTwoKiBBank && (this.ppuMode & 0x20) !== 0) {
+      bank = (bank & 0xfe) | (slot & 1);
+    }
     return bank % this.chrBankCount;
   }
 

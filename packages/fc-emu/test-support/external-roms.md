@@ -16,13 +16,15 @@ identify its input image. A result from that runner is reproducible evidence onl
 records the ROM filename, upstream revision, SHA-256, region, frame limit, protocol and output.
 Unrecorded historical runs do not promote a mapper to `Verified`.
 
-## Curated CPU, PPU, APU and DMA set
+## Curated CPU, PPU, APU, DMA and mapper set
 
 The project pins nine files from
 [`christopherpow/nes-test-roms`](https://github.com/christopherpow/nes-test-roms) revision
-`95d8f621ae55cee0d09b91519a8989ae0e64753b`. The collection has no repository-level license, so its
-binaries are downloaded for local conformance only and remain ignored by Git. Exact upstream paths,
-byte lengths and SHA-256 values live in
+`95d8f621ae55cee0d09b91519a8989ae0e64753b` and two natt VRC6 fixtures from
+[`perilsensitive/nes_test_roms`](https://github.com/perilsensitive/nes_test_roms) revision
+`3eab7a917dda3638ee851021917f6395a0fb949c`. Neither mirror has a repository-level license, so its
+binaries are downloaded for local conformance only and remain ignored by Git. Exact per-file
+upstream revisions, paths, byte lengths and SHA-256 values live in
 [`test-rom-manifest.json`](./test-rom-manifest.json).
 
 Fetch or verify the complete local set with:
@@ -40,9 +42,9 @@ Run the complete pinned set with one build through the same command used by CI:
 yarn conformance:fixtures
 ```
 
-This executes nestest, CPU timing, both instruction modes, PPU VBL/NMI, APU and both Sprite/DMC DMA
-collision fixtures. It invokes `fetch:test-roms` first, so cached files are checksum-verified and a
-missing fixture is downloaded from the pinned revision before execution.
+This executes nestest, CPU timing, both instruction modes, PPU VBL/NMI, APU, both Sprite/DMC DMA
+collision fixtures and the two-board VRC6 matrix. It invokes `fetch:test-roms` first, so cached files
+are checksum-verified and a missing fixture is downloaded from its pinned revision before execution.
 
 `nestest` is not a self-reporting ROM. Its dedicated runner initializes the published `$C000` state
 and compares all 8,991 pre-instruction register states and CPU-cycle positions with the pinned log:
@@ -73,9 +75,32 @@ resolve exactly as written. The equivalent `@fcemu/core` workspace scripts remai
 
 Current recorded results are `nestest` 8,991/8,991, instruction behavior 16/16 in both official and
 all-instruction modes, PPU VBL/NMI 10/10, APU 8/8, both Sprite/DMC DMA collision fixtures `Passed`,
-and the CPU timing final screen `PASSED`. APU DMC basics test 19 specifically verifies that a
+the CPU timing final screen `PASSED`, and both VRC6 variants `All Tests Passed!`. APU DMC basics test
+19 specifically verifies that a
 one-byte load fills an empty reader before an immediately following `$4015` status read; its passing
 result pins the 3/4-cycle load-DMA phase boundary through the integrated CPU/APU/bus path.
+
+### Natt VRC6 CHR and nametable matrix
+
+`vrc6test24.nes` (SHA-256
+`184987c024be2c88065fdfe6932cf59d57910ee1d00720a8bb36055727e4fd03`) and `vrc6test26.nes`
+(SHA-256 `c4c5517c08ee0072d0a7a2e5a446e03c4ef681980264a86fdc95f835a3330c31`) run the same test through
+VRC6a's direct A0/A1 and VRC6b's swapped A0/A1 routes. The ROM scans all 64 `$B003` low-six-bit
+configurations across all 16 PPU bank values with both register datasets, reporting the first
+failing mode, bank, expected byte and received byte in dedicated RAM locations.
+
+Run the pair alone with:
+
+```bash
+yarn conformance:vrc6
+```
+
+The runner pins both input identities, mapper/board/RAM geometry, machine-readable completion and
+failure bytes, final CHR register state, `$B003` mode and a visually reviewed RGBA frame hash. Both
+variants currently finish after 542 frames with failure byte zero and frame SHA-256
+`4a6fbec27c2056ba7a0c7057108b01cf2166557675fd57e6e2c1fb7e8154b1eb`. This matrix verifies CHR and
+nametable routing; VRC6 expansion-audio timing remains covered by focused repository tests rather
+than being implied by this visual ROM.
 
 ## AccuracyCoin CPU data buses
 

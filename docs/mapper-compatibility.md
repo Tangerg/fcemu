@@ -33,7 +33,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 21     | Konami VRC4    | Verified    | Tests; pinned exact _Wai Wai World 2_ VRC4a gameplay               |
 | 22     | Konami VRC2a   | Verified    | Tests; pinned exact _Ganbare Pennant Race!_ VRC2a gameplay         |
 | 23     | VRC2b/VRC4e/f  | Verified    | Tests; pinned exact _Ganbare Goemon 2_ VRC2b gameplay              |
-| 24     | Konami VRC6a   | Implemented | Full PPU modes/IRQ/pulse/saw/mixer/state tests; no fixture         |
+| 24     | Konami VRC6a   | Verified    | Tests; pinned natt VRC6a CHR/nametable matrix                      |
 | 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture          |
 | 26     | Konami VRC6b   | Verified    | Tests; pinned _Esper Dream 2_ banking/nametable/IRQ runner         |
 | 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM         |
@@ -168,9 +168,10 @@ submapper 0 is the single 351618/VRC2a wiring: it has no PRG RAM and grounds D0 
 `$6000-$6FFF` while leaving the remaining data lines open.
 Unallocated VRC2 submappers remain rejected rather than infer nonexistent boards.
 
-Mappers 24/26 are the exact VRC6a/VRC6b PCBs and accept only submapper 0. Both require the physical
-8 KiB PRG RAM/NVRAM window; mapper 26 swaps the ASIC's A0/A1 register inputs rather than carrying a
-second register model.
+Mappers 24/26 are the exact VRC6a/VRC6b PCBs and accept only submapper 0. Mapper 24's sole 351951
+VRC6a board has no PRG RAM; mapper 26's 351949A VRC6b board requires exactly 8 KiB of PRG RAM or
+NVRAM. Mapper 26 swaps the ASIC's A0/A1 register inputs rather than carrying a second register
+model.
 
 Mapper 99 accepts only submapper 0. PRG is one to five physically ordered 8 KiB sockets, CHR is one
 or two 8 KiB sockets, and shared RAM is exactly 2 KiB. OUT2 always selects the CHR socket but selects
@@ -391,14 +392,20 @@ and `$6000.D6` supplying PRG A18.
   RAM/IRQ paths remain focused-test evidence until separately observed in a canonical real-ROM
   route.
 - Mappers 24/26 share one VRC6 ASIC model. Mapper 26 swaps only A0/A1 before canonical register
-  decode. The core implements the 16+8+fixed PRG layout, gated 8 KiB WRAM, all `$B003` pattern and
-  CIRAM/ROM-nametable arrangements, byte-wide shared VRC IRQ, two descending 16-step pulse channels,
-  the fourteen-step saw accumulator and `$9003` halt/16×/256× scaling. The linear six-bit DAC is
+  decode. The core implements the 16+8+fixed PRG layout, Mapper 24's physically absent WRAM,
+  Mapper 26's gated 8 KiB WRAM, all `$B003` pattern and CIRAM/ROM-nametable arrangements,
+  byte-wide shared VRC IRQ, two descending 16-step pulse channels, the fourteen-step saw
+  accumulator and `$9003` halt/16×/256× scaling. `$B003.D5` supplies A10 only to combined 2 KiB
+  CHR windows; byte-wide 1 KiB windows retain the complete bank latch. The linear six-bit DAC is
   sampled through the mapper audio capability and added before the console RC filters; oscillator,
   divider, accumulator, IRQ and bank phase all participate in save state. Clearing a pulse enable
   bit resets and halts its duty generator at phase 0 without resetting the frequency divider;
   physically unreachable disabled/nonzero-duty snapshots fail validation.
-  The checksum-pinned _Esper Dream 2_ profile now verifies VRC6b PRG/CHR switching, CHR-backed
+  Pinned natt `vrc6test24` and `vrc6test26` fixtures exercise every `$B003` low-six-bit value across
+  every PPU bank using both register datasets. Both reach their machine-readable completion byte
+  with no failure tuple and the same reviewed final-frame hash, verifying the two A0/A1 routes and
+  promoting Mapper 24 independently of a commercial ROM. The checksum-pinned _Esper Dream 2_
+  profile verifies VRC6b PRG/CHR switching, CHR-backed
   nametables, scanline IRQ phase, audio output, frame output and save-state replay through the public
   emulator. Its recorded opening sequence leaves the three VRC6 oscillators disabled, so the
   expansion-audio behavior remains cycle-level focused-test evidence rather than part of that

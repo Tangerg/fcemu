@@ -649,14 +649,16 @@ See [NESdev VRC2/VRC4](https://www.nesdev.org/wiki/VRC4),
 `Vrc6Mapper` represents the VRC6a and VRC6b as one ASIC with immutable CPU-pin routing. Mapper 24
 uses A0/A1 directly; mapper 26 swaps them before the common `$F003` decode. One 16 KiB PRG register
 maps `$8000-$BFFF`, one 8 KiB register maps `$C000-$DFFF`, the final bank stays fixed, and `$B003`
-bit 7 gates the physical 8 KiB WRAM/NVRAM window.
+bit 7 gates Mapper 26's physical 8 KiB WRAM/NVRAM window. Mapper 24 names only the 351951 VRC6a
+board, which has no WRAM chip; `$6000-$7FFF` therefore stays open even when software sets that bit.
 
 Eight byte-wide CHR registers support the documented 8×1, 4×2 and mixed 4×1+2×2 KiB layouts.
-`$B003` bit 5 controls whether the ASIC overrides CHR/CIRAM A10, while its low mode/mirroring bits
-select every conventional, direct four-table and paired nametable arrangement. Bit 4 replaces
-CIRAM reads with the corresponding CHR-ROM pages and consumes writes. These routes are calculated
-from the physical bank outputs instead of collapsing the chip to the eight values used by its
-three commercial games.
+`$B003` bit 5 supplies the slot's A10 only where the selected mode combines a register into a 2 KiB
+window; 1 KiB windows retain every bit of their byte-wide latch. The low mode/mirroring bits select
+every conventional, direct four-table and paired nametable arrangement. Bit 4 replaces CIRAM reads
+with the corresponding CHR-ROM pages and consumes writes. These routes are calculated from the
+physical bank outputs instead of collapsing the chip to the eight values used by its three
+commercial games.
 
 The audio device owns two descending 16-step pulse generators and one fourteen-step saw sequence.
 `$9003` can halt all phases or right-shift periods by 4/8 bits; the linear six-bit sum is inverted
@@ -675,6 +677,12 @@ banks, CHR-backed nametable mode, active scanline IRQ phase, filtered audio, ren
 save-state replay. That deterministic opening does not enable the two expansion pulses or saw, so
 their timing and mixer claims remain backed by the focused VRC6 audio and bus tests; the profile is
 not described as commercial-ROM verification of those oscillators.
+
+The checksum-pinned natt `vrc6test24`/`vrc6test26` pair exhaustively scans `$B003`'s low-six-bit
+matrix, all PPU bank positions and both register datasets through each ASIC pin route. Both fixtures
+reach `All Tests Passed!`, expose zero in the dedicated failure byte and match the reviewed final
+RGBA hash. This is the executable Mapper 24 verification; a clean canonical _Akumajou Densetsu_
+image is still required before making a separate commercial-game or expansion-audio claim.
 
 ## Konami VRC7 (85)
 

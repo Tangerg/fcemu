@@ -74,7 +74,8 @@ External fixtures stay outside the tracked worktree. The repository records upst
 license status, checksum, invocation and expected protocol in
 [`packages/fc-emu/test-support/external-roms.md`](../packages/fc-emu/test-support/external-roms.md).
 
-Fetch the pinned local CPU/PPU/APU/DMA set into the ignored `packages/fc-emu/test-roms/` directory:
+Fetch the pinned local CPU/PPU/APU/DMA/mapper set into the ignored `packages/fc-emu/test-roms/`
+directory:
 
 ```bash
 yarn fetch:test-roms
@@ -82,10 +83,11 @@ yarn fetch:test-roms
 
 | Command                                                    | Evidence                                                 |
 | ---------------------------------------------------------- | -------------------------------------------------------- |
-| `yarn conformance:fixtures`                                | Complete checksum-pinned CPU/PPU/APU/DMA CI gate.        |
+| `yarn conformance:fixtures`                                | Complete checksum-pinned external CI gate.               |
 | `yarn conformance:rom -- ROM [frames] [region] [protocol]` | Generic Blargg or zero-page result protocol.             |
 | `yarn conformance:nestest`                                 | 8,991 CPU register and cycle trace records.              |
 | `yarn conformance:cpu-timing`                              | Official/unofficial instruction timing result screen.    |
+| `yarn conformance:vrc6`                                    | VRC6a/VRC6b CHR and nametable routing matrix.            |
 | `yarn conformance:accuracy-coin -- ROM`                    | RP2A03 data-bus, DMA, controller and interrupt behavior. |
 | `yarn conformance:mmc1 -- DIR`                             | Holy Mapperel SxROM board matrix.                        |
 | `yarn conformance:mapper34 -- DIR`                         | Holy Mapperel BNROM fixture and visual hash.             |
@@ -96,9 +98,10 @@ Absolute paths are accepted. Relative ROM and fixture paths are resolved from th
 when these root-level Yarn commands are used.
 
 CI runs `conformance:fixtures` after `quality` and `build`. The command verifies or downloads the
-pinned nine-file manifest, builds the core once, then runs nestest, CPU timing, both instruction
-suites, PPU VBL/NMI, APU and both Sprite/DMC DMA collision fixtures. Specialized suites whose
-redistribution or local setup is not covered by that manifest remain explicit manual gates.
+pinned eleven-file manifest, builds the core once, then runs nestest, CPU timing, both instruction
+suites, PPU VBL/NMI, APU, both Sprite/DMC DMA collision fixtures and the VRC6a/VRC6b matrix.
+Specialized suites whose redistribution or local setup is not covered by that manifest remain
+explicit manual gates.
 
 Do not copy an upstream fixture into the tracked repository merely to make CI convenient. If a
 fixture is redistributable but too large or awkward for Git—or its collection-level license is

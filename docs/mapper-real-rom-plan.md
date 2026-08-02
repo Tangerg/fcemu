@@ -65,7 +65,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     21 | Konami VRC4a/c     | _Wai Wai World 2: SOS!! Paseri Jou_ (pinned local profile)             | Exact VRC4c alternate pin route if available                                      | Pin routing, PRG/CHR banking and VRC IRQ                         |
 |     22 | Konami VRC2a       | _Ganbare Pennant Race!_ (Japan, pinned exact 351618 profile)           | _TwinBee 3: Poko Poko Daimaou_ for a second software route                        | Swapped pins, shifted CHR banks, grounded D0 and zero WRAM       |
 |     23 | VRC2b/VRC4e/f      | _Ganbare Goemon 2_ (Japan, pinned exact 350926 VRC2b)                  | Canonical _Crisis Force_ for VRC4e IRQ/2 KiB RAM                                  | Exact/legacy pin routes, RAM/latch and IRQ                       |
-|     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan)                                            | —                                                                                 | VRC6a banking, IRQ, two pulses, saw and mixer                    |
+|     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan; clean canonical image still needed)        | Pinned natt VRC6a matrix already verifies CHR/nametable routing                   | VRC6a gameplay, IRQ, two pulses, saw and mixer                   |
 |     25 | VRC2c/VRC4b/d      | _Gradius II_ (Japan)                                                   | _Ganbare Goemon Gaiden_ for another pin route                                     | Pin routing, PRG/CHR modes and VRC IRQ                           |
 |     26 | Konami VRC6b       | _Esper Dream 2_ (Japan, pinned local profile)                          | _Mouryou Senki Madara_ for an active VRC6-audio sequence                          | Swapped A0/A1, banking, CHR nametables and IRQ; audio supplement |
 |     32 | Irem G-101         | _Image Fight_ (Japan)                                                  | _Major League_ (Japan, mapper 32.1)                                               | PRG mode, CHR banks and fixed-upper one-screen wiring            |
@@ -145,6 +145,11 @@ the same ID covers materially different hardware that the primary image cannot e
 
 - _Castlevania III: Dracula's Curse_ (USA) is MMC5/mapper 5; _Akumajou Densetsu_ (Japan) is
   VRC6a/mapper 24. They are separate required candidates, not regional substitutes.
+- The local `0170恶魔城 3(无限血).nes` candidate is not canonical evidence: it has 524,304 trailing
+  bytes and PRG CRC `4050EE43`, while the documented 351951 image uses PRG CRC `BA6BDD6A`. Its CHR
+  CRC `BF15255C` matches, which is consistent with a PRG hack rather than a clean board dump. Keep
+  it outside real-ROM profiles; the pinned natt VRC6a fixture verifies the mapper matrix without
+  weakening the commercial-ROM identity rule.
 - Current board evidence assigns _Kaiketsu Yanchamaru_ to mapper 97 and _Crazy Climber_ to mapper 180. The historical TuxNES title table labels _Crazy Climber_ as mapper 97 and must not be used to
   repair a modern header.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'

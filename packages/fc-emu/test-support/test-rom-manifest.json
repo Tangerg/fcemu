@@ -69,6 +69,30 @@
       "upstreamPath": "sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes",
       "byteLength": 40976,
       "sha256": "3789f5134b0561b4344e3f4ce08b4d2a416f67435e083917a80d87fdb9d3583c"
+    },
+    {
+      "id": "vrc6-chr-nametable-24",
+      "path": "nes-test-roms/vrc6test/vrc6test24.nes",
+      "upstreamPath": "vrc6test/vrc6test24.nes",
+      "byteLength": 49168,
+      "sha256": "184987c024be2c88065fdfe6932cf59d57910ee1d00720a8bb36055727e4fd03",
+      "upstream": {
+        "repository": "https://github.com/perilsensitive/nes_test_roms",
+        "revision": "3eab7a917dda3638ee851021917f6395a0fb949c",
+        "licenseStatus": "The mirror has no repository-level license. Fetch natt's VRC6 test for local conformance use only; do not redistribute it from this repository."
+      }
+    },
+    {
+      "id": "vrc6-chr-nametable-26",
+      "path": "nes-test-roms/vrc6test/vrc6test26.nes",
+      "upstreamPath": "vrc6test/vrc6test26.nes",
+      "byteLength": 49168,
+      "sha256": "c4c5517c08ee0072d0a7a2e5a446e03c4ef681980264a86fdc95f835a3330c31",
+      "upstream": {
+        "repository": "https://github.com/perilsensitive/nes_test_roms",
+        "revision": "3eab7a917dda3638ee851021917f6395a0fb949c",
+        "licenseStatus": "The mirror has no repository-level license. Fetch natt's VRC6 test for local conformance use only; do not redistribute it from this repository."
+      }
     }
   ]
 }

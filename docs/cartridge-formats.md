@@ -101,6 +101,12 @@ no PRG RAM. Legacy iNES therefore suppresses byte 8's conventional 8 KiB fallbac
 mapper-22 image. NES 2.0 must declare zero PRG RAM/NVRAM; a nonzero field contradicts the selected
 board and fails before execution.
 
+Mapper 24 is likewise a singleton board identity: Konami 351951/VRC6a has no PRG RAM. Legacy iNES
+therefore suppresses its generic 8 KiB fallback, and NES 2.0 must explicitly declare zero PRG
+RAM/NVRAM. Mapper 26 selects the distinct 351949A/VRC6b board and requires exactly one 8 KiB
+volatile or non-volatile PRG region; its `$B003.D7` gate cannot be used to infer a memory chip that
+the selected board does not carry.
+
 Legacy mappers 21 and 23 combine physically different VRC pin routes that plain iNES cannot name.
 Exact content metadata resolves KON-RC850 _Wai Wai World 2_ (PRG `B201B522`, CHR `75754679`) to
 submapper 1 VRC4a with no WRAM. It resolves KON-RC833 _Ganbare Goemon 2_ (PRG `112140A4`, CHR

@@ -15,6 +15,7 @@ const tasks = [
   blarggTask("APU", "apu_test/apu_test.nes", 3600),
   blarggTask("Sprite/DMC DMA", "sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", 1800),
   blarggTask("Sprite/DMC DMA 512", "sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes", 1800),
+  { name: "VRC6 CHR/nametable matrix", script: "run-vrc6-test.mjs", arguments: [] },
 ];
 
 let completed = 0;

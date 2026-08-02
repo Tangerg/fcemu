@@ -239,7 +239,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
     case 24:
     case 26:
       requireBaseSubmapper(cartridge);
-      requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
+      requireBankedLayout(cartridge, 0x2000, 0x4000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x40_000);
       requireChrRom(cartridge, "Konami VRC6");
       requireTwoScreenNametables(cartridge, "Konami VRC6");
@@ -1099,8 +1099,14 @@ function requireVrc24Memory(cartridge: Cartridge, board: Vrc24Board): void {
 
 function requireVrc6Memory(cartridge: Cartridge): void {
   requireDirectPrgRam(cartridge);
-  if (cartridge.prgWritableBytes !== 0x2000) {
-    throw configurationError(cartridge, "VRC6 requires exactly 8 KiB of PRG RAM or NVRAM");
+  const expectedBytes = cartridge.mapperNumber === 24 ? 0 : 0x2000;
+  if (cartridge.prgWritableBytes !== expectedBytes) {
+    throw configurationError(
+      cartridge,
+      cartridge.mapperNumber === 24
+        ? "VRC6a PCB 351951 has no PRG RAM"
+        : "VRC6b PCB 351949A requires exactly 8 KiB of PRG RAM or NVRAM",
+    );
   }
 }
 

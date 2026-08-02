@@ -9,11 +9,13 @@ const packageRoot = path.resolve(scriptDirectory, "..");
 const manifestPath = path.join(packageRoot, "test-support", "test-rom-manifest.json");
 const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const destinationRoot = path.resolve(packageRoot, manifest.destination);
-const baseUrl = `${manifest.upstream.repository.replace("github.com", "raw.githubusercontent.com")}/${manifest.upstream.revision}`;
 
 let cached = 0;
 let downloaded = 0;
+const upstreams = new Set();
 for (const fixture of manifest.files) {
+  const upstream = fixture.upstream ?? manifest.upstream;
+  upstreams.add(`${upstream.repository}@${upstream.revision}`);
   const destination = resolveWithin(destinationRoot, fixture.path);
   const existing = await readFile(destination).catch(() => undefined);
   if (existing) {
@@ -22,6 +24,7 @@ for (const fixture of manifest.files) {
     continue;
   }
 
+  const baseUrl = `${upstream.repository.replace("github.com", "raw.githubusercontent.com")}/${upstream.revision}`;
   const source = new URL(fixture.upstreamPath, `${baseUrl}/`);
   if (source.protocol !== "https:" || source.hostname !== "raw.githubusercontent.com") {
     throw new Error(`Refusing untrusted test-ROM source: ${source}`);
@@ -47,7 +50,7 @@ process.stdout.write(
   `${JSON.stringify(
     {
       destination: destinationRoot,
-      revision: manifest.upstream.revision,
+      upstreams: [...upstreams].sort(),
       fixtures: manifest.files.length,
       downloaded,
       cached,

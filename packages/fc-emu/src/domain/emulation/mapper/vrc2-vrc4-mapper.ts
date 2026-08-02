@@ -122,14 +122,14 @@ export class Vrc2Vrc4Mapper implements Mapper {
     if (ramOffset !== undefined && this.prgRamIsEnabled()) {
       return this.cartridge.readPrgRam(ramOffset);
     }
-    return this.isMicrowireAddress(address) ? this.microwireLatch : 0;
+    return this.microwireReadValue(address);
   }
 
   cpuReadDriveMask(address: number): number {
     if (address >= 0x8000) return 0xff;
     const ramOffset = this.prgRamOffset(address);
     if (ramOffset !== undefined && this.prgRamIsEnabled()) return 0xff;
-    return this.isMicrowireAddress(address) ? 0x01 : 0;
+    return this.drivesMicrowireD0(address) ? 0x01 : 0;
   }
 
   write(address: number, value: number): void {
@@ -138,7 +138,7 @@ export class Vrc2Vrc4Mapper implements Mapper {
       const ramOffset = this.prgRamOffset(address);
       if (ramOffset !== undefined && this.prgRamIsEnabled()) {
         this.cartridge.writePrgRam(ramOffset, value);
-      } else if (this.isMicrowireAddress(address)) {
+      } else if (this.board.id === "vrc2b" && this.drivesMicrowireD0(address)) {
         this.microwireLatch = value & 1;
       }
       return;
@@ -217,13 +217,20 @@ export class Vrc2Vrc4Mapper implements Mapper {
     return this.board.chip === "vrc2" || this.wramEnabled;
   }
 
-  private isMicrowireAddress(address: number): boolean {
+  private drivesMicrowireD0(address: number): boolean {
     return (
-      this.board.id === "vrc2b" &&
+      (this.board.id === "vrc2a" || this.board.id === "vrc2b") &&
       this.cartridge.prgWritableBytes === 0 &&
       address >= 0x6000 &&
       address < 0x7000
     );
+  }
+
+  private microwireReadValue(address: number): number {
+    if (!this.drivesMicrowireD0(address)) return 0;
+    // On 350926/VRC2b, software can read the ASIC's one-bit latch. The
+    // 351618/VRC2a board instead wires the corresponding DO pin to ground.
+    return this.board.id === "vrc2b" ? this.microwireLatch : 0;
   }
 
   private acceptsMirroring(value: number): boolean {

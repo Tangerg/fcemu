@@ -63,7 +63,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     18 | Jaleco SS8806      | _The Lord of King_ (Japan, pinned JF-25 profile)                       | _Pizza Pop!_ for another software route                                           | Nibble registers, RAM gate, mirroring and cycle IRQ              |
 |     19 | Namco 163          | _King of Kings_ (Japan, pinned NAM-KK-5900 profile)                    | _Digital Devil Story: Megami Tensei II_ for another mix/IRQ route                 | CIRAM/WRAM routing, shared RAM, IRQ, N163 audio and persistence  |
 |     21 | Konami VRC4a/c     | _Wai Wai World 2: SOS!! Paseri Jou_ (pinned local profile)             | Exact VRC4c alternate pin route if available                                      | Pin routing, PRG/CHR banking and VRC IRQ                         |
-|     22 | Konami VRC2a       | _TwinBee 3: Poko Poko Daimaou_ (Japan)                                 | —                                                                                 | Swapped pins, shifted CHR banks and VRC2 latch behavior          |
+|     22 | Konami VRC2a       | _Ganbare Pennant Race!_ (Japan, pinned exact 351618 profile)           | _TwinBee 3: Poko Poko Daimaou_ for a second software route                        | Swapped pins, shifted CHR banks, grounded D0 and zero WRAM       |
 |     23 | VRC2b/VRC4e/f      | _Ganbare Goemon 2_ (Japan, pinned exact 350926 VRC2b)                  | Canonical _Crisis Force_ for VRC4e IRQ/2 KiB RAM                                  | Exact/legacy pin routes, RAM/latch and IRQ                       |
 |     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan)                                            | —                                                                                 | VRC6a banking, IRQ, two pulses, saw and mixer                    |
 |     25 | VRC2c/VRC4b/d      | _Gradius II_ (Japan)                                                   | _Ganbare Goemon Gaiden_ for another pin route                                     | Pin routing, PRG/CHR modes and VRC IRQ                           |
@@ -158,6 +158,11 @@ the same ID covers materially different hardware that the primary image cannot e
   submapper 1 with zero WRAM instead of the generic dual-route/8 KiB fallback. Its input route
   reaches active gameplay and observes scanline IRQ plus both horizontal and lower-single-screen
   mirroring. A 352889 VRC4c title remains the meaningful alternate-route supplement.
+- Mapper 22 now has a pinned exact _Ganbare Pennant Race!_ KON-RC834 profile. Its PRG/CHR CRCs
+  `953CA1B6`/`89A44100` match PCB 351618, proving the single VRC2a pin route and zero-WRAM geometry.
+  The route reaches an active baseball game and crosses both PRG register values plus all eight
+  shifted CHR registers. Grounded-D0 electrical behavior remains covered by the focused CPU-bus
+  test because this title does not use that readback as an observable game mechanic.
 - Mapper 69 base banking and cycle IRQ now have a pinned Japanese _Batman_ BAT-E301 gameplay profile.
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,

@@ -188,6 +188,27 @@ describe("Konami VRC2/VRC4", () => {
     expect(memory.read(0x6000)).toBe(0xa4);
   });
 
+  it("grounds only D0 on VRC2a's $6000-$6FFF µWire read window", () => {
+    const cartridge = createTestCartridge({
+      mapper: 22,
+      nes2: true,
+      prgBanks: 4,
+      chrBanks: 1,
+    });
+    const bus = new Bus(cartridge);
+    const memory = new CPUMemory(bus);
+
+    memory.write(0x6000, 1);
+    memory.write(0x0000, 0xa5);
+    expect(memory.read(0x6000)).toBe(0xa4);
+
+    memory.write(0x0000, 0xa5);
+    expect(memory.read(0x6fff)).toBe(0xa4);
+
+    memory.write(0x0000, 0xa5);
+    expect(memory.read(0x7000)).toBe(0xa5);
+  });
+
   it("round-trips board, banking, RAM control and IRQ state and rejects foreign snapshots", () => {
     const mapper = createMapper(
       createTestCartridge({
@@ -301,6 +322,10 @@ describe("Konami VRC2/VRC4", () => {
     {
       name: "VRC2 2 KiB RAM",
       options: { mapper: 23, nes2: true, submapper: 3, prgBanks: 4, chrBanks: 1, prgRamShift: 5 },
+    },
+    {
+      name: "VRC2a 8 KiB RAM",
+      options: { mapper: 22, nes2: true, prgBanks: 4, chrBanks: 1, prgRamShift: 7 },
     },
     {
       name: "four-screen memory",

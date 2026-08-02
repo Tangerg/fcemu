@@ -182,6 +182,20 @@ describe("Cartridge", () => {
     expect(cartridge.defaultExpansionDevice).toBe(0x17);
   });
 
+  it("does not fabricate legacy iNES PRG RAM on mapper 22's sole VRC2a board", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 22, prgBanks: 8, chrBanks: 16 }),
+    );
+
+    expect(cartridge).toMatchObject({
+      format: "ines",
+      mapperNumber: 22,
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
+      hasBatteryBackup: false,
+    });
+  });
+
   it("accepts an explicit NES 2.0 Oeka Kids tablet device declaration", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({ nes2: true, defaultExpansionDevice: 0x17 }),

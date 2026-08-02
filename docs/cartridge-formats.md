@@ -96,6 +96,11 @@ NES 2.0 declares either zero or exactly 8 KiB. Exact legacy content metadata ide
 _The Lord of King_ by PRG CRC `EFB1DF9E` and CHR CRC `7A2DCF20`, resolving its physical zero-WRAM
 layout instead of exposing the generic fallback.
 
+Mapper 22 is not an ambiguous VRC family header: the ID names only the 351618/VRC2a PCB, which has
+no PRG RAM. Legacy iNES therefore suppresses byte 8's conventional 8 KiB fallback for every
+mapper-22 image. NES 2.0 must declare zero PRG RAM/NVRAM; a nonzero field contradicts the selected
+board and fails before execution.
+
 Legacy mappers 21 and 23 combine physically different VRC pin routes that plain iNES cannot name.
 Exact content metadata resolves KON-RC850 _Wai Wai World 2_ (PRG `B201B522`, CHR `75754679`) to
 submapper 1 VRC4a with no WRAM. It resolves KON-RC833 _Ganbare Goemon 2_ (PRG `112140A4`, CHR

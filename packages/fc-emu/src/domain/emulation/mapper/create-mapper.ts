@@ -1079,6 +1079,12 @@ function requireConyYokoLayout(cartridge: Cartridge, board: ConyYokoBoard): void
 function requireVrc24Memory(cartridge: Cartridge, board: Vrc24Board): void {
   requireDirectPrgRam(cartridge);
   const bytes = cartridge.prgWritableBytes;
+  if (board.id === "vrc2a") {
+    if (bytes !== 0) {
+      throw configurationError(cartridge, "VRC2a PCB 351618 has no PRG RAM");
+    }
+    return;
+  }
   const accepted =
     board.chip === "vrc2" ? bytes === 0 || bytes === 0x2000 : [0, 0x0800, 0x2000].includes(bytes);
   if (!accepted) {

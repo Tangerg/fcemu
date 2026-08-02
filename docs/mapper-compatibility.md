@@ -31,7 +31,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 18     | Jaleco SS8806  | Verified    | Tests; pinned JF-25 _The Lord of King_ gameplay/IRQ runner         |
 | 19     | Namco 129/163  | Verified    | Tests; pinned _King of Kings_ N163 audio/gameplay runner           |
 | 21     | Konami VRC4    | Verified    | Tests; pinned exact _Wai Wai World 2_ VRC4a gameplay               |
-| 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture         |
+| 22     | Konami VRC2a   | Verified    | Tests; pinned exact _Ganbare Pennant Race!_ VRC2a gameplay         |
 | 23     | VRC2b/VRC4e/f  | Verified    | Tests; pinned exact _Ganbare Goemon 2_ VRC2b gameplay              |
 | 24     | Konami VRC6a   | Implemented | Full PPU modes/IRQ/pulse/saw/mixer/state tests; no fixture         |
 | 25     | VRC2c/VRC4b/d  | Implemented | Exact/dual pin routes/banking/IRQ/state tests; no fixture          |
@@ -164,7 +164,8 @@ non-overlapping CPU-address pin routes. Their exact NES 2.0 variants are mapper 
 (VRC4a/c), mapper 23 submappers 1/2/3 (VRC4f/e and VRC2b), and mapper 25 submappers 1/2/3
 (VRC4b/d and VRC2c). Exact legacy content metadata resolves the known mapper-21 VRC4a payload and
 known mapper-23 VRC2b/VRC4e payloads to their physical pin route and RAM geometry. Mapper 22
-submapper 0 is the single VRC2a wiring.
+submapper 0 is the single 351618/VRC2a wiring: it has no PRG RAM and grounds D0 on reads from
+`$6000-$6FFF` while leaving the remaining data lines open.
 Unallocated VRC2 submappers remain rejected rather than infer nonexistent boards.
 
 Mappers 24/26 are the exact VRC6a/VRC6b PCBs and accept only submapper 0. Both require the physical
@@ -362,13 +363,21 @@ and `$6000.D6` supplying PRG A18.
   historically combined, non-overlapping address routes and deliberately behaves as the VRC4
   compatibility superset. Exact VRC2b/VRC2c variants do not gain VRC4's PRG swap mode, one-screen
   mirroring or IRQ device; VRC2b instead exposes only its physical D0 latch at `$6000-$6FFF` when
-  no 8 KiB RAM is declared. VRC2a additionally ignores CHR-bank bit 0. VRC4 supports 9-bit CHR
+  no 8 KiB RAM is declared. VRC2a has no PRG RAM, grounds rather than latches D0 in that window,
+  and ignores CHR-bank bit 0. VRC4 supports 9-bit CHR
   registers, gated 2 KiB-mirrored or 8 KiB PRG RAM, and its shared CPU/cycle-or-scanline IRQ core
   with the 341-dot prescaler. PRG is capped at 256 KiB; reachable CHR capacity is capped per ASIC
   and VRC2a wiring rather than silently modulo an unreachable declaration.
   Exact content metadata identifies _Wai Wai World 2_ as the zero-WRAM 352398 VRC4a board,
   _Ganbare Goemon 2_ as zero-WRAM 350926 VRC2b, _Getsufuu Maden_ as zero-WRAM 350636 VRC2b, and
-  _Crisis Force_ as 2 KiB-WRAM 352396 VRC4e. The pinned _Wai Wai World 2_ profile runs a 600-frame
+  _Crisis Force_ as 2 KiB-WRAM 352396 VRC4e. Mapper 22 itself is already an unambiguous singleton;
+  the exact KON-RC834 _Ganbare Pennant Race!_ PRG/CHR payload matches the 351618 board record, so
+  legacy iNES policy removes the generic RAM fallback for all mapper-22 images rather than using a
+  title hash. Its pinned profile runs a 600-frame baseline and a 3,600-frame input route through
+  mode, player, team, stadium and lineup selection into an active game. Checkpoints observe PRG
+  banks 16/17 and 24/25, changes in all eight even-valued CHR registers, VRC2-only state and zero
+  WRAM; visual, native-audio, CPU-cycle and input-active save-state hashes lock the public path.
+  The pinned _Wai Wai World 2_ profile runs a 600-frame
   baseline and a 3,000-frame input route through title, mode and character selection, world map and
   active gameplay, producing 1,783 distinct frames. Exact checkpoints observe VRC4a-only pin
   routing, scanline IRQ operation, horizontal and lower-single-screen mirroring, PRG/CHR bank

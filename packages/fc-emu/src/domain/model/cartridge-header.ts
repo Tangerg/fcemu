@@ -134,6 +134,16 @@ export function parseCartridgeHeader(buffer: ArrayBuffer, sourceName: string): C
  * supports it; capacity comes from the selected physical memory chip.
  */
 function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
+  if (header.mapperNumber === 22 && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      // Mapper 22 identifies the sole 351618/VRC2a PCB, whose $6000-$7FFF
+      // area contains no RAM. Suppress iNES byte 8's generic 8 KiB fallback;
+      // the board's grounded D0 readback is modeled by the mapper itself.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    });
+  }
   if (header.mapperNumber === 74 && header.format === "ines" && header.chrRomSize > 0) {
     return Object.freeze({
       ...header,

@@ -603,9 +603,13 @@ it ORs the two non-overlapping routes assigned to that iNES mapper, matching the
 dual-decode contract without a title hash. Unallocated VRC2 routes fail closed.
 
 VRC2b submapper 3 exposes the PCB's one-bit latch on D0 at `$6000-$6FFF` when no 8 KiB RAM is
-declared; the other seven CPU data lines remain open bus. VRC4 accepts either its 2 KiB RAM mirrored
-through `$6000-$6FFF` or an externally decoded 8 KiB window. `$9002` bit 0 gates that RAM and bit 1
-selects PRG swap mode. VRC2 RAM, when declared, is an always-visible 8 KiB window.
+declared; the other seven CPU data lines remain open bus. VRC2a's 351618 PCB instead connects that
+output to ground: reads in the same window force only D0 low, writes cannot change it, and
+`$7000-$7FFF` remains fully open bus. The singleton board has no PRG RAM, so legacy iNES byte 8's
+generic 8 KiB fallback is suppressed and NES 2.0 RAM declarations fail closed. VRC4 accepts either
+its 2 KiB RAM mirrored through `$6000-$6FFF` or an externally decoded 8 KiB window. `$9002` bit 0
+gates that RAM and bit 1 selects PRG swap mode. Other VRC2 RAM, when accepted, is an always-visible
+8 KiB window.
 
 VRC4's `$F00x` ports assemble an 8-bit IRQ latch, configure cycle/scanline mode and acknowledge the
 level-sensitive output. Cycle mode clocks its up-counter every CPU cycle. Scanline mode starts a
@@ -620,6 +624,11 @@ _Wai Wai World 2_ is zero-WRAM
 _Ganbare Goemon 2_ is zero-WRAM [350926 VRC2b](https://nescartdb.com/profile/view/1568/ganbare-goemon-2),
 _Getsufuu Maden_ is zero-WRAM [350636 VRC2b](https://nescartdb.com/profile/view/3306/getsufuu-maden),
 and _Crisis Force_ is 2 KiB-WRAM [352396 VRC4e](https://nescartdb.com/profile/view/2279/crisis-force).
+Mapper 22 needs no content override because it names only the zero-WRAM
+[351618 VRC2a](https://nescartdb.com/profile/view/3132/ganbare-pennant-race) board. The pinned
+_Ganbare Pennant Race!_ profile matches its PRG/CHR CRCs `953CA1B6`/`89A44100`, runs 3,600 frames
+through six menu layers into an active baseball game, and locks PRG/CHR evolution, zero WRAM,
+native audio, CPU cycles and an input-active save-state replay.
 The pinned _Wai Wai World 2_ profile drives 3,000 frames through menus, the world map and active
 gameplay. Its exact state checkpoints observe both horizontal and lower-single-screen mirroring,
 scanline IRQ activity, PRG/CHR bank evolution and the absence of fabricated WRAM; video, native

@@ -614,10 +614,16 @@ sequence; a `$FF` counter clock reloads the latch and asserts IRQ. `VrcIrq` is a
 domain component so later VRC6/VRC7 boards can reuse this actual circuit without importing VRC4
 banking.
 
-Exact legacy content metadata separates three mapper-23 boards that iNES cannot distinguish:
+Exact legacy content metadata separates four VRC boards that iNES cannot distinguish precisely:
+_Wai Wai World 2_ is zero-WRAM
+[352398 VRC4a](https://nescartdb.com/profile/view/2273/wai-wai-world-2-sos-paseri-jou),
 _Ganbare Goemon 2_ is zero-WRAM [350926 VRC2b](https://nescartdb.com/profile/view/1568/ganbare-goemon-2),
 _Getsufuu Maden_ is zero-WRAM [350636 VRC2b](https://nescartdb.com/profile/view/3306/getsufuu-maden),
 and _Crisis Force_ is 2 KiB-WRAM [352396 VRC4e](https://nescartdb.com/profile/view/2279/crisis-force).
+The pinned _Wai Wai World 2_ profile drives 3,000 frames through menus, the world map and active
+gameplay. Its exact state checkpoints observe both horizontal and lower-single-screen mirroring,
+scanline IRQ activity, PRG/CHR bank evolution and the absence of fabricated WRAM; video, native
+audio, CPU cycles and an input-active 120-frame save-state replay are deterministic.
 The pinned _Ganbare Goemon 2_ profile fixes a 600-frame baseline and 3,000-frame input route through
 title, mode selection, story and active gameplay with 1,671 distinct frames. Mapper checkpoints
 record 16 PRG bank values, changes in every CHR register, both mirroring states and the absence of

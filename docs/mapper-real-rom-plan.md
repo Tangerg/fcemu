@@ -62,7 +62,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     17 | Super Magic Card   | _Kaiketsu Yanchamaru: Karakuri Land_ Super Magic Card extraction       | A trainer-bearing submapper 1–3 extraction                                        | Four PRG/eight CHR windows, WRAM, trainer and dual-source IRQ    |
 |     18 | Jaleco SS8806      | _The Lord of King_ (Japan, pinned JF-25 profile)                       | _Pizza Pop!_ for another software route                                           | Nibble registers, RAM gate, mirroring and cycle IRQ              |
 |     19 | Namco 163          | _King of Kings_ (Japan, pinned NAM-KK-5900 profile)                    | _Digital Devil Story: Megami Tensei II_ for another mix/IRQ route                 | CIRAM/WRAM routing, shared RAM, IRQ, N163 audio and persistence  |
-|     21 | Konami VRC4a/c     | _Wai Wai World 2: SOS!! Paseri Jou_ (Japan)                            | Exact alternate pin route if available                                            | Pin routing, PRG/CHR banking and VRC IRQ                         |
+|     21 | Konami VRC4a/c     | _Wai Wai World 2: SOS!! Paseri Jou_ (pinned local profile)             | Exact VRC4c alternate pin route if available                                      | Pin routing, PRG/CHR banking and VRC IRQ                         |
 |     22 | Konami VRC2a       | _TwinBee 3: Poko Poko Daimaou_ (Japan)                                 | —                                                                                 | Swapped pins, shifted CHR banks and VRC2 latch behavior          |
 |     23 | VRC2b/VRC4e/f      | _Ganbare Goemon 2_ (Japan, pinned exact 350926 VRC2b)                  | Canonical _Crisis Force_ for VRC4e IRQ/2 KiB RAM                                  | Exact/legacy pin routes, RAM/latch and IRQ                       |
 |     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan)                                            | —                                                                                 | VRC6a banking, IRQ, two pulses, saw and mixer                    |
@@ -153,6 +153,11 @@ the same ID covers materially different hardware that the primary image cannot e
   public path but does not replace VRC4e IRQ/RAM evidence. The local _Crisis Force_ payload CRC
   `88C83A1D` is a known bad dump and must not become a profile; obtain the canonical `FCBF28B1`
   payload before adding the 352396 VRC4e supplement.
+- Mapper 21 now has a pinned exact _Wai Wai World 2_ 352398 VRC4a profile. The PRG/CHR CRCs
+  `B201B522`/`75754679` match the physical board record; the legacy image is therefore resolved to
+  submapper 1 with zero WRAM instead of the generic dual-route/8 KiB fallback. Its input route
+  reaches active gameplay and observes scanline IRQ plus both horizontal and lower-single-screen
+  mirroring. A 352889 VRC4c title remains the meaningful alternate-route supplement.
 - Mapper 69 base banking and cycle IRQ now have a pinned Japanese _Batman_ BAT-E301 gameplay profile.
   That zero-WRAM Sunsoft-5A board cannot validate command `$8`'s RAM mode; retain _Batman: Return of
   the Joker_ for that follow-up. _Gimmick!_ also requires Sunsoft 5B audio, which is not implemented,

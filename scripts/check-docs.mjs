@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -18,6 +18,7 @@ for (const file of markdownFiles) {
 validateDocumentationIndex();
 validateMapperCatalog();
 validateSaveStateVersion();
+await validateEvidenceCatalog();
 
 if (failures.length > 0) {
   console.error(`[check-docs] Found ${failures.length} documentation problem(s):`);
@@ -25,7 +26,7 @@ if (failures.length > 0) {
   process.exitCode = 1;
 } else {
   console.log(
-    `[check-docs] OK — ${markdownFiles.length} Markdown files, the mapper catalog and save-state version are consistent.`,
+    `[check-docs] OK — ${markdownFiles.length} Markdown files, mapper/evidence catalogs and the save-state version are consistent.`,
   );
 }
 
@@ -291,6 +292,115 @@ function validateSaveStateVersion() {
       );
     }
   }
+}
+
+async function validateEvidenceCatalog() {
+  const compatibilityFile = path.join(root, "docs", "mapper-compatibility.md");
+  const roadmapFile = path.join(root, "docs", "engineering-roadmap.md");
+  const realRomsFile = path.join(root, "packages", "fc-emu", "test-support", "real-roms.md");
+  const profileFile = path.join(root, "packages", "fc-emu", "scripts", "real-rom-profiles.mjs");
+  const compatibilitySource = fs.readFileSync(compatibilityFile, "utf8");
+  const statusRows = [
+    ...compatibilitySource.matchAll(/^\|\s*(\d+)\s*\|\s*[^|]+\|\s*(Implemented|Verified)\s*\|/gm),
+  ].map((match) => ({ mapper: Number(match[1]), status: match[2] }));
+  const verifiedMappers = statusRows
+    .filter((row) => row.status === "Verified")
+    .map((row) => row.mapper);
+  const pendingMappers = statusRows
+    .filter((row) => row.status === "Implemented")
+    .map((row) => row.mapper);
+
+  const roadmapSource = fs.readFileSync(roadmapFile, "utf8");
+  const mapperCountClaim =
+    /- (\d+) implemented mapper IDs; (\d+) mapper IDs currently have reproducible external or pinned/.exec(
+      roadmapSource,
+    );
+  if (!mapperCountClaim) {
+    fail(roadmapFile, "cannot locate the implemented/verified mapper count statement");
+  } else {
+    checkDocumentedCount(
+      roadmapFile,
+      "implemented mapper count",
+      Number(mapperCountClaim[1]),
+      statusRows.length,
+    );
+    checkDocumentedCount(
+      roadmapFile,
+      "verified mapper count",
+      Number(mapperCountClaim[2]),
+      verifiedMappers.length,
+    );
+  }
+
+  const pendingClaim =
+    /The largest compatibility risk[^.]+\.\s+Mappers ([^.]+)\s+are implemented but do not yet have executable external verification\./.exec(
+      roadmapSource,
+    );
+  if (!pendingClaim) {
+    fail(roadmapFile, "cannot locate the implemented-without-verification mapper list");
+  } else {
+    const documentedPending = [...(pendingClaim[1] ?? "").matchAll(/\d+/g)].map((match) =>
+      Number(match[0]),
+    );
+    compareMapperSets(
+      pendingMappers,
+      documentedPending,
+      roadmapFile,
+      "implemented-without-verification mapper list",
+    );
+    validateMapperList(
+      documentedPending,
+      roadmapFile,
+      "implemented-without-verification mapper list",
+      true,
+    );
+  }
+
+  const { REAL_ROM_PROFILES: profiles } = await import(pathToFileURL(profileFile).href);
+  const profileIds = Object.keys(profiles);
+  const realRomsSource = fs.readFileSync(realRomsFile, "utf8");
+  const documentedProfileIds = [...realRomsSource.matchAll(/^\|\s*`([a-z0-9-]+)`\s*\|/gm)].map(
+    (match) => match[1],
+  );
+  compareTextSets(profileIds, documentedProfileIds, realRomsFile, "real-ROM profile table");
+
+  const realRomsCountClaim = /The current profiles cover (\d+) files/.exec(realRomsSource);
+  if (!realRomsCountClaim) {
+    fail(realRomsFile, "cannot locate the real-ROM profile count statement");
+  } else {
+    checkDocumentedCount(
+      realRomsFile,
+      "real-ROM profile count",
+      Number(realRomsCountClaim[1]),
+      profileIds.length,
+    );
+  }
+
+  const roadmapProfileClaim = /and (\d+) local real-ROM smoke profiles\./.exec(roadmapSource);
+  if (!roadmapProfileClaim) {
+    fail(roadmapFile, "cannot locate the local real-ROM profile count statement");
+  } else {
+    checkDocumentedCount(
+      roadmapFile,
+      "local real-ROM profile count",
+      Number(roadmapProfileClaim[1]),
+      profileIds.length,
+    );
+  }
+}
+
+function checkDocumentedCount(file, label, documented, actual) {
+  if (documented !== actual) fail(file, `${label} is ${documented}; current catalog has ${actual}`);
+}
+
+function compareTextSets(expected, actual, file, label) {
+  const expectedSet = new Set(expected);
+  const actualSet = new Set(actual);
+  const missing = [...expectedSet].filter((value) => !actualSet.has(value));
+  const extra = [...actualSet].filter((value) => !expectedSet.has(value));
+  if (missing.length > 0) fail(file, `${label} is missing: ${missing.join(", ")}`);
+  if (extra.length > 0) fail(file, `${label} lists unknown entries: ${extra.join(", ")}`);
+  if (actualSet.size !== actual.length) fail(file, `${label} repeats a profile ID`);
 }
 
 function numericConstant(file, name) {

@@ -56,6 +56,19 @@ describe("legacy ROM metadata", () => {
     ).toEqual({ submapperNumber: 5, prgRamSize: 0, prgNvRamSize: 0 });
   });
 
+  it("identifies the exact Wai Wai World 2 VRC4a board", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 21,
+        prgRomBytes: 0x40_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xb201b522,
+        chrCrc32: 0x75754679,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 });
+  });
+
   it.each([
     {
       title: "Ganbare Goemon 2 350926",

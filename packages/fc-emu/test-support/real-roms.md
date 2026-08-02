@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover forty-nine files used during development:
+The current profiles cover 50 files used during development:
 
 | Profile           | Expected file                                         | SHA-256                                                            | Mapper |
 | ----------------- | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -42,6 +42,7 @@ The current profiles cover forty-nine files used during development:
 | `yanchamaru3`     | `Kaiketsu Yanchamaru 3 - Taiketsu! Zouringen (J).nes` | `462cec366e3bbbae173e317a658df9f28399a4f6bbf08a0b40c04467f113f2a4` | 65     |
 | `dragonpower`     | `Dragon Power (U).nes`                                | `1d7d68614efef2a71dccfa0e0bf66b674d84c740f1e94f1fbff90db9fff9f1d9` | 66     |
 | `afterburner`     | `After Burner (U).nes`                                | `c603a92e0895365d201e8aec7d4518f69e6edee1cd69d767d84160300da496a2` | 68     |
+| `waiwai2`         | `konami2.nes`                                         | `575b0346e5e2ed7186d95c2b5f67fe7b51f18514edc0cf84b745b31688443587` | 21     |
 | `goemon2`         | `Ganbare Goemon 2 (J).nes`                            | `57dd19aac878b61bfd995cb42c2084262de5b0da8f02b42362d153fa3118e5b2` | 23     |
 | `napoleon`        | `Napoleon Senki (J).nes`                              | `0a45b46c226cdf4f7b6ad5c50327d09a1370e7ef3390ed9da9ac8b5ee7e72753` | 77     |
 | `batman`          | `Batman (J).nes`                                      | `39b3982742429e9226de6d1f3eb86adb94fa54e77f416a635fa58a8e7c832093` | 69     |
@@ -95,6 +96,7 @@ yarn smoke:real-rom -- skullcrossbones "/absolute/path/to/Skull & Crossbones (U)
 yarn smoke:real-rom -- yanchamaru3 "/absolute/path/to/Kaiketsu Yanchamaru 3 - Taiketsu! Zouringen (J).nes"
 yarn smoke:real-rom -- dragonpower "/absolute/path/to/Dragon Power (U).nes"
 yarn smoke:real-rom -- afterburner "/absolute/path/to/After Burner (U).nes"
+yarn smoke:real-rom -- waiwai2 /absolute/path/to/konami2.nes
 yarn smoke:real-rom -- goemon2 "/absolute/path/to/Ganbare Goemon 2 (J).nes"
 yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
 yarn smoke:real-rom -- batman "/absolute/path/to/Batman (J).nes"
@@ -176,7 +178,7 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 23,
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 21, 23,
 26, 64, 65, 66, 68, 69, 77, 85, 87, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142, 163,
 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M

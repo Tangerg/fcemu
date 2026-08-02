@@ -30,7 +30,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture              |
 | 18     | Jaleco SS8806  | Verified    | Tests; pinned JF-25 _The Lord of King_ gameplay/IRQ runner         |
 | 19     | Namco 129/163  | Verified    | Tests; pinned _King of Kings_ N163 audio/gameplay runner           |
-| 21     | Konami VRC4    | Implemented | VRC4a/c pins/banking/RAM/mirroring/IRQ tests; no fixture           |
+| 21     | Konami VRC4    | Verified    | Tests; pinned exact _Wai Wai World 2_ VRC4a gameplay               |
 | 22     | Konami VRC2a   | Implemented | Swapped pins/shifted-CHR/VRC2 capability tests; no fixture         |
 | 23     | VRC2b/VRC4e/f  | Verified    | Tests; pinned exact _Ganbare Goemon 2_ VRC2b gameplay              |
 | 24     | Konami VRC6a   | Implemented | Full PPU modes/IRQ/pulse/saw/mixer/state tests; no fixture         |
@@ -162,8 +162,9 @@ rule. Legacy iNES mapper 227 follows submapper 0 rather than using title hashes.
 Mappers 21/23/25 accept submapper 0 as the historical VRC4 compatibility superset with both
 non-overlapping CPU-address pin routes. Their exact NES 2.0 variants are mapper 21 submappers 1/2
 (VRC4a/c), mapper 23 submappers 1/2/3 (VRC4f/e and VRC2b), and mapper 25 submappers 1/2/3
-(VRC4b/d and VRC2c). Exact legacy content metadata also resolves known mapper-23 payloads to their
-physical VRC2b or VRC4e variant and RAM geometry. Mapper 22 submapper 0 is the single VRC2a wiring.
+(VRC4b/d and VRC2c). Exact legacy content metadata resolves the known mapper-21 VRC4a payload and
+known mapper-23 VRC2b/VRC4e payloads to their physical pin route and RAM geometry. Mapper 22
+submapper 0 is the single VRC2a wiring.
 Unallocated VRC2 submappers remain rejected rather than infer nonexistent boards.
 
 Mappers 24/26 are the exact VRC6a/VRC6b PCBs and accept only submapper 0. Both require the physical
@@ -365,9 +366,15 @@ and `$6000.D6` supplying PRG A18.
   registers, gated 2 KiB-mirrored or 8 KiB PRG RAM, and its shared CPU/cycle-or-scanline IRQ core
   with the 341-dot prescaler. PRG is capped at 256 KiB; reachable CHR capacity is capped per ASIC
   and VRC2a wiring rather than silently modulo an unreachable declaration.
-  Exact content metadata identifies _Ganbare Goemon 2_ as the zero-WRAM 350926 VRC2b board,
-  _Getsufuu Maden_ as zero-WRAM 350636 VRC2b, and _Crisis Force_ as 2 KiB-WRAM 352396 VRC4e. The
-  pinned _Ganbare Goemon 2_ profile runs a 600-frame baseline and 3,000-frame route through title,
+  Exact content metadata identifies _Wai Wai World 2_ as the zero-WRAM 352398 VRC4a board,
+  _Ganbare Goemon 2_ as zero-WRAM 350926 VRC2b, _Getsufuu Maden_ as zero-WRAM 350636 VRC2b, and
+  _Crisis Force_ as 2 KiB-WRAM 352396 VRC4e. The pinned _Wai Wai World 2_ profile runs a 600-frame
+  baseline and a 3,000-frame input route through title, mode and character selection, world map and
+  active gameplay, producing 1,783 distinct frames. Exact checkpoints observe VRC4a-only pin
+  routing, scanline IRQ operation, horizontal and lower-single-screen mirroring, PRG/CHR bank
+  evolution and zero WRAM; visual, native-audio, CPU-cycle and input-active save-state hashes lock
+  the public path. The pinned _Ganbare Goemon 2_ profile runs a 600-frame baseline and 3,000-frame
+  route through title,
   mode selection, story and active gameplay, producing 1,671 distinct frames. Exact state
   checkpoints cross 16 PRG values, changes in all eight CHR registers and both mirroring states
   while retaining VRC2-only `irq: null`, disabled swap mode and zero WRAM; visual, native-audio,

@@ -96,8 +96,10 @@ NES 2.0 declares either zero or exactly 8 KiB. Exact legacy content metadata ide
 _The Lord of King_ by PRG CRC `EFB1DF9E` and CHR CRC `7A2DCF20`, resolving its physical zero-WRAM
 layout instead of exposing the generic fallback.
 
-Legacy mapper 23 combines physically different VRC2b and VRC4e boards. Exact content metadata
-resolves KON-RC833 _Ganbare Goemon 2_ (PRG `112140A4`, CHR `B0C3CE2D`) and KON-RC819 _Getsufuu
+Legacy mappers 21 and 23 combine physically different VRC pin routes that plain iNES cannot name.
+Exact content metadata resolves KON-RC850 _Wai Wai World 2_ (PRG `B201B522`, CHR `75754679`) to
+submapper 1 VRC4a with no WRAM. It resolves KON-RC833 _Ganbare Goemon 2_ (PRG `112140A4`, CHR
+`B0C3CE2D`) and KON-RC819 _Getsufuu
 Maden_ (PRG `C8859038`, CHR `DCFA8063`) to submapper 3 VRC2b with no WRAM. KON-RC856 _Crisis
 Force_ (PRG `99580334`, CHR `A709BCB8`) resolves to submapper 2 VRC4e with its physical 2 KiB
 volatile WRAM. Unknown legacy payloads retain the dual-route VRC4 compatibility model and generic

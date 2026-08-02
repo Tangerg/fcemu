@@ -130,6 +130,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Wai Wai World 2, KON-RC850/352398: VRC4a without external WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 21,
+      prgRomBytes: 0x40_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xb201b522,
+      chrCrc32: 0x75754679,
+    }),
+    overrides: Object.freeze({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Ganbare Goemon 2, KON-RC833/350926: VRC2b with its one-bit latch and no WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 23,

@@ -52,7 +52,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
 | 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
 | 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
-| 75     | Konami VRC1    | Implemented | PRG/CHR/mirroring/four-screen tests; no conformance ROM            |
+| 75     | Konami VRC1    | Verified    | Tests; pinned _Ganbare Goemon_ 302114A gameplay runner             |
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
 | 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
@@ -524,7 +524,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 75 (Konami VRC1) exposes three switchable 8 KiB PRG banks followed by the fixed final bank,
   plus two 4 KiB CHR banks whose fifth select bits share the horizontal/vertical mirroring register.
   Four-screen cartridges ignore that mirroring output; the ASIC has no IRQ, PRG RAM or bus
-  conflicts.
+  conflicts. Exact metadata matches _Ganbare Goemon! Karakuri Douchuu_ to two physical 302114A
+  boards and removes the generic iNES 8 KiB RAM allocation. Its pinned input route selects one-player
+  mode, reaches the opening building and first outdoor stage, observes PRG states `[6,7,14]`,
+  `[0,1,14]` and `[8,9,14]` plus CHR states using both fifth select bits, then completes an exact
+  120-frame visual/audio save-state replay.
 - Mapper 76 rewires the Namco 108 family to four 2 KiB CHR-ROM windows selected through R2-R5;
   R0/R1 are inaccessible. Its two switchable and two fixed 8 KiB PRG windows remain unchanged, with
   no IRQ, PRG RAM, mirroring register or bus conflicts.

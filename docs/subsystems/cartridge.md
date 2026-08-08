@@ -136,6 +136,9 @@ board's hardwired vertical mirroring.
 BA-KAMEN _Kamen Rider Club_ (PRG `A59CA2EF`, CHR `CC0FFD0E`) likewise removes the generic RAM and
 corrects its circulating iNES image from horizontal to the physical board's hardwired vertical
 mirroring.
+KON-RC815 _Ganbare Goemon! Karakuri Douchuu_ (PRG `565A57E5`, CHR `D9842835`) removes the generic
+allocation from its zero-WRAM Konami 302114A VRC1 board while leaving Mapper-controlled mirroring
+to the runtime register.
 
 The lookup completes or corrects metadata only; it never changes ROM bytes, the mapper number or ROM
 geometry. It may supply an otherwise-unrepresentable submapper or correct a known inaccurate legacy

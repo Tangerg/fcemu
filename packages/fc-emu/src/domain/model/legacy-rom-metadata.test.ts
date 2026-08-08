@@ -313,6 +313,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Ganbare Goemon 302114A memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 75,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x565a57e5,
+        chrCrc32: 0xd9842835,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 75,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x565a57e5,
+        chrCrc32: 0xd9842834,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Skull & Crossbones 800032 memory layout", () => {
     expect(
       findLegacyRomMetadata({

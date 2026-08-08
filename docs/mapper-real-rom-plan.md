@@ -84,7 +84,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     72 | Jaleco JF-17       | _Pinball Quest_ (Japan)                                                | _Moero!! Pro Tennis_, tracked as expected audio-incomplete                        | Conflict-masked rising-edge PRG and CHR latches                  |
 |     73 | Konami VRC3        | _Salamander_ (Japan)                                                   | —                                                                                 | Nibble latch, 16/8-bit cycle IRQ and PRG/CHR RAM                 |
 |     74 | Waixing Type A     | _Di 4 Ci: Ji Qi Ren Da Zhan - Robot War IV_                            | _Ji Jia Zhan Shi_                                                                 | Exact CHR `$08/$09` RAM redirects plus MMC3 banking and IRQ      |
-|     75 | Konami VRC1        | _Ganbare Goemon! Karakuri Douchuu_ (Japan)                             | —                                                                                 | Split CHR high bits, PRG banks and mirroring                     |
+|     75 | Konami VRC1        | _Ganbare Goemon! Karakuri Douchuu_ (Japan, pinned 302114A profile)     | —                                                                                 | Split CHR high bits, PRG banks and mirroring                     |
 |     76 | Namco 3446         | _Digital Devil Story: Megami Tensei_ (Japan)                           | —                                                                                 | Four 2 KiB CHR windows and fixed PRG geometry                    |
 |     77 | Irem LROG017       | _Napoleon Senki_ (Japan, pinned exact LROG017-00 profile)              | —                                                                                 | Mixed CHR ROM/RAM, split nametable ownership and conflicts       |
 |     78 | Irem 74HC161       | _Holy Diver_ (Japan, mapper 78.3)                                      | _Uchuusen: Cosmo Carrier_ (Japan, mapper 78.1)                                    | Both incompatible mirroring wirings and conflicts                |
@@ -192,6 +192,12 @@ the same ID covers materially different hardware that the primary image cannot e
   The input route reaches active gameplay and observes three PRG plus four CHR banks. Mapper 152
   remains separate evidence scope because it spends PRG bit 7 on controlled single-screen
   mirroring; a Mapper 70 profile cannot verify that wiring.
+- Mapper 75 now has a pinned exact _Ganbare Goemon! Karakuri Douchuu_ profile. Its
+  `565A57E5`/`D9842835` pair matches two physical Konami 302114A boards with Mapper-controlled
+  mirroring and no WRAM/VRAM, removing the legacy image's generic 8 KiB RAM allocation. The input
+  route selects one-player mode, reaches the opening building and first outdoor stage, and observes
+  three PRG layouts plus CHR values exercising both shared fifth bank bits before deterministic
+  save-state replay.
 - Mapper 96 now has a pinned _Anpanman to Oekaki Shiyou!!_ profile with the exact PRG CRC
   `9D048EA4`. Its timeline uses native tablet reports—not no-op controller events—to enter drawing
   mode and produce a visible stroke, with a save-state checkpoint while the pen is still pressed.

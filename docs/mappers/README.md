@@ -1017,6 +1017,14 @@ vertical/horizontal mirroring, except on cartridges with four-screen VRAM where 
 The VRC1 has no PRG RAM, IRQ or bus conflicts. See the
 [NESdev VRC1 reference](https://www.nesdev.org/wiki/VRC1).
 
+The checksum-pinned _Ganbare Goemon! Karakuri Douchuu_ profile matches
+[NESCartDB 302114A profile 3040](https://nescartdb.com/profile/view/3040/ganbare-goemon-karakuri-douchuu)
+and [profile 3041](https://nescartdb.com/profile/view/3041/ganbare-goemon-karakuri-douchuu):
+both record PRG `565A57E5`, CHR `D9842835`, Mapper-controlled mirroring and no WRAM/VRAM. Exact
+legacy metadata therefore suppresses the header's generic PRG-RAM fallback. The input route enters
+one-player gameplay, exercises three PRG layouts and CHR banks with both high select lines, and
+replays an input-active 120-frame save-state segment with exact video, audio and cycle counts.
+
 ## Namco 3446 (76)
 
 Mapper 76 keeps the Namco 108 family's two switchable and two fixed 8 KiB PRG windows, but rewires

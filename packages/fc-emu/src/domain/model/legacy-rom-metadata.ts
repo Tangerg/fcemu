@@ -290,6 +290,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Ganbare Goemon! Karakuri Douchuu, 302114A: KONAMI-VRC-1 without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 75,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x565a57e5,
+      chrCrc32: 0xd9842835,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Skull & Crossbones, TGN-020-SK/800032 REV A: RAMBO-1 without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 64,

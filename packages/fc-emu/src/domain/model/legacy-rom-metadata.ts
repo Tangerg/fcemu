@@ -359,6 +359,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Tekken 2, J.Y. Company mapper 90: EL861226C board without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 90,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x80_000,
+      prgCrc32: 0xcddb21da,
+      chrCrc32: 0x93fdfbb2,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Street Fighter 3, JY830623C: fixed-mirroring mapper 91.0 without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 91,

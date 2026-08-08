@@ -97,7 +97,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     87 | Jaleco J87         | _The Goonies_ (Japan, pinned local profile)                            | _City Connection_ (Japan)                                                         | Reversed CHR select bits without bus conflicts                   |
 |     88 | Namco 3433         | _Dragon Spirit: Aratanaru Densetsu_ (Japan)                            | —                                                                                 | Split lower/upper 64 KiB CHR wiring                              |
 |     89 | Sunsoft-2          | _Tenka no Goikenban: Mito Koumon_ (Japan)                              | —                                                                                 | Split-field CHR bank, PRG bank, mirroring and conflicts          |
-|     90 | J.Y. EL861226C     | _Aladdin_ (Hummer Team, unlicensed)                                    | _Mortal Kombat II Special_                                                        | Outer banks, multiplier, latch, banking modes and IRQ sources    |
+|     90 | J.Y. EL861226C     | _Tekken 2_ (unlicensed, pinned exact profile)                          | _Aladdin_; _Mortal Kombat II Special_                                             | 2/1 KiB CHR, 8 KiB PRG modes and decrementing A12 IRQ            |
 |     91 | JY/EJ bootleg      | _Street Fighter 3_ (pinned mapper-91.0 JY830623C profile)              | _Super Fighter III_ (mapper 91.1)                                                 | JY outer/A12 path and EJ mirroring/M2 IRQ path                   |
 |     92 | Jaleco JF-19       | _Moero!! Pro Yakyuu '88 Ketteihen_                                     | —                                                                                 | Fixed-lower/switchable-upper PRG, edge latches and missing ADPCM |
 |     93 | Sunsoft-3R         | _Shanghai_ (Japan)                                                     | _Fantasy Zone_ compatible board revision                                          | PRG bank and CHR-RAM enable/open-bus behavior                    |
@@ -222,6 +222,14 @@ the same ID covers materially different hardware that the primary image cannot e
   public-facade power-cycle retention. The gameplay route observes four PRG layouts and all six CHR
   registers; it leaves the RAM permission latch closed, so `$A3` gating stays focused-test evidence
   and the two secondary titles remain useful independent software routes.
+- Mapper 90 now has a pinned exact _Tekken 2_ profile. Combined CRC `FC78ACAF` matches the Mesen
+  database's 128 KiB PRG/512 KiB CHR, zero-WRAM mapper-90 record; exact metadata removes the legacy
+  header's phantom 8 KiB allocation. The route enters a baseball-stadium fight, crosses mode values
+  `$16` and `$1E`, changes all four PRG registers and multiple CHR registers, and preserves its
+  decrementing A12 IRQ configuration through deterministic replay. It does not exercise the
+  multiplier, automatic CHR latches, other PRG/CHR sizes or three alternate IRQ sources, so
+  _Aladdin_ and _Mortal Kombat II Special_ remain useful independent software supplements while
+  focused tests retain those electrical claims.
 - Mapper 96 now has a pinned _Anpanman to Oekaki Shiyou!!_ profile with the exact PRG CRC
   `9D048EA4`. Its timeline uses native tablet reports—not no-op controller events—to enter drawing
   mode and produce a visible stroke, with a save-state checkpoint while the pen is still pressed.

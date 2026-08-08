@@ -65,7 +65,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 87     | Jaleco J87     | Verified    | CHR-bit-swap tests; pinned _The Goonies_ real-ROM runner           |
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                  |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM               |
-| 90     | J.Y. EL861226C | Implemented | PRG/CHR/multiplier/latch/four-source-IRQ/state tests; no fixture   |
+| 90     | J.Y. EL861226C | Verified    | Tests; pinned exact _Tekken 2_ combat/A12-IRQ real-ROM runner      |
 | 91     | JY/EJ bootleg  | Verified    | Board tests; pinned exact _Street Fighter 3_ mapper-91.0 runner    |
 | 92     | Jaleco JF-19   | Implemented | Dual-edge/window/state tests; canonical payload local replay       |
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM         |
@@ -709,6 +709,12 @@ and `$6000.D6` supplying PRG A18.
   PPU-read or CPU-write clocks, 8/256 prescaling, increment/decrement, XOR-loaded registers and
   level-sensitive acknowledgement. `$C001` bit 3/`$C007` are retained in state but add no guessed
   behavior because their hardware function remains unknown and no known title uses it.
+  The checksum-pinned _Tekken 2_ profile removes iNES's fictitious 8 KiB WRAM, runs a 1,200-frame
+  attract baseline and drives 1,500 frames from title through character selection into active
+  combat. Its checkpoints cross 2 KiB and 1 KiB CHR modes, change all four 8 KiB PRG registers and
+  retain the game's decrementing A12 IRQ configuration; 622 distinct interactive frames plus an
+  input-active 120-frame video/audio/cycle replay provide public-facade evidence. The multiplier,
+  MMC4-like latches, alternate PRG/CHR sizes and other IRQ sources remain focused-test evidence.
 - Mapper 91 denotes two related but electrically distinct boards sharing two switchable 8 KiB PRG
   windows and four 2 KiB CHR windows. Submapper 0 (JY830623C/YY840238C) uses write-address bits
   A2-A0 to select an outer 128 KiB PRG/512 KiB CHR region; its fixed tail follows the selected PRG

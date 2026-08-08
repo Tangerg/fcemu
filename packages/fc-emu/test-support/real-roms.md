@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover 59 files used during development:
+The current profiles cover 60 files used during development:
 
 | Profile            | Expected file                                         | SHA-256                                                            | Mapper |
 | ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -63,6 +63,7 @@ The current profiles cover 59 files used during development:
 | `dbz5`             | `dbz5cn.nes`                                          | `4e8d261a023aa4bd6a4c43a88200f63bd2a0ae9437a5216e016ba4d6713d9cc8` | 12     |
 | `tinytoon2-j`      | `Tiny Toon Adventures 2 (J).nes`                      | `f41607b80904a2e1150a155121405dd1fed007ce98ff00a274a7891cafd7e32d` | 85     |
 | `goonies`          | `GOONIES-J.NES`                                       | `30c9d00cd797899fdede35a3af50addc5f2d270b35cc2f60cbca361bf4a93d23` | 87     |
+| `tekken-2`         | `Tekken 2 (Unl).nes`                                  | `11dba945a8821831514412979a01afa372f14733239d20dc909c4102fcd66a06` | 90     |
 | `street-fighter-3` | `0190街头霸王III.nes`                                 | `7a91dd8b2a2b404e3c06ce8a1e3cd885de822ab5d63178bad04b9da107792327` | 91     |
 | `oeka-kids`        | `Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes`     | `d7a1d2a77007a58cb639d8d93c4b29b8cc93d922a72336bb3a97d2a91d5a9ef4` | 96     |
 | `yanchamaru`       | `KAIKETSU-YANCHAMARU-J.NES`                           | `238cb4c247187cf0ca1b77462a574b2495981307c9701725d8a111cb401d94d1` | 97     |
@@ -126,6 +127,7 @@ yarn smoke:real-rom -- fire-emblem "/absolute/path/to/Fire Emblem (J).nes"
 yarn smoke:real-rom -- dbz5 /absolute/path/to/dbz5cn.nes
 yarn smoke:real-rom -- tinytoon2-j "/absolute/path/to/Tiny Toon Adventures 2 (J).nes"
 yarn smoke:real-rom -- goonies /absolute/path/to/GOONIES-J.NES
+yarn smoke:real-rom -- tekken-2 "/absolute/path/to/Tekken 2 (Unl).nes"
 yarn smoke:real-rom -- street-fighter-3 /absolute/path/to/0190街头霸王III.nes
 yarn smoke:real-rom -- oeka-kids "/absolute/path/to/Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes"
 yarn smoke:real-rom -- yanchamaru /absolute/path/to/KAIKETSU-YANCHAMARU-J.NES

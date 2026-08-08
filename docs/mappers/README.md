@@ -1237,6 +1237,15 @@ with `$C006`, and a wrap asserts a level-sensitive IRQ until either disable port
 is still unknown and no known software uses it. See the
 [J.Y. Company ASIC reference](https://www.nesdev.org/wiki/INES_Mapper_090).
 
+The checksum-pinned _Tekken 2_ payload CRC `FC78ACAF` matches the
+[Mesen NES database entry](https://github.com/nesdev-org/MesenCE/blob/master/UI/Dependencies/MesenNesDB.txt#L10523)
+for 128 KiB PRG, 512 KiB CHR and zero WRAM. Exact legacy metadata removes iNES's generic 8 KiB
+allocation. A 1,200-frame attract route and 1,500-frame input route reach active combat, observe
+2 KiB then 1 KiB CHR modes, two distinct four-register PRG layouts and decrementing A12 IRQ setup,
+and reproduce an input-active 120-frame save-state segment with exact video, audio and CPU cycles.
+The title does not use the multiplier, MMC4-like latches or the other three IRQ sources, which stay
+within the focused hardware-test evidence boundary.
+
 ## JY830623C / EJ-006-1 (91)
 
 Both mapper-91 boards use two switchable 8 KiB PRG windows followed by a fixed 16 KiB tail and four

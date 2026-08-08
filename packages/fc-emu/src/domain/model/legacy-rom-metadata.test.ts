@@ -444,6 +444,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Tekken 2 J.Y. Company memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 90,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x80_000,
+        prgCrc32: 0xcddb21da,
+        chrCrc32: 0x93fdfbb2,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 90,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x80_000,
+        prgCrc32: 0xcddb21da,
+        chrCrc32: 0x93fdfbb3,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Street Fighter 3 JY830623C memory layout", () => {
     expect(
       findLegacyRomMetadata({

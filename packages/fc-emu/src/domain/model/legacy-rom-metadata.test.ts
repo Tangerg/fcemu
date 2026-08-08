@@ -361,6 +361,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Double Strike NINA-06 memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 79,
+        prgRomBytes: 0x8000,
+        chrRomBytes: 0x8000,
+        prgCrc32: 0x127436fc,
+        chrCrc32: 0x39536d86,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 79,
+        prgRomBytes: 0x8000,
+        chrRomBytes: 0x8000,
+        prgCrc32: 0x127436fc,
+        chrCrc32: 0x39536d87,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Skull & Crossbones 800032 memory layout", () => {
     expect(
       findLegacyRomMetadata({

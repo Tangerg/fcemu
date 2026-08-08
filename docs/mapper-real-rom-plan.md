@@ -88,7 +88,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     76 | Namco 3446         | _Digital Devil Story: Megami Tensei_ (Japan)                           | —                                                                                 | Four 2 KiB CHR windows and fixed PRG geometry                    |
 |     77 | Irem LROG017       | _Napoleon Senki_ (Japan, pinned exact LROG017-00 profile)              | —                                                                                 | Mixed CHR ROM/RAM, split nametable ownership and conflicts       |
 |     78 | Irem 74HC161       | _Holy Diver_ (Japan, mapper 78.3)                                      | _Uchuusen: Cosmo Carrier_ (Japan, mapper 78.1)                                    | Both incompatible mirroring wirings and conflicts                |
-|     79 | NINA-03/06         | _F-15 City War_ (USA)                                                  | —                                                                                 | Expansion-area latch and combined PRG/CHR selection              |
+|     79 | NINA-03/06         | _Double Strike_ (USA, v1.1, pinned NINA-06 profile)                    | _F-15 City War_ (USA) for a 64 KiB/two-bank PRG route                             | Expansion-area latch and combined PRG/CHR selection              |
 |     80 | Taito X1-005       | _Minelvaton Saga: Ragon no Fukkatsu_ (Japan)                           | _Taito Grand Prix_ (Japan)                                                        | Mirrored registers, internal RAM permission and banking          |
 |     82 | Taito X1-017       | _Kyuukyoku Harikiri Stadium III_ (Japan)                               | —                                                                                 | PRG/CHR banking, pull-down behavior, RAM and cycle IRQ           |
 |     83 | Cony/Yoko ASIC     | _Street Fighter II Pro_ (unlicensed, mapper 83.0)                      | _World Heroes 2'_ (83.1), _Dragon Ball Party_ (83.2), _1994 Super 20-in-1_ (83.3) | Four PCB wirings, NVRAM, outer banks and dual-source IRQ         |
@@ -204,6 +204,11 @@ the same ID covers materially different hardware that the primary image cannot e
   route selects one-player mode, reaches the opening building and first outdoor stage, and observes
   three PRG layouts plus CHR values exercising both shared fifth bank bits before deterministic
   save-state replay.
+- Mapper 79 now has a pinned exact _Double Strike_ v1.1 profile. Its combined CRC `1EB4A920`, PRG
+  `127436FC` and CHR `39536D86` match AVE NINA-06 with vertical mirroring and no WRAM/VRAM. The
+  route reaches one-player aerial combat and observes CHR 0→1 selection. Because this production
+  image has only one 32 KiB PRG bank, _F-15 City War_ remains the deliberate follow-up for a real
+  D3 bank transition; the complete D3 and CHR selector logic remains covered by focused tests.
 - Mapper 96 now has a pinned _Anpanman to Oekaki Shiyou!!_ profile with the exact PRG CRC
   `9D048EA4`. Its timeline uses native tablet reports—not no-op controller events—to enter drawing
   mode and produce a visible stroke, with a save-state checkpoint while the pen is still pressed.

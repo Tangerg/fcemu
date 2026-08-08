@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover 56 files used during development:
+The current profiles cover 57 files used during development:
 
 | Profile            | Expected file                                         | SHA-256                                                            | Mapper |
 | ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -52,6 +52,7 @@ The current profiles cover 56 files used during development:
 | `kamen-rider-club` | `Kamen Rider Kurabu (J).nes`                          | `cb26c77375ee3f315e0cd364d964b747953c06de6e05f46e85b49e6fb3809369` | 70     |
 | `fire-hawk`        | `Fire Hawk (U).nes`                                   | `66848b312fd174101b5be07cb536cbfbd34a4a3fa43dbdd491386d1259b77ccf` | 71     |
 | `ganbare-goemon`   | `Ganbare Goemon - Karakuri Douchuu (J).nes`           | `e9d91b075a930ed84c2fccbf9bcde78e2c7018c6b10499e21d012dca8b020320` | 75     |
+| `double-strike`    | `Double Strike (U).nes`                               | `cba6440fe706575e56e379a1e8d2ae6a8e8c511d1d2dc0552d2eb62934100e36` | 79     |
 | `esper-dream-2`    | `Esper Dream 2 - Aratanaru Tatakai (J).nes`           | `9dff8bc590cf73e9063575dd77707964c69f81573bb84ecd5c13aab874db1717` | 26     |
 | `shinchan`         | `Crayon Shin Chan (J).nes`                            | `4b33db75d9e755bb685695f7a07ce6bdd441c0901ee5c63301faa841ab90bfd5` | 16     |
 | `lord-of-king`     | `Lord of King, The (J).nes`                           | `2cdf03ba31916f76dc9af62f2ab969cd7e9a055a7788b8b65740e4ef400947bb` | 18     |
@@ -112,6 +113,7 @@ yarn smoke:real-rom -- batman "/absolute/path/to/Batman (J).nes"
 yarn smoke:real-rom -- kamen-rider-club "/absolute/path/to/Kamen Rider Kurabu (J).nes"
 yarn smoke:real-rom -- fire-hawk "/absolute/path/to/Fire Hawk (U).nes"
 yarn smoke:real-rom -- ganbare-goemon "/absolute/path/to/Ganbare Goemon - Karakuri Douchuu (J).nes"
+yarn smoke:real-rom -- double-strike "/absolute/path/to/Double Strike (U).nes"
 yarn smoke:real-rom -- esper-dream-2 "/absolute/path/to/Esper Dream 2 - Aratanaru Tatakai (J).nes"
 yarn smoke:real-rom -- shinchan "/absolute/path/to/Crayon Shin Chan (J).nes"
 yarn smoke:real-rom -- lord-of-king "/absolute/path/to/Lord of King, The (J).nes"
@@ -191,7 +193,7 @@ The runner exits non-zero for a missing file, identity mismatch or any failed ch
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
 not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 21, 22, 23,
-25, 26, 33, 64, 65, 66, 68, 69, 70, 71, 75, 77, 85, 87, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142,
+25, 26, 33, 64, 65, 66, 68, 69, 70, 71, 75, 77, 79, 85, 87, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142,
 163,
 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M

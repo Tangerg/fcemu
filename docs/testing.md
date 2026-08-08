@@ -144,6 +144,7 @@ yarn smoke:real-rom -- golf-ko-open "/absolute/path/to/0370高尔夫球公开赛
 yarn smoke:real-rom -- kamen-rider-club "/absolute/path/to/Kamen Rider Kurabu (J).nes"
 yarn smoke:real-rom -- fire-hawk "/absolute/path/to/Fire Hawk (U).nes"
 yarn smoke:real-rom -- ganbare-goemon "/absolute/path/to/Ganbare Goemon - Karakuri Douchuu (J).nes"
+yarn smoke:real-rom -- double-strike "/absolute/path/to/Double Strike (U).nes"
 yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
 yarn smoke:real-rom -- oeka-kids "/absolute/path/to/Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory

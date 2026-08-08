@@ -1084,6 +1084,16 @@ The single bank latch is decoded in CPU expansion space only when
 controlled, and the board has no PRG RAM, IRQ or bus conflicts. See
 [NESdev mapper 79](https://www.nesdev.org/wiki/INES_Mapper_079).
 
+The checksum-pinned _Double Strike_ v1.1 profile matches the
+[AVE-NINA-06 board record](https://nescartdb.com/profile/view/1044/double-strike): combined payload
+CRC `1EB4A920`, PRG `127436FC`, CHR `39536D86`, vertical mirroring and no WRAM/VRAM. Exact legacy
+metadata removes iNES's generic 8 KiB PRG-RAM fallback. A 600-frame idle baseline and 1,800-frame
+input route cross the title into one-player aerial combat, produce 1,553 distinct interactive
+frames, observe CHR banks 0 and 1, and pin visual, native-audio, CPU-cycle and input-active
+save-state replay results. Because this production image carries only one 32 KiB PRG bank, D3 and
+the remaining CHR selections retain complete focused-test coverage without being overstated as
+real-ROM evidence.
+
 ## Taito X1-005 (80)
 
 The X1-005 exposes three switchable 8 KiB PRG windows followed by the fixed final bank, and two

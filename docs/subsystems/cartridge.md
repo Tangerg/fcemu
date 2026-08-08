@@ -141,6 +141,8 @@ controlled single-screen mirroring, retains its 8 KiB CHR RAM and removes the no
 KON-RC815 _Ganbare Goemon! Karakuri Douchuu_ (PRG `565A57E5`, CHR `D9842835`) removes the generic
 allocation from its zero-WRAM Konami 302114A VRC1 board while leaving Mapper-controlled mirroring
 to the runtime register.
+AVE-NINA-06 _Double Strike_ v1.1 (PRG `127436FC`, CHR `39536D86`) removes the same generic
+allocation from its zero-WRAM Mapper 79 board while retaining the header's vertical mirroring.
 
 The lookup completes or corrects metadata only; it never changes ROM bytes, the mapper number or ROM
 geometry. It may supply an otherwise-unrepresentable submapper or correct a known inaccurate legacy

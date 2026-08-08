@@ -318,6 +318,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Double Strike v1.1, NINA-06: vertical AVE board without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 79,
+      prgRomBytes: 0x8000,
+      chrRomBytes: 0x8000,
+      prgCrc32: 0x127436fc,
+      chrCrc32: 0x39536d86,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Skull & Crossbones, TGN-020-SK/800032 REV A: RAMBO-1 without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 64,

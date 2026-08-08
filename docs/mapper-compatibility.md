@@ -56,7 +56,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
 | 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
-| 79     | NINA-03/06     | Implemented | Expansion decode/PRG/CHR/geometry tests; no conformance ROM        |
+| 79     | NINA-03/06     | Verified    | Tests; pinned exact _Double Strike_ NINA-06 gameplay runner        |
 | 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture           |
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM          |
 | 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture    |
@@ -569,7 +569,12 @@ and `$6000.D6` supplying PRG A18.
   cannot be represented by the accepted cartridge format.
 - Mapper 79 (AVE NINA-03/NINA-06) decodes its latch only at `$4100-$5FFF` addresses matching
   `(address & $E100) == $4100`. D3 selects one of two 32 KiB PRG banks and D2-D0 select one of eight
-  8 KiB CHR-ROM banks; mirroring is hardwired and there are no conflicts, IRQs or PRG RAM.
+  8 KiB CHR-ROM banks; mirroring is hardwired and there are no conflicts, IRQs or PRG RAM. Exact
+  metadata matches _Double Strike_ v1.1 to its AVE NINA-06 payload (PRG `127436FC`, CHR `39536D86`)
+  and removes the generic iNES RAM fallback. Its pinned route enters one-player combat, produces
+  1,553 distinct frames across 1,800 input-driven frames, observes CHR banks 0 and 1 and locks video,
+  native audio, CPU cycles and input-active save-state replay. This 32 KiB PRG image has no second
+  physical PRG bank, so D3 selection remains focused-test evidence rather than a profile claim.
 - Mapper 112 (NTDEC/Asder) uses a two-stage selector/data register with two switchable and two fixed
   8 KiB PRG windows. Two even-aligned 2 KiB and four independent 1 KiB CHR paths remain distinct;
   the outer register supplies separate CHR A18 lines only to the latter four. Even-address mirrors

@@ -385,6 +385,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies Mirai Shinwa Jarvas' battery-backed X1-005 RAM", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 80,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x95aaed34,
+        chrCrc32: 0x599cd55d,
+      })?.overrides,
+    ).toEqual({ hasBatteryFlag: true, prgRamSize: 0, prgNvRamSize: 0x80 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 80,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x95aaed34,
+        chrCrc32: 0x599cd55c,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Skull & Crossbones 800032 memory layout", () => {
     expect(
       findLegacyRomMetadata({

@@ -143,6 +143,8 @@ allocation from its zero-WRAM Konami 302114A VRC1 board while leaving Mapper-con
 to the runtime register.
 AVE-NINA-06 _Double Strike_ v1.1 (PRG `127436FC`, CHR `39536D86`) removes the same generic
 allocation from its zero-WRAM Mapper 79 board while retaining the header's vertical mirroring.
+TFC-MJ-5500-11 _Mirai Shinwa Jarvas_ (PRG `95AAED34`, CHR `599CD55D`) corrects the matching legacy
+image's missing battery flag and assigns the X1-005's exact 128 internal bytes to PRG NVRAM.
 
 The lookup completes or corrects metadata only; it never changes ROM bytes, the mapper number or ROM
 geometry. It may supply an otherwise-unrepresentable submapper or correct a known inaccurate legacy

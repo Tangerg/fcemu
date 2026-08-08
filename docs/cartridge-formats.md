@@ -38,6 +38,11 @@ declare the exact 128 bytes. Mapper 82 always normalizes to the X1-017's physica
 because neither header format can encode that capacity exactly; mapper creation additionally
 requires the battery flag.
 
+Exact content metadata also corrects a known missing legacy battery declaration: TFC-MJ-5500-11
+_Mirai Shinwa Jarvas_ (PRG `95AAED34`, CHR `599CD55D`) maps its 128 X1-005 bytes to NVRAM and sets
+the battery fact recorded on both P3-034A boards. Unknown Mapper 80 images still follow their own
+header flag, and explicit NES 2.0 declarations remain authoritative.
+
 Mapper 96 similarly overrides legacy iNES's zero-CHR default with the Oeka Kids board's physical
 32 KiB volatile CHR RAM, suppresses the generic 8 KiB PRG-RAM fallback and selects default expansion
 device `$17`. This mapper is used only by the two Oeka Kids tablet titles, so the legacy inference is

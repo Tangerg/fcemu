@@ -1106,6 +1106,19 @@ through `$7EF8/$7EF9` equals `$A3`; disabled reads remain open bus. Cartridge fo
 normalizes legacy iNES's generic RAM size to 128 bytes, with the battery flag selecting persistent
 or volatile ownership. See [NESdev mapper 80](https://www.nesdev.org/wiki/INES_Mapper_080).
 
+The checksum-pinned _Mirai Shinwa Jarvas_ profile matches two documented
+[P3-034A](https://nescartdb.com/profile/view/1763/mirai-shinwa-jarvas)
+[board records](https://nescartdb.com/profile/view/3163/mirai-shinwa-jarvas): combined payload CRC
+`0E1683C5`, PRG `95AAED34`, CHR `599CD55D`, Mapper-controlled mirroring, a battery and no external
+WRAM/VRAM. Exact legacy metadata corrects the circulating iNES image's missing battery flag and
+assigns the ASIC's 128 internal bytes to NVRAM, preventing power-on from erasing saved progress. A
+600-frame baseline and 2,160-frame input route cross the title into field movement, menu handling
+and an enemy encounter, produce 328 distinct interactive frames, pin four PRG layouts and all six
+CHR registers, and preserve exact video, native audio, CPU cycles and input-active save-state
+replay. The runner pattern-fills all 128 NVRAM bytes through the public emulator facade and proves
+they survive a power cycle. The game route does not open the RAM permission latch; exact `$A3`
+gating, mirrored RAM access and the volatile sibling remain covered by focused mapper tests.
+
 ## Taito X1-017 (82)
 
 X1-017 keeps the mixed CHR windows but can exchange which pattern-table half holds the two 2 KiB

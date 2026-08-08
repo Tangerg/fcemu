@@ -89,7 +89,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     77 | Irem LROG017       | _Napoleon Senki_ (Japan, pinned exact LROG017-00 profile)              | —                                                                                 | Mixed CHR ROM/RAM, split nametable ownership and conflicts       |
 |     78 | Irem 74HC161       | _Holy Diver_ (Japan, mapper 78.3)                                      | _Uchuusen: Cosmo Carrier_ (Japan, mapper 78.1)                                    | Both incompatible mirroring wirings and conflicts                |
 |     79 | NINA-03/06         | _Double Strike_ (USA, v1.1, pinned NINA-06 profile)                    | _F-15 City War_ (USA) for a 64 KiB/two-bank PRG route                             | Expansion-area latch and combined PRG/CHR selection              |
-|     80 | Taito X1-005       | _Minelvaton Saga: Ragon no Fukkatsu_ (Japan)                           | _Taito Grand Prix_ (Japan)                                                        | Mirrored registers, internal RAM permission and banking          |
+|     80 | Taito X1-005       | _Mirai Shinwa Jarvas_ (Japan, pinned P3-034A profile)                  | _Minelvaton Saga_; _Taito Grand Prix_ for independent software routes             | Banking, mirrored registers and 128-byte internal NVRAM          |
 |     82 | Taito X1-017       | _Kyuukyoku Harikiri Stadium III_ (Japan)                               | —                                                                                 | PRG/CHR banking, pull-down behavior, RAM and cycle IRQ           |
 |     83 | Cony/Yoko ASIC     | _Street Fighter II Pro_ (unlicensed, mapper 83.0)                      | _World Heroes 2'_ (83.1), _Dragon Ball Party_ (83.2), _1994 Super 20-in-1_ (83.3) | Four PCB wirings, NVRAM, outer banks and dual-source IRQ         |
 |     85 | Konami VRC7        | _Tiny Toon Adventures 2_ (Japan, pinned VRC7b profile)                 | _Lagrange Point_ (Japan) for VRC7a and audible six-channel FM                     | A3 banking/IRQ and muted PCB; A4/FM supplement                   |
@@ -209,6 +209,13 @@ the same ID covers materially different hardware that the primary image cannot e
   route reaches one-player aerial combat and observes CHR 0→1 selection. Because this production
   image has only one 32 KiB PRG bank, _F-15 City War_ remains the deliberate follow-up for a real
   D3 bank transition; the complete D3 and CHR selector logic remains covered by focused tests.
+- Mapper 80 now has a pinned exact _Mirai Shinwa Jarvas_ profile. Its combined CRC `0E1683C5`, PRG
+  `95AAED34` and CHR `599CD55D` match two P3-034A boards with a battery and X1-005 internal RAM.
+  Exact metadata repairs the legacy image's missing battery bit so its 128-byte save region is not
+  cleared on power loss. The smoke runner independently pattern-fills the full region and proves
+  public-facade power-cycle retention. The gameplay route observes four PRG layouts and all six CHR
+  registers; it leaves the RAM permission latch closed, so `$A3` gating stays focused-test evidence
+  and the two secondary titles remain useful independent software routes.
 - Mapper 96 now has a pinned _Anpanman to Oekaki Shiyou!!_ profile with the exact PRG CRC
   `9D048EA4`. Its timeline uses native tablet reports—not no-op controller events—to enter drawing
   mode and produce a visible stroke, with a save-state checkpoint while the pen is still pressed.

@@ -57,7 +57,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
 | 79     | NINA-03/06     | Verified    | Tests; pinned exact _Double Strike_ NINA-06 gameplay runner        |
-| 80     | Taito X1-005   | Implemented | PRG/CHR/mirrored-register/internal-RAM tests; no fixture           |
+| 80     | Taito X1-005   | Verified    | Tests; pinned exact _Mirai Shinwa Jarvas_ P3-034A runner           |
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM          |
 | 83     | Cony/Yoko ASIC | Implemented | Four PCBs/PRG/CHR/NVRAM/dual-source-IRQ/state tests; no fixture    |
 | 85     | Konami VRC7    | Verified    | Tests; pinned _Tiny Toon Adventures 2_ VRC7b gameplay runner       |
@@ -639,7 +639,15 @@ and `$6000.D6` supplying PRG A18.
   windows, horizontal/vertical mirroring and 128 bytes of internal RAM mirrored across
   `$7F00-$7FFF`. Either `$7EF8/$7EF9` must contain `$A3` to expose RAM; CPU A7 is unconnected so
   the `$7E7x` register mirrors are decoded. Legacy iNES RAM is normalized to the physical 128-byte
-  capacity and the battery flag selects volatile or persistent ownership.
+  capacity and the battery flag selects volatile or persistent ownership. Exact content metadata
+  matches _Mirai Shinwa Jarvas_ to Taito P3-034A (PRG `95AAED34`, CHR `599CD55D`) and corrects its
+  circulating iNES image's missing battery flag, preserving the ASIC's 128 bytes as NVRAM rather
+  than clearing saved progress on power-on. Its pinned 2,160-frame route enters field gameplay,
+  opens and closes the command menu, moves into an enemy encounter, produces 328 distinct frames
+  and locks four PRG layouts, all six CHR registers, video, native audio, CPU cycles and input-active
+  save-state replay. The runner also pattern-fills all 128 NVRAM bytes through the public facade and
+  proves they survive a power cycle. The game route leaves the permission latch closed, so `$A3`
+  gating and mirrored CPU access remain focused-test evidence.
 - Mapper 82 (Taito X1-017) is not approximated as X1-005. It uses three consecutive PRG registers
   with historical iNES bit ordering, switchable 2/1 KiB CHR halves, three independently keyed
   regions of 5 KiB NVRAM and strong pull-downs on otherwise floating CPU reads. The reverse-

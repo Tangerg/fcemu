@@ -110,7 +110,9 @@ unclear—document a checksum-pinned acquisition process.
 ## Real-ROM smoke tests
 
 Commercial ROM bytes never enter Git or CI. The runner accepts only an explicit path whose SHA-256
-matches a committed profile:
+matches a committed profile. For battery-backed cartridges it also fills the in-memory save region
+with a deterministic pattern through the public facade and proves the bytes survive a power cycle;
+it never writes that pattern to disk or changes the ROM:
 
 ```bash
 yarn smoke:real-rom -- mario /absolute/path/to/MARIO.NES
@@ -145,6 +147,7 @@ yarn smoke:real-rom -- kamen-rider-club "/absolute/path/to/Kamen Rider Kurabu (J
 yarn smoke:real-rom -- fire-hawk "/absolute/path/to/Fire Hawk (U).nes"
 yarn smoke:real-rom -- ganbare-goemon "/absolute/path/to/Ganbare Goemon - Karakuri Douchuu (J).nes"
 yarn smoke:real-rom -- double-strike "/absolute/path/to/Double Strike (U).nes"
+yarn smoke:real-rom -- jarvas "/absolute/path/to/Mirai Shinwa Jarvas (J).nes"
 yarn smoke:real-rom -- napoleon "/absolute/path/to/Napoleon Senki (J).nes"
 yarn smoke:real-rom -- oeka-kids "/absolute/path/to/Oeka Kids - Anpanman To Oekaki Shiyou!! (J).nes"
 yarn smoke:real-rom -- all /absolute/path/to/rom-directory

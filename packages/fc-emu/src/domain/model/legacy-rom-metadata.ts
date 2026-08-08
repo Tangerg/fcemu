@@ -18,6 +18,7 @@ type LegacyHeaderOverrides = Readonly<
   Partial<
     Pick<
       CartridgeHeader,
+      | "hasBatteryFlag"
       | "mirroringMode"
       | "submapperNumber"
       | "prgRamSize"
@@ -327,6 +328,22 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
       chrCrc32: 0x39536d86,
     }),
     overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // Mirai Shinwa Jarvas, TFC-MJ-5500-11/P3-034A: battery-backed X1-005 RAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 80,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x95aaed34,
+      chrCrc32: 0x599cd55d,
+    }),
+    overrides: Object.freeze({
+      hasBatteryFlag: true,
+      prgRamSize: 0,
+      prgNvRamSize: 0x80,
+    }),
   }),
   Object.freeze({
     identity: Object.freeze({

@@ -94,6 +94,7 @@ function executeProfile(id, profile, romPath) {
     checkEqual(failures, `cartridge.${name}`, metadataEmulator.cartridge[name], expected);
   }
   checkEqual(failures, "cpuHalted after boot", metadataEmulator.diagnostics.cpuHalted, false);
+  const battery = verifyBatteryPersistence(failures, metadataEmulator);
 
   const baseline = runScenario(
     rom,
@@ -218,11 +219,45 @@ function executeProfile(id, profile, romPath) {
     rom: romPath,
     sha256: fixtureSha256,
     cartridge: metadataEmulator.cartridge,
+    battery,
     baseline,
     interactive,
     replay: replay.first,
     passed: failures.length === 0,
     failures,
+  };
+}
+
+function verifyBatteryPersistence(failures, emulator) {
+  const cartridge = emulator.cartridge;
+  const expectedBytes =
+    cartridge.prgNvRamBytes + cartridge.chrNvRamBytes + cartridge.mapperNvRamBytes;
+  const initial = emulator.captureBatterySave();
+  if (expectedBytes === 0) {
+    checkEqual(failures, "battery snapshot without NVRAM", initial, undefined);
+    return undefined;
+  }
+  if (!initial) {
+    failures.push(`battery snapshot: expected ${expectedBytes} bytes, received none`);
+    return { bytes: expectedBytes, powerCyclePreserved: false };
+  }
+
+  checkEqual(failures, "battery snapshot bytes", initial.data.byteLength, expectedBytes);
+  const pattern = Uint8Array.from(
+    { length: expectedBytes },
+    (_, index) => (index * 37 + 0x5a) & 0xff,
+  );
+  emulator.restoreBatterySave(pattern);
+  emulator.powerCycle();
+  const afterPowerCycle = emulator.captureBatterySave();
+  const powerCyclePreserved =
+    afterPowerCycle?.data.byteLength === pattern.byteLength &&
+    afterPowerCycle.data.every((value, index) => value === pattern[index]);
+  checkEqual(failures, "battery data after power cycle", powerCyclePreserved, true);
+  return {
+    bytes: expectedBytes,
+    patternSha256: sha256(pattern),
+    powerCyclePreserved,
   };
 }
 

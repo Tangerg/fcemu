@@ -204,6 +204,12 @@ the same ID covers materially different hardware that the primary image cannot e
   route selects one-player mode, reaches the opening building and first outdoor stage, and observes
   three PRG layouts plus CHR values exercising both shared fifth bank bits before deterministic
   save-state replay.
+- Mapper 78 must retain its AND bus conflicts. The JF-16 _Uchuusen: Cosmo Carrier_ evidence target
+  is combined CRC `3D1C3137`, PRG `42392440` and CHR `CFFEE642`; its historical iNES
+  alternative-nametable flag is set to identify one-screen submapper 1. Do not promote the local
+  `695CB142` payload (`CECE4CFC`/`CFFEE642`): its altered PRG writes values that are destroyed by
+  the physical bus conflict and the CPU jams after selecting the wrong bank. A hardware-faithful
+  profile therefore remains pending until an unmodified JF-16 image is supplied.
 - Mapper 79 now has a pinned exact _Double Strike_ v1.1 profile. Its combined CRC `1EB4A920`, PRG
   `127436FC` and CHR `39536D86` match AVE NINA-06 with vertical mirroring and no WRAM/VRAM. The
   route reaches one-player aerial combat and observes CHR 0→1 selection. Because this production

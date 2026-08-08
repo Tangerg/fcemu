@@ -46,12 +46,16 @@ describe("Irem78Mapper", () => {
   });
 
   it("resolves the historical iNES alternate-nametable convention explicitly", () => {
-    const cosmo = createTestCartridge({ mapper: 78, prgBanks: 8, chrBanks: 16 });
-    const holyDiver = createTestCartridge({
+    const cosmo = createTestCartridge({
       mapper: 78,
       prgBanks: 8,
       chrBanks: 16,
       fourScreen: true,
+    });
+    const holyDiver = createTestCartridge({
+      mapper: 78,
+      prgBanks: 8,
+      chrBanks: 16,
     });
     cosmo.prgRom[0] = 0xff;
     holyDiver.prgRom[0] = 0xff;

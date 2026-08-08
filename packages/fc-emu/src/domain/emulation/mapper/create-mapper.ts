@@ -1318,9 +1318,11 @@ function requireCodemastersMirroring(cartridge: Cartridge): boolean {
 
 function resolveIrem78Mirroring(cartridge: Cartridge): Irem78Mirroring {
   if (cartridge.format === "ines") {
+    // Historical dumps repurpose flag 6 bit 3 as a board discriminator:
+    // set means JF-16/Cosmo Carrier, clear means Holy Diver. It is not VRAM.
     return cartridge.mirroringMode === NametableMirroring.FourScreen
-      ? "horizontal-vertical"
-      : "single-screen";
+      ? "single-screen"
+      : "horizontal-vertical";
   }
   switch (cartridge.submapperNumber) {
     case 1:

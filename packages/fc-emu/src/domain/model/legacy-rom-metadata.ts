@@ -319,6 +319,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Uchuusen: Cosmo Carrier, JF-16: mapper-controlled one-screen mirroring without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 78,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x42392440,
+      chrCrc32: 0xcffee642,
+    }),
+    overrides: Object.freeze({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Double Strike v1.1, NINA-06: vertical AVE board without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 79,

@@ -549,8 +549,9 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 78 combines UNROM-style 16 KiB PRG and CNROM-style 8 KiB CHR switching with AND bus
   conflicts. Register bit 3 selects lower/upper one-screen mirroring on Cosmo Carrier hardware but
   horizontal/vertical mirroring on Holy Diver hardware. Legacy iNES uses the historical
-  alternative-nametable flag to distinguish those wirings; NES 2.0 uses submapper 1 or 3 and rejects
-  an actual four-screen declaration.
+  alternative-nametable flag set for Cosmo Carrier and clear for Holy Diver; NES 2.0 uses submapper
+  1 or 3 and rejects an actual four-screen declaration. The exact JF-16 payload is also pinned to
+  submapper 1 with zero WRAM so legacy iNES's generic 8 KiB allocation cannot leak into the board.
 - Mapper 67 (Sunsoft-3) maps one switchable and one fixed 16 KiB PRG window plus four independent
   2 KiB CHR-ROM windows without bus conflicts or PRG RAM. The high half of each 4 KiB register
   region owns CHR, IRQ, mirroring or PRG control; every low half is an IRQ-acknowledge mirror. The

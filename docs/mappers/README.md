@@ -1072,7 +1072,7 @@ One conflict-prone `$8000-$FFFF` latch combines a 16 KiB `$8000-$BFFF` PRG bank 
 mirroring and bits 7-4 select CHR. The physical mirroring wire differs: Cosmo Carrier selects
 one-screen lower/upper, while Holy Diver selects horizontal/vertical. NES 2.0 submapper 1 and 3 name
 those boards; submapper 0 is rejected. For legacy iNES, the historical alternative-nametable flag
-selects Holy Diver wiring and a clear flag selects Cosmo Carrier wiring. That legacy flag is not a
+selects Cosmo Carrier wiring and a clear flag selects Holy Diver wiring. That legacy flag is not a
 four-screen declaration; NES 2.0 four-screen layouts are rejected for both modeled boards. See
 [NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_078).
 

@@ -361,6 +361,41 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Uchuusen JF-16 board", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 78,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x42392440,
+        chrCrc32: 0xcffee642,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 78,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x42392440,
+        chrCrc32: 0xcffee643,
+      }),
+    ).toBeUndefined();
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 78,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xcece4cfc,
+        chrCrc32: 0xcffee642,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Double Strike NINA-06 memory layout", () => {
     expect(
       findLegacyRomMetadata({

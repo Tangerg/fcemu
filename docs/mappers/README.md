@@ -950,6 +950,14 @@ to the last bank; no bus conflicts. The BF9097 variant (submapper 1, e.g. Fire H
 mirroring from `$9000-$9FFF` bit 4 and rejects four-screen layouts; submapper 0 (BF9093) keeps the
 header's fixed mirroring, including externally declared four-screen memory.
 
+Exact legacy metadata matches _Fire Hawk_ to the
+[NESCartDB BIC-62 profile](https://nescartdb.com/profile/view/733/fire-hawk), whose PRG CRC
+`1BC686A8` records a BF9097, Mapper-controlled mirroring, 8 KiB CHR RAM and no WRAM. This corrects
+the plain iNES image from fixed-mirroring submapper 0 to controlled-mirroring submapper 1 and removes
+its generic PRG-RAM fallback. The pinned route enters mission-one flight, selects PRG banks 0/1/4/5,
+uses both single-screen pages and replays an input-active 120-frame segment with exact video, audio
+and cycle counts. _Micro Machines_ remains separate fixed-mirroring BF9093 evidence.
+
 ## Jaleco JF-17 / JF-19 (72, 92)
 
 JF-17 maps one switchable 16 KiB PRG bank at `$8000-$BFFF` and fixes the final bank at

@@ -290,6 +290,22 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Fire Hawk, BIC-62: CAMERICA-BF9097 with controlled single-screen mirroring and no WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 71,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0,
+      prgCrc32: 0x1bc686a8,
+      chrCrc32: 0,
+    }),
+    overrides: Object.freeze({
+      submapperNumber: 1,
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Ganbare Goemon! Karakuri Douchuu, 302114A: KONAMI-VRC-1 without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 75,

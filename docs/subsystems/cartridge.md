@@ -136,6 +136,8 @@ board's hardwired vertical mirroring.
 BA-KAMEN _Kamen Rider Club_ (PRG `A59CA2EF`, CHR `CC0FFD0E`) likewise removes the generic RAM and
 corrects its circulating iNES image from horizontal to the physical board's hardwired vertical
 mirroring.
+BIC-62 _Fire Hawk_ (PRG `1BC686A8`, empty CHR) resolves Mapper 71 to BF9097 submapper 1 with
+controlled single-screen mirroring, retains its 8 KiB CHR RAM and removes the nonexistent PRG RAM.
 KON-RC815 _Ganbare Goemon! Karakuri Douchuu_ (PRG `565A57E5`, CHR `D9842835`) removes the generic
 allocation from its zero-WRAM Konami 302114A VRC1 board while leaving Mapper-controlled mirroring
 to the runtime register.

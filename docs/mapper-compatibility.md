@@ -48,7 +48,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 68     | Sunsoft-4      | Verified    | Tests; pinned _After Burner_ CHR-nametable gameplay runner         |
 | 69     | Sunsoft FME-7  | Verified    | Tests; pinned _Batman_ BAT-E301 gameplay/IRQ; no 5B audio          |
 | 70     | Bandai 74xx    | Verified    | Tests; pinned _Kamen Rider Club_ BA-KAMEN gameplay runner          |
-| 71     | Codemasters    | Implemented | PRG/mirroring unit tests; no conformance ROM                       |
+| 71     | Codemasters    | Verified    | Tests; pinned _Fire Hawk_ BIC-62/BF9097 gameplay runner            |
 | 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
 | 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
 | 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
@@ -499,7 +499,11 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 71 (Codemasters/Camerica) switches a 16 KiB `$8000-$BFFF` bank from `$C000-$FFFF` with the
   last bank fixed and no bus conflicts. The BF9097 variant (submapper 1) adds `$9000-$9FFF` bit 4
   single-screen mirroring and rejects four-screen layouts; submapper 0 keeps the header's fixed
-  mirroring and may retain external four-screen memory.
+  mirroring and may retain external four-screen memory. Exact metadata identifies _Fire Hawk_ as
+  the BIC-62/BF9097 board, fixing legacy iNES's otherwise-unrepresentable submapper and removing its
+  generic 8 KiB PRG RAM. The pinned route crosses the mission briefing and carrier launch into
+  player-controlled flight, observes PRG banks 0/1/4/5 and both single-screen pages, then completes
+  a deterministic 120-frame visual/audio save-state replay.
 - Mappers 72/92 (Jaleco JF-17/JF-19) apply ROM bus conflicts before treating D7 and D6 as
   independent rising-edge clocks for their 16 KiB PRG and 8 KiB CHR latches. JF-17 switches the
   lower PRG window with three data bits and fixes the final bank above it; JF-19 fixes bank 0 below

@@ -80,7 +80,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     68 | Sunsoft-4          | _After Burner_ (USA, pinned TGN-011-AB profile)                        | _Maharaja_ (Japan) for battery WRAM                                               | CHR-backed nametables, RAM and mirroring                         |
 |     69 | Sunsoft FME-7      | _Batman_ (Japan, pinned BAT-E301 profile)                              | _Batman: Return of the Joker_ (USA) for WRAM; _Gimmick!_ for future 5B audio      | Command/data banking, RAM window and decrementing IRQ            |
 |     70 | Bandai 74xx        | _Kamen Rider Club_ (Japan, pinned BA-KAMEN profile)                    | A clean Mapper 152 image for the controlled-mirroring sibling                     | Conflicted PRG/CHR latch with hard-wired mirroring               |
-|     71 | Codemasters        | _Fire Hawk_ (USA)                                                      | _Micro Machines_ for fixed-mirroring wiring                                       | Controlled one-screen submapper, PRG switching and timing        |
+|     71 | Codemasters        | _Fire Hawk_ (USA, pinned BIC-62/BF9097 profile)                        | _Micro Machines_ for fixed-mirroring wiring                                       | Controlled one-screen submapper, PRG switching and timing        |
 |     72 | Jaleco JF-17       | _Pinball Quest_ (Japan)                                                | _Moero!! Pro Tennis_, tracked as expected audio-incomplete                        | Conflict-masked rising-edge PRG and CHR latches                  |
 |     73 | Konami VRC3        | _Salamander_ (Japan)                                                   | —                                                                                 | Nibble latch, 16/8-bit cycle IRQ and PRG/CHR RAM                 |
 |     74 | Waixing Type A     | _Di 4 Ci: Ji Qi Ren Da Zhan - Robot War IV_                            | _Ji Jia Zhan Shi_                                                                 | Exact CHR `$08/$09` RAM redirects plus MMC3 banking and IRQ      |
@@ -192,6 +192,12 @@ the same ID covers materially different hardware that the primary image cannot e
   The input route reaches active gameplay and observes three PRG plus four CHR banks. Mapper 152
   remains separate evidence scope because it spends PRG bit 7 on controlled single-screen
   mirroring; a Mapper 70 profile cannot verify that wiring.
+- Mapper 71 now has a pinned exact _Fire Hawk_ profile. Its PRG CRC `1BC686A8` matches the physical
+  BIC-62/BF9097 board with controlled single-screen mirroring, 8 KiB CHR RAM and no WRAM. Exact
+  metadata supplies otherwise-unrepresentable submapper 1 and removes legacy iNES's generic PRG
+  RAM. The route reaches player-controlled mission-one flight, observes four PRG banks and both
+  single-screen pages, then performs deterministic save-state replay. _Micro Machines_ remains the
+  required fixed-mirroring BF9093 sibling.
 - Mapper 75 now has a pinned exact _Ganbare Goemon! Karakuri Douchuu_ profile. Its
   `565A57E5`/`D9842835` pair matches two physical Konami 302114A boards with Mapper-controlled
   mirroring and no WRAM/VRAM, removing the legacy image's generic 8 KiB RAM allocation. The input

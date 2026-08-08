@@ -313,6 +313,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Fire Hawk BIC-62 board facts", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 71,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0,
+        prgCrc32: 0x1bc686a8,
+        chrCrc32: 0,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 71,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0,
+        prgCrc32: 0x1bc686a9,
+        chrCrc32: 0,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Ganbare Goemon 302114A memory layout", () => {
     expect(
       findLegacyRomMetadata({

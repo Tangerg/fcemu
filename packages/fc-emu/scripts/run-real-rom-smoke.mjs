@@ -95,6 +95,7 @@ function executeProfile(id, profile, romPath) {
     checkEqual(failures, `cartridge.${name}`, metadataEmulator.cartridge[name], expected);
   }
   checkEqual(failures, "cpuHalted after boot", metadataEmulator.diagnostics.cpuHalted, false);
+  const startup = verifyStartup(failures, metadataEmulator, profile.startup);
   const battery = verifyBatteryPersistence(failures, metadataEmulator);
 
   const baseline = runScenario(
@@ -220,12 +221,33 @@ function executeProfile(id, profile, romPath) {
     rom: romPath,
     sha256: fixtureSha256,
     cartridge: metadataEmulator.cartridge,
+    startup,
     battery,
     baseline,
     interactive,
     replay: replay.first,
     passed: failures.length === 0,
     failures,
+  };
+}
+
+function verifyStartup(failures, emulator, expected) {
+  if (!expected) return undefined;
+  const coldRegisters = emulator.captureSaveState().state.cpu.registers;
+  checkEqual(failures, "cold-start program counter", coldRegisters.PC, expected.coldProgramCounter);
+  checkEqual(failures, "cold-start stack pointer", coldRegisters.SP, expected.coldStackPointer);
+  emulator.reset();
+  const warmResetProgramCounter = emulator.diagnostics.programCounter;
+  checkEqual(
+    failures,
+    "warm-reset program counter",
+    warmResetProgramCounter,
+    expected.warmResetProgramCounter,
+  );
+  return {
+    coldProgramCounter: coldRegisters.PC,
+    coldStackPointer: coldRegisters.SP,
+    warmResetProgramCounter,
   };
 }
 

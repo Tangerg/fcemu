@@ -59,7 +59,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     13 | CPROM              | _Videomation_ (USA)                                                    | —                                                                                 | Banked upper 4 KiB CHR-RAM and conflicts                         |
 |     15 | K-1029/K-1030P     | _100-in-1 Contra Function 16_                                          | _168-in-1 New Contra Function 16_                                                 | Four PRG modes, CHR protection and reset state                   |
 |     16 | Bandai FCG         | _Crayon Shin-chan: Ora to Poi Poi_ (Japan, pinned exact LZ93D50 board) | _Dragon Ball Z III_ for 24C02/IRQ; _Akuma Kun_ for FCG-1/2 decode                 | LZ93D50 IRQ, 24C02 persistence and low/high register decode      |
-|     17 | Super Magic Card   | _Kaiketsu Yanchamaru: Karakuri Land_ Super Magic Card extraction       | A trainer-bearing submapper 1–3 extraction                                        | Four PRG/eight CHR windows, WRAM, trainer and dual-source IRQ    |
+|     17 | Super Magic Card   | _Street Fighter 2010_ (pinned trainer-bearing submapper-0 extraction)  | _Kaiketsu Yanchamaru 2_; a submapper 1–3 trainer extraction                       | Cold trainer jump, four PRG/eight CHR windows, A12 IRQ/mirroring |
 |     18 | Jaleco SS8806      | _The Lord of King_ (Japan, pinned JF-25 profile)                       | _Pizza Pop!_ for another software route                                           | Nibble registers, RAM gate, mirroring and cycle IRQ              |
 |     19 | Namco 163          | _King of Kings_ (Japan, pinned NAM-KK-5900 profile)                    | _Digital Devil Story: Megami Tensei II_ for another mix/IRQ route                 | CIRAM/WRAM routing, shared RAM, IRQ, N163 audio and persistence  |
 |     21 | Konami VRC4a/c     | _Wai Wai World 2: SOS!! Paseri Jou_ (pinned local profile)             | Exact VRC4c alternate pin route if available                                      | Pin routing, PRG/CHR banking and VRC IRQ                         |
@@ -154,10 +154,11 @@ the same ID covers materially different hardware that the primary image cannot e
   repair a modern header.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'
   original retail cartridge boards. Preserve the conversion provenance and trainer metadata. The
-  pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction keeps its exact 512-byte trainer and
-  locks mode-1 PRG/CHR card state, first-stage video/audio and save-state replay. It does not replace
-  mode-4, alternate-mirroring or FDS-compatible data-IRQ evidence, so mapper 8/17 and a second
-  mapper-6 extraction remain independent targets.
+  pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction locks its synthetic `$7003` trainer
+  call, mode-1 PRG/CHR card state, first-stage video/audio and save-state replay. The pinned mapper-17
+  _Street Fighter 2010_ extraction separately locks its direct `$7000` cold jump, four 8 KiB PRG
+  windows, direct 1 KiB CHR mode, mirroring switch and PPU-A12 IRQ. Mapper 8, mapper-17 submapper 1–3
+  trainer addresses, MMC4/CHR-nametable modes and CPU-M2 IRQ remain independent targets.
 - Mapper 23 now has a pinned exact _Ganbare Goemon 2_ 350926 VRC2b profile. It proves the VRC2-only
   public path but does not replace VRC4e IRQ/RAM evidence. The local _Crisis Force_ payload CRC
   `88C83A1D` is a known bad dump and must not become a profile; obtain the canonical `FCBF28B1`

@@ -5944,6 +5944,11 @@ export const REAL_ROM_PROFILES = Object.freeze({
     title: "Ganbare Goemon! Karakuri Douchuu (Magic Card extraction)",
     fileName: "goemon.nes",
     sha256: "943c83e8f8c8766804a5fac7bdcbc808fef85cc71c2c2493de0bf7caa219293e",
+    startup: {
+      coldProgramCounter: 0x7003,
+      coldStackPointer: 0xfb,
+      warmResetProgramCounter: 0xe000,
+    },
     cartridge: {
       format: "ines",
       mapperNumber: 6,
@@ -6140,6 +6145,214 @@ export const REAL_ROM_PROFILES = Object.freeze({
       cpuCycles: 3_573_660,
     },
   },
+  "sf2010-smc": {
+    title: "Street Fighter 2010: The Final Fight (Super Magic Card extraction)",
+    fileName: "Street Fighter 2010 (J).nes",
+    sha256: "8944612478916f5b081017e2814d287d98c78e5eb147d15bb04f7bd4f1b79ae5",
+    startup: {
+      coldProgramCounter: 0x7000,
+      coldStackPointer: 0xfd,
+      warmResetProgramCounter: 0xff80,
+    },
+    cartridge: {
+      format: "ines",
+      mapperNumber: 17,
+      submapperNumber: 0,
+      timingMode: 0,
+      consoleType: 0,
+      vsPpuType: 0,
+      vsHardwareType: 0,
+      defaultExpansionDevice: 0,
+      consoleRegion: "ntsc",
+      mirroringMode: 1,
+      hasBatteryBackup: false,
+      hasWritableChrMemory: false,
+      prgRomBytes: 131_072,
+      chrRomBytes: 131_072,
+      prgRamBytes: 32_768,
+      prgNvRamBytes: 0,
+      chrRamBytes: 0,
+      chrNvRamBytes: 0,
+      mapperRamBytes: 0,
+      mapperNvRamBytes: 0,
+    },
+    baseline: {
+      frames: 600,
+      minimumDistinctFrames: 35,
+      finalFrameSha256: "fa7d8a3c9cc415ffa8368ac13e3516ee42beb1ea0fd0440d495a05e85fe1ef1f",
+      frameSequenceSha256: "5f4191cd8d08d40f4c3d316ff2c9b10a279fcd6b871c1d02e07ad2c07fbd3828",
+      cpuCycles: 17_840_909,
+      mapperCheckpoints: {
+        1: {
+          kind: "ffe-magic-card",
+          board: "super-magic-card",
+          prgBanks: [12, 13, 14, 15],
+          chrRegisters: [0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0],
+          latchMode: 1,
+          latchValue: 0,
+          prgWriteProtected: true,
+          twoScreenMirroring: true,
+          mirroringSetting: false,
+          bankingMode: "4m",
+          bankingModeAddressBits: 0,
+          chr8kBank: 0,
+          superMode: 71,
+          latch0Fe: false,
+          latch1Fe: false,
+          irqCounter: 0,
+          irqEnabled: false,
+          irqPending: false,
+          a12High: false,
+          fdsIrqDivider: 0,
+          fdsIrqEnabled: false,
+          fdsIrqPending: false,
+          mirroring: 1,
+          scratchRam: {
+            type: "Uint8Array",
+            byteLength: 4096,
+            sha256: "ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7",
+          },
+          prgMemory: {
+            type: "Uint8Array",
+            byteLength: 524_288,
+            sha256: "9ebe003b4200d3a9be6cd3328ac62acc82b31e718caede275c04f1756015af7d",
+          },
+          chrMemory: {
+            type: "Uint8Array",
+            byteLength: 262_144,
+            sha256: "64a55e655bc430372e6148a6bb8e972e2988714731dad579f0379893cc0d91e1",
+          },
+        },
+        600: {
+          kind: "ffe-magic-card",
+          board: "super-magic-card",
+          prgBanks: [10, 11, 14, 15],
+          chrRegisters: [88, 89, 110, 111, 0, 0, 0, 0, 0, 0, 0, 0],
+          latchMode: 1,
+          latchValue: 0,
+          prgWriteProtected: true,
+          twoScreenMirroring: true,
+          mirroringSetting: false,
+          bankingMode: "4m",
+          bankingModeAddressBits: 0,
+          chr8kBank: 0,
+          superMode: 79,
+          latch0Fe: false,
+          latch1Fe: false,
+          irqCounter: 64_053,
+          irqEnabled: true,
+          irqPending: false,
+          a12High: false,
+          fdsIrqDivider: 0,
+          fdsIrqEnabled: false,
+          fdsIrqPending: false,
+          mirroring: 1,
+          scratchRam: {
+            type: "Uint8Array",
+            byteLength: 4096,
+            sha256: "f02cd882d0c7069c3e04325478e9aef9a8731b8f80592fecbc951169b00283ce",
+          },
+          prgMemory: {
+            type: "Uint8Array",
+            byteLength: 524_288,
+            sha256: "9ebe003b4200d3a9be6cd3328ac62acc82b31e718caede275c04f1756015af7d",
+          },
+          chrMemory: {
+            type: "Uint8Array",
+            byteLength: 262_144,
+            sha256: "64a55e655bc430372e6148a6bb8e972e2988714731dad579f0379893cc0d91e1",
+          },
+        },
+      },
+    },
+    interactive: {
+      frames: 1800,
+      minimumDistinctFrames: 800,
+      events: [
+        { frame: 301, button: "start", pressed: true },
+        { frame: 307, button: "start", pressed: false },
+        { frame: 600, button: "start", pressed: true },
+        { frame: 606, button: "start", pressed: false },
+        { frame: 900, button: "start", pressed: true },
+        { frame: 906, button: "start", pressed: false },
+        { frame: 1080, button: "right", pressed: true },
+        { frame: 1200, button: "b", pressed: true },
+        { frame: 1206, button: "b", pressed: false },
+        { frame: 1320, button: "a", pressed: true },
+        { frame: 1326, button: "a", pressed: false },
+        { frame: 1440, button: "right", pressed: false },
+        { frame: 1500, button: "left", pressed: true },
+        { frame: 1560, button: "b", pressed: true },
+        { frame: 1566, button: "b", pressed: false },
+        { frame: 1680, button: "left", pressed: false },
+        { frame: 1740, button: "a", pressed: true },
+        { frame: 1746, button: "a", pressed: false },
+      ],
+      checkpoints: {
+        300: "ded7355e993908716c135341415714b2b84cb3b3e95987e4685dac26a4067568",
+        600: "42b3aa329de1c3bc66c987bf7e77173a32e674952babecfb154694f04ccbd9a6",
+        900: "12b907f1f1eb2d9fa0d424ad81ff30d06a6363931786ec55e034065e7426d7d9",
+        1200: "695529cd44777d63433123d059eda79c24894dca4a8ce7ac289a54eb3385b681",
+        1500: "e5f47c62699cb77f1071c5568ca49768c238f8307798b68ea89b14979352a959",
+        1800: "57622e01232e91fe62aecb0d48380b7d3d360ee48a2dc71e4da3bf4004ee843e",
+      },
+      mapperCheckpoints: {
+        1200: {
+          kind: "ffe-magic-card",
+          board: "super-magic-card",
+          prgBanks: [8, 9, 14, 15],
+          chrRegisters: [58, 59, 60, 61, 0, 37, 0, 0, 0, 0, 0, 0],
+          latchMode: 1,
+          latchValue: 0,
+          prgWriteProtected: true,
+          twoScreenMirroring: true,
+          mirroringSetting: true,
+          bankingMode: "4m",
+          bankingModeAddressBits: 0,
+          chr8kBank: 0,
+          superMode: 79,
+          latch0Fe: false,
+          latch1Fe: false,
+          irqCounter: 64_013,
+          irqEnabled: true,
+          irqPending: false,
+          a12High: false,
+          fdsIrqDivider: 0,
+          fdsIrqEnabled: false,
+          fdsIrqPending: false,
+          mirroring: 0,
+          scratchRam: {
+            type: "Uint8Array",
+            byteLength: 4096,
+            sha256: "7e3f282e66f416954b269ce1d698a4cef2edfcb2c8492b2501c1840ca51ac0a7",
+          },
+          prgMemory: {
+            type: "Uint8Array",
+            byteLength: 524_288,
+            sha256: "9ebe003b4200d3a9be6cd3328ac62acc82b31e718caede275c04f1756015af7d",
+          },
+          chrMemory: {
+            type: "Uint8Array",
+            byteLength: 262_144,
+            sha256: "64a55e655bc430372e6148a6bb8e972e2988714731dad579f0379893cc0d91e1",
+          },
+        },
+      },
+      finalFrameSha256: "57622e01232e91fe62aecb0d48380b7d3d360ee48a2dc71e4da3bf4004ee843e",
+      frameSequenceSha256: "153c2f635bce4b1f87e72b2a8a9ea0f73c7d927a993ebc4c445e687d6d79333a",
+      audioSamples: 1_320_149,
+      audioSha256: "48c14d82e83ef8aa4af91afd47167dedc31e50b28241e33200802061a817a0bf",
+      cpuCycles: 53_577_515,
+    },
+    replay: {
+      checkpointFrame: 1500,
+      frames: 120,
+      frameSequenceSha256: "098f1cb9b12612326fbee981b21d1f0d4def720ba387081ac3873ef66f5a0f71",
+      audioSamples: 88_055,
+      audioSha256: "cdd643ab5152fdb0bbf117968356ab8c92e2723a0c545424b5d2651456cf21b7",
+      cpuCycles: 3_573_660,
+    },
+  },
 });
 
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
@@ -6169,6 +6382,7 @@ export function validateRealRomProfiles(profiles, buttonNames) {
     if (fileNames.has(profile.fileName)) fail(id, `duplicates fileName ${profile.fileName}`);
     fileNames.add(profile.fileName);
     requireSha256(id, "sha256", profile.sha256);
+    validateStartup(id, profile.startup);
     validateCartridge(id, profile.cartridge);
 
     validateScenario(id, "baseline", profile.baseline, false);
@@ -6176,6 +6390,25 @@ export function validateRealRomProfiles(profiles, buttonNames) {
     validateEvents(id, profile.interactive, validButtons);
     validateReplay(id, profile.replay, profile.interactive);
   }
+}
+
+function validateStartup(id, startup) {
+  if (startup === undefined) return;
+  if (!isRecord(startup)) fail(id, "startup must be an object");
+  const fields = ["coldProgramCounter", "coldStackPointer", "warmResetProgramCounter"];
+  requireKnownFields(id, "startup", startup, fields);
+  for (const field of fields) {
+    if (!Object.hasOwn(startup, field)) fail(id, `startup is missing required field ${field}`);
+  }
+  requireIntegerBetween(id, "startup.coldProgramCounter", startup.coldProgramCounter, 0, 0xffff);
+  requireIntegerBetween(id, "startup.coldStackPointer", startup.coldStackPointer, 0, 0xff);
+  requireIntegerBetween(
+    id,
+    "startup.warmResetProgramCounter",
+    startup.warmResetProgramCounter,
+    0,
+    0xffff,
+  );
 }
 
 function validateCartridge(id, cartridge) {

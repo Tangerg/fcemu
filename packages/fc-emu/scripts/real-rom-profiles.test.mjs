@@ -49,6 +49,32 @@ describe("real-ROM profile validation", () => {
     );
   });
 
+  it("validates optional cold-start and warm-reset evidence", () => {
+    const valid = cloneOneProfile();
+    valid.fixture.startup = {
+      coldProgramCounter: 0x7000,
+      coldStackPointer: 0xfd,
+      warmResetProgramCounter: 0xff80,
+    };
+    expect(() => validateRealRomProfiles(valid, BUTTON_NAMES)).not.toThrow();
+
+    const missing = cloneOneProfile();
+    missing.fixture.startup = { coldProgramCounter: 0x7000, coldStackPointer: 0xfd };
+    expect(() => validateRealRomProfiles(missing, BUTTON_NAMES)).toThrowError(
+      /startup is missing required field warmResetProgramCounter/,
+    );
+
+    const invalid = cloneOneProfile();
+    invalid.fixture.startup = {
+      coldProgramCounter: 0x1_0000,
+      coldStackPointer: 0xfd,
+      warmResetProgramCounter: 0xff80,
+    };
+    expect(() => validateRealRomProfiles(invalid, BUTTON_NAMES)).toThrowError(
+      /startup\.coldProgramCounter.*between 0 and 65535/,
+    );
+  });
+
   it("rejects unknown buttons and unsorted input events", () => {
     const unknownButton = cloneOneProfile();
     unknownButton.fixture.interactive.events[0].button = "turbo";

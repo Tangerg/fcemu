@@ -27,7 +27,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
 | 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
 | 16     | Bandai FCG     | Verified    | Tests; pinned _Crayon Shin-chan_ LZ93D50 story runner              |
-| 17     | Super Magic    | Implemented | PRG/CHR/WRAM/IRQ/trainer/MMC4/state tests; no fixture              |
+| 17     | Super Magic    | Verified    | Tests; pinned trainer/4M/A12-IRQ _Street Fighter 2010_ runner      |
 | 18     | Jaleco SS8806  | Verified    | Tests; pinned JF-25 _The Lord of King_ gameplay/IRQ runner         |
 | 19     | Namco 129/163  | Verified    | Tests; pinned _King of Kings_ N163 audio/gameplay runner           |
 | 21     | Konami VRC4    | Verified    | Tests; pinned exact _Wai Wai World 2_ VRC4a gameplay               |
@@ -268,8 +268,18 @@ and `$6000.D6` supplying PRG A18.
   video, audio and CPU cycles across an input-active 120-frame save-state replay. Compact mapper
   checkpoints pin every byte of the 256 KiB PRG-card and 32 KiB CHR-card memories by SHA-256 rather
   than expanding them into the profile. Alternate latch modes, mirroring arrangements and the
-  FDS-compatible data IRQ remain focused-test evidence; mapper 8 and mapper 17 still need their own
-  extracted-image profiles.
+  FDS-compatible data IRQ remain focused-test evidence; mapper 8 still needs its own extracted-image
+  profile.
+  The checksum-pinned mapper-17 _Street Fighter 2010: The Final Fight_ extraction retains its
+  512-byte trainer and locks the distinct direct cold jump to `$7000` with stack pointer `$FD`, then
+  the normal `$FF80` reset vector on warm reset. Its 600-frame baseline and 1,800-frame input route
+  cross the title, introduction and active Planet 1 play with 820 distinct frames. Mapper
+  checkpoints observe all four PRG windows changing from banks 12–15 through 10/11/14/15 to
+  8/9/14/15, direct 1 KiB CHR registers, mode `$47` becoming `$4F`, a horizontal-to-vertical
+  mirroring change and the PPU-A12 IRQ source. Complete PRG-card, CHR-card and scratch-RAM contents
+  remain covered by compact hashes, and an input-active 120-frame replay reproduces video, audio and
+  CPU cycles exactly. Submapper 1–3 trainer addresses, CPU-M2 IRQ, MMC4 latches and CHR-backed
+  nametables remain focused-test evidence rather than claims made from this route.
 - Mapper 34 never combines its unrelated register sets. Legacy CHR ROM above 8 KiB selects
   NINA-001; CHR RAM or at most 8 KiB CHR ROM selects BNROM. NINA-001 maps its `$7FFD-$7FFF`
   registers over 8 KiB PRG RAM. BNROM applies original-board AND bus conflicts; NES 2.0 submapper 2

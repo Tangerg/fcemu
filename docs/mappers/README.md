@@ -362,8 +362,18 @@ runner hashes the complete 256 KiB PRG-card and 32 KiB CHR-card typed arrays as 
 type/length/SHA-256 records, so mutable card contents remain fully pinned without committing
 hundreds of thousands of numeric object properties. Video, native audio, CPU cycles and an
 input-active 120-frame save-state replay are deterministic. The title does not exercise alternate
-latch modes, other mirroring settings or the FDS-compatible data IRQ; mapper 8 and mapper 17 remain
-separate external-evidence targets.
+latch modes, other mirroring settings or the FDS-compatible data IRQ; mapper 8 remains a separate
+external-evidence target.
+
+The checksum-pinned mapper-17 _Street Fighter 2010: The Final Fight_ extraction retains its trainer
+and verifies the board's distinct direct cold jump to `$7000` with stack pointer `$FD`, followed by
+the normal `$FF80` vector on warm reset. A 600-frame baseline and 1,800-frame input route cross the
+title, introduction and active Planet 1 play with 820 distinct frames. Compact mapper checkpoints
+pin the complete 512 KiB PRG card, 256 KiB CHR card and 4 KiB scratch RAM while observing all four
+PRG windows, direct 1 KiB CHR banking, `$47`-to-`$4F` mode evolution, both mirroring orientations and
+the PPU-A12 IRQ source. Video, native audio, CPU cycles and an input-active 120-frame save-state
+replay are deterministic. This route does not claim submapper 1–3 trainer addresses, CPU-M2 IRQ,
+MMC4 latches or CHR-backed nametables; focused tests remain the evidence for those paths.
 
 ## AxROM (7)
 

@@ -1257,6 +1257,14 @@ asserts IRQ. `$7006` stops counting and acknowledges the line. This board reache
 PRG and 512 KiB CHR, while submapper 0 reaches 512 KiB/1 MiB. See
 [NESdev mapper 91](https://www.nesdev.org/wiki/INES_Mapper_091).
 
+The exact 128 KiB PRG + 512 KiB CHR _Street Fighter 3_ payload (PRG CRC `F754DA71`, CHR CRC
+`2C40E304`, combined payload CRC `A09AA82C`) resolves legacy iNES's implicit RAM to the physical
+JY830623C board's zero-WRAM layout. Its checksum-pinned profile advances from the title through
+character selection into active combat for 1,800 frames, records 718 distinct frames and changing
+PRG/CHR registers with the A12 IRQ enabled, and verifies exact visual/audio/cycle output plus a
+120-frame save-state replay. The profile verifies mapper 91.0; EJ-006-1 remains unit-tested rather
+than inheriting evidence from the electrically different J.Y. board.
+
 ## Sunsoft-2 / Sunsoft-3R (93)
 
 The Sunsoft-3R board uses the same Sunsoft-2 IC with different wiring. Bits 6-4 of its

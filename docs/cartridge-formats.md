@@ -143,6 +143,12 @@ AVE-NINA-06 _Double Strike_ v1.1 (PRG `127436FC`, CHR `39536D86`) likewise remov
 allocation from a board with no decoded WRAM. Its vertical mirroring and ROM geometry already agree
 with the header, so the exact record changes only the nonexistent writable-memory declaration.
 
+Mapper 91's two known boards expose registers, not RAM, throughout `$6000-$7FFF`. Exact content
+metadata identifies JY830623C _Street Fighter 3_ by PRG CRC `F754DA71` and CHR CRC `2C40E304`,
+removing the generic legacy 8 KiB allocation so the image reaches the strict zero-WRAM mapper
+contract. Unknown legacy Mapper 91 payloads keep their header metadata and still fail closed when
+it contradicts the selected board; NES 2.0 must declare zero PRG RAM/NVRAM explicitly.
+
 Mapper 64 RAMBO-1 never decodes a PRG-RAM window. Exact content metadata identifies TGN-020-SK
 _Skull & Crossbones_ by PRG CRC `0857DF48` and CHR CRC `D0BF8C50`, removing the generic iNES
 allocation from its zero-WRAM 800032 REV A board. NES 2.0 Mapper 64 images must declare no PRG

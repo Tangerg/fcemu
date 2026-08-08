@@ -66,7 +66,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                  |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM               |
 | 90     | J.Y. EL861226C | Implemented | PRG/CHR/multiplier/latch/four-source-IRQ/state tests; no fixture   |
-| 91     | JY/EJ bootleg  | Implemented | Outer-bank/A12/M2/submapper/state tests; no conformance ROM        |
+| 91     | JY/EJ bootleg  | Verified    | Board tests; pinned exact _Street Fighter 3_ mapper-91.0 runner    |
 | 92     | Jaleco JF-19   | Implemented | Dual-edge/window/state tests; canonical payload local replay       |
 | 93     | Sunsoft-3R     | Implemented | PRG/CHR-enable/open-bus/conflict tests; no conformance ROM         |
 | 94     | UN1ROM         | Implemented | Shifted banking/conflict/geometry tests; no conformance ROM        |
@@ -715,7 +715,11 @@ and `$6000.D6` supplying PRG A18.
   Submapper 1 (EJ-006-1) has no outer latch, adds horizontal/vertical registers and exposes a 16-bit
   IRQ counter whose subtractor removes five every fourth CPU M2 cycle and asserts on borrow. Both
   variants decode their `$6000-$7FFF` ports with the documented, different masks and leave reads
-  there open bus. Neither board exposes PRG RAM.
+  there open bus. Neither board exposes PRG RAM. Exact legacy content metadata identifies
+  _Street Fighter 3_ by PRG CRC `F754DA71` and CHR CRC `2C40E304`, removing iNES's phantom 8 KiB
+  allocation from its JY830623C board. Its pinned profile runs 600 attract frames and a 1,800-frame
+  route through title and character selection into combat, observes PRG/CHR register changes and
+  active A12 IRQ state, then pins video, audio, CPU cycles and deterministic save-state replay.
 - Mapper 93 (Sunsoft-2 on Sunsoft-3R) uses bits 6-4 of one AND-conflicted `$8000-$FFFF` latch for a
   switchable 16 KiB PRG bank and D0 as the fixed 8 KiB CHR-RAM enable. Disabled RAM ignores writes
   and tri-states PPU pattern reads; mirroring remains hardwired and no PRG RAM is decoded.

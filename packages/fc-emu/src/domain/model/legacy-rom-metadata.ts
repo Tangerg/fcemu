@@ -347,6 +347,18 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Street Fighter 3, JY830623C: fixed-mirroring mapper 91.0 without WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 91,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x80_000,
+      prgCrc32: 0xf754da71,
+      chrCrc32: 0x2c40e304,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Skull & Crossbones, TGN-020-SK/800032 REV A: RAMBO-1 without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 64,

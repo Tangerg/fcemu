@@ -409,6 +409,30 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the exact Street Fighter 3 JY830623C memory layout", () => {
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 91,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x80_000,
+        prgCrc32: 0xf754da71,
+        chrCrc32: 0x2c40e304,
+      })?.overrides,
+    ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 91,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x80_000,
+        prgCrc32: 0xf754da71,
+        chrCrc32: 0x2c40e305,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Skull & Crossbones 800032 memory layout", () => {
     expect(
       findLegacyRomMetadata({

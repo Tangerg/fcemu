@@ -17,7 +17,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 3      | CNROM          | Verified    | Tests; pinned _The Legend of Kage_ real-ROM runner                 |
 | 4      | MMC3           | Verified    | A12/IRQ tests; pinned _Super Mario Bros. 3_ real-ROM runner        |
 | 5      | MMC5/ExROM     | Verified    | Tests; pinned _Uchuu Keibitai SDF_ ELROM real-ROM runner           |
-| 6      | Magic Card     | Implemented | RAM banking/write/IRQ/trainer/state tests; no fixture              |
+| 6      | Magic Card     | Verified    | Tests; pinned trainer-bearing _Ganbare Goemon_ extraction runner   |
 | 7      | AxROM          | Verified    | Tests; pinned _Battletoads_ NES-AOROM-03 opening runner            |
 | 8      | Magic Card m4  | Implemented | Mapper-6 mode-4 alias/protection/geometry tests; no fixture        |
 | 9      | MMC2/PxROM     | Verified    | Latch tests; pinned _Punch-Out!!_ real-ROM runner                  |
@@ -262,6 +262,14 @@ and `$6000.D6` supplying PRG A18.
   pass-through used to create those images are not modeled. Mapper 12.1 starts in protected 4M mode,
   stores the header CHR payload at PRG-card offset `$40000`, exposes only 32 KiB of live CHR RAM and
   calls a `$7003` trainer before returning to the reset vector.
+  The checksum-pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction includes its 512-byte
+  `$7000` trainer. A 600-frame title baseline and 1,200-frame input route enter the first stage,
+  cross PRG latch values `$19` and `$01`, select PRG banks 6 and 0 plus CHR bank 1, and reproduce
+  video, audio and CPU cycles across an input-active 120-frame save-state replay. Compact mapper
+  checkpoints pin every byte of the 256 KiB PRG-card and 32 KiB CHR-card memories by SHA-256 rather
+  than expanding them into the profile. Alternate latch modes, mirroring arrangements and the
+  FDS-compatible data IRQ remain focused-test evidence; mapper 8 and mapper 17 still need their own
+  extracted-image profiles.
 - Mapper 34 never combines its unrelated register sets. Legacy CHR ROM above 8 KiB selects
   NINA-001; CHR RAM or at most 8 KiB CHR ROM selects BNROM. NINA-001 maps its `$7FFD-$7FFF`
   registers over 8 KiB PRG RAM. BNROM applies original-board AND bus conflicts; NES 2.0 submapper 2

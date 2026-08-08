@@ -49,7 +49,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |      3 | CNROM              | _The Legend of Kage_ (pinned local profile)                            | _Hayauchi Super Igo_ for its 2 KiB PRG-RAM board                                  | Legacy no-conflict compatibility, CHR banks and mirrored RAM     |
 |      4 | MMC3               | _Super Mario Bros. 3_ (Japan, pinned local profile)                    | _Rad Racer II_ for four-screen wiring                                             | Filtered A12 IRQ, PRG/CHR modes and mirroring                    |
 |      5 | MMC5/ExROM         | _Uchuu Keibitai SDF_ (Japan, pinned HVC-ELROM-01 profile)              | _Shin 4 Nin Uchi Mahjong_ for PCM/IRQ; _Just Breed_ for larger RAM                | ExRAM, split/extended rendering, scanline IRQ and MMC5 audio     |
-|      6 | Magic Card         | _Arabian Dream Scheherazade_ Magic Card extraction                     | A trainer-bearing extraction if available                                         | RAM-card initialization, latch mode, trainer and data IRQ        |
+|      6 | Magic Card         | _Ganbare Goemon! Karakuri Douchuu_ (pinned trainer-bearing extraction) | _Arabian Dream Scheherazade_; a mapper-8 mode-4 extraction                        | RAM-card initialization, mode-1 latch, trainer and CHR transfer  |
 |      7 | AxROM              | _Battletoads_ (USA, pinned NES-AOROM-03 profile)                       | —                                                                                 | 32 KiB PRG switching, one-screen mirroring and timing stress     |
 |      8 | Magic Card mode 4  | _Paris-Dakar Rally Special_ mode-4 extraction                          | —                                                                                 | Mapper-6 submapper-4 alias and extraction geometry               |
 |      9 | MMC2/PxROM         | _Punch-Out!!_ (Japan, pinned local profile)                            | —                                                                                 | Real PPU FD/FE latch transitions and PRG banking                 |
@@ -153,7 +153,11 @@ the same ID covers materially different hardware that the primary image cannot e
 - Current board evidence assigns _Kaiketsu Yanchamaru_ to mapper 97 and _Crazy Climber_ to mapper 180. The historical TuxNES title table labels _Crazy Climber_ as mapper 97 and must not be used to
   repair a modern header.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'
-  original retail cartridge boards. Preserve the conversion provenance and trainer metadata.
+  original retail cartridge boards. Preserve the conversion provenance and trainer metadata. The
+  pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction keeps its exact 512-byte trainer and
+  locks mode-1 PRG/CHR card state, first-stage video/audio and save-state replay. It does not replace
+  mode-4, alternate-mirroring or FDS-compatible data-IRQ evidence, so mapper 8/17 and a second
+  mapper-6 extraction remain independent targets.
 - Mapper 23 now has a pinned exact _Ganbare Goemon 2_ 350926 VRC2b profile. It proves the VRC2-only
   public path but does not replace VRC4e IRQ/RAM evidence. The local _Crisis Force_ payload CRC
   `88C83A1D` is a known bad dump and must not become a profile; obtain the canonical `FCBF28B1`

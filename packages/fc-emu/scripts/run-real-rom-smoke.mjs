@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { ControllerButton, Emulator } from "../dist/index.js";
+import { summarizeRealRomCheckpoint } from "./real-rom-checkpoint.mjs";
 import { REAL_ROM_PROFILES, validateRealRomProfiles } from "./real-rom-profiles.mjs";
 
 const AUDIO_SAMPLE_RATE = 44_100;
@@ -290,7 +291,9 @@ function runScenario(
     frameSequence.update(pixels);
     if (checkpointFrames.includes(frame)) checkpoints[frame] = finalFrameSha256;
     if (mapperCheckpointFrames.includes(frame)) {
-      mapperCheckpoints[frame] = emulator.captureSaveState().state.mapper;
+      mapperCheckpoints[frame] = summarizeRealRomCheckpoint(
+        emulator.captureSaveState().state.mapper,
+      );
     }
   }
 

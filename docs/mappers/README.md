@@ -346,14 +346,24 @@ Because this card has only 32 KiB CHR RAM, the header's CHR payload is copied in
 memory beginning at `$40000`; the loader explicitly transfers the pages it needs into CHR RAM.
 
 An optional 512-byte trainer represents the copier loader, not generic `$7000` initialization.
-Mapper 6 and mapper 12.1 load it at `$7000`, cold-call `$7003`, then return to the ROM reset vector. Mapper 17
-submappers 0-3 cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`; warm reset always uses the normal
-reset vector. The external FDS/BIOS, copier GUI, transfer port and pass-through cartridge hardware
-used to create an extraction are deliberately outside this execution format. See
+Mapper 6 and mapper 12.1 load it at `$7000`, cold-call `$7003`, then return to the ROM reset vector.
+Mapper 17 submappers 0-3 cold-jump to `$7000`, `$5D00`, `$5E00` or `$5F00`; warm reset always uses
+the normal reset vector. The external FDS/BIOS, copier GUI, transfer port and pass-through cartridge
+hardware used to create an extraction are deliberately outside this execution format. See
 [NESdev mapper 6](https://www.nesdev.org/wiki/INES_Mapper_006),
 [mapper 12](https://www.nesdev.org/wiki/INES_Mapper_012),
 [mapper 17](https://www.nesdev.org/wiki/INES_Mapper_017), and
 [Super Magic Card](https://www.nesdev.org/wiki/Super_Magic_Card).
+
+The checksum-pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction retains its 512-byte
+trainer and runs 600 title frames plus a 1,200-frame route into the first stage. Exact checkpoints
+observe legacy latch mode 1, PRG banks 6 then 0, CHR bank 1 and the write-protected PRG path. The
+runner hashes the complete 256 KiB PRG-card and 32 KiB CHR-card typed arrays as compact
+type/length/SHA-256 records, so mutable card contents remain fully pinned without committing
+hundreds of thousands of numeric object properties. Video, native audio, CPU cycles and an
+input-active 120-frame save-state replay are deterministic. The title does not exercise alternate
+latch modes, other mirroring settings or the FDS-compatible data IRQ; mapper 8 and mapper 17 remain
+separate external-evidence targets.
 
 ## AxROM (7)
 

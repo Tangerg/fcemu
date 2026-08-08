@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover 60 files used during development:
+The current profiles cover 61 files used during development:
 
 | Profile            | Expected file                                         | SHA-256                                                            | Mapper |
 | ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -36,6 +36,7 @@ The current profiles cover 60 files used during development:
 | `kage`             | `KAGE.NES`                                            | `72fce2a76b602d96268a4800e2b981f8d44c761fb7bf2d83f1dd486d17dc075f` | 3      |
 | `smb3`             | `SMB3-J.NES`                                          | `2dbff658378216b3d4e59fdb38926d0bddabd9e78d75e8819e3824d5554daed8` | 4      |
 | `uchuu-sdf`        | `Uchuu Keibitai SDF (J).nes`                          | `adf88f4a42fe17284daece3a419a25d74340b0c063e3f94e70a2de30b9e91fbd` | 5      |
+| `goemon-mc`        | `goemon.nes`                                          | `943c83e8f8c8766804a5fac7bdcbc808fef85cc71c2c2493de0bf7caa219293e` | 6      |
 | `battletoads`      | `0039忍者蛙1战斗蛙.nes`                               | `677330f45a1249d24d003792a4674c93f836be57fd18b57125306efe82f3cda8` | 7      |
 | `bible`            | `Bible Adventures (Ver 1_3) (U).nes`                  | `821029557f7d0e30d1defab14be7bafeead9743db09c30b58867a2a6cb869eea` | 11     |
 | `skullcrossbones`  | `Skull & Crossbones (U).nes`                          | `bbbeb7f12bf3e5afaed78008d817fdd1f1fd29622e0ada1a935946c9a656d120` | 64     |
@@ -100,6 +101,7 @@ yarn smoke:real-rom -- contra /absolute/path/to/CONTRA.NES
 yarn smoke:real-rom -- kage /absolute/path/to/KAGE.NES
 yarn smoke:real-rom -- smb3 /absolute/path/to/SMB3-J.NES
 yarn smoke:real-rom -- uchuu-sdf "/absolute/path/to/Uchuu Keibitai SDF (J).nes"
+yarn smoke:real-rom -- goemon-mc /absolute/path/to/goemon.nes
 yarn smoke:real-rom -- battletoads /absolute/path/to/0039忍者蛙1战斗蛙.nes
 yarn smoke:real-rom -- bible "/absolute/path/to/Bible Adventures (Ver 1_3) (U).nes"
 yarn smoke:real-rom -- skullcrossbones "/absolute/path/to/Skull & Crossbones (U).nes"
@@ -171,7 +173,8 @@ Each profile verifies:
   native X/Y/contact reports for Oeka Kids—with visual, audio and CPU-cycle checks;
 - several intermediate frame hashes so a failure can be localized;
 - optional exact mapper-state checkpoints for profiles whose bank, latch or IRQ evolution is part
-  of the evidence;
+  of the evidence; typed-array fields are represented by their view type, exact byte length and
+  SHA-256 so large mutable mapper memories remain fully covered without unreadable numeric dumps;
 - an in-memory public-facade battery roundtrip that pattern-fills every declared NVRAM byte and
   proves it survives a power cycle, without writing a save file or modifying the ROM;
 - a Save State checkpoint followed by two identical 100–120-frame visual/audio replays.
@@ -184,6 +187,10 @@ ambiguous controller/coin/tablet input events, invalid coin slots or tablet repo
 and replay segments that leave the pinned interactive timeline. The validator has focused
 regressions in
 [`scripts/real-rom-profiles.test.mjs`](../scripts/real-rom-profiles.test.mjs).
+
+Binary checkpoint canonicalization and its focused subview regression live in
+[`scripts/real-rom-checkpoint.mjs`](../scripts/real-rom-checkpoint.mjs) and
+[`scripts/real-rom-checkpoint.test.mjs`](../scripts/real-rom-checkpoint.test.mjs).
 
 Controller events use `{ frame, button, pressed }`; a cabinet event is the distinct shape
 `{ frame, coin: 1 | 2 }`; tablet events use
@@ -200,7 +207,7 @@ behavior; a new hash must not be accepted solely to make the runner green.
 The runner exits non-zero for a missing file, identity mismatch or any failed checkpoint. Its JSON
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
-not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 7, 9, 10, 11, 12, 16, 18, 19, 21, 22, 23,
+not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 16, 18, 19, 21, 22, 23,
 25, 26, 33, 64, 65, 66, 68, 69, 70, 71, 75, 77, 79, 80, 85, 87, 91, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142,
 163,
 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250

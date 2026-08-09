@@ -1473,6 +1473,10 @@ Expansion reads remain open bus. The board has no PRG RAM, bus conflicts, IRQ or
 power-on clears both bank fields and selects horizontal mirroring. Unsupported submappers,
 four-screen nametable memory, CHR RAM and ROM images beyond 256 KiB PRG or 128 KiB CHR fail closed.
 
+Legacy iNES loading suppresses byte 8's generic 8 KiB PRG-RAM fallback for Mapper 113. The public
+cartridge inventory therefore matches the NTD-8 expansion decode instead of exposing unreachable
+writable memory. A legacy battery flag is rejected because this board has no persistent storage.
+
 Mapper 113 is specifically the HES/AVE multicart extension; ordinary 32 KiB NINA-03/NINA-06 games
 belong to mapper 79, whose mirroring is hardwired. Four local single-game images with legacy
 mapper-113 headers were rejected as end-to-end evidence after the D7 mirroring behavior visibly

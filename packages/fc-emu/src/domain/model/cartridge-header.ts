@@ -173,6 +173,16 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       prgNvRamSize: 0,
     });
   }
+  if (header.mapperNumber === 113 && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      // Mapper 113 identifies the HES NTD-8 multicart extension. Its decoded
+      // expansion writes select ROM banks and mirroring only; the board has no
+      // CPU-visible RAM behind iNES byte 8's generic fallback.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    });
+  }
   if (header.mapperNumber === 74 && header.format === "ines" && header.chrRomSize > 0) {
     return Object.freeze({
       ...header,

@@ -642,7 +642,9 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 113 (HES NTD-8) extends that expansion latch without approximating it as mapper 79. D5-D3
   select up to eight 32 KiB PRG banks; D6 joins D2-D0 as the non-contiguous 8 KiB CHR bank field;
   D7 selects horizontal/vertical mirroring. The board has no bus conflicts, IRQ, PRG RAM or driven
-  expansion reads. Focused state and geometry tests pass. Four user-local 32 KiB single-game images
+  expansion reads. Legacy iNES loading removes the format's generic 8 KiB PRG-RAM fallback and
+  rejects contradictory battery headers, so public memory metadata matches the zero-WRAM board.
+  Focused state and geometry tests pass. Four user-local 32 KiB single-game images
   previously used as short replay smokes were audited as NINA-03/NINA-06 software with mapper-113
   headers, not HES NTD-8 multicarts. In particular, applying D7 as mapper-controlled mirroring to
   _AV Soccer_ corrupts its selection screen, while the mapper-79 hardwired-mirroring contract renders

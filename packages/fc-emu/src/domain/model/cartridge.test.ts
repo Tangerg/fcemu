@@ -250,6 +250,26 @@ describe("Cartridge", () => {
     },
   );
 
+  it("does not fabricate legacy iNES PRG RAM on HES NTD-8 mapper 113", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 113, prgBanks: 16, chrBanks: 16 }),
+    );
+
+    expect(cartridge).toMatchObject({
+      format: "ines",
+      mapperNumber: 113,
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
+      hasBatteryBackup: false,
+    });
+
+    expect(() =>
+      Cartridge.fromArrayBuffer(
+        createTestRom({ mapper: 113, prgBanks: 16, chrBanks: 16, battery: true }),
+      ),
+    ).toThrow(expect.objectContaining({ code: "UNSUPPORTED_BATTERY_MEMORY" }));
+  });
+
   it("accepts an explicit NES 2.0 Oeka Kids tablet device declaration", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({ nes2: true, defaultExpansionDevice: 0x17 }),

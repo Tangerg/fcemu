@@ -85,7 +85,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     73 | Konami VRC3        | _Salamander_ (Japan)                                                   | —                                                                                 | Nibble latch, 16/8-bit cycle IRQ and PRG/CHR RAM                 |
 |     74 | Waixing Type A     | _Di 4 Ci: Ji Qi Ren Da Zhan - Robot War IV_                            | _Ji Jia Zhan Shi_                                                                 | Exact CHR `$08/$09` RAM redirects plus MMC3 banking and IRQ      |
 |     75 | Konami VRC1        | _Ganbare Goemon! Karakuri Douchuu_ (Japan, pinned 302114A profile)     | —                                                                                 | Split CHR high bits, PRG banks and mirroring                     |
-|     76 | Namco 3446         | _Digital Devil Story: Megami Tensei_ (Japan)                           | —                                                                                 | Four 2 KiB CHR windows and fixed PRG geometry                    |
+|     76 | Namco 3446         | _Megami Tensei_ (pinned local enhanced image)                          | Canonical _Digital Devil Story: Megami Tensei_ (Japan)                            | Four 2 KiB CHR windows, PRG geometry and zero-WRAM layout        |
 |     77 | Irem LROG017       | _Napoleon Senki_ (Japan, pinned exact LROG017-00 profile)              | —                                                                                 | Mixed CHR ROM/RAM, split nametable ownership and conflicts       |
 |     78 | Irem 74HC161       | _Holy Diver_ (Japan, mapper 78.3)                                      | _Uchuusen: Cosmo Carrier_ (Japan, mapper 78.1)                                    | Both incompatible mirroring wirings and conflicts                |
 |     79 | NINA-03/06         | _Double Strike_ (USA, v1.1, pinned NINA-06 profile)                    | _F-15 City War_ (USA) for a 64 KiB/two-bank PRG route                             | Expansion-area latch and combined PRG/CHR selection              |
@@ -219,6 +219,12 @@ the same ID covers materially different hardware that the primary image cannot e
   route selects one-player mode, reaches the opening building and first outdoor stage, and observes
   three PRG layouts plus CHR values exercising both shared fifth bank bits before deterministic
   save-state replay.
+- Mapper 76 now has a pinned local _Megami Tensei_ enhanced profile. The unchanged CHR CRC
+  `73F1E3CF` matches the NAM-MT-4900 board while its PRG CRC `4E0A1B82` differs from canonical
+  `9F3DA143`; exact metadata keeps both pairs on the physical zero-WRAM layout. The route completes
+  both character builds, enters the pyramid and moves through the first-person maze while observing
+  all four physical CHR registers and both PRG registers. Preserve canonical combined CRC
+  `5393D949` as the preferred independent software supplement.
 - Mapper 78 must retain its AND bus conflicts. The JF-16 _Uchuusen: Cosmo Carrier_ evidence target
   is combined CRC `3D1C3137`, PRG `42392440` and CHR `CFFEE642`; its historical iNES
   alternative-nametable flag is set to identify one-screen submapper 1. Do not promote the local

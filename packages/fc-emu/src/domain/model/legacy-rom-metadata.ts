@@ -319,6 +319,30 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Megami Tensei, NAM-MT-4900/NAMCOT-3446: no external WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 76,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x9f3da143,
+      chrCrc32: 0x73f1e3cf,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // Local Megami Tensei enhanced modification of the same zero-WRAM board image.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 76,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x4e0a1b82,
+      chrCrc32: 0x73f1e3cf,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Uchuusen: Cosmo Carrier, JF-16: mapper-controlled one-screen mirroring without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 78,

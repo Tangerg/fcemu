@@ -141,6 +141,10 @@ controlled single-screen mirroring, retains its 8 KiB CHR RAM and removes the no
 KON-RC815 _Ganbare Goemon! Karakuri Douchuu_ (PRG `565A57E5`, CHR `D9842835`) removes the generic
 allocation from its zero-WRAM Konami 302114A VRC1 board while leaving Mapper-controlled mirroring
 to the runtime register.
+NAM-MT-4900 _Megami Tensei_ (PRG `9F3DA143`, CHR `73F1E3CF`) removes the generic allocation from its
+zero-WRAM NAMCOT-3446 board. The pinned local enhanced modification changes only the PRG region to
+`4E0A1B82`; its exact PRG/unchanged-CHR pair receives the same correction while partial matches
+remain conservative.
 AVE-NINA-06 _Double Strike_ v1.1 (PRG `127436FC`, CHR `39536D86`) removes the same generic
 allocation from its zero-WRAM Mapper 79 board while retaining the header's vertical mirroring.
 NAM-DS-5200 _Dragon Spirit_ (PRG `6231E6DF`, CHR `58216CF2`) removes the generic allocation from

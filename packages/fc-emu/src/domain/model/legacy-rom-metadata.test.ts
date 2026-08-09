@@ -361,6 +361,32 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the canonical and locally modified Megami Tensei zero-WRAM layouts", () => {
+    for (const prgCrc32 of [0x9f3da143, 0x4e0a1b82]) {
+      expect(
+        findLegacyRomMetadata({
+          consoleType: 0,
+          mapperNumber: 76,
+          prgRomBytes: 0x20_000,
+          chrRomBytes: 0x20_000,
+          prgCrc32,
+          chrCrc32: 0x73f1e3cf,
+        })?.overrides,
+      ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+    }
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 76,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x4e0a1b82,
+        chrCrc32: 0x73f1e3ce,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Uchuusen JF-16 board", () => {
     expect(
       findLegacyRomMetadata({

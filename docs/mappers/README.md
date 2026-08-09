@@ -1078,7 +1078,15 @@ replays an input-active 120-frame save-state segment with exact video, audio and
 
 Mapper 76 keeps the Namco 108 family's two switchable and two fixed 8 KiB PRG windows, but rewires
 CHR as four 2 KiB windows selected by R2-R5. R0/R1 are physically inaccessible for CHR selection.
-The board reaches 128 KiB CHR ROM with no IRQ, PRG RAM, mirroring register or bus conflicts. See the
+The board reaches 128 KiB CHR ROM with no IRQ, PRG RAM, mirroring register or bus conflicts.
+
+Exact legacy metadata matches both physical NAM-MT-4900 _Megami Tensei_ (PRG `9F3DA143`, CHR
+`73F1E3CF`) and the pinned local enhanced modification (PRG `4E0A1B82`, unchanged CHR), removing
+iNES's generic 8 KiB PRG-RAM fallback from the zero-WRAM board. A 600-frame baseline and 4,000-frame
+controller route complete both character builds, cross the pyramid entrance and move through the
+first-person maze with 437 distinct frames. Checkpoints keep R0/R1 zero, change every physical
+R2-R5 CHR register and both R6/R7 PRG registers, and pin exact video, native audio, CPU cycles and
+input-active save-state replay. A canonical PRG remains the preferred independent supplement. See the
 [Namco 108 family reference](https://www.nesdev.org/wiki/INES_Mapper_206) and
 [pinout](https://www.nesdev.org/wiki/Namcot_108_family_pinout).
 

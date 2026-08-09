@@ -53,7 +53,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
 | 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
 | 75     | Konami VRC1    | Verified    | Tests; pinned _Ganbare Goemon_ 302114A gameplay runner             |
-| 76     | Namco 3446     | Implemented | Four 2 KiB CHR-window/geometry tests; no conformance ROM           |
+| 76     | Namco 3446     | Verified    | Tests; pinned local _Megami Tensei_ maze/gameplay runner           |
 | 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
 | 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
 | 79     | NINA-03/06     | Verified    | Tests; pinned exact _Double Strike_ NINA-06 gameplay runner        |
@@ -568,7 +568,15 @@ and `$6000.D6` supplying PRG A18.
   120-frame visual/audio save-state replay.
 - Mapper 76 rewires the Namco 108 family to four 2 KiB CHR-ROM windows selected through R2-R5;
   R0/R1 are inaccessible. Its two switchable and two fixed 8 KiB PRG windows remain unchanged, with
-  no IRQ, PRG RAM, mirroring register or bus conflicts.
+  no IRQ, PRG RAM, mirroring register or bus conflicts. Exact metadata matches the physical
+  NAM-MT-4900 PRG/CHR pair and the pinned local enhanced modification's changed-PRG/unchanged-CHR
+  pair, removing iNES's fictitious 8 KiB PRG RAM from both zero-WRAM layouts. The local image's
+  600-frame baseline and 4,000-frame input route cross the title, both character builds and pyramid
+  entrance into the movable first-person maze, producing 437 distinct frames. Mapper checkpoints
+  keep inaccessible R0/R1 at zero while observing all four R2-R5 CHR windows and both R6/R7 PRG
+  windows change; exact video, native audio, CPU cycles and an input-active 120-frame save-state
+  replay remain deterministic. Because the PRG is modified, a canonical image remains the preferred
+  independent software supplement.
 - Mapper 77 (Irem LROG017) keeps one banked 2 KiB CHR-ROM window beside three fixed cartridge-RAM
   pattern windows. The RAM's fourth window owns `$2000-$27FF`, `$2800-$2FFF` reaches CIRAM, and
   `$3000-$3EFF` remains open bus; those owners are modeled explicitly rather than flattened into a

@@ -233,8 +233,11 @@ the same ID covers materially different hardware that the primary image cannot e
   declared payload but substantial trailing data, so it is identity evidence rather than a pinned
   route. Do not promote the local `695CB142` _Uchuusen_ payload (`CECE4CFC`/`CFFEE642`): its altered
   PRG writes values that are destroyed by the physical bus conflict and the CPU jams after
-  selecting the wrong bank. A hardware-faithful Mapper 78 profile therefore remains pending until
-  a structurally clean canonical image is supplied.
+  selecting the wrong bank. Holy Mapperel 0.02 now provides independent, checksum-pinned IF-12
+  conformance across the complete PRG/CHR bank spaces and Holy Diver mirroring with detailed result
+  `0000`, so mapper 78 is externally verified. A commercial Cosmo Carrier route remains pending
+  until a structurally clean canonical image is supplied; it is supplemental software evidence,
+  not a blocker on the board status.
 - Mapper 79 now has a pinned exact _Double Strike_ v1.1 profile. Its combined CRC `1EB4A920`, PRG
   `127436FC` and CHR `39536D86` match AVE NINA-06 with vertical mirroring and no WRAM/VRAM. The
   route reaches one-player aerial combat and observes CHR 0→1 selection. Because this production

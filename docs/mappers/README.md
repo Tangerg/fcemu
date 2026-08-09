@@ -1156,6 +1156,12 @@ remain rejected. See [NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_
 [submapper history](https://www.nesdev.org/wiki/NES_2.0_submappers) and the
 [Holy Diver board record](https://nescartdb.com/profile/view/4038/holy-diver).
 
+The checksum-pinned Holy Mapperel 0.02 `M78.3_P128K_C64K.nes` fixture exercises the IF-12 board
+through the public emulator. It identifies mapper 078/Holy Diver, verifies all 128 KiB of PRG ROM,
+all 64 KiB of CHR ROM and the board's horizontal/vertical mirroring, then reports detailed result
+`0000`. The focused tests retain responsibility for AND bus-conflict masking and the distinct
+Cosmo Carrier one-screen wiring.
+
 ## AVE NINA-03/NINA-06 (79)
 
 The single bank latch is decoded in CPU expansion space only when

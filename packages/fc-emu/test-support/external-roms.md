@@ -145,6 +145,7 @@ Extract the archive outside the repository, build the core, and run:
 ```bash
 yarn conformance:mmc1 -- /path/to/holy-mapperel-bin-0.02
 yarn conformance:mapper34 -- /path/to/holy-mapperel-bin-0.02
+yarn conformance:mapper78 -- /path/to/holy-mapperel-bin-0.02
 ```
 
 The suite covers SKROM, SGROM, SNROM, SUROM and SXROM. Holy Mapperel 0.02 does not distribute the
@@ -156,6 +157,13 @@ The Mapper 34 runner uses the unmodified `M34_P128K_CR8K_H.nes` BNROM fixture (S
 `0000`; the runner pins the visually verified final-frame hash so a non-halting but incorrect screen
 cannot pass silently. The upstream archive does not include the separate NES 2.0 submapper 1/2
 fixtures linked from the NESdev forum, so those identities remain covered by focused synthetic ROMs.
+
+The Mapper 78 runner uses the unmodified NES 2.0 submapper-3 `M78.3_P128K_C64K.nes` IF-12 fixture
+(SHA-256 `459f50efc839872599091e3b66c48b972716df773342b42f4f6e0cbd94c232f0`). Holy Mapperel
+detects mapper 078/Holy Diver, scans all 128 KiB of PRG ROM and 64 KiB of CHR ROM, verifies the
+board's horizontal/vertical mirroring, and reports detailed result `0000`. The runner validates the
+parsed cartridge geometry and pins the visually reviewed final RGBA frame hash so a changed result
+screen cannot pass silently.
 
 ## Blargg PPU open bus
 

@@ -40,6 +40,7 @@
     "conformance:cpu": "yarn conformance:rom",
     "conformance:mmc1": "yarn build && node scripts/run-holy-mapperel.mjs",
     "conformance:mapper34": "yarn build && node scripts/run-holy-mapper34.mjs",
+    "conformance:mapper78": "yarn build && node scripts/run-holy-mapper78.mjs",
     "conformance:oam-bus": "yarn build && node scripts/run-read2004.mjs",
     "conformance:pal-apu": "yarn build && node scripts/run-pal-apu.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",

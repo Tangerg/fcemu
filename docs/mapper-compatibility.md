@@ -55,7 +55,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 75     | Konami VRC1    | Verified    | Tests; pinned _Ganbare Goemon_ 302114A gameplay runner             |
 | 76     | Namco 3446     | Verified    | Tests; pinned local _Megami Tensei_ maze/gameplay runner           |
 | 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
-| 78     | Irem 74HC161   | Implemented | Both mirroring wirings/conflict tests; no conformance ROM          |
+| 78     | Irem 74HC161   | Verified    | Tests; Holy Mapperel IF-12 result `0000`                           |
 | 79     | NINA-03/06     | Verified    | Tests; pinned exact _Double Strike_ NINA-06 gameplay runner        |
 | 80     | Taito X1-005   | Verified    | Tests; pinned exact _Mirai Shinwa Jarvas_ P3-034A runner           |
 | 82     | Taito X1-017   | Implemented | Banking/RAM/pull-down/cycle-IRQ tests; no conformance ROM          |
@@ -609,7 +609,9 @@ and `$6000.D6` supplying PRG A18.
   1 or 3 and rejects an actual four-screen declaration. Exact metadata pins the canonical JF-16
   payload (`42392440`/`CFFEE642`) to submapper 1 and canonical _Holy Diver_
   (`BC1197A4`/`BE4A4753`) to submapper 3, overriding an ambiguous legacy flag. Board-wide format
-  policy removes iNES's generic 8 KiB allocation from both zero-WRAM layouts.
+  policy removes iNES's generic 8 KiB allocation from both zero-WRAM layouts. Holy Mapperel 0.02's
+  checksum-pinned NES 2.0 submapper-3 IF-12 fixture detects mapper 78, verifies the complete 128 KiB
+  PRG and 64 KiB CHR bank spaces plus Holy Diver mirroring, and reports detailed result `0000`.
 - Mapper 67 (Sunsoft-3) maps one switchable and one fixed 16 KiB PRG window plus four independent
   2 KiB CHR-ROM windows without bus conflicts or PRG RAM. The high half of each 4 KiB register
   region owns CHR, IRQ, mirroring or PRG control; every low half is an IRQ-acknowledge mirror. The

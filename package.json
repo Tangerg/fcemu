@@ -38,6 +38,7 @@
     "conformance:accuracy-coin": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-accuracy-coin.mjs",
     "conformance:mmc1": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-holy-mapperel.mjs",
     "conformance:mapper34": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-holy-mapper34.mjs",
+    "conformance:mapper78": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-holy-mapper78.mjs",
     "conformance:oam-bus": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-read2004.mjs",
     "conformance:pal-apu": "yarn workspace @fcemu/core build && node packages/fc-emu/scripts/run-pal-apu.mjs",
     "conformance:cpu": "yarn conformance:rom",

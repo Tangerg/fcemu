@@ -491,7 +491,8 @@ zero while leaving A19 unchanged. See
 [NESdev mapper 227](https://www.nesdev.org/wiki/INES_Mapper_227).
 
 Mapper 228 follows the Active Enterprises PAL: A12-A11 select a 512 KiB PRG chip, A10-A6 select its
-16 KiB page, A5 selects paired versus mirrored PRG, A3-A0 plus written D1-D0 select an 8 KiB CHR
+16 KiB page, A5 selects paired versus mirrored PRG, A3-A0 plus the only two retained data lines,
+written D1-D0, select an 8 KiB CHR
 bank, and A13 controls mirroring. A 512 KiB image occupies chip 0. Action 52's 1.5 MiB payload stores
 physical chips 0, 1 and 3 consecutively; selecting absent chip 2 leaves all CPU data lines open.
 The rumored four-nibble expansion RAM is not present on either real board and is not modeled. See

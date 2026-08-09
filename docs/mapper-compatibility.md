@@ -98,7 +98,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
 | 226    | BMC 42/63/76-1 | Verified    | Three-geometry tests; pinned _Super 42-in-1_ real-ROM runner       |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
-| 228    | Active Ent.    | Implemented | Non-contiguous PRG/open-bus/CHR/reset tests; no fixture            |
+| 228    | Active Ent.    | Implemented | PRG/open-bus/two-bit CHR latch/reset/state tests; no fixture       |
 | 240    | C&E/Supertone  | Verified    | Expansion-latch tests; pinned _Jing Ke Xin Zhuan_ real-ROM runner  |
 | 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
 | 242    | Waixing 43272  | Verified    | Latch/mode tests; pinned _Wai Xin Zhan Shi_ real-ROM runner        |

@@ -64,7 +64,7 @@ export class AddressLatchMulticartMapper implements Mapper {
       state.nibbleRam.byteLength !== NIBBLE_RAM_SIZE ||
       state.nibbleRam.some((value) => value > 0x0f) ||
       this.latchedAddress(state.addressLatch) !== state.addressLatch ||
-      (!this.hasDataLatch() && state.dataLatch !== 0) ||
+      (state.dataLatch & ~this.dataLatchMask()) !== 0 ||
       (!this.board.hasNibbleRam && state.nibbleRam.some((value) => value !== 0))
     ) {
       throw new RangeError("Address-latch multicart save state is invalid for this board");
@@ -101,7 +101,7 @@ export class AddressLatchMulticartMapper implements Mapper {
     }
     if (address < 0x8000) return;
     this.addressLatch = this.latchedAddress(address);
-    this.dataLatch = this.hasDataLatch() ? value : 0;
+    this.dataLatch = value & this.dataLatchMask();
     this.applyMirroring();
   }
 
@@ -261,8 +261,10 @@ export class AddressLatchMulticartMapper implements Mapper {
     return this.board.prgRamWindow === "battery" && this.cartridge.hasBatteryBackup;
   }
 
-  private hasDataLatch(): boolean {
-    return this.board.mapperNumber === 15 || this.board.mapperNumber === 228;
+  private dataLatchMask(): number {
+    if (this.board.mapperNumber === 15) return 0xff;
+    if (this.board.mapperNumber === 228) return 0x03;
+    return 0;
   }
 
   private latchedAddress(address: number): number {

@@ -230,6 +230,22 @@ describe("address-latch multicarts", () => {
     expect(mapper.cpuReadDriveMask?.(0x8000)).toBe(0);
   });
 
+  it("latches only Mapper 228's physically connected CPU D1-D0 lines", () => {
+    const mapper = createMapper(
+      createTestCartridge({ mapper: 228, prgBanks: 96, chrBanks: 64 }),
+      silentInterruptPort,
+    );
+
+    mapper.write(0x8000, 0xff);
+    const state = mapper.captureState();
+    expect(state).toMatchObject({ dataLatch: 0x03 });
+
+    expect(() => mapper.restoreState({ ...state, dataLatch: 0x83 } as MapperState)).toThrowError(
+      RangeError,
+    );
+    expect(mapper.captureState()).toEqual(state);
+  });
+
   it("implements mapper 242's address-derived UNROM and NROM modes", () => {
     const cartridge = createTestCartridge({ mapper: 242, prgBanks: 32 });
     fillBanks(cartridge.prgRom, 0x4000);

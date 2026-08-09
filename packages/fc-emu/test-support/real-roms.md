@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover 63 files used during development:
+The current profiles cover 64 files used during development:
 
 | Profile            | Expected file                                         | SHA-256                                                            | Mapper |
 | ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -58,6 +58,7 @@ The current profiles cover 63 files used during development:
 | `esper-dream-2`    | `Esper Dream 2 - Aratanaru Tatakai (J).nes`           | `9dff8bc590cf73e9063575dd77707964c69f81573bb84ecd5c13aab874db1717` | 26     |
 | `pokemon-gold-m15` | `口袋妖怪金.nes`                                      | `3293a57ee11089c8e3acf82cee6e184fa977385a65f6e437984b85e46b8e033e` | 15     |
 | `shinchan`         | `Crayon Shin Chan (J).nes`                            | `4b33db75d9e755bb685695f7a07ce6bdd441c0901ee5c63301faa841ab90bfd5` | 16     |
+| `image-fight`      | `90.梦幻战机无敌.nes`                                 | `062066f2cbe1cc64b0e8e3b29b05c9bffb7554e3767b9b942b1c3eaf7bd9f6b8` | 32     |
 | `sf2010-smc`       | `Street Fighter 2010 (J).nes`                         | `8944612478916f5b081017e2814d287d98c78e5eb147d15bb04f7bd4f1b79ae5` | 17     |
 | `lord-of-king`     | `Lord of King, The (J).nes`                           | `2cdf03ba31916f76dc9af62f2ab969cd7e9a055a7788b8b65740e4ef400947bb` | 18     |
 | `king-of-kings`    | `King of Kings (J).nes`                               | `40cbc810f8355ef81af0982f55d00072f5c5f472b629a86502e2da4e583a28e3` | 19     |
@@ -125,6 +126,7 @@ yarn smoke:real-rom -- jarvas "/absolute/path/to/Mirai Shinwa Jarvas (J).nes"
 yarn smoke:real-rom -- esper-dream-2 "/absolute/path/to/Esper Dream 2 - Aratanaru Tatakai (J).nes"
 yarn smoke:real-rom -- pokemon-gold-m15 /absolute/path/to/口袋妖怪金.nes
 yarn smoke:real-rom -- shinchan "/absolute/path/to/Crayon Shin Chan (J).nes"
+yarn smoke:real-rom -- image-fight /absolute/path/to/90.梦幻战机无敌.nes
 yarn smoke:real-rom -- sf2010-smc "/absolute/path/to/Street Fighter 2010 (J).nes"
 yarn smoke:real-rom -- lord-of-king "/absolute/path/to/Lord of King, The (J).nes"
 yarn smoke:real-rom -- king-of-kings "/absolute/path/to/King of Kings (J).nes"
@@ -214,7 +216,7 @@ The runner exits non-zero for a missing file, identity mismatch or any failed ch
 output includes the resolved cartridge metadata and separate baseline, interactive and replay
 results. A passing result proves only the recorded deterministic scenario on that exact image; it is
 not a general compatibility claim for all Mapper 0, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 15, 16, 17, 18, 19, 21, 22, 23,
-25, 26, 33, 64, 65, 66, 68, 69, 70, 71, 75, 77, 79, 80, 85, 87, 91, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142,
+25, 26, 32, 33, 64, 65, 66, 68, 69, 70, 71, 75, 77, 79, 80, 85, 87, 91, 96, 97, 99, 112, 114, 115, 117, 118, 119, 133, 142,
 163,
 164, 182, 184, 187, 189, 226, 240, 242, 244, 245, 246, 248 or 250
 software. In particular, the Mapper 12 profile exercises the SL-5020B board but not the distinct FFE 4M

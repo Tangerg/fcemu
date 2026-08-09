@@ -36,7 +36,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 24     | Konami VRC6a   | Verified    | Tests; pinned natt VRC6a CHR/nametable matrix                      |
 | 25     | VRC2c/VRC4b/d  | Verified    | Tests; pinned exact _Racer Mini Yonku_ VRC4b replay                |
 | 26     | Konami VRC6b   | Verified    | Tests; pinned _Esper Dream 2_ banking/nametable/IRQ runner         |
-| 32     | Irem G-101     | Implemented | PRG modes/CHR/submapper/geometry tests; no conformance ROM         |
+| 32     | Irem G-101     | Verified    | Tests; pinned local _Image Fight_ gameplay/mirroring runner        |
 | 33     | Taito TC0190   | Verified    | Tests; pinned _Golf Ko Open_ TC0190FMC opening/story runner        |
 | 34     | BNROM/NINA-001 | Verified    | Board tests; Holy Mapperel BNROM result `0000`                     |
 | 41     | Caltron 6-in-1 | Implemented | Address/data/conflict/reset/state tests; local no-bank replay      |
@@ -468,7 +468,15 @@ and `$6000.D6` supplying PRG A18.
   1 KiB CHR-ROM banks. Register bit 1 swaps the first switchable and second-to-last fixed PRG
   windows; bit 0 selects horizontal/vertical mirroring. NES 2.0 submapper 1 instead identifies Major
   League's fixed-upper one-screen board and disabled `$9000` register; legacy iNES cannot
-  distinguish that wiring without a title database.
+  distinguish that wiring without a title database. The checksum-pinned local _Image Fight_
+  invincibility image runs a 600-frame baseline and 2,400-frame input route through the Irem logo,
+  title, machine self-test and active combat, producing 737 distinct frames. Mapper checkpoints
+  observe both switchable PRG registers, values 0/10/11 at the mode-selected window, bank 13 at the
+  second window, all eight CHR registers and both horizontal/vertical mirroring states; exact video,
+  audio, CPU-cycle and input-active 120-frame save-state replay results are deterministic. The image
+  is pinned by whole-file SHA-256 and described as modified rather than passed off as a canonical
+  dump. It remains mode-0 standard-board evidence: the rare PRG mode 1 and Major League submapper-1
+  wiring remain focused-test evidence.
 - Mapper 33 (Taito TC0190) has two switchable 8 KiB PRG banks followed by the final two fixed banks,
   two 2 KiB and four 1 KiB CHR-ROM windows, and bit-6 horizontal/vertical mirroring. Its 2 KiB CHR
   register values are offsets in 2 KiB units rather than MMC3-style even 1 KiB indexes. Four-screen

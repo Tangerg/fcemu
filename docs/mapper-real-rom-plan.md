@@ -68,7 +68,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     24 | Konami VRC6a       | _Akumajou Densetsu_ (Japan; clean canonical image still needed)        | Pinned natt VRC6a matrix already verifies CHR/nametable routing                   | VRC6a gameplay, IRQ, two pulses, saw and mixer                   |
 |     25 | VRC2c/VRC4b/d      | _Racer Mini Yonku_ (Japan, pinned exact 351406 VRC4b)                  | Clean _Gradius II_ for 2 KiB WRAM; clean VRC4d and VRC2c images                   | All pin routes, RAM variants, PRG/CHR modes and VRC IRQ          |
 |     26 | Konami VRC6b       | _Esper Dream 2_ (Japan, pinned local profile)                          | _Mouryou Senki Madara_ for an active VRC6-audio sequence                          | Swapped A0/A1, banking, CHR nametables and IRQ; audio supplement |
-|     32 | Irem G-101         | _Image Fight_ (Japan)                                                  | _Major League_ (Japan, mapper 32.1)                                               | PRG mode, CHR banks and fixed-upper one-screen wiring            |
+|     32 | Irem G-101         | _Image Fight_ (pinned local invincibility image)                       | A canonical _Image Fight_; _Major League_ (Japan, mapper 32.1)                    | PRG/CHR banks, mirroring, PRG mode and fixed-upper wiring        |
 |     33 | Taito TC0190       | _Golf Ko Open_ (Japan, pinned TFC-GO-5900-26 profile)                  | _Akira_ for an independent TC0190 software route                                  | Register mask, PRG/CHR banks and mapper-controlled mirroring     |
 |     34 | BNROM/NINA-001     | _Deadly Towers_ (USA, BNROM)                                           | _Impossible Mission II_ (USA, NINA-001)                                           | Mutually exclusive board selection, conflicts and NINA registers |
 |     41 | Caltron 6-in-1     | _Caltron 6-in-1_                                                       | Local _Aladdin 3_ only as a no-banking undersized-image smoke                     | Address latch, gated conflicted CHR latch, mirroring and reset   |
@@ -157,6 +157,11 @@ the same ID covers materially different hardware that the primary image cannot e
   for mapper-164/227 conversions and its route remains in mode 0. The canonical _100-in-1 Contra
   Function 16_ and _168-in-1 New Contra Function 16_ multicarts are still required to verify the
   physical board's four PRG modes and CHR protection.
+- The pinned mapper-32 _Image Fight_ image is a locally named invincibility modification and is not
+  promoted as a canonical dump. Its route still supplies executable standard G-101 evidence for
+  both switchable PRG registers, all CHR windows and both mirroring orientations. A canonical image
+  remains desirable, while the rare PRG mode 1 and _Major League_'s fixed-upper one-screen wiring
+  require separate routes.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'
   original retail cartridge boards. Preserve the conversion provenance and trainer metadata. The
   pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction locks its synthetic `$7003` trainer

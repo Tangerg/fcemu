@@ -766,7 +766,16 @@ at `$C000`/`$E000`. `$9000` bit 1 exchanges the `$8000` switchable and `$C000` f
 bit 0 selects vertical/horizontal mirroring. `$B000-$B007` select eight 1 KiB CHR-ROM windows.
 NES 2.0 submapper 1 identifies Major League's hardwired upper one-screen board, which fixes PRG mode
 0 and does not decode `$9000`; ambiguous legacy images remain on the standard board rather than use
-a title hash. See [NESdev mapper 32](https://www.nesdev.org/wiki/INES_Mapper_032).
+a title hash.
+
+The checksum-pinned local _Image Fight_ invincibility image runs 600 baseline frames and a
+2,400-frame input route through the Irem logo, title, machine self-test and active combat. Its 737
+distinct frames and compact mapper checkpoints cover both switchable PRG registers, all eight CHR
+registers and both horizontal/vertical mirroring states, with exact native audio, CPU-cycle and
+input-active 120-frame save-state replay results. The profile deliberately records the image as a
+modification rather than claiming canonical dump identity. This software remains in PRG mode 0;
+mode 1 and Major League's fixed-upper submapper-1 board remain focused-test evidence. See
+[NESdev mapper 32](https://www.nesdev.org/wiki/INES_Mapper_032).
 
 ## Taito TC0190 (33)
 

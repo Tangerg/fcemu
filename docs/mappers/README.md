@@ -1493,7 +1493,8 @@ one of sixteen 8 KiB CHR-ROM banks. Bit 7 selects horizontal (0) or vertical (1)
 
 Expansion reads remain open bus. The board has no PRG RAM, bus conflicts, IRQ or expansion audio;
 power-on clears both bank fields and selects horizontal mirroring. Unsupported submappers,
-four-screen nametable memory, CHR RAM and ROM images beyond 256 KiB PRG or 128 KiB CHR fail closed.
+four-screen nametable memory, CHR RAM and non-power-of-two or oversized ROM images fail closed; the
+accepted directly addressed capacities are 32-256 KiB PRG and 8-128 KiB CHR.
 
 Legacy iNES loading suppresses byte 8's generic 8 KiB PRG-RAM fallback for Mapper 113. The public
 cartridge inventory therefore matches the NTD-8 expansion decode instead of exposing unreachable

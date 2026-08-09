@@ -112,7 +112,19 @@ describe("HesNtd8Mapper", () => {
       createMapper(createTestCartridge({ mapper: 113, prgBanks: 18, chrBanks: 1 }), interruptPort),
     ).toThrow(UnsupportedMapperConfigurationError);
     expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 113, prgRomBytes: 0x18_000, chrBanks: 1 }),
+        interruptPort,
+      ),
+    ).toThrow(UnsupportedMapperConfigurationError);
+    expect(() =>
       createMapper(createTestCartridge({ mapper: 113, prgBanks: 2, chrBanks: 17 }), interruptPort),
+    ).toThrow(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 113, prgBanks: 2, chrRomBytes: 0x6000 }),
+        interruptPort,
+      ),
     ).toThrow(UnsupportedMapperConfigurationError);
     expect(() => createMapper(createTestCartridge({ mapper: 113 }), interruptPort)).toThrow(
       UnsupportedMapperConfigurationError,

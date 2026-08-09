@@ -75,7 +75,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 97     | Irem TAM-S1    | Verified    | Board tests; pinned _Kaiketsu Yanchamaru_ real-ROM runner          |
 | 99     | VS mainboard   | Verified    | Board tests; pinned _Vs. Soccer_ cabinet/gameplay real-ROM runner  |
 | 112    | NTDEC/Asder    | Verified    | Banking/state tests; pinned _Sango Fighter_ real-ROM runner        |
-| 113    | HES NTD-8      | Implemented | Board/geometry/state tests; local single-game misheaders rejected  |
+| 113    | HES NTD-8      | Implemented | Decode/power-of-two geometry/state tests; misheaders rejected      |
 | 114    | SuperGame MMC3 | Verified    | Scramble/MMC3A tests; pinned _The Lion King_ real-ROM runner       |
 | 115    | Kasheng MMC3   | Verified    | Outer banks/MMC3C tests; pinned _Yuu Yuu Hakusho Final_ runner     |
 | 117    | Future Media   | Verified    | Bank/IRQ tests; pinned _San Guo Zhi IV_ real-ROM runner            |
@@ -650,7 +650,8 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 113 (HES NTD-8) extends that expansion latch without approximating it as mapper 79. D5-D3
   select up to eight 32 KiB PRG banks; D6 joins D2-D0 as the non-contiguous 8 KiB CHR bank field;
   D7 selects horizontal/vertical mirroring. The board has no bus conflicts, IRQ, PRG RAM or driven
-  expansion reads. Legacy iNES loading removes the format's generic 8 KiB PRG-RAM fallback and
+  expansion reads. Direct address-line outputs constrain PRG/CHR images to power-of-two capacities
+  through 256/128 KiB. Legacy iNES loading removes the format's generic 8 KiB PRG-RAM fallback and
   rejects contradictory battery headers, so public memory metadata matches the zero-WRAM board.
   Focused state and geometry tests pass. Four user-local 32 KiB single-game images
   previously used as short replay smokes were audited as NINA-03/NINA-06 software with mapper-113

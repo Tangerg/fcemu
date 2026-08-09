@@ -533,8 +533,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       return new NtdecAsderMapper(cartridge);
     case 113:
       requireBaseSubmapper(cartridge);
-      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
-      requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
+      requireHesNtd8Layout(cartridge);
       requireChrRom(cartridge, "HES NTD-8");
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "HES NTD-8");
@@ -1550,6 +1549,17 @@ function requireMapper243Layout(cartridge: Cartridge): void {
 function requireMapper150Layout(cartridge: Cartridge): void {
   const prgSizes = [0x8000, 0x10_000, 0x20_000];
   const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000];
+  if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
+  }
+  if (!chrSizes.includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, `CHR ROM must be ${formatSizes(chrSizes)}`);
+  }
+}
+
+function requireHesNtd8Layout(cartridge: Cartridge): void {
+  const prgSizes = [0x8000, 0x10_000, 0x20_000, 0x40_000];
+  const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000, 0x20_000];
   if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
     throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
   }

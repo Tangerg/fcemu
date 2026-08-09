@@ -27,7 +27,7 @@ yarn catalog:roms -- /absolute/path/to/rom-directory --apply
 header or stripping an appended payload would create a different ROM identity and requires explicit
 provenance outside this workflow.
 
-The current profiles cover 68 files used during development:
+The current profiles cover 69 files used during development:
 
 | Profile            | Expected file                                         | SHA-256                                                            | Mapper |
 | ------------------ | ----------------------------------------------------- | ------------------------------------------------------------------ | ------ |
@@ -54,6 +54,7 @@ The current profiles cover 68 files used during development:
 | `fire-hawk`        | `Fire Hawk (U).nes`                                   | `66848b312fd174101b5be07cb536cbfbd34a4a3fa43dbdd491386d1259b77ccf` | 71     |
 | `pinball-quest`    | `Pinball Quest (J).nes`                               | `55ab04a037a3163121eb6a2fe9d8c90e3c70f62b3e982bc07a46c350026ceb06` | 72     |
 | `salamander`       | `0109沙罗曼蛇.nes`                                    | `fce0e800062bb97fa6f583f6af2799771d5d5decf31aa336812ffb75d527169e` | 73     |
+| `robot-war-4`      | `d4cjqrdz.nes`                                        | `b8b3b1bf4ec5491efc68229240fe188b34e35e99ba6d733a7b8550d3f0067c11` | 74     |
 | `ganbare-goemon`   | `Ganbare Goemon - Karakuri Douchuu (J).nes`           | `e9d91b075a930ed84c2fccbf9bcde78e2c7018c6b10499e21d012dca8b020320` | 75     |
 | `double-strike`    | `Double Strike (U).nes`                               | `cba6440fe706575e56e379a1e8d2ae6a8e8c511d1d2dc0552d2eb62934100e36` | 79     |
 | `jarvas`           | `Mirai Shinwa Jarvas (J).nes`                         | `04891c082d9886417a59f6ae29c7dfae6994e4e05623b9b375aa3d7d990577b8` | 80     |
@@ -126,6 +127,7 @@ yarn smoke:real-rom -- kamen-rider-club "/absolute/path/to/Kamen Rider Kurabu (J
 yarn smoke:real-rom -- fire-hawk "/absolute/path/to/Fire Hawk (U).nes"
 yarn smoke:real-rom -- pinball-quest "/absolute/path/to/Pinball Quest (J).nes"
 yarn smoke:real-rom -- salamander /absolute/path/to/0109沙罗曼蛇.nes
+yarn smoke:real-rom -- robot-war-4 /absolute/path/to/d4cjqrdz.nes
 yarn smoke:real-rom -- ganbare-goemon "/absolute/path/to/Ganbare Goemon - Karakuri Douchuu (J).nes"
 yarn smoke:real-rom -- double-strike "/absolute/path/to/Double Strike (U).nes"
 yarn smoke:real-rom -- jarvas "/absolute/path/to/Mirai Shinwa Jarvas (J).nes"

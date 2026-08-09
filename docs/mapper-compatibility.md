@@ -51,7 +51,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 71     | Codemasters    | Verified    | Tests; pinned _Fire Hawk_ BIC-62/BF9097 gameplay runner            |
 | 72     | Jaleco JF-17   | Verified    | Tests; pinned exact _Pinball Quest_ JF-17 gameplay/banking runner  |
 | 73     | Konami VRC3    | Verified    | Tests; pinned exact _Salamander_ VRC3 gameplay/16-bit IRQ runner   |
-| 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
+| 74     | Waixing Type A | Verified    | Tests; pinned _Robot War IV_ mixed-CHR/IRQ gameplay runner         |
 | 75     | Konami VRC1    | Verified    | Tests; pinned _Ganbare Goemon_ 302114A gameplay runner             |
 | 76     | Namco 3446     | Verified    | Tests; pinned local _Megami Tensei_ maze/gameplay runner           |
 | 77     | Irem LROG017   | Verified    | Tests; pinned exact _Napoleon Senki_ campaign-map runner           |
@@ -566,9 +566,13 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 74 (Waixing Type A) keeps standard MMC3 PRG banking, mirroring, direct PRG-RAM protection
   and filtered A12 IRQ, but exact 1 KiB CHR bank values `$08/$09` redirect to the two halves of 2 KiB
   volatile CHR RAM. All other values remain CHR ROM; there is no threshold, masked alias or generic
-  writable-ROM fallback. Two local exact-geometry images select both RAM pages, modify them, advance
-  through hundreds of frames and reproduce deterministic save-state replays. Their copyrighted
-  bytes and checksums remain outside the repository, so status stays `Implemented`.
+  writable-ROM fallback. The pinned _Di 4 Ci: Ji Qi Ren Da Zhan - Robot War IV_ profile has 512 KiB
+  PRG ROM, 256 KiB CHR ROM, 8 KiB battery NVRAM and the board-implied 2 KiB CHR RAM. Its route
+  crosses title and scenario setup into the strategy map, produces 209 distinct interactive frames,
+  observes `$08` through both 2 KiB and 1 KiB CHR registers, changes the physical RAM contents,
+  switches PRG/CHR banks and enables the filtered A12 IRQ with latch `$A0`. Exact video, native
+  audio, CPU cycles, battery retention and an input-active 120-frame save-state replay remain
+  deterministic. A second clean _Ji Jia Zhan Shi_ image remains an independent software route.
 - Mapper 75 (Konami VRC1) exposes three switchable 8 KiB PRG banks followed by the fixed final bank,
   plus two 4 KiB CHR banks whose fifth select bits share the horizontal/vertical mirroring register.
   Four-screen cartridges ignore that mirroring output; the ASIC has no IRQ, PRG RAM or bus

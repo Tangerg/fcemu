@@ -1072,9 +1072,15 @@ Legacy iNES cannot encode mixed CHR memory, so the board policy supplies the phy
 NES 2.0 must declare exactly that capacity. The accepted base board has 128–512 KiB PRG ROM,
 8–256 KiB CHR ROM, submapper 0 and two-screen mirroring. Threshold-based RAM selection, writable
 CHR-ROM compatibility behavior, pure-CHR-RAM images and oversized or four-screen variants fail
-closed. Two local exact-geometry images exercise `$08/$09`, modify CHR RAM, advance through hundreds
-of distinct frames and reproduce identical 60-frame save-state replays; their copyrighted payloads
-and checksums remain outside the repository. See
+closed.
+
+The checksum-pinned local _Di 4 Ci: Ji Qi Ren Da Zhan - Robot War IV_ profile uses the full
+512 KiB PRG/256 KiB CHR geometry, 8 KiB battery NVRAM and board-implied 2 KiB CHR RAM. A deterministic
+input route crosses title and scenario setup into the strategy map, records 209 distinct frames,
+selects `$08` through R0 and R1, changes both RAM pages, switches PRG/CHR banks and enables the
+filtered A12 IRQ with latch `$A0`. It also locks video, native audio, CPU cycles, complete battery
+retention and an input-active 120-frame save-state replay. The local _Ji Jia Zhan Shi_ image remains
+an independent software supplement. Commercial bytes stay outside the repository. See
 [NESdev mapper 74](https://www.nesdev.org/wiki/INES_Mapper_074).
 
 ## Konami VRC1 (75)

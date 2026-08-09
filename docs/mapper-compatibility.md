@@ -50,7 +50,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 70     | Bandai 74xx    | Verified    | Tests; pinned _Kamen Rider Club_ BA-KAMEN gameplay runner          |
 | 71     | Codemasters    | Verified    | Tests; pinned _Fire Hawk_ BIC-62/BF9097 gameplay runner            |
 | 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
-| 73     | Konami VRC3    | Implemented | Banking/RAM/16-bit and 8-bit IRQ tests; three local replay smokes  |
+| 73     | Konami VRC3    | Verified    | Tests; pinned exact _Salamander_ VRC3 gameplay/16-bit IRQ runner   |
 | 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
 | 75     | Konami VRC1    | Verified    | Tests; pinned _Ganbare Goemon_ 302114A gameplay runner             |
 | 76     | Namco 3446     | Verified    | Tests; pinned local _Megami Tensei_ maze/gameplay runner           |
@@ -549,9 +549,13 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 73 (Konami VRC3) keeps fixed CHR RAM and solder-pad mirroring around one switchable and one
   fixed 16 KiB PRG window, with optional direct 8 KiB PRG RAM. Its four nibble registers feed a
   16-bit CPU-cycle up-counter; 8-bit mode preserves the counter's upper byte, and the distinct
-  control/acknowledge path copies A to E exactly as hardware documents. Three user-local images
-  completed 240-frame runs with deterministic 60-frame save-state replay. Their bytes and hashes
-  remain outside the repository, so this is `Implemented` evidence rather than `Verified`.
+  control/acknowledge path copies A to E exactly as hardware documents. The pinned exact
+  _Salamander_ profile matches PRG CRC32 `AC652B47` and the physical KONAMI-VRC-3 board's vertical
+  mirroring, 8 KiB WRAM and 8 KiB VRAM. Its one-player route enters the first stage, produces 1,417
+  distinct frames over 1,500 frames, observes switchable PRG banks 1/3/4 and an enabled 16-bit IRQ
+  counter with latch `$9F00`, then reproduces a deterministic 120-frame visual/audio save-state
+  replay. VRC3's 8-bit IRQ mode and acknowledge/re-enable variants remain focused-test evidence;
+  the real game does not select them on this route.
 - Mapper 74 (Waixing Type A) keeps standard MMC3 PRG banking, mirroring, direct PRG-RAM protection
   and filtered A12 IRQ, but exact 1 KiB CHR bank values `$08/$09` redirect to the two halves of 2 KiB
   volatile CHR RAM. All other values remain CHR ROM; there is no threshold, masked alias or generic

@@ -1040,6 +1040,14 @@ counter; `$D000` acknowledges and copies the saved A flag into the enable flag. 
 keeps this counter separate from the scanline-capable VRC4/VRC6/VRC7 IRQ core. See
 [NESdev VRC3](https://www.nesdev.org/wiki/VRC3).
 
+The pinned exact _Salamander_ profile independently matches PRG CRC32 `AC652B47` to a physical
+KONAMI-VRC-3 board with vertical mirroring, 8 KiB WRAM and 8 KiB VRAM. Its first-stage route locks
+frame/audio/replay output plus live mapper checkpoints: switchable PRG banks 1, 3 and 4, latch
+`$9F00` and the enabled 16-bit CPU-cycle counter. The cartridge does not select 8-bit IRQ mode on
+that route, so focused mapper tests remain the evidence for that mode. See the
+[NesCartDB Salamander profile](https://nescartdb.com/profile/view/3313/salamander) for the physical
+cartridge identity and memory inventory.
+
 ## Waixing Type A (74)
 
 Waixing's 43-393/43-406/860908C board retains the MMC3 PRG windows, `$A000` horizontal/vertical

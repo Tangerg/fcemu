@@ -210,6 +210,26 @@ describe("Cartridge", () => {
     });
   });
 
+  it("does not fabricate legacy iNES PRG RAM on Caltron mapper 41", () => {
+    const cartridge = Cartridge.fromArrayBuffer(
+      createTestRom({ mapper: 41, prgBanks: 16, chrBanks: 16 }),
+    );
+
+    expect(cartridge).toMatchObject({
+      format: "ines",
+      mapperNumber: 41,
+      prgRamBytes: 0,
+      prgNvRamBytes: 0,
+      hasBatteryBackup: false,
+    });
+
+    expect(() =>
+      Cartridge.fromArrayBuffer(
+        createTestRom({ mapper: 41, prgBanks: 16, chrBanks: 16, battery: true }),
+      ),
+    ).toThrow(expect.objectContaining({ code: "UNSUPPORTED_BATTERY_MEMORY" }));
+  });
+
   it.each([
     { mapper: 72, prgBanks: 8, name: "JF-17" },
     { mapper: 92, prgBanks: 16, name: "JF-19" },

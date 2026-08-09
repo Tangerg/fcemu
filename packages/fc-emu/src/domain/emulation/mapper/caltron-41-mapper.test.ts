@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createTestCartridge } from "../../../../test-support/rom.js";
-import { NametableMirroring } from "../../model/cartridge.js";
+import { CartridgeFormatError, NametableMirroring } from "../../model/cartridge.js";
 import Bus from "../bus.js";
 import { CPUMemory } from "../memory.js";
 import { Caltron41Mapper } from "./caltron-41-mapper.js";
@@ -169,7 +169,7 @@ describe("Caltron41Mapper", () => {
     {
       name: "legacy battery memory",
       options: { mapper: 41, prgBanks: 16, chrBanks: 16, battery: true },
-      error: UnsupportedMapperConfigurationError,
+      error: CartridgeFormatError,
     },
     {
       name: "four-screen nametables",

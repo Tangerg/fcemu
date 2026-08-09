@@ -813,6 +813,10 @@ in `$8000-$FFFF` capture data bits D0-D1 after an AND bus conflict against the c
 PRG byte. The outer and retained inner fields together select an 8 KiB CHR bank. `$6000-$7FFF`
 reads are open bus; the board owns no PRG RAM, CHR RAM or IRQ source.
 
+Legacy iNES loading suppresses byte 8's generic 8 KiB PRG-RAM fallback for Mapper 41. This keeps the
+public cartridge memory inventory consistent with the open-bus `$6000-$7FFF` read path instead of
+allocating unreachable writable memory behind the address-only outer latch.
+
 Both latches and mirroring reset on either power-on or the console reset signal. Save states retain
 the raw six-bit address latch and two-bit inner latch, then derive mirroring from the restored
 hardware state. The production board carries 256 KiB PRG ROM and 128 KiB CHR ROM; the factory also

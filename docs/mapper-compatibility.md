@@ -492,7 +492,9 @@ and `$6000.D6` supplying PRG A18.
   CHR block and A5 selects vertical/horizontal mirroring. Writes in `$8000-$FFFF` update the inner
   two CHR bits only while outer bit 2 is set and are AND-masked by the selected PRG byte to model
   the board's partial bus conflicts. Both latches clear on power-on and warm reset; `$6000-$7FFF`
-  remains open bus because the board has no PRG RAM. The factory accepts the fully populated
+  remains open bus because the board has no PRG RAM. Legacy iNES loading suppresses the format's
+  generic 8 KiB PRG-RAM fallback, so public cartridge metadata now reports the same zero-WRAM
+  layout. The factory accepts the fully populated
   256 KiB PRG/128 KiB CHR board and smaller power-of-two ROMs whose absent high address lines
   naturally mirror, while rejecting unaddressable capacities and invented writable memory.
   Current NESdev, Mesen CE, MAME and puNES behavior agree on A5 mirroring, a data-driven inner latch

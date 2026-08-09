@@ -153,6 +153,16 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       prgNvRamSize: 0,
     });
   }
+  if (header.mapperNumber === 41 && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      // Mapper 41 denotes the Caltron 6-in-1 discrete board. Its $6000
+      // address writes feed an outer latch, but the cartridge cannot decode
+      // PRG RAM; iNES byte 8's generic fallback is therefore non-physical.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    });
+  }
   if ([72, 92].includes(header.mapperNumber) && header.format === "ines") {
     return Object.freeze({
       ...header,

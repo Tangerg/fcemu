@@ -85,7 +85,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
 | 142    | Kaiser KS7032  | Verified    | KS202/IRQ tests; pinned Kaiser _Super Mario Bros. 2_ runner        |
 | 150    | Sachen SA-015  | Implemented | ASIC/pin-routing/solder-pad/nametable/state tests; no fixture      |
-| 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
+| 152    | Bandai 74xx    | Implemented | ROM-geometry/PRG/CHR/mirroring/conflict tests; no fixture          |
 | 163    | Nanjing FC-001 | Verified    | FC-001 register/CHR/state tests; pinned _Chinese Paladin_ runner   |
 | 164    | Dongda PEC9588 | Verified    | PRG/1bpp/93C66 tests; pinned _Digimon Crystal_ real-ROM runner     |
 | 180    | Inverted UxROM | Verified    | Tests; Holy Mapperel UNROM (7408) result `0000`                    |

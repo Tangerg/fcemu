@@ -331,6 +331,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x40_000, 0x20_000);
+      requireChrRom(cartridge, "Bandai mapper 70");
       requireNoPrgRam(cartridge);
       return new Bandai74Mapper(cartridge, false);
     case 71: {
@@ -597,6 +598,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x4000, 0x8000, 0x2000, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireChrRom(cartridge, "Bandai mapper 152");
       requireNoPrgRam(cartridge);
       requireTwoScreenNametables(cartridge, "Bandai mapper 152");
       return new Bandai74Mapper(cartridge, true);

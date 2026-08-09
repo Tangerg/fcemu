@@ -975,7 +975,7 @@ Gimmick!, Batman: Return of the Joker.
 ## Bandai 74xx (70, 152)
 
 One `$8000-$FFFF` latch with AND-type bus conflicts: a 16 KiB `$8000-$BFFF` bank (fixed last at
-`$C000-$FFFF`) and an 8 KiB CHR bank. Mapper 70 uses bits 7-4 for PRG and keeps mirroring hardwired.
+`$C000-$FFFF`) and an 8 KiB CHR-ROM bank. Mapper 70 uses bits 7-4 for PRG and keeps mirroring hardwired.
 Mapper 152 spends bit 7 on single-screen mirroring (0 = screen A, 1 = screen B), leaving a 3-bit PRG
 field. Its four-screen declarations are rejected because that output directly drives two-screen
 CIRAM; mapper 70's hardwired variant may retain externally declared four-screen memory. Both are

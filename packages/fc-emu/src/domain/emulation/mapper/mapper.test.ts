@@ -651,6 +651,7 @@ describe("cartridge mappers", () => {
       "Bandai 70 with PRG RAM",
       { nes2: true, mapper: 70, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
     ],
+    ["Bandai 70 with CHR RAM", { mapper: 70, prgBanks: 8 }],
     ["Codemasters with PRG RAM", { nes2: true, mapper: 71, prgBanks: 4, prgRamShift: 7 }],
     [
       "Jaleco 87 with PRG RAM",
@@ -660,6 +661,7 @@ describe("cartridge mappers", () => {
       "Bandai 152 with PRG RAM",
       { nes2: true, mapper: 152, prgBanks: 8, chrBanks: 8, prgRamShift: 7 },
     ],
+    ["Bandai 152 with CHR RAM", { mapper: 152, prgBanks: 8 }],
     [
       "Bandai mapper 152 with four-screen nametables",
       { mapper: 152, prgBanks: 8, chrBanks: 8, fourScreen: true },

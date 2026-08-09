@@ -152,6 +152,11 @@ the same ID covers materially different hardware that the primary image cannot e
   weakening the commercial-ROM identity rule.
 - Current board evidence assigns _Kaiketsu Yanchamaru_ to mapper 97 and _Crazy Climber_ to mapper 180. The historical TuxNES title table labels _Crazy Climber_ as mapper 97 and must not be used to
   repair a modern header.
+- The pinned mapper-15 _Pokémon Gold_ image is deliberately labeled a legacy hack, not K-1029 board
+  evidence. Its iNES header requires the permissive PRG-RAM/CHR-RAM compatibility path documented
+  for mapper-164/227 conversions and its route remains in mode 0. The canonical _100-in-1 Contra
+  Function 16_ and _168-in-1 New Contra Function 16_ multicarts are still required to verify the
+  physical board's four PRG modes and CHR protection.
 - Mappers 6, 8 and 17 describe play-mode images extracted from copier disk formats, not the games'
   original retail cartridge boards. Preserve the conversion provenance and trainer metadata. The
   pinned mapper-6 _Ganbare Goemon! Karakuri Douchuu_ extraction locks its synthetic `$7003` trainer

@@ -37,7 +37,7 @@ describe("address-latch multicarts", () => {
 
   it("enforces K-1029 CHR-RAM protection only in physical modes 0 and 3", () => {
     const mapper = createMapper(
-      createTestCartridge({ mapper: 15, prgBanks: 64 }),
+      createTestCartridge({ mapper: 15, nes2: true, prgBanks: 64 }),
       silentInterruptPort,
     );
 
@@ -49,6 +49,35 @@ describe("address-latch multicarts", () => {
     mapper.write(0x8003, 0);
     mapper.write(0x0010, 0x12);
     expect(mapper.read(0x0010)).toBe(0x11);
+  });
+
+  it("supports legacy mapper-15 hacks with implicit PRG RAM and writable CHR RAM", () => {
+    const bus = new Bus(createTestCartridge({ mapper: 15, prgBanks: 64 }));
+    const mapper = bus.Mapper;
+
+    mapper.write(0x6000, 0x61);
+    mapper.write(0x7fff, 0x7f);
+    mapper.write(0x8000, 0);
+    mapper.write(0x0010, 0x51);
+
+    expect(readAt(mapper, [0x6000, 0x7fff, 0x0010])).toEqual([0x61, 0x7f, 0x51]);
+    expect(mapper.cpuReadDriveMask?.(0x6000)).toBe(0xff);
+  });
+
+  it("keeps legacy mapper-15 and exact K-1029 save states distinct", () => {
+    const legacy = createMapper(
+      createTestCartridge({ mapper: 15, prgBanks: 64 }),
+      silentInterruptPort,
+    );
+    const exact = createMapper(
+      createTestCartridge({ mapper: 15, nes2: true, prgBanks: 64 }),
+      silentInterruptPort,
+    );
+
+    expect(legacy.captureState()).toMatchObject({ board: "mapper-15-legacy" });
+    expect(exact.captureState()).toMatchObject({ board: "k-1029" });
+    expect(() => legacy.restoreState(exact.captureState())).toThrowError(RangeError);
+    expect(() => exact.restoreState(legacy.captureState())).toThrowError(RangeError);
   });
 
   it("banks both ET-4310 ROM sizes through the shared A14 high line", () => {
@@ -300,6 +329,7 @@ describe("address-latch multicarts", () => {
 
   it.each([
     { mapper: 15, prgBanks: 64 },
+    { mapper: 15, nes2: true, prgBanks: 64 },
     { mapper: 225, prgBanks: 64, chrBanks: 64 },
     { mapper: 225, prgBanks: 128, chrBanks: 128 },
     { mapper: 227, nes2: true, submapper: 0, prgBanks: 64 },
@@ -333,6 +363,10 @@ describe("address-latch multicarts", () => {
     {
       name: "K-1029 CHR ROM",
       options: { mapper: 15, prgBanks: 64, chrBanks: 1 },
+    },
+    {
+      name: "NES 2.0 K-1029 PRG RAM",
+      options: { mapper: 15, nes2: true, prgBanks: 64, prgRamShift: 7 },
     },
     {
       name: "ET-4310 mismatched PRG/CHR pair",

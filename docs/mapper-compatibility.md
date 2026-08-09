@@ -25,7 +25,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 11     | Color Dreams   | Verified    | Tests; pinned _Bible Adventures_ BC6 gameplay runner               |
 | 12     | Rex/FFE 4M     | Verified    | MMC3A/card tests; pinned SL-5020B _DBZ5_ real-ROM runner           |
 | 13     | CPROM          | Implemented | CHR-RAM banking/conflict unit tests; no conformance ROM            |
-| 15     | K-1029/K-1030P | Implemented | Four PRG modes/CHR protection/reset/state tests; no fixture        |
+| 15     | K-1029/K-1030P | Implemented | Physical-board tests; pinned legacy-hack runner; no board fixture  |
 | 16     | Bandai FCG     | Verified    | Tests; pinned _Crayon Shin-chan_ LZ93D50 story runner              |
 | 17     | Super Magic    | Verified    | Tests; pinned trainer/4M/A12-IRQ _Street Fighter 2010_ runner      |
 | 18     | Jaleco SS8806  | Verified    | Tests; pinned JF-25 _The Lord of King_ gameplay/IRQ runner         |
@@ -328,11 +328,18 @@ and `$6000.D6` supplying PRG A18.
 - Mapper 13 (CPROM) fixes 32 KiB PRG and splits 16 KiB CHR RAM into a fixed `$0000-$0FFF` bank 0 and
   a bits 1-0 switchable `$1000-$1FFF` bank, with AND-type bus conflicts. Legacy iNES cannot declare
   the implied 16 KiB CHR RAM, so CPROM images require an NES 2.0 header.
-- Mapper 15 models the actual K-1029/K-1030P board, not mapper-hacked images from 164/227. CPU write
-  address bits 1-0 select NROM-256, UNROM, mirrored 8 KiB NROM-64 or mirrored 16 KiB NROM-128 PRG
-  wiring; data bits select the 1 MiB PRG region and horizontal/vertical mirroring. Its 8 KiB CHR RAM
-  is write-protected in modes 0/3 and writable in modes 1/2. The hardware has no `$6000` RAM, so the
-  permissive PRG-RAM/CHR-write behavior required by old mapper hacks is deliberately absent.
+- Mapper 15 keeps physical K-1029/K-1030P and legacy mapper-hack semantics as explicit board
+  identities. NES 2.0 submapper 0 is the exact zero-WRAM board: CPU write-address bits 1-0 select
+  NROM-256, UNROM, mirrored 8 KiB NROM-64 or mirrored 16 KiB NROM-128 PRG wiring; data bits select
+  the 1 MiB PRG region and horizontal/vertical mirroring; modes 0/3 protect its 8 KiB CHR RAM while
+  modes 1/2 enable writes. Ambiguous iNES headers resolve instead to `mapper-15-legacy`, exposing the
+  implicit 8 KiB `$6000-$7FFF` RAM and writable CHR RAM required by the widespread mapper-164/227
+  hacks documented by NESdev. The checksum-pinned _Pokémon Gold_ hack previously rendered 2,400
+  consecutive black frames while its CPU continued running; the compatibility board restores its
+  title, introduction and active first-room play. Its 600-frame baseline plus 3,000-frame input
+  route produce 243 distinct frames and reproduce video, audio, CPU cycles, mapper state and an
+  input-active 120-frame save-state replay. The route remains mode-0 legacy compatibility evidence,
+  not a substitute for a physical K-1029/K-1030P multicart fixture.
 - Mapper 16 represents the Bandai FCG family without merging its ASIC revisions. Submapper 4
   (FCG-1/2) decodes only `$6000-$7FFF` and writes its live 16-bit IRQ counter directly; submapper 5
   (LZ93D50) decodes only `$8000-$FFFF`, writes a reload latch and copies it on IRQ control. Legacy

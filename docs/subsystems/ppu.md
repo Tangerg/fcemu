@@ -369,7 +369,7 @@ PPUDATA increments use the PPU's 15-bit internal VRAM address width: both the `+
 wrap with `& 0x7FFF` before the next cartridge address is observed. This keeps every state produced
 by the running implementation inside the same invariant enforced by restoration.
 
-The public save-state envelope is version 18. Sprite pattern bytes are fetched at their real PPU
+The public save-state envelope is version 19. Sprite pattern bytes are fetched at their real PPU
 dots, so no delayed mapper-observation queue exists or needs to be reconstructed after restore.
 Older snapshots are rejected instead of inferring missing bus state.
 

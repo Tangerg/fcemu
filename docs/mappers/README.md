@@ -459,8 +459,20 @@ the class does not emulate a fictional common ASIC.
 Mapper 15's K-1029/K-1030P board uses write-address A1-A0 to select NROM-256, UNROM, NROM-64 or
 NROM-128 behavior. Written D5-D0 drive PRG A19-A14, D7 supplies PRG A13 only in NROM-64 mode, and D6
 selects mirroring. Modes 0/3 write-protect the unbanked 8 KiB CHR RAM; modes 1/2 enable writes.
-Mapper-hacked ROMs that depend on nonexistent PRG RAM or disabled protection are outside the board
-contract. See [NESdev mapper 15](https://www.nesdev.org/wiki/INES_Mapper_015).
+NES 2.0 submapper 0 selects that exact `k-1029` zero-WRAM contract. Legacy iNES cannot distinguish
+the two physical multicarts from widespread mapper-164/227 hacks assigned mapper 15, so it resolves
+to the explicit `mapper-15-legacy` compatibility board instead: the implicit 8 KiB PRG RAM is mapped
+at `$6000-$7FFF` and CHR RAM remains writable in every mode. This is a header-level policy, with no
+title or ROM-hash inference.
+
+The checksum-pinned legacy _Pokémon Gold_ hack demonstrates why the split matters: before the
+compatibility board it executed CPU code for 2,400 frames but every frame remained black because
+mode 0 blocked its CHR uploads. Its deterministic profile now crosses the title and introduction
+into active first-room play over 3,000 input-driven frames, produces 243 distinct frames and pins
+video, native audio, CPU cycles, mapper state and an input-active 120-frame save-state replay. It
+uses only mode 0 and is not physical K-1029/K-1030P evidence; the four modes and exact protection
+remain focused-test evidence pending a canonical multicart fixture. See
+[NESdev mapper 15](https://www.nesdev.org/wiki/INES_Mapper_015).
 
 Mapper 225's ET-4310/K-1010 latches A14 as the shared high PRG/CHR bank line, A13 as mirroring, A12 as
 paired-32 KiB versus mirrored-16 KiB PRG mode, A11-A6 as the inner PRG bank and A5-A0 as the CHR

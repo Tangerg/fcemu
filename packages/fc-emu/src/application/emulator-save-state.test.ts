@@ -309,12 +309,14 @@ describe("Emulator save states", () => {
     expect(emulator.captureSaveState()).toEqual(before);
   });
 
-  it("rejects unknown state versions", () => {
+  it("rejects previous and unknown state versions", () => {
     const emulator = Emulator.fromRom(createTestRom());
     const snapshot = emulator.captureSaveState();
-    expect(snapshot.version).toBe(18);
-    const future = { ...snapshot, version: 19 } as unknown as EmulatorSaveState;
-    expect(() => emulator.restoreSaveState(future)).toThrow(/format or version/i);
+    expect(snapshot.version).toBe(19);
+    for (const version of [18, 20]) {
+      const incompatible = { ...snapshot, version } as unknown as EmulatorSaveState;
+      expect(() => emulator.restoreSaveState(incompatible)).toThrow(/format or version/i);
+    }
   });
 
   it("rejects unknown and malformed persisted envelopes before touching runtime state", () => {
@@ -325,10 +327,10 @@ describe("Emulator save states", () => {
     for (const invalid of [
       null,
       {},
-      { format: "fcemu-state", version: 18 },
+      { format: "fcemu-state", version: 19 },
       {
         format: "fcemu-state",
-        version: 18,
+        version: 19,
         romIdentity: before.romIdentity,
         consoleRegion: before.consoleRegion,
         state: null,

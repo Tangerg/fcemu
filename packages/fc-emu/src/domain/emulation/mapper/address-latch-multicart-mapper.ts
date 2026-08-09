@@ -78,7 +78,7 @@ export class AddressLatchMulticartMapper implements Mapper {
   read(address: number): number {
     if (address < 0x2000) return this.cartridge.readChr(this.chrOffset(address));
     if (address >= 0x8000) return this.readPrg(address);
-    if (address >= 0x6000 && this.hasBatteryWram()) {
+    if (address >= 0x6000 && this.hasPrgRamWindow()) {
       return this.cartridge.readPrgRam(address - 0x6000);
     }
     return 0;
@@ -86,7 +86,7 @@ export class AddressLatchMulticartMapper implements Mapper {
 
   cpuReadDriveMask(address: number): number {
     if (address >= 0x8000) return this.prgIsDriven() ? 0xff : 0;
-    if (address >= 0x6000 && this.hasBatteryWram()) return 0xff;
+    if (address >= 0x6000 && this.hasPrgRamWindow()) return 0xff;
     return 0;
   }
 
@@ -96,7 +96,7 @@ export class AddressLatchMulticartMapper implements Mapper {
       return;
     }
     if (address >= 0x6000 && address < 0x8000) {
-      if (this.hasBatteryWram()) this.cartridge.writePrgRam(address - 0x6000, value);
+      if (this.hasPrgRamWindow()) this.cartridge.writePrgRam(address - 0x6000, value);
       return;
     }
     if (address < 0x8000) return;
@@ -192,7 +192,7 @@ export class AddressLatchMulticartMapper implements Mapper {
     const selectedInner = (this.addressLatch >>> 2) & 7;
     const cpuHalf = address < 0xc000 ? 0 : 1;
     let inner: number;
-    if (this.board.exposesBatteryWram || (this.addressLatch & 0x0080) !== 0) {
+    if (this.board.prgRamWindow === "battery" || (this.addressLatch & 0x0080) !== 0) {
       inner = (this.addressLatch & 1) !== 0 ? (selectedInner & 6) | cpuHalf : selectedInner;
     } else if (cpuHalf === 0) {
       inner = (this.addressLatch & 1) !== 0 ? selectedInner & 6 : selectedInner;
@@ -212,7 +212,7 @@ export class AddressLatchMulticartMapper implements Mapper {
   private mapper242PrgBank(address: number): number {
     const outer = (this.addressLatch & 0x0060) >>> 2;
     const selected = outer | ((this.addressLatch & 0x001c) >>> 2);
-    const nromMode = this.hasBatteryWram() || (this.addressLatch & 0x0080) !== 0;
+    const nromMode = this.hasPrgRamWindow() || (this.addressLatch & 0x0080) !== 0;
     const paired = (this.addressLatch & 1) !== 0;
     const lower = selected & ~(paired ? 1 : 0);
     if (address < 0xc000) return lower % this.prgBankCount;
@@ -247,7 +247,7 @@ export class AddressLatchMulticartMapper implements Mapper {
       return mode === 1 || mode === 2;
     }
     if (this.board.chrWriteProtection === "mapper-242") {
-      return this.hasBatteryWram() || (this.addressLatch & 0x0080) === 0;
+      return this.hasPrgRamWindow() || (this.addressLatch & 0x0080) === 0;
     }
     return (this.addressLatch & 0x0080) === 0;
   }
@@ -256,8 +256,9 @@ export class AddressLatchMulticartMapper implements Mapper {
     return this.board.mapperNumber !== 228 || this.prgOffset(0x8000) !== undefined;
   }
 
-  private hasBatteryWram(): boolean {
-    return this.board.exposesBatteryWram && this.cartridge.hasBatteryBackup;
+  private hasPrgRamWindow(): boolean {
+    if (this.board.prgRamWindow === "declared") return this.cartridge.prgWritableBytes === 0x2000;
+    return this.board.prgRamWindow === "battery" && this.cartridge.hasBatteryBackup;
   }
 
   private hasDataLatch(): boolean {

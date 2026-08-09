@@ -28,6 +28,7 @@ export type MapperState =
   | {
       readonly kind: "address-latch-multicart";
       readonly board:
+        | "mapper-15-legacy"
         | "k-1029"
         | "et-4310"
         | "mapper-227-rpg"

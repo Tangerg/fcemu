@@ -15,10 +15,10 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - iNES plus a constrained, fail-closed NES 2.0 subset.
 - 97 implemented mapper IDs; 64 mapper IDs currently have reproducible external or pinned
   real-ROM verification.
-- Transactional version-18 save states and independent PRG, CHR and mapper-owned NVRAM.
+- Transactional version-19 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad/Oeka Kids input, IndexedDB persistence and quick
   saves.
-- Checksum-pinned external conformance runners and 62 local real-ROM smoke profiles.
+- Checksum-pinned external conformance runners and 63 local real-ROM smoke profiles.
 - A built-package consumer gate for public declarations, runtime exports and blocked deep imports.
 
 See [Mapper compatibility](./mapper-compatibility.md) and [Testing](./testing.md) for the precise

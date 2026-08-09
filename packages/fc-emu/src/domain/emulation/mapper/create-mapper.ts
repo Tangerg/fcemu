@@ -768,7 +768,11 @@ function createKashengMapper(
 }
 
 function createAddressLatchMulticartMapper(cartridge: Cartridge): AddressLatchMulticartMapper {
-  const board = findAddressLatchMulticartBoard(cartridge.mapperNumber, cartridge.submapperNumber);
+  const board = findAddressLatchMulticartBoard(
+    cartridge.mapperNumber,
+    cartridge.format,
+    cartridge.submapperNumber,
+  );
   if (!board) {
     throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }
@@ -785,7 +789,16 @@ function requireAddressLatchMulticartLayout(
     case 15:
       requireRomLayout(cartridge, [0x100_000], 0x2000);
       requireVolatileChrRam(cartridge, board.id);
-      requireNoBatteryPrgRam(cartridge, board.id);
+      if (board.prgRamWindow === "declared") {
+        if (cartridge.prgWritableBytes !== 0x2000) {
+          throw configurationError(
+            cartridge,
+            "legacy mapper 15 requires the implicit 8 KiB PRG RAM allocation",
+          );
+        }
+      } else {
+        requireNoBatteryPrgRam(cartridge, board.id);
+      }
       return;
     case 225:
       if (!(
@@ -803,7 +816,7 @@ function requireAddressLatchMulticartLayout(
     case 227:
       requireRomLayout(cartridge, [0x100_000], 0x2000);
       requireVolatileChrRam(cartridge, board.id);
-      if (board.exposesBatteryWram) {
+      if (board.prgRamWindow === "battery") {
         if (
           cartridge.format === "nes2" &&
           (cartridge.prgRamBytes !== 0 ||

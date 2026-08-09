@@ -275,7 +275,7 @@ cycles multiplied by the region's CPU master-clock divider. This rejects a local
 impossible splice of independently captured clock domains before any aggregate is changed.
 
 These watermarks are part of the public save-state envelope carried by `EmulatorSaveState`
-(current `SAVE_STATE_VERSION = 18`, guarded together with format, ROM identity and console region).
+(current `SAVE_STATE_VERSION = 19`, guarded together with format, ROM identity and console region).
 Older in-memory snapshots are rejected explicitly rather than restored with ambiguous state. The
 nested APU state separately checks the output sample rate.
 

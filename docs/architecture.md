@@ -202,8 +202,9 @@ Three state categories have different owners and compatibility rules:
 | Emulator save state | Core           | Exact schema version + ROM identity + region + audio rate | Opaque to UI runtime port           |
 | Quick save          | UI application | Outer format + ROM identity + region + slot               | `QuickSaveStoragePort` / IndexedDB  |
 
-The core save-state envelope is version 18. This revision adds the Oeka Kids tablet's physical and
-serial state and cross-checks its OUT0 line against both standard controllers. Version 17 persisted
+The core save-state envelope is version 19. This revision separates the ambiguous legacy mapper-15
+compatibility board identity from exact K-1029 state. Version 18 added the Oeka Kids tablet's
+physical and serial state and cross-checked its OUT0 line against both standard controllers. Version 17 persisted
 the asserted MMC3 IRQ output, required every named bus IRQ source to agree with its owning APU
 channel or mapper snapshot, and cross-checked the DMC reader request/address against the DMA
 arbiter. Version 16 introduced the

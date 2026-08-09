@@ -182,9 +182,9 @@ rejected instead of returning a snapshot from the middle of a clock transaction.
 - every nested CPU, PPU, APU, DMA, mapper, clock, controller and cartridge invariant.
 
 Restore is transactional: if any nested validation fails, the live runtime is rolled back. Schema
-version 18 is intentionally exact rather than forward/backward compatible. Version 18 adds the
-Oeka Kids tablet's physical input, serial report and OUT0/OUT1 line state to the transactional bus
-snapshot.
+version 19 is intentionally exact rather than forward/backward compatible. Version 19 separates
+legacy mapper-15 compatibility state from the exact K-1029 board identity; version 18 added the Oeka
+Kids tablet's physical input, serial report and OUT0/OUT1 line state to the transactional bus snapshot.
 
 ## Diagnostics
 

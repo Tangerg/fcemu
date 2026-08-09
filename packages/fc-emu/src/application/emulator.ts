@@ -13,7 +13,7 @@ import { createRomIdentity } from "../domain/model/rom-identity.js";
 import type { OekaKidsTabletInput } from "../domain/emulation/oeka-kids-tablet.js";
 
 const SAVE_STATE_FORMAT = "fcemu-state";
-const SAVE_STATE_VERSION = 18;
+const SAVE_STATE_VERSION = 19;
 
 export interface CartridgeInfo {
   readonly format: CartridgeFormat;

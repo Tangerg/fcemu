@@ -38,6 +38,23 @@ describe("CnromProtectionMapper", () => {
     },
   );
 
+  it("pulls D0 high while disabled and leaves the other PPU data lines open", () => {
+    const cartridge = createTestCartridge({
+      mapper: 185,
+      nes2: true,
+      submapper: 5,
+      prgBanks: 2,
+      chrBanks: 1,
+    });
+    const bus = new Bus(cartridge);
+    const ppuMemory = new PPUMemory(bus);
+
+    expect(bus.Mapper.ppuReadDriveMask?.(0x0000)).toBe(0x01);
+    expect(ppuMemory.read(0x0000)).toBe(0x01);
+    expect(ppuMemory.read(0x0154)).toBe(0x55);
+    expect(ppuMemory.read(0x0155)).toBe(0x55);
+  });
+
   it("always applies CNROM's AND bus conflict before latching chip select", () => {
     const cartridge = createTestCartridge({
       mapper: 185,
@@ -51,7 +68,7 @@ describe("CnromProtectionMapper", () => {
     const mapper = createMapper(cartridge, interruptPort);
 
     mapper.write(0x8000, 0x02);
-    expect(mapper.ppuReadDriveMask?.(0)).toBe(0);
+    expect(mapper.ppuReadDriveMask?.(0)).toBe(0x01);
 
     mapper.write(0x8001, 0x02);
     expect(mapper.ppuReadDriveMask?.(0)).toBe(0xff);

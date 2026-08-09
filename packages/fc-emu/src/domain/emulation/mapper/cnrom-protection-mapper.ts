@@ -6,7 +6,8 @@ import type { Mapper, MapperState } from "./mapper.js";
  * NES 2.0 mapper 185: CNROM with CHR-ROM chip-select copy protection.
  *
  * Submappers 4-7 identify which two-bit latch value enables the sole 8 KiB
- * CHR-ROM chip. Every other value tri-states the cartridge's PPU data lines.
+ * CHR-ROM chip. Every other value disables the ROM: D7-D1 become open bus,
+ * while the compatibility-bearing protection circuit pulls D0 high.
  */
 export class CnromProtectionMapper implements Mapper {
   private selectedChip = 0;
@@ -37,7 +38,9 @@ export class CnromProtectionMapper implements Mapper {
   }
 
   read(address: number): number {
-    if (address < 0x2000) return this.cartridge.readChr(address);
+    if (address < 0x2000) {
+      return this.selectedChip === this.enabledChip ? this.cartridge.readChr(address) : 0x01;
+    }
     if (address >= 0x8000) {
       return this.cartridge.prgRom[(address - 0x8000) % this.cartridge.prgRom.byteLength] ?? 0;
     }
@@ -49,7 +52,7 @@ export class CnromProtectionMapper implements Mapper {
   }
 
   ppuReadDriveMask(address: number): number {
-    return address < 0x2000 && this.selectedChip !== this.enabledChip ? 0 : 0xff;
+    return address < 0x2000 && this.selectedChip !== this.enabledChip ? 0x01 : 0xff;
   }
 
   write(address: number, value: number): void {

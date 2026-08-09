@@ -1773,9 +1773,12 @@ by focused tests. See
 
 Mapper 185 is a one-bank CNROM variant whose two-bit conflicted latch controls the CHR-ROM
 chip-select line rather than selecting among banks. When the selected value does not match the
-board's enable wiring, the cartridge tri-states PPU pattern reads. NES 2.0 submappers 4-7 explicitly
-identify enable values 0-3 and are supported; legacy/submapper 0 does not identify that value and
-fails closed. PRG stays fixed as a 16 KiB mirrored or 32 KiB image, and PRG RAM is absent. See
+board's enable wiring, the cartridge disables CHR ROM and tri-states D7-D1 while the protection
+circuit's compatibility-bearing D0 pull-up drives bit 0 high; the remaining open-bus bits follow the
+PPU address low byte. This behavior is required by the earlier _Mighty Bomb Jack_ board. NES 2.0
+submappers 4-7 explicitly identify enable values 0-3 and are supported; legacy/submapper 0 does not
+identify that value and fails closed. PRG stays fixed as a 16 KiB mirrored or 32 KiB image, and PRG
+RAM is absent. See
 [NESdev mapper 185](https://www.nesdev.org/wiki/INES_Mapper_185).
 
 ## UNL SF3/KOF96 (187)

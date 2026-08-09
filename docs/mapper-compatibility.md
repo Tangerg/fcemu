@@ -898,8 +898,9 @@ and `$6000.D6` supplying PRG A18.
   lower/upper CHR bank pairs 0/4, 0/7, 2/7 and 3/7; the remaining reachable pairs stay covered by
   focused board tests.
 - Mapper 185 keeps CNROM's fixed 16/32 KiB PRG and AND-conflicted two-bit latch but uses the latch as
-  CHR-ROM chip select. NES 2.0 submappers 4-7 name enable values 0-3. Any other value tri-states the
-  PPU data pins, whose undriven read follows the address low byte; unknown legacy wiring is rejected.
+  CHR-ROM chip select. NES 2.0 submappers 4-7 name enable values 0-3. Any other value disables CHR
+  ROM and tri-states D7-D1 while the compatibility-bearing protection pull-up drives D0 high; the
+  remaining open-bus bits follow the PPU address low byte. Unknown legacy wiring is rejected.
 - Mapper 187 layers the UNL SF3/KOF96 protection and outer-bank circuit over a standard MMC3 core.
   Exact `$5000`/`$6000` writes choose normal six-bit MMC3 PRG banking, mirrored 16 KiB banking or
   either documented 32 KiB wiring; CHR A18 applies only to slots sourced by R0/R1. The expansion

@@ -574,8 +574,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       return new SachenSa72008Mapper(cartridge);
     case 140:
       requireBaseSubmapper(cartridge);
-      requireBankedLayout(cartridge, 0x8000, 0x8000, 0x2000, 0x2000);
-      requireMaximumRomSize(cartridge, 0x20_000, 0x20_000);
+      requireJalecoJfLayout(cartridge);
       requireChrRom(cartridge, "Jaleco JF-11/JF-14");
       requireNoPrgRam(cartridge);
       return new JalecoJfMapper(cartridge);
@@ -1559,6 +1558,17 @@ function requireMapper150Layout(cartridge: Cartridge): void {
 
 function requireHesNtd8Layout(cartridge: Cartridge): void {
   const prgSizes = [0x8000, 0x10_000, 0x20_000, 0x40_000];
+  const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000, 0x20_000];
+  if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
+    throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);
+  }
+  if (!chrSizes.includes(cartridge.chrRom.byteLength)) {
+    throw configurationError(cartridge, `CHR ROM must be ${formatSizes(chrSizes)}`);
+  }
+}
+
+function requireJalecoJfLayout(cartridge: Cartridge): void {
+  const prgSizes = [0x8000, 0x10_000, 0x20_000];
   const chrSizes = [0x2000, 0x4000, 0x8000, 0x10_000, 0x20_000];
   if (!prgSizes.includes(cartridge.prgRom.byteLength)) {
     throw configurationError(cartridge, `PRG ROM must be ${formatSizes(prgSizes)}`);

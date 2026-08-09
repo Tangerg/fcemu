@@ -82,7 +82,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 118    | TxSROM         | Verified    | CIRAM/IRQ tests; pinned _Pro Sport Hockey_ real-ROM runner         |
 | 119    | TQROM          | Verified    | Mixed-CHR/IRQ tests; pinned _Pinbot_ real-ROM runner               |
 | 133    | Sachen SA72008 | Verified    | Board tests; pinned _Jovial Race_ real-ROM runner                  |
-| 140    | Jaleco JF      | Implemented | PRG/CHR/register/open-bus/geometry tests; no conformance ROM       |
+| 140    | Jaleco JF      | Implemented | Latch/open-bus/power-of-two geometry tests; no fixture             |
 | 142    | Kaiser KS7032  | Verified    | KS202/IRQ tests; pinned Kaiser _Super Mario Bros. 2_ runner        |
 | 150    | Sachen SA-015  | Implemented | ASIC/pin-routing/solder-pad/nametable/state tests; no fixture      |
 | 152    | Bandai 74xx    | Implemented | ROM-geometry/PRG/CHR/mirroring/conflict tests; no fixture          |
@@ -853,7 +853,8 @@ and `$6000.D6` supplying PRG A18.
   the unimplemented analog-feedback board.
 - Mapper 140 (Jaleco JF-11/JF-14) maps a write-only `$6000-$7FFF` latch: bits 5-4 select a 32 KiB
   PRG bank and bits 3-0 select an 8 KiB CHR-ROM bank. The window has no bus conflicts and reads are
-  open bus rather than a fabricated zero.
+  open bus rather than a fabricated zero. Direct address-line outputs accept only power-of-two PRG
+  and CHR capacities through 128 KiB instead of modulo-folding unreachable layouts.
 - Mapper 142 models Kaiser's KS7032 board and KS202 ASIC independently of VRC3. Select/data writes
   assign four 8 KiB PRG windows at `$6000-$DFFF`, while the final bank is fixed at `$E000` and 8 KiB
   CHR RAM is unbanked. Its four-nibble reload feeds a CPU-cycle counter. Overflow asserts IRQ,

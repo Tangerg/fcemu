@@ -69,6 +69,18 @@ describe("JalecoJfMapper", () => {
     expect(() =>
       createMapper(createTestCartridge({ mapper: 140, prgBanks: 2 }), interruptPort),
     ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 140, prgRomBytes: 0x18_000, chrBanks: 1 }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
+    expect(() =>
+      createMapper(
+        createTestCartridge({ mapper: 140, prgBanks: 2, chrRomBytes: 0x6000 }),
+        interruptPort,
+      ),
+    ).toThrowError(UnsupportedMapperConfigurationError);
   });
 });
 

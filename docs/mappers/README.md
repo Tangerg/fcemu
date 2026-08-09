@@ -1640,8 +1640,9 @@ PRG banks and CHR banks 0/3; the other two reachable CHR banks remain covered by
 
 A write-only latch throughout `$6000-$7FFF` uses bits 5-4 to select one of four 32 KiB PRG banks and
 bits 3-0 to select one of sixteen 8 KiB CHR-ROM banks. The register occupies otherwise-unmapped
-space, so writes have no bus conflicts and reads remain open bus. PRG and CHR are limited to the
-128 KiB reachable by those physical select lines. See
+space, so writes have no bus conflicts and reads remain open bus. Direct address-line outputs limit
+PRG and CHR to power-of-two capacities through the 128 KiB reachable by those physical select lines;
+non-power-of-two images fail closed instead of acquiring modulo-based aliases. See
 [NESdev mapper 140](https://www.nesdev.org/wiki/INES_Mapper_140).
 
 ## Kaiser KS7032 / KS202 (142)

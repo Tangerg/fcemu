@@ -100,7 +100,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
 | 228    | Active Ent.    | Implemented | PRG/open-bus/two-bit CHR latch/reset/state tests; no fixture       |
 | 240    | C&E/Supertone  | Verified    | Expansion-latch tests; pinned _Jing Ke Xin Zhuan_ real-ROM runner  |
-| 241    | BxROM + WRAM   | Implemented | PRG/WRAM/CHR/state tests; two local replays; LPC audio pending     |
+| 241    | BxROM + WRAM   | Implemented | Core tests/replays; optional LPC board identity remains unresolved |
 | 242    | Waixing 43272  | Verified    | Latch/mode tests; pinned _Wai Xin Zhan Shi_ real-ROM runner        |
 | 243    | Sachen SA-020A | Implemented | Wrong-header Poker III rejected; canonical fixture pending         |
 | 244    | C&E Decathlon  | Verified    | Permutation tests; pinned _Decathlon_ real-ROM runner              |
@@ -960,12 +960,16 @@ and `$6000.D6` supplying PRG A18.
   replay. A separate trace across it and a local HACK image exercised five effective latch states.
 - Mapper 241 models the conflict-free BxROM-with-WRAM contract rather than FCEUX's incorrect-dump
   exception. Any `$8000-$FFFF` write latches one 32 KiB PRG bank; 8 KiB WRAM or battery NVRAM is
-  direct at `$6000-$7FFF`, 8 KiB CHR RAM is unbanked and mirroring stays hardwired. One local 512 KiB
-  _Edu_ image exercised banks 0/1/2/4 and retained an 8 KiB battery snapshot; one local 128 KiB
-  _Journey to the West_ image exercised banks 0/1/3 with volatile WRAM. Both completed 1200
-  non-halted frames and identical 120-frame save-state replay. Some educational cartridges add an
-  LPC speech device at `$5000-$5FFF`; that optional audio hardware is not yet modeled and remains
-  open bus, so status stays `Implemented` rather than `Verified`.
+  direct at `$6000-$7FFF`, 8 KiB CHR RAM is unbanked and mirroring stays hardwired. The emulator uses
+  bank zero for deterministic cold start but does not present that as the physical latch's undefined
+  power-up value. One local 512 KiB _Edu_ image exercised banks 0/1/2/4 and the LPC nibble protocol at
+  `$5FF0`; its legacy header's battery bit conflicts with the current NES 2.0 database, which marks
+  the matching payload's 8 KiB PRG RAM volatile. One local 128 KiB _Journey to the West_ image
+  exercised banks 0/1/2/3 with volatile WRAM. Both completed 1800 non-halted frames and previously
+  reproduced identical 120-frame save-state replay. Some educational cartridges add an LPC speech
+  device at `$5000-$5FFF`, but the formats provide no subvariant field to distinguish it from base
+  boards and mapper hacks that retain expansion-register accesses. The base model therefore remains
+  open bus without hash or runtime heuristics, and status stays `Implemented` rather than `Verified`.
 - Mapper 242 models the 512 KiB Waixing/UNL-43272 address latch with four outer and three inner PRG
   lines, UNROM/NROM-128/NROM-256 modes and address-selected mirroring. Multicart boards protect
   their unbanked 8 KiB CHR RAM in NROM modes and can replace PRG A4-A0 with the unbridged menu-pad

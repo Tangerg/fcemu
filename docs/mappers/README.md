@@ -1858,23 +1858,34 @@ Mapper 241 adds direct 8 KiB WRAM or battery-backed NVRAM at `$6000-$7FFF` to a 
 data path. Every write at `$8000-$FFFF` replaces one byte-wide latch; its connected low lines select
 the complete 32 KiB PRG window while unconnected high lines naturally mirror the available power-of-
 two ROM. The board has unbanked 8 KiB volatile CHR RAM, no IRQ and horizontal or vertical mirroring
-hardwired in the cartridge header. Cold power clears the PRG latch; warm reset does not reach it.
+hardwired in the cartridge header. The physical latch has no documented power-up value, so software
+must provide a usable reset vector in every reachable bank. The emulator chooses bank zero as its
+deterministic cold-start policy; warm reset does not reach the latch.
 
-The factory accepts power-of-two PRG capacities from 32 KiB through 1 MiB, exactly 8 KiB of PRG RAM
-or NVRAM, exactly 8 KiB of volatile CHR RAM and only the base submapper. It rejects four-screen
-memory and does not reproduce FCEUX's D7 bank alteration, which exists only for an overdump whose
-proper identity is NES 2.0 mapper 481.
+The format policy accepts power-of-two PRG capacities from 32 KiB through 1 MiB, exactly 8 KiB of
+PRG RAM or NVRAM, exactly 8 KiB of volatile CHR RAM and only the base submapper. It rejects
+four-screen memory and does not reproduce FCEUX's D7 bank alteration, which exists only for an
+overdump whose proper identity is NES 2.0 mapper 481. The current NES 2.0 database corpus contains
+native and compatibility images from 128 KiB through 1 MiB; the smaller accepted layouts retain the
+generic BxROM contract without pretending that every capacity is a documented production board.
 
 Some educational cartridges additionally carry a TMS5220C-data-compatible LPC speech device at
 `$5000-$5FFF`. iNES/NES 2.0 does not distinguish that optional population with a mapper subvariant;
-the synthesis device is not yet implemented, so its range remains open bus rather than returning a
-fabricated constant. This limits speech without contaminating the proven banking owner.
+the base board therefore leaves this range open bus rather than guessing from a ROM hash, battery
+flag or observed register writes. A future LPC implementation needs an explicit board-selection
+policy as well as the synthesizer so that converted mapper hacks retaining `$4800-$5FFF` accesses do
+not see speech hardware they never had.
 
-A user-local 512 KiB _Edu_ image selected raw banks 0/1/2/4, retained an 8 KiB battery snapshot and
-completed 1200 non-halted frames. A 128 KiB _Journey to the West_ image selected banks 0/1/3 with
-volatile WRAM. Both reproduced identical 120-frame save-state segments. Their bytes remain outside
-the repository. See [NESdev mapper 241](https://www.nesdev.org/wiki/INES_Mapper_241), the
-[Mesen CE implementation](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Unlicensed/Mapper241.h)
+A user-local 512 KiB _Edu_ image selected raw banks 0/1/2/4 and repeatedly exchanged the documented
+LPC nibble protocol at `$5FF0`; its legacy iNES header marks battery RAM, but the matching payload in
+the current NES 2.0 database specifies volatile 8 KiB PRG RAM, so it is not NVRAM evidence. A local
+128 KiB _Journey to the West_ image selected banks 0/1/2/3 with volatile WRAM. Both completed 1800
+non-halted frames and previously reproduced identical 120-frame save-state segments. Their bytes
+remain outside the repository. See [NESdev mapper 241](https://www.nesdev.org/wiki/INES_Mapper_241),
+the
+[Mesen CE implementation](https://github.com/nesdev-org/MesenCE/blob/7f418e352a2bab89f239ca09930a0c2b5074f9e3/Core/NES/Mappers/Unlicensed/Mapper241.h),
+the current
+[NES 2.0 database](https://github.com/punesemu/puNES/blob/2ed5b1b2cffcde48ff36f359091756d17d8fe193/misc/nes20db.xml),
 and the
 [MAME TXC board notes](https://github.com/mamedev/mame/blob/dcc9f33c59815103994534a85d2f70d77b2ca862/src/devices/bus/nes/txc.cpp#L259).
 

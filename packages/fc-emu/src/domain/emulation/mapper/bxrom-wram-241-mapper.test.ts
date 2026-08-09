@@ -46,7 +46,7 @@ describe("BxromWram241Mapper", () => {
     expect(mapper.read(0x1fff)).toBe(0x64);
   });
 
-  it("leaves the unimplemented optional LPC window electrically open", () => {
+  it("leaves the optional LPC window electrically open on the base board model", () => {
     const bus = new Bus(createMapper241Cartridge());
     const memory = new CPUMemory(bus);
 
@@ -90,9 +90,9 @@ describe("BxromWram241Mapper", () => {
   });
 
   it.each([
-    { name: "Journey to the West", prgBanks: 8, battery: false },
-    { name: "Edu", prgBanks: 32, battery: true },
-    { name: "maximum 1 MiB board", prgBanks: 64, battery: false },
+    { name: "128 KiB volatile-WRAM board", prgBanks: 8, battery: false },
+    { name: "512 KiB volatile-WRAM board", prgBanks: 32, battery: false },
+    { name: "1 MiB NVRAM board", prgBanks: 64, battery: true },
   ])("accepts the $name geometry", ({ prgBanks, battery }) => {
     expect(() =>
       createMapper(createTestCartridge({ mapper: 241, prgBanks, battery }), noopInterrupt),

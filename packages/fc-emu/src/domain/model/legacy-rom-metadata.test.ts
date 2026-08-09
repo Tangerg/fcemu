@@ -387,7 +387,7 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
-  it("identifies the exact Uchuusen JF-16 board", () => {
+  it("identifies the exact mapper 78 board wiring", () => {
     expect(
       findLegacyRomMetadata({
         consoleType: 0,
@@ -397,7 +397,18 @@ describe("legacy ROM metadata", () => {
         prgCrc32: 0x42392440,
         chrCrc32: 0xcffee642,
       })?.overrides,
-    ).toEqual({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 });
+    ).toEqual({ submapperNumber: 1 });
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 78,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xbc1197a4,
+        chrCrc32: 0xbe4a4753,
+      })?.overrides,
+    ).toEqual({ submapperNumber: 3 });
 
     expect(
       findLegacyRomMetadata({
@@ -418,6 +429,17 @@ describe("legacy ROM metadata", () => {
         chrRomBytes: 0x20_000,
         prgCrc32: 0xcece4cfc,
         chrCrc32: 0xcffee642,
+      }),
+    ).toBeUndefined();
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 78,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0xbc1197a4,
+        chrCrc32: 0xbe4a4752,
       }),
     ).toBeUndefined();
   });

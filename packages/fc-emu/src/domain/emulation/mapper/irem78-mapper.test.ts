@@ -50,6 +50,30 @@ describe("Irem78Mapper", () => {
       mapper: 78,
       prgBanks: 8,
       chrBanks: 16,
+    });
+    const holyDiver = createTestCartridge({
+      mapper: 78,
+      prgBanks: 8,
+      chrBanks: 16,
+      fourScreen: true,
+    });
+    cosmo.prgRom[0] = 0xff;
+    holyDiver.prgRom[0] = 0xff;
+    const cosmoMapper = createMapper(cosmo, interruptPort);
+    const holyDiverMapper = createMapper(holyDiver, interruptPort);
+
+    cosmoMapper.write(0x8000, 0x08);
+    holyDiverMapper.write(0x8000, 0x08);
+
+    expect(cosmo.mirroringMode).toBe(NametableMirroring.SingleScreenUpper);
+    expect(holyDiver.mirroringMode).toBe(NametableMirroring.Vertical);
+  });
+
+  it("prefers exact legacy submapper metadata over the historical flag fallback", () => {
+    const cosmo = createTestCartridge({
+      mapper: 78,
+      prgBanks: 8,
+      chrBanks: 16,
       fourScreen: true,
     });
     const holyDiver = createTestCartridge({
@@ -57,6 +81,8 @@ describe("Irem78Mapper", () => {
       prgBanks: 8,
       chrBanks: 16,
     });
+    Object.defineProperty(cosmo, "submapperNumber", { value: 1 });
+    Object.defineProperty(holyDiver, "submapperNumber", { value: 3 });
     cosmo.prgRom[0] = 0xff;
     holyDiver.prgRom[0] = 0xff;
     const cosmoMapper = createMapper(cosmo, interruptPort);

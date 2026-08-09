@@ -250,6 +250,28 @@ describe("Cartridge", () => {
     },
   );
 
+  it("does not fabricate legacy iNES PRG RAM on either mapper 78 board", () => {
+    for (const fourScreen of [false, true]) {
+      const cartridge = Cartridge.fromArrayBuffer(
+        createTestRom({ mapper: 78, prgBanks: 8, chrBanks: 16, fourScreen }),
+      );
+
+      expect(cartridge).toMatchObject({
+        format: "ines",
+        mapperNumber: 78,
+        prgRamBytes: 0,
+        prgNvRamBytes: 0,
+        hasBatteryBackup: false,
+      });
+    }
+
+    expect(() =>
+      Cartridge.fromArrayBuffer(
+        createTestRom({ mapper: 78, prgBanks: 8, chrBanks: 16, battery: true }),
+      ),
+    ).toThrow(expect.objectContaining({ code: "UNSUPPORTED_BATTERY_MEMORY" }));
+  });
+
   it("does not fabricate legacy iNES PRG RAM on HES NTD-8 mapper 113", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({ mapper: 113, prgBanks: 16, chrBanks: 16 }),

@@ -91,9 +91,10 @@ ROM implies exactly 8 KiB of volatile CHR RAM unless mapper 96 supplies its phys
 Mapper 77 adds 8 KiB of board-implied RAM beside CHR ROM, and mapper 119 similarly implies TQROM's
 8 KiB RAM. Mapper 22's sole 351618/VRC2a board, Mapper 24's sole 351951/VRC6a board, Mapper 41's
 Caltron 6-in-1, the JF-17/JF-19 boards identified by Mappers 72/92, Mapper 77's LROG017 board and
-Mapper 113's HES NTD-8 override the generic legacy PRG-RAM fallback to zero because none has
-CPU-visible writable memory. Mapper 164 is another explicit exception: its battery flag denotes a
-mapper-owned 512-byte EEPROM, while format policy supplies 2 KiB of volatile CPU work RAM.
+both Mapper 78 boards, plus Mapper 113's HES NTD-8, override the generic legacy PRG-RAM fallback to
+zero because none has CPU-visible writable memory. Mapper 164 is another explicit exception: its
+battery flag denotes a mapper-owned 512-byte EEPROM, while format policy supplies 2 KiB of volatile
+CPU work RAM.
 
 `mirroringMode` is a `NametableMirroring` enum (`Horizontal`, `Vertical`, `SingleScreenLower`,
 `SingleScreenUpper`, `FourScreen`); the header only ever decodes Horizontal, Vertical, or FourScreen,
@@ -146,6 +147,11 @@ NAM-MT-4900 _Megami Tensei_ (PRG `9F3DA143`, CHR `73F1E3CF`) removes the generic
 zero-WRAM NAMCOT-3446 board. The pinned local enhanced modification changes only the PRG region to
 `4E0A1B82`; its exact PRG/unchanged-CHR pair receives the same correction while partial matches
 remain conservative.
+JF-16 _Uchuusen: Cosmo Carrier_ (PRG `42392440`, CHR `CFFEE642`) supplies Mapper 78 submapper 1,
+while canonical _Holy Diver_ (PRG `BC1197A4`, CHR `BE4A4753`) supplies submapper 3. Those exact
+records resolve incompatible one-screen versus horizontal/vertical register wiring and take
+precedence over the historical alternative-nametable flag; Mapper 78 format policy, rather than
+title metadata, owns the invariant that both supported boards have no PRG RAM.
 AVE-NINA-06 _Double Strike_ v1.1 (PRG `127436FC`, CHR `39536D86`) removes the same generic
 allocation from its zero-WRAM Mapper 79 board while retaining the header's vertical mirroring.
 NAM-DS-5200 _Dragon Spirit_ (PRG `6231E6DF`, CHR `58216CF2`) removes the generic allocation from

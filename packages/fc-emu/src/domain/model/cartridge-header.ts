@@ -202,6 +202,16 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       chrNvRamSize: 0,
     });
   }
+  if (header.mapperNumber === 78 && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      // Both supported mapper-78 boards, Irem JF-16 and the Holy Diver
+      // discrete board, omit CPU-visible RAM. iNES byte 8 cannot express
+      // that absence, so suppress its generic 8 KiB fallback for the board.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    });
+  }
   if (header.mapperNumber === 96 && header.format === "ines" && header.chrRomSize === 0) {
     return Object.freeze({
       ...header,

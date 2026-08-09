@@ -1330,18 +1330,22 @@ function requireCodemastersMirroring(cartridge: Cartridge): boolean {
 }
 
 function resolveIrem78Mirroring(cartridge: Cartridge): Irem78Mirroring {
-  if (cartridge.format === "ines") {
-    // Historical dumps repurpose flag 6 bit 3 as a board discriminator:
-    // set means JF-16/Cosmo Carrier, clear means Holy Diver. It is not VRAM.
-    return cartridge.mirroringMode === NametableMirroring.FourScreen
-      ? "single-screen"
-      : "horizontal-vertical";
-  }
   switch (cartridge.submapperNumber) {
     case 1:
       return "single-screen";
     case 3:
       return "horizontal-vertical";
+    case 0:
+      if (cartridge.format === "nes2") {
+        throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
+      }
+      // Before NES 2.0, dumps repurposed flag 6 bit 3 as a board
+      // discriminator: set means Holy Diver, clear means JF-16/Cosmo
+      // Carrier. It is not a four-screen VRAM declaration. Exact legacy
+      // metadata supplies submapper 1 or 3 above and takes precedence.
+      return cartridge.mirroringMode === NametableMirroring.FourScreen
+        ? "horizontal-vertical"
+        : "single-screen";
     default:
       throw new UnsupportedMapperVariantError(cartridge.mapperNumber, cartridge.submapperNumber);
   }

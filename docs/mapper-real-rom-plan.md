@@ -227,10 +227,14 @@ the same ID covers materially different hardware that the primary image cannot e
   `5393D949` as the preferred independent software supplement.
 - Mapper 78 must retain its AND bus conflicts. The JF-16 _Uchuusen: Cosmo Carrier_ evidence target
   is combined CRC `3D1C3137`, PRG `42392440` and CHR `CFFEE642`; its historical iNES
-  alternative-nametable flag is set to identify one-screen submapper 1. Do not promote the local
-  `695CB142` payload (`CECE4CFC`/`CFFEE642`): its altered PRG writes values that are destroyed by
-  the physical bus conflict and the CPU jams after selecting the wrong bank. A hardware-faithful
-  profile therefore remains pending until an unmodified JF-16 image is supplied.
+  alternative-nametable flag is clear to identify one-screen submapper 1. Exact content metadata
+  pins that canonical pair independently of the flag. Canonical _Holy Diver_ PRG `BC1197A4` and
+  CHR `BE4A4753` similarly select horizontal/vertical submapper 3; the local copy has the exact
+  declared payload but substantial trailing data, so it is identity evidence rather than a pinned
+  route. Do not promote the local `695CB142` _Uchuusen_ payload (`CECE4CFC`/`CFFEE642`): its altered
+  PRG writes values that are destroyed by the physical bus conflict and the CPU jams after
+  selecting the wrong bank. A hardware-faithful Mapper 78 profile therefore remains pending until
+  a structurally clean canonical image is supplied.
 - Mapper 79 now has a pinned exact _Double Strike_ v1.1 profile. Its combined CRC `1EB4A920`, PRG
   `127436FC` and CHR `39536D86` match AVE NINA-06 with vertical mirroring and no WRAM/VRAM. The
   route reaches one-player aerial combat and observes CHR 0→1 selection. Because this production

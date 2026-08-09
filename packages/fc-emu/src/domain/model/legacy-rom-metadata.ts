@@ -351,7 +351,19 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
       prgCrc32: 0x42392440,
       chrCrc32: 0xcffee642,
     }),
-    overrides: Object.freeze({ submapperNumber: 1, prgRamSize: 0, prgNvRamSize: 0 }),
+    overrides: Object.freeze({ submapperNumber: 1 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // Holy Diver: mapper 78 with horizontal/vertical mirroring and no WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 78,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0xbc1197a4,
+      chrCrc32: 0xbe4a4753,
+    }),
+    overrides: Object.freeze({ submapperNumber: 3 }),
   }),
   Object.freeze({
     identity: Object.freeze({

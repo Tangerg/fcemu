@@ -60,6 +60,12 @@ implicit 8 KiB PRG RAM because LROG017 has no CPU-visible writable memory; NES 2
 declare the CHR RAM and no PRG RAM/NVRAM. Board creation also requires the singleton's 128 KiB PRG,
 32 KiB CHR ROM and four-screen flag.
 
+Mapper 78's two supported boards also have no CPU-visible RAM, so legacy format policy suppresses
+iNES's generic 8 KiB PRG allocation for every Mapper 78 image. The old alternative-nametable flag
+is only a wiring discriminator: clear selects JF-16 one-screen control and set selects Holy Diver
+horizontal/vertical control. Exact canonical payload metadata supplies submapper 1 or 3 before that
+fallback is consulted. NES 2.0 must declare the submapper explicitly and no PRG RAM/NVRAM.
+
 Mappers 114/115/182/248 decode `$6000-$7FFF` as mirrored outer-bank registers rather than writable
 memory.
 Legacy iNES's conventional implicit 8 KiB allocation remains parser metadata but is electrically

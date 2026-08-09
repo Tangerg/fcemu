@@ -1140,10 +1140,15 @@ One conflict-prone `$8000-$FFFF` latch combines a 16 KiB `$8000-$BFFF` PRG bank 
 `$C000-$FFFF`), an 8 KiB CHR bank and nametable control. Bits 2-0 select PRG, bit 3 controls
 mirroring and bits 7-4 select CHR. The physical mirroring wire differs: Cosmo Carrier selects
 one-screen lower/upper, while Holy Diver selects horizontal/vertical. NES 2.0 submapper 1 and 3 name
-those boards; submapper 0 is rejected. For legacy iNES, the historical alternative-nametable flag
-selects Cosmo Carrier wiring and a clear flag selects Holy Diver wiring. That legacy flag is not a
-four-screen declaration; NES 2.0 four-screen layouts are rejected for both modeled boards. See
-[NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_078).
+those boards; submapper 0 is rejected. For legacy iNES, a clear historical alternative-nametable
+flag identifies Cosmo Carrier and a set flag identifies Holy Diver. That legacy flag is a board
+discriminator, not a four-screen declaration. Exact payload metadata takes precedence and assigns
+canonical _Uchuusen: Cosmo Carrier_ (PRG `42392440`, CHR `CFFEE642`) to submapper 1 and canonical
+_Holy Diver_ (PRG `BC1197A4`, CHR `BE4A4753`) to submapper 3. Format policy removes iNES's generic
+8 KiB PRG-RAM fallback from both no-WRAM boards; explicit NES 2.0 RAM and actual four-screen layouts
+remain rejected. See [NESdev mapper 78](https://www.nesdev.org/wiki/INES_Mapper_078), the
+[submapper history](https://www.nesdev.org/wiki/NES_2.0_submappers) and the
+[Holy Diver board record](https://nescartdb.com/profile/view/4038/holy-diver).
 
 ## AVE NINA-03/NINA-06 (79)
 

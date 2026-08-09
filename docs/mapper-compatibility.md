@@ -49,7 +49,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 69     | Sunsoft FME-7  | Verified    | Tests; pinned _Batman_ BAT-E301 gameplay/IRQ; no 5B audio          |
 | 70     | Bandai 74xx    | Verified    | Tests; pinned _Kamen Rider Club_ BA-KAMEN gameplay runner          |
 | 71     | Codemasters    | Verified    | Tests; pinned _Fire Hawk_ BIC-62/BF9097 gameplay runner            |
-| 72     | Jaleco JF-17   | Implemented | Dual-edge/conflict/banking/state tests; one local replay smoke     |
+| 72     | Jaleco JF-17   | Verified    | Tests; pinned exact _Pinball Quest_ JF-17 gameplay/banking runner  |
 | 73     | Konami VRC3    | Verified    | Tests; pinned exact _Salamander_ VRC3 gameplay/16-bit IRQ runner   |
 | 74     | Waixing Type A | Implemented | Mixed-CHR/MMC3/IRQ/state tests; two local replay smokes            |
 | 75     | Konami VRC1    | Verified    | Tests; pinned _Ganbare Goemon_ 302114A gameplay runner             |
@@ -541,11 +541,16 @@ and `$6000.D6` supplying PRG A18.
   independent rising-edge clocks for their 16 KiB PRG and 8 KiB CHR latches. JF-17 switches the
   lower PRG window with three data bits and fixes the final bank above it; JF-19 fixes bank 0 below
   a four-bit switchable upper window. Clock history is save-state data; both use exactly 128 KiB
-  CHR ROM, while PRG is respectively 128/256 KiB, with no PRG RAM and solder-pad mirroring. The
-  user-local _Pinball Quest_ image completed 240 frames with deterministic 60-frame replay. A
-  _Moero!! Pro Yakyuu '88 Ketteihen_ payload whose CRC matches NESCartDB completed 1,500 frames and
-  deterministic 300-frame replay, but its padded container is not a pinnable fixture. Optional
-  µPD7756C sample audio remains unsupported because normal iNES images omit its sample ROM.
+  CHR ROM, while PRG is respectively 128/256 KiB, with no PRG RAM and solder-pad mirroring. Legacy
+  iNES loading now suppresses the format's generic 8 KiB PRG-RAM fallback for both mapper IDs, so
+  the public cartridge inventory matches the electrically open `$6000-$7FFF` range. The pinned
+  exact _Pinball Quest_ profile matches the physical JF-17 PRG/CHR CRCs `55C3589C`/`1FCDD252` and
+  horizontal mirroring. Its minimal route enters `POP! POP!`, exercises both flippers over 1,200
+  frames, observes PRG banks 0/1/2 and CHR banks 15/3/0, and reproduces a deterministic 120-frame
+  visual/audio save-state replay. A _Moero!! Pro Yakyuu '88 Ketteihen_ payload whose CRC matches
+  NESCartDB completed 1,500 frames and deterministic 300-frame replay, but its padded container is
+  not a pinnable Mapper 92 fixture. Optional µPD7756C sample audio remains unsupported because
+  normal iNES images omit its sample ROM.
 - Mapper 73 (Konami VRC3) keeps fixed CHR RAM and solder-pad mirroring around one switchable and one
   fixed 16 KiB PRG window, with optional direct 8 KiB PRG RAM. Its four nibble registers feed a
   16-bit CPU-cycle up-counter; 8-bit mode preserves the counter's upper byte, and the distinct

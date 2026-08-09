@@ -153,6 +153,16 @@ function applyBoardMemoryPolicy(header: CartridgeHeader): CartridgeHeader {
       prgNvRamSize: 0,
     });
   }
+  if ([72, 92].includes(header.mapperNumber) && header.format === "ines") {
+    return Object.freeze({
+      ...header,
+      // These mapper IDs denote Jaleco's JF-17/JF-19 discrete boards, neither
+      // of which decodes CPU-visible RAM. Suppress iNES byte 8's generic
+      // fallback instead of allocating an unreachable $6000-$7FFF window.
+      prgRamSize: 0,
+      prgNvRamSize: 0,
+    });
+  }
   if (header.mapperNumber === 74 && header.format === "ines" && header.chrRomSize > 0) {
     return Object.freeze({
       ...header,

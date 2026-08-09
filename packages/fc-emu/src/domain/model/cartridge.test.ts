@@ -210,6 +210,26 @@ describe("Cartridge", () => {
     });
   });
 
+  it.each([
+    { mapper: 72, prgBanks: 8, name: "JF-17" },
+    { mapper: 92, prgBanks: 16, name: "JF-19" },
+  ])(
+    "does not fabricate legacy iNES PRG RAM on mapper $mapper's $name board",
+    ({ mapper, prgBanks }) => {
+      const cartridge = Cartridge.fromArrayBuffer(
+        createTestRom({ mapper, prgBanks, chrBanks: 16 }),
+      );
+
+      expect(cartridge).toMatchObject({
+        format: "ines",
+        mapperNumber: mapper,
+        prgRamBytes: 0,
+        prgNvRamBytes: 0,
+        hasBatteryBackup: false,
+      });
+    },
+  );
+
   it("accepts an explicit NES 2.0 Oeka Kids tablet device declaration", () => {
     const cartridge = Cartridge.fromArrayBuffer(
       createTestRom({ nes2: true, defaultExpansionDevice: 0x17 }),

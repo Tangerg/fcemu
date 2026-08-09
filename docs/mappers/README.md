@@ -1020,6 +1020,14 @@ window wiring in the pinned
 confirms the mapper, exact ROM geometry, vertical solder-pad setting, absence of WRAM and combined
 payload CRC `B297B5E7`.
 
+Legacy iNES loading suppresses the format's generic 8 KiB PRG-RAM fallback for both mapper IDs;
+the public cartridge inventory therefore matches the boards' electrically open `$6000-$7FFF`
+range. The pinned exact _Pinball Quest_ profile matches the
+[NesCartDB JF-17 record](https://nescartdb.com/profile/view/2286/pinball-quest), including PRG/CHR
+CRCs `55C3589C`/`1FCDD252`, horizontal mirroring and zero WRAM. Its `POP! POP!` route locks video,
+audio, CPU cycles and save-state replay while mapper checkpoints observe PRG banks 0/1/2 and CHR
+banks 15/3/0.
+
 The µPD7756C sample playback used by some JF-17/JF-19 releases is not emulated: ordinary iNES files
 contain neither the external sample payload nor a standard way to identify it. A user-local
 _Moero!! Pro Yakyuu '88 Ketteihen_ payload matching that catalog CRC completed 1,500 frames and a

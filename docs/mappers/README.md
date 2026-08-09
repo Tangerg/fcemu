@@ -1238,7 +1238,16 @@ visual/audio/cycle save-state replay. See
 Mapper 88 retains the standard two 2 KiB plus four 1 KiB Namco CHR windows, while PPU A12 directly
 drives CHR A16. The `$0000` and `$1000` pattern tables therefore select separate 64 KiB halves of a
 128 KiB CHR ROM. Undersized CHR naturally mirrors into the lower capacity. PRG layout and missing
-IRQ/RAM/mirroring registers match mapper 206. See
+IRQ/RAM/mirroring registers match mapper 206.
+
+Exact legacy metadata matches both the physical NAM-DS-5200 _Dragon Spirit_ image (PRG `6231E6DF`,
+CHR `58216CF2`) and the pinned local invincibility modification (PRG `0E340680`, unchanged CHR),
+removing iNES's generic 8 KiB PRG-RAM fallback from the zero-WRAM board. The modified image's
+600-frame baseline and 3,000-frame controller route pass through title/story screens into sustained
+vertical combat and a large enemy with 2,409 distinct frames. Mapper checkpoints exercise all eight
+registers, both switchable PRG windows and all six CHR selectors; exact visual, native-audio,
+CPU-cycle and input-active save-state replay results pin the route. A canonical PRG remains the
+preferred independent supplement. See
 [NESdev mapper 206 variants](https://www.nesdev.org/wiki/INES_Mapper_206).
 
 ## Sunsoft-2 / Sunsoft-3 (89)

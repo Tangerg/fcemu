@@ -444,6 +444,32 @@ describe("legacy ROM metadata", () => {
     ).toBeUndefined();
   });
 
+  it("identifies the canonical and locally modified Dragon Spirit zero-WRAM layouts", () => {
+    for (const prgCrc32 of [0x6231e6df, 0x0e340680]) {
+      expect(
+        findLegacyRomMetadata({
+          consoleType: 0,
+          mapperNumber: 88,
+          prgRomBytes: 0x20_000,
+          chrRomBytes: 0x20_000,
+          prgCrc32,
+          chrCrc32: 0x58216cf2,
+        })?.overrides,
+      ).toEqual({ prgRamSize: 0, prgNvRamSize: 0 });
+    }
+
+    expect(
+      findLegacyRomMetadata({
+        consoleType: 0,
+        mapperNumber: 88,
+        prgRomBytes: 0x20_000,
+        chrRomBytes: 0x20_000,
+        prgCrc32: 0x0e340680,
+        chrCrc32: 0x58216cf3,
+      }),
+    ).toBeUndefined();
+  });
+
   it("identifies the exact Tekken 2 J.Y. Company memory layout", () => {
     expect(
       findLegacyRomMetadata({

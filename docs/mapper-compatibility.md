@@ -63,7 +63,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 85     | Konami VRC7    | Verified    | Tests; pinned _Tiny Toon Adventures 2_ VRC7b gameplay runner       |
 | 86     | Jaleco JF-13   | Implemented | Banking/mirror/state tests; µPD7756C and canonical fixture pending |
 | 87     | Jaleco J87     | Verified    | CHR-bit-swap tests; pinned _The Goonies_ real-ROM runner           |
-| 88     | Namco 3433     | Implemented | Split-64 KiB CHR wiring tests; no conformance ROM                  |
+| 88     | Namco 3433     | Verified    | Tests; pinned local _Dragon Spirit_ split-CHR gameplay runner      |
 | 89     | Sunsoft-2      | Implemented | PRG/CHR/conflict/mirroring tests; no conformance ROM               |
 | 90     | J.Y. EL861226C | Verified    | Tests; pinned exact _Tekken 2_ combat/A12-IRQ real-ROM runner      |
 | 91     | JY/EJ bootleg  | Verified    | Board tests; pinned exact _Street Fighter 3_ mapper-91.0 runner    |
@@ -725,7 +725,15 @@ and `$6000.D6` supplying PRG A18.
   output across a 120-frame save-state replay.
 - Mapper 88 retains Namco 108 banking but connects PPU A12 directly to CHR A16, forcing the left and
   right pattern tables into separate 64 KiB halves of 128 KiB CHR ROM. Smaller ROM naturally mirrors
-  the absent line.
+  the absent line. Exact metadata matches the physical NAM-DS-5200 PRG/CHR pair and the pinned local
+  invincibility modification's changed-PRG/unchanged-CHR pair, removing iNES's fictitious 8 KiB PRG
+  RAM from both zero-WRAM layouts. The local image's 600-frame baseline and 3,000-frame input route
+  cross the title and story into sustained vertical combat and a large enemy, producing 2,409
+  distinct frames. Mapper checkpoints observe all eight Namco registers, both switchable PRG
+  windows and every CHR selector while exact video, native audio, CPU cycles and an input-active
+  120-frame save-state replay remain deterministic. Because the PRG is modified, a canonical image
+  remains desirable as independent software evidence; split-CHR wiring retains focused electrical
+  tests in addition to the real visual hashes.
 - Mapper 89 (Sunsoft-2 on Sunsoft-3) uses one AND-conflicted `$8000-$FFFF` latch for a switchable
   16 KiB PRG bank, split-field 8 KiB CHR bank and lower/upper one-screen mirroring. The final 16 KiB
   PRG bank is fixed, no PRG RAM is decoded, and four-screen layouts are rejected.

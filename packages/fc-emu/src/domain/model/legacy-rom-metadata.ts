@@ -359,6 +359,30 @@ const LEGACY_ROM_METADATA: readonly LegacyRomMetadata[] = Object.freeze([
   }),
   Object.freeze({
     identity: Object.freeze({
+      // Dragon Spirit, NAM-DS-5200/NAMCOT-3433: no external WRAM.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 88,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x6231e6df,
+      chrCrc32: 0x58216cf2,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
+      // Local Dragon Spirit invincibility modification of the same zero-WRAM board image.
+      consoleType: CartridgeConsoleType.Standard,
+      mapperNumber: 88,
+      prgRomBytes: 0x20_000,
+      chrRomBytes: 0x20_000,
+      prgCrc32: 0x0e340680,
+      chrCrc32: 0x58216cf2,
+    }),
+    overrides: Object.freeze({ prgRamSize: 0, prgNvRamSize: 0 }),
+  }),
+  Object.freeze({
+    identity: Object.freeze({
       // Tekken 2, J.Y. Company mapper 90: EL861226C board without WRAM.
       consoleType: CartridgeConsoleType.Standard,
       mapperNumber: 90,

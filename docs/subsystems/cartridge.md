@@ -143,6 +143,10 @@ allocation from its zero-WRAM Konami 302114A VRC1 board while leaving Mapper-con
 to the runtime register.
 AVE-NINA-06 _Double Strike_ v1.1 (PRG `127436FC`, CHR `39536D86`) removes the same generic
 allocation from its zero-WRAM Mapper 79 board while retaining the header's vertical mirroring.
+NAM-DS-5200 _Dragon Spirit_ (PRG `6231E6DF`, CHR `58216CF2`) removes the generic allocation from
+its zero-WRAM NAMCOT-3433 board. The pinned local invincibility modification changes only the PRG
+region to `0E340680`; its exact PRG/unchanged-CHR pair receives the same correction without turning
+partial CRC matches into board metadata.
 TFC-MJ-5500-11 _Mirai Shinwa Jarvas_ (PRG `95AAED34`, CHR `599CD55D`) corrects the matching legacy
 image's missing battery flag and assigns the X1-005's exact 128 internal bytes to PRG NVRAM.
 JY830623C _Street Fighter 3_ (PRG `F754DA71`, CHR `2C40E304`) removes the generic allocation from

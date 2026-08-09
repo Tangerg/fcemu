@@ -95,7 +95,7 @@ the same ID covers materially different hardware that the primary image cannot e
 |     85 | Konami VRC7        | _Tiny Toon Adventures 2_ (Japan, pinned VRC7b profile)                 | _Lagrange Point_ (Japan) for VRC7a and audible six-channel FM                     | A3 banking/IRQ and muted PCB; A4/FM supplement                   |
 |     86 | Jaleco JF-13       | _Moero!! Pro Yakyuu_ (Japan, red or black JF-13 release)               | The other JF-13 revision plus identified µPD7756C sample data                     | PRG/CHR latch, mirrored decode and speech control                |
 |     87 | Jaleco J87         | _The Goonies_ (Japan, pinned local profile)                            | _City Connection_ (Japan)                                                         | Reversed CHR select bits without bus conflicts                   |
-|     88 | Namco 3433         | _Dragon Spirit: Aratanaru Densetsu_ (Japan)                            | —                                                                                 | Split lower/upper 64 KiB CHR wiring                              |
+|     88 | Namco 3433         | _Dragon Spirit_ (pinned local invincibility image)                     | Canonical _Dragon Spirit: Aratanaru Densetsu_ (Japan)                             | Split lower/upper 64 KiB CHR wiring and zero-WRAM layout         |
 |     89 | Sunsoft-2          | _Tenka no Goikenban: Mito Koumon_ (Japan)                              | —                                                                                 | Split-field CHR bank, PRG bank, mirroring and conflicts          |
 |     90 | J.Y. EL861226C     | _Tekken 2_ (unlicensed, pinned exact profile)                          | _Aladdin_; _Mortal Kombat II Special_                                             | 2/1 KiB CHR, 8 KiB PRG modes and decrementing A12 IRQ            |
 |     91 | JY/EJ bootleg      | _Street Fighter 3_ (pinned mapper-91.0 JY830623C profile)              | _Super Fighter III_ (mapper 91.1)                                                 | JY outer/A12 path and EJ mirroring/M2 IRQ path                   |
@@ -237,6 +237,12 @@ the same ID covers materially different hardware that the primary image cannot e
   public-facade power-cycle retention. The gameplay route observes four PRG layouts and all six CHR
   registers; it leaves the RAM permission latch closed, so `$A3` gating stays focused-test evidence
   and the two secondary titles remain useful independent software routes.
+- Mapper 88 now has a pinned local _Dragon Spirit_ invincibility profile. The unchanged CHR CRC
+  `58216CF2` matches the NAM-DS-5200 board while its PRG CRC `0E340680` differs from the canonical
+  `6231E6DF`; exact metadata keeps both pairs on the physical zero-WRAM layout. The route crosses
+  title/story screens into sustained vertical combat, changes all eight Namco registers and locks
+  split-CHR visuals, native audio, CPU cycles and input-active save-state replay. Preserve canonical
+  combined CRC `D2699893` as the preferred independent software supplement.
 - Mapper 90 now has a pinned exact _Tekken 2_ profile. Combined CRC `FC78ACAF` matches the Mesen
   database's 128 KiB PRG/512 KiB CHR, zero-WRAM mapper-90 record; exact metadata removes the legacy
   header's phantom 8 KiB allocation. The route enters a baseball-stadium fight, crosses mode values

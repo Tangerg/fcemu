@@ -94,7 +94,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
 | 187    | UNL SF3/KOF96  | Verified    | Board tests; pinned _KOF '96_ and _SF Zero 2 '97_ runners          |
 | 189    | TXC MMC3       | Verified    | Outer-PRG/MMC3/IRQ tests; pinned _Thunder Warrior_ real-ROM runner |
-| 206    | Namco 118      | Implemented | PRG/CHR bank unit tests; no conformance ROM                        |
+| 206    | Namco 118      | Implemented | Register-decode/bank/mask/state tests; no conformance ROM          |
 | 225    | ET-4310/K-1010 | Implemented | Dual geometry/PRG/CHR/nibble-RAM/reset tests; no fixture           |
 | 226    | BMC 42/63/76-1 | Verified    | Three-geometry tests; pinned _Super 42-in-1_ real-ROM runner       |
 | 227    | 810449/FW-01   | Implemented | Three variants/WRAM/protection/open-bus/state tests; no fixture    |
@@ -920,8 +920,9 @@ and `$6000.D6` supplying PRG A18.
   state. The secondary local _Street Fighter II_ image remains useful unpinned smoke evidence.
 - Mapper 206 (Namco 118 / DxROM) is the discrete predecessor to MMC3. It reuses the `$8000`/`$8001`
   bank-select and bank-data ports for two 2 KiB plus four 1 KiB CHR windows and two 8 KiB PRG banks
-  with the final two banks fixed. It has no IRQ, no PRG-RAM and no mirroring register, so mirroring
-  stays hardwired from the header. MMC3-family supersets that add those features remain separate.
+  with the final two banks fixed. D0 is physically absent from the two 2 KiB CHR registers. It has
+  CHR ROM only, no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the
+  header. MMC3-family supersets that add those features remain separate.
 - Mapper 225 models the address-latched ET-4310/K-1010 pairs as either 1 MiB PRG/512 KiB CHR or
   2 MiB PRG/1 MiB CHR. A14 is the shared high bank line; A12 selects mirrored 16 KiB versus paired
   32 KiB PRG and A13 controls mirroring. Because the mapper number cannot distinguish populated

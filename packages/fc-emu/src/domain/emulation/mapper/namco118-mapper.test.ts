@@ -43,6 +43,16 @@ describe("Namco118Mapper", () => {
     expect(mapper.read(0x1c00)).toBe(23);
   });
 
+  it("does not latch the unconnected D0 input on the two 2 KiB CHR registers", () => {
+    const cartridge = createTestCartridge({ mapper: 206, prgBanks: 8, chrBanks: 8 });
+    const mapper = new Namco118Mapper(cartridge);
+
+    bank(mapper, 0, 0x05);
+    bank(mapper, 1, 0x09);
+
+    expect(mapper.captureState()).toMatchObject({ registers: [0x04, 0x08, 0, 0, 0, 0, 0, 0] });
+  });
+
   it("ignores writes to the $A000-$FFFF range", () => {
     const cartridge = createTestCartridge({ mapper: 206, prgBanks: 8, chrBanks: 4 });
     for (let b = 0; b < 16; b++) cartridge.prgRom[b * 0x2000] = 0xa0 + b;
@@ -65,5 +75,10 @@ describe("Namco118Mapper", () => {
     mapper.powerOn();
     mapper.restoreState(state);
     expect(mapper.captureState()).toEqual(state);
+
+    if (state.kind !== "namco-118") throw new Error("unexpected mapper state kind");
+    expect(() =>
+      mapper.restoreState({ ...state, registers: [1, 0, 0, 0, 0, 0, 0, 0] }),
+    ).toThrowError(RangeError);
   });
 });

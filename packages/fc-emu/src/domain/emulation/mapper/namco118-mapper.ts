@@ -5,7 +5,7 @@ import { isFixedByteArray } from "./state-validation.js";
 
 const PRG_BANK_SIZE = 0x2000;
 const CHR_BANK_SIZE = 0x0400;
-const REGISTER_MASKS = [0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x3f, 0x0f, 0x0f] as const;
+const REGISTER_MASKS = [0x3e, 0x3e, 0x3f, 0x3f, 0x3f, 0x3f, 0x0f, 0x0f] as const;
 
 export interface Namco108Board {
   readonly chrLayout: "standard" | "four-2k";

@@ -1828,8 +1828,9 @@ state. See [NESdev mapper 189](https://www.nesdev.org/wiki/INES_Mapper_189).
 The discrete predecessor to MMC3. `$8000` (even) selects one of eight bank registers and `$8001` (odd)
 writes it: R0/R1 are 2 KiB CHR banks at PPU `$0000`/`$0800`, R2-R5 are 1 KiB CHR banks at
 `$1000-$1FFF`, and R6/R7 are 8 KiB PRG banks at `$8000`/`$A000` with the final two banks fixed. There
-is no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the header. Writes
-to `$A000-$FFFF` are ignored. See
+is no IRQ, no PRG-RAM and no mirroring register, so mirroring stays hardwired from the header. The
+two 2 KiB registers physically omit D0, all CHR windows source ROM, and writes to `$A000-$FFFF` are
+ignored. See
 [NESdev mapper 206](https://www.nesdev.org/wiki/INES_Mapper_206).
 
 ## C&E / Supertone (240)

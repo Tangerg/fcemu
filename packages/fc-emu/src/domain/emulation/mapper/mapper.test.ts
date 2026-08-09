@@ -730,6 +730,7 @@ describe("cartridge mappers", () => {
     ],
     ["Jaleco 87 with a non-NROM PRG size", { mapper: 87, prgBanks: 4, chrBanks: 1 }],
     ["Namco 118 beyond its 64 KiB CHR capacity", { mapper: 206, prgBanks: 8, chrBanks: 9 }],
+    ["Namco 118 with CHR RAM", { mapper: 206, prgBanks: 8 }],
     ["Taito TC0190 beyond its 512 KiB PRG capacity", { mapper: 33, prgBanks: 33, chrBanks: 1 }],
     [
       "Taito TC0190 with four-screen nametables",

@@ -650,6 +650,7 @@ export function createMapper(cartridge: Cartridge, interruptPort: MapperInterrup
       requireBaseSubmapper(cartridge);
       requireBankedLayout(cartridge, 0x2000, 0x8000, 0x0400, 0x2000);
       requireMaximumRomSize(cartridge, 0x20_000, 0x10_000);
+      requireChrRom(cartridge, "Namco 118");
       requireNoPrgRam(cartridge);
       return new Namco118Mapper(cartridge);
     case 225:

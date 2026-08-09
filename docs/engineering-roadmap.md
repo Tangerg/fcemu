@@ -60,10 +60,15 @@ remains a separate follow-up.
 
 ## Priority 1: verify the implemented mapper set
 
-The largest compatibility risk is evidence depth, not missing class files. Mappers 8, 13, 15, 41,
-48, 67, 82, 83, 86, 89, 92, 93, 94, 95, 113,
-140, 150, 152, 185, 206, 225, 227, 228, 241 and 243
-are implemented but do not yet have executable external verification.
+The initial 28-board hardening audit is complete. It promoted mappers 74, 78 and 180 with executable
+evidence, corrected six board/format models, documented three irreducible evidence boundaries and
+found the remaining source-aligned implementations sound under their focused tests. The precise
+ledger is in [Mapper compatibility](./mapper-compatibility.md#implemented-mapper-hardening-audit).
+
+The largest compatibility risk is evidence depth, not missing class files. Mappers 8, 13,
+15, 41, 48, 67, 82, 83, 86, 89, 92, 93, 94, 95, 113, 140, 150, 152, 185, 206, 225, 227, 228, 241
+and 243 are implemented but do not yet have executable external verification. All have completed the
+hardening audit above.
 
 For each board family:
 

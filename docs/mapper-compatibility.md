@@ -109,6 +109,25 @@ describes evidence maturity rather than a runtime feature flag.
 | 248    | Kasheng MMC3   | Verified    | Shared-board tests; pinned _Bao Qing Tian_ real-ROM runner         |
 | 250    | MMC3 addr/data | Verified    | Rewiring/IRQ tests; pinned _Time Diver_ real-ROM runner            |
 
+## Implemented-mapper hardening audit
+
+The 28-mapper hardening pass covered every board that was `Implemented` when the pass began. Its
+outcome is deliberately separate from the compatibility status: an implementation can be audited
+and corrected without being promoted to `Verified` when no redistributable conformance fixture or
+checksum-pinned clean ROM is available.
+
+| Outcome                                 | Mapper IDs                                                       | Result                                                                                    |
+| --------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| External executable evidence added      | 74, 78, 180                                                      | Promoted to `Verified` with pinned Robot War IV or Holy Mapperel execution                |
+| Root board/format model corrected       | 113, 140, 152, 185, 206, 228                                     | Constrained physical ROM/CHR geometry, data-line masks, pull-up/open-bus or latch state   |
+| Evidence boundary made explicit         | 86, 241, 243                                                     | Kept `Implemented`; missing audio data/board identity or wrong-header fixture is recorded |
+| Source/test audit found no model defect | 8, 13, 15, 41, 48, 67, 82, 83, 89, 92, 93, 94, 95, 150, 225, 227 | Kept `Implemented`; external executable evidence remains the only promotion blocker       |
+
+The audit used current NESdev board descriptions, pinned maintained-emulator implementations where
+the physical documentation was incomplete, focused state/geometry/open-bus tests, Holy Mapperel,
+the NES 2.0 database and user-local ROM traces. ROM bytes remain outside the repository, and local
+filenames or legacy headers never override contradictory board evidence.
+
 The core accepts both iNES and a constrained NES 2.0 subset; see
 [cartridge-formats.md](./cartridge-formats.md). Detailed per-board behavior lives in
 [mappers/README.md](./mappers/README.md). Mapper

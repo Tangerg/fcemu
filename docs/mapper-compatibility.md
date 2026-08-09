@@ -88,7 +88,7 @@ describes evidence maturity rather than a runtime feature flag.
 | 152    | Bandai 74xx    | Implemented | PRG/CHR/mirroring unit tests; no conformance ROM                   |
 | 163    | Nanjing FC-001 | Verified    | FC-001 register/CHR/state tests; pinned _Chinese Paladin_ runner   |
 | 164    | Dongda PEC9588 | Verified    | PRG/1bpp/93C66 tests; pinned _Digimon Crystal_ real-ROM runner     |
-| 180    | Inverted UxROM | Implemented | Fixed-first/banking/conflict tests; no conformance ROM             |
+| 180    | Inverted UxROM | Verified    | Tests; Holy Mapperel UNROM (7408) result `0000`                    |
 | 182    | SuperGame MMC3 | Verified    | Duplicate-ID tests; pinned _Pocahontas_ real-ROM runner            |
 | 184    | Sunsoft-1      | Verified    | Board tests; pinned _The Wing of Madoola_ real-ROM runner          |
 | 185    | CNROM protect  | Implemented | NES 2.0 variants/open-bus/conflict tests; no conformance ROM       |
@@ -885,7 +885,10 @@ and `$6000.D6` supplying PRG A18.
   cycle and replay results.
 - Mapper 180 uses the opposite UxROM window arrangement: the first 16 KiB PRG bank is fixed at
   `$8000-$BFFF`, while `$C000-$FFFF` is switchable. Legacy images use original UNROM AND conflicts;
-  NES 2.0 submapper 1 disables them and submapper 2 makes them explicit.
+  NES 2.0 submapper 1 disables them and submapper 2 makes them explicit. Holy Mapperel 0.02's
+  checksum-pinned UNROM (7408) fixture verifies the full 128 KiB PRG bank space, 8 KiB CHR RAM and
+  hardwired mirroring through the original conflict-bearing submapper-0 layout, reporting detailed
+  result `0000`.
 - Mapper 184 (Sunsoft-1) fixes 32 KiB PRG and selects two 4 KiB CHR-ROM windows through a write-only
   `$6000-$7FFF` latch. Bits 2-0 select the lower bank; bits 5-4 select the upper bank with CHR A14
   hard-wired high. Its 16 KiB and 32 KiB CHR layouts are both modeled explicitly. The

@@ -146,6 +146,7 @@ Extract the archive outside the repository, build the core, and run:
 yarn conformance:mmc1 -- /path/to/holy-mapperel-bin-0.02
 yarn conformance:mapper34 -- /path/to/holy-mapperel-bin-0.02
 yarn conformance:mapper78 -- /path/to/holy-mapperel-bin-0.02
+yarn conformance:mapper180 -- /path/to/holy-mapperel-bin-0.02
 ```
 
 The suite covers SKROM, SGROM, SNROM, SUROM and SXROM. Holy Mapperel 0.02 does not distribute the
@@ -164,6 +165,12 @@ detects mapper 078/Holy Diver, scans all 128 KiB of PRG ROM and 64 KiB of CHR RO
 board's horizontal/vertical mirroring, and reports detailed result `0000`. The runner validates the
 parsed cartridge geometry and pins the visually reviewed final RGBA frame hash so a changed result
 screen cannot pass silently.
+
+The Mapper 180 runner uses the unmodified `M180_P128K_CR8K_H.nes` UNROM (7408) fixture (SHA-256
+`211c02ee86c90992fd89404874fa81c0c6c2091b98e81498275e7981d721521b`). It detects the
+original conflict-bearing submapper-0 board, verifies all 128 KiB of PRG ROM, 8 KiB of CHR RAM and
+hardwired mirroring, and reports detailed result `0000`. The runner rejects changed input identity
+or parsed geometry and pins the visually reviewed final RGBA frame hash.
 
 ## Blargg PPU open bus
 

@@ -13,7 +13,7 @@ capabilities and evidence belong in the subsystem references and compatibility m
 - One cycle-stepped CPU engine, dot-stepped PPU, regional APU and shared DMA arbitration.
 - NTSC, PAL and Dendy clock domains under one `MachineClock`.
 - iNES plus a constrained, fail-closed NES 2.0 subset.
-- 97 implemented mapper IDs; 71 mapper IDs currently have reproducible external or pinned
+- 97 implemented mapper IDs; 72 mapper IDs currently have reproducible external or pinned
   real-ROM verification.
 - Transactional version-19 save states and independent PRG, CHR and mapper-owned NVRAM.
 - Browser Canvas, AudioWorklet, keyboard/gamepad/Oeka Kids input, IndexedDB persistence and quick
@@ -62,7 +62,7 @@ remains a separate follow-up.
 
 The largest compatibility risk is evidence depth, not missing class files. Mappers 8, 13, 15, 41,
 48, 67, 82, 83, 86, 89, 92, 93, 94, 95, 113,
-140, 150, 152, 180, 185, 206, 225, 227, 228, 241 and 243
+140, 150, 152, 185, 206, 225, 227, 228, 241 and 243
 are implemented but do not yet have executable external verification.
 
 For each board family:

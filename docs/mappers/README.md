@@ -1389,6 +1389,11 @@ conflicts, while NES 2.0 submapper 1/2 selects no-conflict/conflict behavior exp
 [NESdev mapper 94](https://www.nesdev.org/wiki/INES_Mapper_094) and
 [NESdev mapper 180](https://www.nesdev.org/wiki/INES_Mapper_180).
 
+The checksum-pinned Holy Mapperel 0.02 `M180_P128K_CR8K_H.nes` fixture identifies the original
+conflict-bearing UNROM (7408) layout, scans all 128 KiB of PRG ROM, verifies its 8 KiB CHR RAM and
+hardwired mirroring, and reports detailed result `0000`. Focused tests separately preserve the two
+explicit NES 2.0 bus-conflict variants, conflict masking itself, reset and save-state behavior.
+
 ## Namco 3425 (95)
 
 Mapper 95 is the Namco 108 layout with CHR A15 also connected to CIRAM A10. R0 selects the nametable

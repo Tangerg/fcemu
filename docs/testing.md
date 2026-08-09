@@ -92,6 +92,7 @@ yarn fetch:test-roms
 | `yarn conformance:mmc1 -- DIR`                             | Holy Mapperel SxROM board matrix.                        |
 | `yarn conformance:mapper34 -- DIR`                         | Holy Mapperel BNROM fixture and visual hash.             |
 | `yarn conformance:mapper78 -- DIR`                         | Holy Mapperel IF-12 bank/mirroring result.               |
+| `yarn conformance:mapper180 -- DIR`                        | Holy Mapperel UNROM (7408) bank/RAM result.              |
 | `yarn conformance:oam-bus -- ROM [frames]`                 | Exact Quietust `read2004` byte screen.                   |
 | `yarn conformance:pal-apu -- DIR`                          | Ten PAL APU visual hashes.                               |
 
